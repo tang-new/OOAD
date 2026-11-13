@@ -1,0 +1,90 @@
+= RBAC1 二阶段实施基线
+:toc:
+
+== M0：事实与执行边界
+
+起始分支 `main`，起始提交 `363939ad1cc8cc0a8b5f669eff03ecd99bfad856`。
+主代理实际执行 `git status --short`，输出为空。未 fetch；本地 remote-tracking ref 不代表远端现状。
+一期 README 的测试数量、覆盖率、部署状态都属于历史声明，不作为本轮运行证明。
+
+用户最新优先级：*重构优先于迁移和兼容*。先收缩，再双工程布局，再修订结构化业务，最后实现双后端 RBAC1。
+这不授权生产清库、远程覆盖或重写历史。本轮不连接远程服务器，不读取部署密钥，不执行生产数据迁移。
+
+== 输入与权威顺序
+
+. 下载的 `rbac1上下文.zip` 中 `README.md`、`需求文档-final.md`（1521行）、`需求文档.md` 和 `需求更改.md` 已通读。
+. 当前仓库六份 README 已完整阅读；其指向的 `docs/00–17`、现行 OpenAPI 及 V1–V4 已由只读探索任务完整核对。
+. 两份规范 ZIP 中 SKILL 已读取；教师工程路径、项目ID和Spring Boot版本不能直接套用。
+. 下载 PDF `基于RBAC模型的权限管理系统_概要设计说明书.pdf` 共37页，文本已完整提取阅读。它描述一期RBAC0、多公司、数据范围和Mock，*不是新版评分标准*。
+. `OOAD_Grading_2026` V4、`5. 面向对象设计.pdf`、早期“我们的设计文档”在本次压缩包和已检查 Downloads 顶层未找到。final 中引述的条款按目标执行，原件尚不能独立核验。
+. 教师课程中心当前源码、CloneFactory 源码及最新公开 OAS 尚未拉取核验；Conversation 是历史资料，不能当作当前代码。
+
+== 当前真实结构
+
+[cols="1,3"]
+|===
+|项目 |事实
+|父工程 |Spring Boot 3.3.5；要求 Java21；Maven wrapper 3.9.9
+|模块 |rbac-contract、rbac-structured、一期外部演示模块；DDD不存在
+|结构化后端 |Controller → Service → JPA/Redis Mapper；业务规则在Service
+|API |`rbac-contract/src/main/resources/openapi/rbac-api.yaml`；/api/v1；45个一期操作
+|数据库 |V1 RBAC0基线、V2全局授权版本、V3用户编号段、V4删除到期字段
+|权限 |角色无系统归属；指派包含scope_dept_id；角色编辑混合状态；没有角色DAG
+|缓存 |MySQL版本 + Redis用户授权集合；没有L1
+|审计 |独立REQUIRES_NEW；没有外部requestId幂等审计契约
+|前端 |Vue3/TS；一期菜单/按钮守卫及ECharts；尚无RBAC1管理页
+|部署 |Compose/Swarm定义存在；本轮未验证远程运行态
+|===
+
+== 本机工具与测试隔离
+
+主代理实际确认：默认 `java -version` 为Java8，不符合项目要求；找到
+`D:/Software/Eclipse Adoptium/jdk-21.0.7.6-hotspot`，后续必须显式设置JAVA_HOME。
+`node --version` 为v22.23.4；Docker daemon的ServerVersion为29.8.0。
+初始 `docker ps` 未发现本项目测试容器。
+
+一期集成测试会Flyway clean并清理Redis，严禁使用生产连接。
+本轮测试只能使用本机127.0.0.1:13306/16379的隔离实例。
+构建及测试结果待实际执行完成后追加；旧target报告不是本轮证据。
+
+== 备份与回退
+
+已实际执行 `git bundle create .../ooad-before-phase2.bundle --all`，随后
+`git bundle verify` 成功：完整历史，HEAD为起始提交。bundle保存在仓库外的资料解压目录。
+不包含被忽略的员工表、.env、运行数据库，也不应将这些敏感内容公开提交。
+
+一期源码可按起始提交恢复或在新目录从bundle克隆；不强制覆盖当前工作区。
+旧库需要继续使用时，应维持一期镜像和schema，不让重构后的新基线直接作用于已部署旧库。
+本轮改写开发基线不等于已完成旧库升级路径。
+
+== 决策与缺口
+
+[cols="1,3,3"]
+|===
+|编号 |问题 |采用边界
+|DEC-01 |final中直接重构Flyway与旧库兼容条款矛盾 |用户最新指令优先：开发空库重构；不追加兼容层来维持废弃功能；生产库不动
+|DEC-02 |一期PDF与RBAC1目标相反 |PDF只作一期参考，不恢复多公司、业务scope及演示模块
+|DEC-03 |final对Dashboard表述不一致 |保留简洁首页、健康与导航；移除热力图和统计大屏
+|DEC-04 |旧与新T编号重合 |追踪中用RBAC0/、RBAC1/前缀，不宣称旧测试覆盖新需求
+|DEC-05 |独立导论工程移出 |先本地提取完整子目录历史及核验内容；无远端权限则不先删除源目录
+|DEC-06 |正式评分/PPT/最新外部契约未核验 |明确外部依赖，不伪造读取、联调或部署证据
+|===
+
+== 独立导论工程的本地导出
+
+实际执行 `git subtree split --prefix=intro-spec-coding -b export/intro-spec-coding`，
+得到 `f4490581b3a6afa04b5c47068bfb770200ebc295`，四条与该路径相关的真实历史。
+独立clone到仓库同级目录 `intro-spec-coding-export/`，没有hardlink，已移除origin，避免误推回原RBAC仓库。
+`git fsck --full` 退出成功；原仓库复制带来的不可达对象提示不是文件损坏。
+
+原 `HEAD:intro-spec-coding` 与新仓库 `HEAD^{tree}` 均为
+`29c24ee631060a8d208350ad65ac2b294b25ce95`，证明1176个受跟踪文件和附件的Git内容完全一致。
+新仓库工作区干净。被忽略的vendor、.env等未复制、未公开。
+
+尚未取得新的远程仓库地址和访问权限，按final任务一第4条先保留原目录；
+本地导出完成不等于远程迁移验收完成。原工程引用的复现路径也要在独立仓库正式接收时校正。
+
+== 下一质量门槛
+
+只有基线验证结果记录、清理影响与可回退证据具备后，才删除旧运行模块。
+文档和代码都必须区分“目标”“存在但未验证”“本轮验证通过”。
