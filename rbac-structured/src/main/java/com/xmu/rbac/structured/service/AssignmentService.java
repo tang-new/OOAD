@@ -35,12 +35,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 5.0 授权管理：人工分配与回收用户角色，单个与批量（docs/06-detail-structured.md §5.4、§5.5）。
+ * 5.0 授权管理：人工分配与回收用户角色，单个与批量（docs/architecture-structured.adoc）。
  *
  * <p>一次指派需要通过的校验（单个与批量共用 {@link #checkOne}）：
  * <ol>
  *   <li>用户存在且未删除；角色存在且启用；</li>
- *   <li>公司内角色只能指派到本公司的部门；适用部门可以在别的公司（跨公司授权，docs/12-design-log.md R-20）；</li>
+ *   <li>公司内角色只能指派到本公司的部门；适用部门可以在别的公司（跨公司授权，docs/iteration-log.adoc R-20）；</li>
  *   <li>操作者对用户所属部门、对适用部门都持有 rbac:assignment:assign（管理范围）；</li>
  *   <li>超级管理员角色只有超级管理员能分配；</li>
  *   <li>不能授出自己没有的权限：角色的每个权限，操作者在适用部门都必须持有。</li>
@@ -168,7 +168,7 @@ public class AssignmentService {
      * 唯一例外是最后一个有效的超级管理员，由调用方在删除后统一拦截。
      *
      * <p>回收别人的指派，操作者管得到指派的适用部门即可，不再要求也管得到用户所属部门：跨公司授权后，适用部门所在
-     * 公司要能收回别人在自己部门的权限（docs/12-design-log.md R-20）。不按「管得到用户所属部门」放行：否则分公司
+     * 公司要能收回别人在自己部门的权限（docs/iteration-log.adoc R-20）。不按「管得到用户所属部门」放行：否则分公司
      * 管理员能撤掉所属部门在本分公司、但适用于整个公司的上级管理员角色。用户所在公司要收回，可以停用账号。
      */
     private String checkRevoke(Operator op, User u, Role role, Long scopeDeptId) {

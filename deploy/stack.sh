@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Swarm 集群部署。对应实验二第四部分，命令都在 manager 节点（编译服务器）的仓库根目录执行。
-# 每一步做什么、为什么，见 docs/13-deployment.md §4。
+# 每一步做什么、为什么，见 docs/deployment.adoc。
 #
 #   bash deploy/stack.sh init <本机内网IP>           建集群，打印给工作节点执行的 join 命令
 #   bash deploy/stack.sh label <数据节点> <应用节点>   按主机名打 rbac.role 标签（docker node ls 看主机名）

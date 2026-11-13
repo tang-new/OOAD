@@ -1,10 +1,10 @@
-# 一份编排文件，两种用法（docs/02-architecture.md §6）：
+# 一份编排文件，两种用法（docs/deployment.adoc）：
 #   docker compose up -d                              单机：开发、CI、检查演示
-#   bash deploy/stack.sh up                           Swarm 集群（实验二的做法，见 docs/13-deployment.md §4）
+#   bash deploy/stack.sh up                           Swarm 集群（见 docs/deployment.adoc）
 # deploy: 段只在 Swarm 下生效，单机 compose 忽略。
 #
-# 课程服务器（3 台 2 核 2G，1 台编译 + 2 台部署）的放置方式见 docs/13-deployment.md：
-#   节点标签 rbac.role=data → MySQL + Redis；rbac.role=app → 两个 Java 服务。
+# 服务器放置方式见 docs/deployment.adoc；本轮未验证远端运行态：
+#   节点标签 rbac.role=data → MySQL + Redis；rbac.role=app → 应用服务。
 #
 # 口令与密钥从 .env 读取（不入库），模板见 deploy/env.example。
 # 注意 docker stack deploy 不会自动读 .env，所以集群部署一律走 deploy/stack.sh。
@@ -45,7 +45,7 @@ services:
       resources:
         limits: { memory: 800M }
 
-  # 授权数据缓存（带版本号失效）与登出令牌登记（docs/02-architecture.md §4.2）
+  # 授权数据缓存（带版本号失效）与登出令牌登记（docs/architecture-structured.adoc）
   redis:
     image: ${REDIS_IMAGE:-redis:7-alpine}
     command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
@@ -81,22 +81,6 @@ services:
       restart_policy: { condition: on-failure, delay: 10s }
       resources:
         limits: { memory: 700M }
-
-  rbac-mock-biz:
-    image: ${REGISTRY:-}rbac-mock-biz:${TAG:-latest}
-    build:
-      context: .
-      args: { MODULE: rbac-mock-biz }
-    environment:
-      RBAC_CENTER_URL: http://rbac-structured:8081/api/v1
-      JAVA_OPTS: -Xms64m -Xmx256m
-    ports:
-      - "8090:8090"
-    deploy:
-      placement:
-        constraints: [node.labels.rbac.role == app]
-      resources:
-        limits: { memory: 350M }
 
   # 前端（Vue 3）：Nginx 提供页面，/api 转发到 rbac-structured。浏览器访问 http://<节点>:80
   rbac-web:

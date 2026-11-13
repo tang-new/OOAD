@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 4.0 用户管理：列表与搜索、新增、修改、启用停用、删除、批量操作、用户详情（docs/06 §5.3）。
+ * 4.0 用户管理：列表与搜索、新增、修改、启用停用、删除、批量操作、用户详情（docs/architecture-structured.adoc）。
  * 每个处理过程都先确认目标用户所在部门在操作者的管理范围内。
  */
 @Service
@@ -207,7 +207,7 @@ public class UserManagementService {
         return toView(created, dept.deptName);
     }
 
-    /** 业务系统账号是内部账号，编号取在 1–9999 段内（docs/03-database.md §3.2）；员工与临时用户走自增，从 10000 开始。 */
+    /** 业务系统账号是内部账号，编号取在 1–9999 段内（docs/database.adoc）；员工与临时用户走自增，从 10000 开始。 */
     private User insertInternal(User u) {
         long id = userMapper.nextInternalId(User.INTERNAL_ID_LIMIT);
         if (id >= User.INTERNAL_ID_LIMIT) {

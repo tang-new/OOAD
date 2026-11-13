@@ -24,7 +24,7 @@ import type { Heatmap } from '@/api/types'
 import { toLocalDateTime } from '@/utils/format'
 import { heatmapOption } from '@/utils/heatmap'
 
-/** 权限使用热力图（docs/05-ui.md §3.11）：横轴操作、纵轴业务系统，数据来自审计日志里的真实鉴权事件。 */
+/** 权限使用热力图（docs/requirements.adoc）：横轴操作、纵轴业务系统，数据来自审计日志里的真实鉴权事件。 */
 const router = useRouter()
 const chartEl = ref<HTMLDivElement>()
 const preset = ref('7')

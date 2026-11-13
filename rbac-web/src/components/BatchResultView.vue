@@ -27,7 +27,7 @@
 import type { BatchResult } from '@/api/types'
 import { FAILURE_LABEL, label } from '@/utils/format'
 
-// 永远显示 committed、成功、已持有、失败与失败清单，不只弹一个「操作成功」（docs/05-ui.md §6）
+// 永远显示 committed、成功、已持有、失败与失败清单，不只弹一个「操作成功」（docs/requirements.adoc）
 defineProps<{ result: BatchResult }>()
 </script>
 

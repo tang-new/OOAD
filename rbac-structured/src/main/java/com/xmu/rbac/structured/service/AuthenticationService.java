@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
- * 1.0 认证：登录、登出、令牌校验、修改口令（docs/06-detail-structured.md §5.1）。
+ * 1.0 认证：登录、登出、令牌校验、修改口令（docs/architecture-structured.adoc）。
  */
 @Service
 public class AuthenticationService {

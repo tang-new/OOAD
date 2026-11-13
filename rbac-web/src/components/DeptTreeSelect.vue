@@ -15,7 +15,7 @@ import { orgApi } from '@/api'
 import type { CompanyView, DeptNode } from '@/api/types'
 
 /**
- * 公司 + 部门树选择。只列出管理范围涉及的公司与部门（后端已过滤，docs/05-ui.md §3.9）。
+ * 公司 + 部门树选择。只列出管理范围涉及的公司与部门（后端已过滤，docs/requirements.adoc）。
  * 祖先节点也会出现在树里（方便定位），选了范围外的部门，后端会返回 403。
  */
 const model = defineModel<number | null>({ default: null })

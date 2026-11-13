@@ -55,7 +55,7 @@ import { catalogApi, menuApi } from '@/api'
 import type { MenuNode, ResourceView, SaveMenu } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 
-/** 菜单管理（docs/05-ui.md §3.7）。 */
+/** 菜单管理（docs/requirements.adoc）。 */
 const auth = useAuthStore()
 const menus = ref<MenuNode[]>([])
 const menuResources = ref<ResourceView[]>([])

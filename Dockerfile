@@ -6,7 +6,6 @@
 #
 # 用法（在仓库根目录）：
 #   docker build --build-arg MODULE=rbac-structured -t rbac-structured:latest .
-#   docker build --build-arg MODULE=rbac-mock-biz   -t rbac-mock-biz:latest   .
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 
@@ -18,5 +17,5 @@ COPY ${MODULE}/target/${MODULE}.jar app.jar
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC" \
     TZ=Asia/Shanghai
 
-EXPOSE 8081 8090
+EXPOSE 8081
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

@@ -13,7 +13,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * 架构适应度函数：课程规定的 Controller + Service + Mapper 三层与结构化设计约束，
- * 写成会失败的测试。约束被破坏时构建直接失败（docs/02-architecture.md §2.4）。
+ * 写成会失败的测试。约束被破坏时构建直接失败（docs/architecture-structured.adoc）。
  */
 class ArchitectureTest {
 

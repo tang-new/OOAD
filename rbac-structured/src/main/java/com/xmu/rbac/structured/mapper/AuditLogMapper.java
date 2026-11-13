@@ -69,7 +69,7 @@ public interface AuditLogMapper extends JpaRepository<AuditLog, Long> {
 
     /**
      * 异常访问：登录失败，以及已停用、已删除、已过期或不存在的主体发起的鉴权。
-     * 这类请求说明有人在用不该再有效的身份访问系统（docs/05-ui.md §3.1 的统计口径）。
+     * 这类请求说明有人在用不该再有效的身份访问系统（docs/requirements.adoc 的统计口径）。
      * 与 {@link #search} 的 abnormal 条件必须一致：Dashboard 点进审计日志看到的就是这些记录。
      */
     @Query("""

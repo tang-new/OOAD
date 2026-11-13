@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * T21：导入三份 Excel。真实数据含个人信息不能进仓库，这里按真实表格的格式造一份小样本（姓名均为虚构），
  * 覆盖真实数据里的各种情形：分公司直属人员、各分公司同名的「财务部」、合并单元格、
  * 「查看/编辑本人」、混合语言「view/新增」、空白单元格、重名负责人。
- * 用真实三份表格的全量导入结果记在 docs/03-database.md §5.4。
+ * 用真实三份表格的全量导入结果记在 docs/database.adoc。
  */
 class ExcelImportIntegrationTest extends IntegrationTestBase {
 

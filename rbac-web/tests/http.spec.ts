@@ -23,7 +23,7 @@ beforeEach(() => {
   setAuthHooks(hooks)
 })
 
-describe('统一错误处理（docs/05-ui.md §4.3）', () => {
+describe('统一错误处理（docs/requirements.adoc）', () => {
   it('决策表', () => {
     expect(classifyError(401, 40101)).toBe('login')
     expect(classifyError(403, 40304)).toBe('password')

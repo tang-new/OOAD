@@ -131,7 +131,7 @@ import type { ActionView, Page, PermissionView, ResourceType, ResourceView, Syst
 import { RESOURCE_TYPE_LABEL, label } from '@/utils/format'
 import PermissionCode from '@/components/PermissionCode.vue'
 
-/** 权限管理（docs/05-ui.md §3.6）：区分 Resource、Action、Permission 三个页签。 */
+/** 权限管理（docs/requirements.adoc）：区分 Resource、Action、Permission 三个页签。 */
 const tab = ref('resources')
 const systems = ref<SystemView[]>([])
 const actions = ref<ActionView[]>([])

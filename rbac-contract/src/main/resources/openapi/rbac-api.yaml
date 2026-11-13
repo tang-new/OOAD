@@ -3,7 +3,7 @@ openapi: 3.0.3
 # =============================================================================
 # 权限中心 API 契约（RBAC0）
 #
-# 本文件是接口的唯一事实来源，docs/04-api.md 是它的说明。
+# 本文件是接口的唯一事实来源，docs/api.adoc 是它的说明。
 # 每个操作都声明 x-required-permission，运行时拦截器只认这里：
 #   - 权限码（如 rbac:user:view）：调用判定过程，没有该权限 → 403；
 #   - "@self"：登录即可，能操作谁由 Service 判断（本人，或在管理范围内的人）；
@@ -1395,7 +1395,7 @@ components:
 
     Dashboard:
       type: object
-      description: 实时总量及今日鉴权统计；比率为 0～1，延迟为毫秒，无样本时比率和延迟为 0，详细口径见 docs/05-ui.md §3.1
+      description: 实时总量及今日鉴权统计；比率为 0～1，延迟为毫秒，无样本时比率和延迟为 0，详细口径见 docs/requirements.adoc
       properties:
         userCount: { type: integer, format: int64, description: 未删除的用户（含停用、临时） }
         roleCount: { type: integer, format: int64, description: 当前角色总数，包含停用角色 }

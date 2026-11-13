@@ -2,7 +2,7 @@ package com.xmu.rbac.structured.service;
 
 /**
  * 业务处理过程的异常出口：HTTP 状态 + 错误码 + 说明。
- * 状态码口径（docs/04-api.md §1.3）：401 未认证；403 无操作权限或超出管理范围；404 目标不存在；
+ * 状态码口径（docs/api.adoc）：401 未认证；403 无操作权限或超出管理范围；404 目标不存在；
  * 409 重复或状态冲突；400 参数不合法。鉴权接口判定为「无权限」时不抛异常，返回 allowed=false。
  */
 public class BizException extends RuntimeException {

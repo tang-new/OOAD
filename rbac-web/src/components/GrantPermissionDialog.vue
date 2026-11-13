@@ -40,7 +40,7 @@ import PermissionCode from './PermissionCode.vue'
 
 /**
  * 为角色授予权限。权限按系统 / 关键词分页查询（共 1,800 余个，不一次全取），跨页勾选后一次提交。
- * 后端返回 40303 时说明「不能授出你自己没有的权限」（docs/05-ui.md §3.5）。
+ * 后端返回 40303 时说明「不能授出你自己没有的权限」（docs/requirements.adoc）。
  */
 const visible = defineModel<boolean>({ default: false })
 const props = defineProps<{ roleId: number }>()

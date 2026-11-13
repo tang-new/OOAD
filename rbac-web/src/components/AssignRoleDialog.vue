@@ -44,7 +44,7 @@ const reason = ref('')
 const loading = ref(false)
 const error = ref('')
 
-/** 后端拒绝时按错误码给出说明（docs/05-ui.md §3.3）。 */
+/** 后端拒绝时按错误码给出说明（docs/requirements.adoc）。 */
 const HINTS: Record<number, string> = {
   40302: '用户或适用部门不在你的管理范围内',
   40303: '该角色含有你在适用部门不具备的权限，不能授出',

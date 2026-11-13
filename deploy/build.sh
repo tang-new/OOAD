@@ -32,7 +32,7 @@ echo "==> 1/3 编译 + 全部测试 + Jacoco 门槛（任何一步失败都不�
 ./mvnw -B -s deploy/maven-settings-huawei.xml clean verify
 
 echo "==> 2/3 打镜像，标签 $TAG 与 latest，基础镜像 $BASE_IMAGE"
-for m in rbac-structured rbac-mock-biz; do
+for m in rbac-structured; do
   docker build --build-arg BASE_IMAGE="$BASE_IMAGE" --build-arg MODULE="$m" \
     -t "${REGISTRY}${m}:${TAG}" -t "${REGISTRY}${m}:latest" .
 done
@@ -42,7 +42,7 @@ docker build --build-arg NODE_IMAGE="$NODE_IMAGE" --build-arg NGINX_IMAGE="$NGIN
 
 if [ "${1:-}" = "push" ]; then
   echo "==> 3/3 推送到 ${REGISTRY}"
-  for m in rbac-structured rbac-mock-biz rbac-web; do
+  for m in rbac-structured rbac-web; do
     docker push "${REGISTRY}${m}:${TAG}"
     docker push "${REGISTRY}${m}:latest"
   done

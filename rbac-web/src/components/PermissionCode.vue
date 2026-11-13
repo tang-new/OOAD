@@ -10,7 +10,7 @@
 import { computed } from 'vue'
 import { splitPermissionCode } from '@/utils/format'
 
-// 权限码用等宽字体，系统 / 模块 / 功能点 / 操作四段用不同灰度区分（docs/05-ui.md §6）
+// 权限码用等宽字体，系统 / 模块 / 功能点 / 操作四段用不同灰度区分（docs/requirements.adoc）
 const props = defineProps<{ code: string }>()
 const segments = computed(() => splitPermissionCode(props.code))
 </script>

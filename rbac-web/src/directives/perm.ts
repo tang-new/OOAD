@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 /**
  * v-perm="'rbac:user:delete'"：没有该权限时禁用按钮并提示缺少的权限码；
  * v-perm.hide：没有权限时隐藏。
- * 默认禁用而不是隐藏：按钮直接消失时，用户分不清是功能不存在还是自己没权限（docs/05-ui.md §4.1）。
+ * 默认禁用而不是隐藏：按钮直接消失时，用户分不清是功能不存在还是自己没权限（docs/requirements.adoc）。
  * 这只是体验：目标对象是否在管理范围内，以后端的 403 为准。
  */
 function apply(el: HTMLElement, binding: DirectiveBinding<string>) {

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 验收用例 T01–T22（审查报告 §10.2，需求—用例追溯见 docs/09-test-plan.md §4）。
+ * 验收用例 T01–T22（需求—用例追溯见 docs/test-plan.adoc）。
  * 全部经 HTTP 接口、连真实 MySQL 与 Redis 执行。
  */
 class AcceptanceTest extends IntegrationTestBase {

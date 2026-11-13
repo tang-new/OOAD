@@ -1,4 +1,4 @@
-# 每次 push / PR（docs/09-test-plan.md §5）：
+# 每次 push / PR（docs/test-plan.adoc）：
 #   verify：后端编译 + 全部测试（连真实 MySQL、Redis）+ Jacoco 门槛；再用同一套服务跑前端端到端测试；最后验证镜像能构建
 #   web：前端类型检查 + 单元测试与覆盖率门槛 + 生产构建
 name: ci
@@ -49,6 +49,7 @@ jobs:
           cache-dependency-path: rbac-web/package-lock.json
       - run: npm ci --no-audit --no-fund
         working-directory: rbac-web
+      - run: node --test tools/project-layout.test.mjs diagrams/tools/gen-mdj.test.mjs
       - run: npx playwright install --with-deps chromium
         working-directory: rbac-web
       - run: npx playwright test

@@ -13,7 +13,7 @@ import { buildRoutes, homePath } from '@/router/routes'
 import { createAppRouter } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 
-describe('路由只来自后端下发的菜单（docs/05-ui.md §4.1）', () => {
+describe('路由只来自后端下发的菜单（docs/requirements.adoc）', () => {
   it('按菜单注册页面，列表页带出详情页', () => {
     const names = buildRoutes(ALL_MENUS).map((r) => r.path)
     expect(names).toEqual(['/dashboard', '/users', '/users/:id', '/roles', '/roles/:id', '/permissions', '/menus',

@@ -29,7 +29,7 @@ export interface DynamicRoute {
 }
 
 /**
- * 从 GET /menus/me 返回的菜单树得出要注册的路由（docs/05-ui.md §4.1「路由级」）。
+ * 从 GET /menus/me 返回的菜单树得出要注册的路由（docs/requirements.adoc「路由级」）。
  * 路由只来自后端下发的菜单：没有菜单的页面根本不注册，直接输入地址会落到 403 页。
  * 认不出的 componentKey 跳过（新菜单可能先于前端页面上线）。
  */

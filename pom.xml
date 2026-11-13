@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 父 POM：统一 JDK、依赖版本与插件配置（含 Jacoco）。见 docs/02-architecture.md §3.1 -->
+    <!-- 父 POM：统一 JDK、依赖版本与插件配置（含 Jacoco）。见 docs/architecture-structured.adoc -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -18,14 +18,10 @@
     <packaging>pom</packaging>
     <name>rbac-parent</name>
 
-    <!--
-      当前阶段（RBAC0、结构化设计）只有这三个模块。
-      rbac-contract 是建表脚本与 OpenAPI 契约，rbac-structured 是权限中心，rbac-mock-biz 是外部模拟业务系统。
-    -->
+    <!-- 共享契约与结构化后端；独立 DDD 后端在双工程布局阶段加入。 -->
     <modules>
         <module>rbac-contract</module>
         <module>rbac-structured</module>
-        <module>rbac-mock-biz</module>
     </modules>
 
     <properties>
@@ -77,7 +73,7 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- Jacoco：每次检查的提交门槛。门槛与排除项见 docs/09-test-plan.md §2 -->
+                <!-- Jacoco：每次检查的提交门槛。门槛与排除项见 docs/test-plan.adoc -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>

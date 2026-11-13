@@ -59,7 +59,7 @@ import DeptTreeSelect from './DeptTreeSelect.vue'
 import BatchResultView from './BatchResultView.vue'
 
 /**
- * 按分公司 / 部门 / 员工批量授权与回收（docs/05-ui.md §3.2）。用户列表与组织管理共用。
+ * 按分公司 / 部门 / 员工批量授权与回收（docs/requirements.adoc）。用户列表与组织管理共用。
  * 默认整批原子：未通过校验时明确告诉用户「一个都没写入」，并提供改为部分执行的按钮。
  */
 const visible = defineModel<boolean>({ default: false })

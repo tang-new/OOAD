@@ -1,6 +1,6 @@
 // 显示用的格式化函数（纯函数，便于单测）
 
-/** 列表中电话脱敏：13812345678 → 138****5678（docs/05-ui.md §6）。 */
+/** 列表中电话脱敏：13812345678 → 138****5678（docs/requirements.adoc）。 */
 export function maskPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
   if (phone.length < 7) return phone
@@ -30,7 +30,7 @@ export const RESOURCE_TYPE_LABEL: Record<string, string> = {
   API: '接口',
 }
 
-/** 判定原因码的中文说明（docs/05-ui.md §3.10）。 */
+/** 判定原因码的中文说明（docs/requirements.adoc）。 */
 export const REASON_LABEL: Record<string, string> = {
   ROLE_GRANTED: '允许：角色授予',
   SUPER_ADMIN_BYPASS: '允许：超级管理员越过权限引擎',
@@ -83,7 +83,7 @@ export function splitPermissionCode(code: string): string[] {
   return code.split(':')
 }
 
-/** 「角色 @ 适用部门」：凡是出现角色的地方都带适用部门（docs/05-ui.md §6）。 */
+/** 「角色 @ 适用部门」：凡是出现角色的地方都带适用部门（docs/requirements.adoc）。 */
 export function roleAtScope(roleName: string, scopeDeptName: string): string {
   return `${roleName} @ ${scopeDeptName}`
 }

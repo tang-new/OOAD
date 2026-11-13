@@ -114,7 +114,7 @@ import PermissionCode from './PermissionCode.vue'
 import AssignRoleDialog from './AssignRoleDialog.vue'
 
 /**
- * 用户详情：基本信息、角色、有效权限（docs/05-ui.md §3.3）。个人中心与用户详情页共用。
+ * 用户详情：基本信息、角色、有效权限（docs/requirements.adoc）。个人中心与用户详情页共用。
  * 每条有效权限都带来源角色与适用部门；同一权限码的多行不合并，否则看不出作用域。
  */
 const props = defineProps<{ detail: UserDetail; manageable?: boolean; initialTab?: string }>()
@@ -131,7 +131,7 @@ const auth = useAuthStore()
 const canExplain = computed(() => auth.has('rbac:explain:view')
   && (props.detail.user.id === auth.me?.user.id || auth.has('rbac:authz:explain')))
 
-/** 自己的指派总能回收（后端不查管理范围，docs/01-srs.md §4.2.7），个人中心也给回收按钮 */
+/** 自己的指派总能回收（后端不查管理范围，docs/requirements.adoc），个人中心也给回收按钮 */
 const isSelf = computed(() => props.detail.user.id === auth.me?.user.id)
 
 const assignVisible = ref(false)

@@ -356,7 +356,7 @@ class ManagementApiTest extends IntegrationTestBase {
     }
 
     /**
-     * 跨公司授权（docs/12-design-log.md R-20）：用户只属于一家公司，但可以持有别家公司部门的指派。
+     * 跨公司授权（docs/iteration-log.adoc R-20）：用户只属于一家公司，但可以持有别家公司部门的指派。
      * 能否授出照常看管理范围（用户所属部门与适用部门都要在范围内）与越权检查，不再看两边是否同公司。
      */
     @Test

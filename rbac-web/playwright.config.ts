@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 /**
  * 端到端测试：真实的权限中心（jar）+ MySQL + Redis + Vite 前端，在浏览器里走完整流程。
- * 需要 MySQL（13306）与 Redis（16379），与后端集成测试相同（docs/09-test-plan.md §3）。
+ * 需要 MySQL（13306）与 Redis（16379），与后端集成测试相同（docs/test-plan.adoc）。
  * 每次运行用一个新数据库（createDatabaseIfNotExist），Redis 用 5 号库并在开始前清空。
  */
 process.env.E2E_DB ??= `rbac_e2e_${Date.now()}`

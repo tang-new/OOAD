@@ -14,7 +14,7 @@ function readToken(): string | null {
 }
 
 /**
- * 登录状态与权限状态（docs/05-ui.md §4.2）。
+ * 登录状态与权限状态（docs/requirements.adoc）。
  * 前端缓存的权限只用于菜单与按钮的显示，能否真正执行由后端每次判定。
  */
 export const useAuthStore = defineStore('auth', () => {

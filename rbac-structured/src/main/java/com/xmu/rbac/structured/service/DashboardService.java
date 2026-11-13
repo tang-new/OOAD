@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * 7.0 Dashboard 与权限使用热力图。全部从真实数据统计：用户、角色、权限三张表，
- * 以及审计日志里的鉴权事件（AUTH_SUCCESS / AUTH_FAILED）。统计口径见 docs/05-ui.md §3.1。
+ * 以及审计日志里的鉴权事件（AUTH_SUCCESS / AUTH_FAILED）。统计口径见 docs/requirements.adoc。
  */
 @Service
 public class DashboardService {

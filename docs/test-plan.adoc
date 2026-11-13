@@ -1,0 +1,83 @@
+= 测试计划与证据边界
+:toc:
+
+== 状态
+
+本文列现有测试设施及后续验收计划，*不是本轮测试报告*。
+旧文档的测试数量、覆盖率和通过结论均为历史记录；旧 target/ 报告不得当作本轮证据。
+实际Maven/Vitest/构建结果统一记录于link:iteration-log.adoc[迭代记录]；本文不是测试执行报告。
+本轮尚未执行Playwright或远程验收。
+需求见 link:requirements.adoc[追踪表]，安全限制见 link:migration-baseline.adoc[实施基线]。
+
+== 现有一期验证设施
+
+[cols="1,3"]
+|===
+|设施 |现有目的（不是本轮结果）
+|ArchitectureTest |三层依赖、数据实体、Service 无状态、不继承业务逻辑及禁用 MyBatis。
+|ContractRoutesTest |现行 OAS 权限声明、路由双向匹配与内置权限一致性。
+|RedisFailureTest |缓存降级、令牌注销查询失败时拒绝。
+|AcceptanceTest |一期 RBAC0 登录、角色并集、旧部门 scope/管理范围、撤权、菜单、审计、多副本等。
+|ManagementApiTest |管理接口成功/失败分支、授权上界、编号段、账号/角色保护及审计。
+|ExcelImportIntegrationTest |虚构 xlsx、歧义行、重复导入和角色模板同步。
+|Vitest / Playwright |前端逻辑单测及真实后端桌面 Chromium E2E；不是移动端或双后端 RBAC1 证明。
+|===
+
+关键授权与事务测试连接 *真实 MySQL 8 与 Redis 7*，经 HTTP 检查结果；不得用 H2 或仅 Mock 替代外键、原生 SQL、唯一约束和并发一致性验证。
+
+== 隔离与运行前检查
+
+集成基类会 Flyway clean/migrate、恢复表快照并清理 Redis；E2E 会新建 `rbac_e2e_<时间戳>` 数据库并清空 Redis 5号库。
+这些是破坏性测试行为，*只能连接本机专用可丢弃实例*，不能指向生产、共享开发库或部署数据卷。
+Redis 的逻辑库编号不是实例隔离的替代品。
+
+* 本阶段仅允许127.0.0.1:13306 的测试 MySQL 与127.0.0.1:16379 的测试 Redis，容器端口应只绑定回环；预先核实实例身份、库名和配置，不能只看端口。
+* 后端参数：TEST_DB_URL（明确 rbac_test）、TEST_DB_USER、TEST_DB_PASSWORD、TEST_REDIS_HOST、TEST_REDIS_PORT；测试 Redis 默认逻辑库0，仍须独占实例。
+* E2E 另核对 E2E_DB_HOST（含端口，如127.0.0.1:13306）、E2E_DB、E2E_DB_USER、E2E_DB_PASSWORD、E2E_REDIS_HOST/PORT，不能因 Java 测试变量已设置就假定 E2E 也隔离。确认全局 setup 将清理专用 Redis 的5号库。
+* 使用 Java21，显式核对 JAVA_HOME 与 `java -version`；本机默认 Java8 不可直接使用。前端需 Node20+；口令及 Token 不写入报告、命令示例或仓库。
+
+隔离确认且依赖已就绪后，可在仓库根目录执行以下待运行命令（Windows 使用 mvnw.cmd）：
+
+[source,shell]
+----
+./mvnw -pl rbac-structured -am verify
+cd rbac-web
+npm ci
+npm run typecheck
+npm run test:coverage
+npm run build
+npm run e2e
+----
+
+E2E 读取已构建的 structured jar，并启动后端18081及前端5174；JAVA_BIN 可指定 Java21，PW_CHROMIUM 可指定浏览器。测试配置和夹具以仓库现有文件为准，执行前必须再次核对。
+
+== 覆盖率门槛（配置，不是测量结果）
+
+[cols="2,1,2"]
+|===
+|范围 |门槛 |依据
+|后端整体行/分支 |≥70% / ≥60% |根 POM 的 JaCoCo verify 检查
+|后端 service 行 |≥85% |根 POM 包规则
+|前端逻辑行/分支 |≥85% / ≥80% |rbac-web/vite.config.ts
+|===
+
+后端排除 dto、entity、config 及启动类；前端逻辑覆盖 api/stores/router/utils/directives，不把页面覆盖统计混入其中。
+报告位置为 `rbac-structured/target/site/jacoco/`、`rbac-web/coverage/` 和 Playwright/test-results 产物；必须与实际命令、退出码、提交及环境绑定。
+覆盖率只证明执行路径，不代替业务断言。
+
+== 新旧编号与共享黑盒目标
+
+一期 T01–T22 及 b 后缀一律记为 `RBAC0/Txx`，语义仍是旧多公司/scope等。
+新验收一律使用 `RBAC1/Txx`、`RBAC1/DAG-*`、`RBAC1/ORG-*`、`RBAC1/API-C*`、`RBAC1/AUD-T*` 等命名空间；相同数字不表示同一需求，也不能复用旧通过结论。
+
+双后端共享黑盒测试尚待建设：共用请求、响应、逻辑夹具和预期，分别对独立启动且数据隔离的 structured/DDD 运行，不共享业务算法。
+重点覆盖：
+
+* DAG 多父/传递/菱形/停用切断、跨系统拒绝及并发反向加边防环。
+* 部门准入、迁部门只回收不合资格指派、不修改共享角色；系统/audience 隔离。
+* 七外部接口精确字段及HTTP码、UI/API权限分离、可信网关与真实课程对象级拒绝。
+* requestId 串行/并发重试、同键异体拒绝、审计写失败回滚、成功业务与审计同事务、敏感字段脱敏。
+* L1/L2、多副本撤权与延迟回填；双后端前端切换、桌面/手机真实 E2E、三层日志与 Swarm 配置。
+
+DDD、最新课程 OAS、教师部署权限和真实联调环境仍有缺口；无法核验项应保留为待验证，不用 Mock 演示或旧测试冒充完成。
+每次报告记录用例命名空间、环境、命令/退出码、断言及脱敏产物；一期回归通过不等于RBAC1需求验收通过。

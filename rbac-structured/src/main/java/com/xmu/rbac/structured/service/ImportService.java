@@ -46,10 +46,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 8.0 数据导入：三份 xlsx（docs/03-database.md §5）。
+ * 8.0 数据导入：三份 xlsx（docs/database.adoc）。
  *
  * <p>导入只建立组织、人员和权限模板，<b>不给任何人分配角色</b>：整个系统的权限都由人工分配，
- * 岗位不等于系统角色。导入之后由管理员审核，用批量授权接口正式分配（docs/12-design-log.md #18）。
+ * 岗位不等于系统角色。导入之后由管理员审核，用批量授权接口正式分配（docs/iteration-log.adoc #18）。
  *
  * <p>无法唯一确定的数据一律进入异常清单、不写入，绝不「取第一个同名的」。
  */

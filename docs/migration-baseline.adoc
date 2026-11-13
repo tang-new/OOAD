@@ -17,7 +17,7 @@
 . 两份规范 ZIP 中 SKILL 已读取；教师工程路径、项目ID和Spring Boot版本不能直接套用。
 . 下载 PDF `基于RBAC模型的权限管理系统_概要设计说明书.pdf` 共37页，文本已完整提取阅读。它描述一期RBAC0、多公司、数据范围和Mock，*不是新版评分标准*。
 . `OOAD_Grading_2026` V4、`5. 面向对象设计.pdf`、早期“我们的设计文档”在本次压缩包和已检查 Downloads 顶层未找到。final 中引述的条款按目标执行，原件尚不能独立核验。
-. 教师课程中心当前源码、CloneFactory 源码及最新公开 OAS 尚未拉取核验；Conversation 是历史资料，不能当作当前代码。
+. 已只读克隆教师课程中心至仓库外参考目录，提交 `fde08d5dd417abc543145aff33ca8378deb9ca36`；CloneFactory所在仓库提交 `854d0e09e250bc5462267f63ecacdcff32161104`。已核验相关README、backend-design、api/openapi.yaml及CloneFactory处理器；七接口字段/分页和具体技术限制见api.adoc及architecture-ddd.adoc。未构建/运行教师项目，也没有对其远端写入。公开Apifox登录页已回读，username明确为string；其他公开页面与部署版本仍需联调前逐项对照。Conversation仍只是历史资料，不能当作当前源码。
 
 == 当前真实结构
 
@@ -45,7 +45,11 @@
 
 一期集成测试会Flyway clean并清理Redis，严禁使用生产连接。
 本轮测试只能使用本机127.0.0.1:13306/16379的隔离实例。
-构建及测试结果待实际执行完成后追加；旧target报告不是本轮证据。
+本轮实际执行 `./mvnw -s deploy/maven-settings-huawei.xml -B verify`：BUILD SUCCESS，
+69个测试、0失败、0错误、0跳过，JaCoCo门槛通过。使用上述全新隔离容器，Flyway V1–V4实际执行成功。
+RedisFailureTest中注入的错误日志属于预期故障测试，不是整体验证失败。
+前端本轮 `npm run typecheck`、`npm run test:coverage`、`npm run build` 完成；42个单测通过。
+原始日志保存在仓库外资料解压目录的baseline-*.log，不引用旧target报告作为本轮证据。
 
 == 备份与回退
 
@@ -67,7 +71,9 @@
 |DEC-03 |final对Dashboard表述不一致 |保留简洁首页、健康与导航；移除热力图和统计大屏
 |DEC-04 |旧与新T编号重合 |追踪中用RBAC0/、RBAC1/前缀，不宣称旧测试覆盖新需求
 |DEC-05 |独立导论工程移出 |先本地提取完整子目录历史及核验内容；无远端权限则不先删除源目录
-|DEC-06 |正式评分/PPT/最新外部契约未核验 |明确外部依赖，不伪造读取、联调或部署证据
+|DEC-06 |正式评分/PPT与教师部署版本未核验 |教师源码七接口已静态核对；仍明确部署依赖，不伪造联调或部署证据
+|DEC-07 |网关全局资格与教师组长对象级例外的边界 |教师CoursePermissionGuard先允许本课程组长；M6前须确认双层规则，不能中央盲拒绝或信任客户端对象身份
+|DEC-08 |教师审计范围字段与公开schema不齐 |联调前明确最少元数据/返回扩展；不存课程业务副本、不默改外部协议
 |===
 
 == 独立导论工程的本地导出

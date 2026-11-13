@@ -1,0 +1,75 @@
+= structured 安全本地启动与部署边界
+:toc:
+
+== 当前状态
+
+当前运行目标是一期 `rbac-structured`，不是 RBAC1 或 DDD。
+Spring Boot 3.3.5、Java21、Maven wrapper 3.9.9；前端 Vue3/TypeScript，需 Node20+。
+link:migration-baseline.adoc[实施基线]已指出本机默认 Java8，启动/构建前应显式选择 Java21 并检查版本。
+本轮测试启动过隔离MySQL/Redis及Spring测试上下文，但未作正式服务部署、镜像构建或远端运行态验证；以下不是部署成功报告。
+
+== 隔离前提
+
+* 仅使用新建、专用、可丢弃的本地 MySQL8 与 Redis7；容器端口只绑定127.0.0.1，不能复用远程连接、部署数据卷或共享 Redis。
+* 本地手工开发可使用 MySQL `127.0.0.1:23306`、Redis `127.0.0.1:26379` 与专用空库 `rbac_local`，预先由本地管理员创建专用数据库用户并授权该库；这不是仓库已提供的 Compose 配置。
+* 自动测试另限127.0.0.1:13306/16379，独立测试实例，绝不能把手工运行实例当测试库。测试会清理数据，见 link:test-plan.adoc[测试隔离]。
+* 启动即由 Flyway 执行 link:database.adoc[V1–V4]；Hibernate 不建表。遇旧库、checksum mismatch 或未知迁移历史立即停止，先核对版本和备份，不绕过校验、不删除历史。
+* 数据库口令、JWT 密钥、初始口令仅在本地环境或受控凭据设施中设置，不粘贴到仓库、截图、共享终端记录或日志。本文不给真实密钥或默认口令。
+
+== 构建与启动（本地 Bash 示例）
+
+先设置本机实际 Java21 的 JAVA_HOME 并将其 bin 放在 PATH 首位，再检查：
+
+[source,shell]
+----
+java -version
+./mvnw -version
+./mvnw -pl rbac-structured -am -DskipTests package
+----
+
+此处 `-DskipTests` 仅生成本地待验证产物，不是发布门槛，更不表示测试通过。
+Windows 可用 mvnw.cmd；若依赖下载需镜像，可加现有 `-s deploy/maven-settings-huawei.xml`。
+根工程全栈部署会占用公开应用端口；此处只启动回环环境中的单后端，不直接执行全栈脚本。阶段一已移除旧外部演示服务。
+
+在专用 MySQL/Redis 已就绪、且 DB_USER 是预先创建的本地专用账号后设置下列参数。
+敏感项用交互读取或本地凭据管理器注入；JWT 密钥应使用本地随机生成的足够强值（至少32字节），不用示例值。
+
+[source,shell]
+----
+export DB_URL='jdbc:mysql://127.0.0.1:23306/rbac_local?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'
+export DB_USER=rbac_local
+export REDIS_HOST=127.0.0.1 REDIS_PORT=26379
+export SERVER_ADDRESS=127.0.0.1 SERVER_PORT=8081
+read -r -s -p '本地数据库口令: ' DB_PASSWORD; echo
+export DB_PASSWORD
+read -r -s -p '本地 JWT 密钥: ' RBAC_JWT_SECRET; echo
+export RBAC_JWT_SECRET
+read -r -s -p '本地新建/导入用户初始口令: ' RBAC_INITIAL_PASSWORD; echo
+export RBAC_INITIAL_PASSWORD
+java -jar rbac-structured/target/rbac-structured.jar
+----
+
+本地 URL 的非 TLS 参数仅限回环开发，不是生产连接模板。
+现行可选环境项还包括 DB_HOST/PORT/NAME（未设 DB_URL 时组合）、DB_POOL_SIZE；设置完整 DB_URL 时应检查没有遗留远程值。
+RBAC_INITIAL_PASSWORD 只作用于未显式给口令的新建/导入用户，*不修改 V1 内置 root 的初始凭据*。
+V1 含固定内置账号，首次启动必须保持回环访问，使用受控方式取得初始化凭据，完成首次改密并重新登录；在此之前不得公开服务。JWT 环境覆盖也不等于账号初始化安全问题已被重构修复。
+
+另一个本地终端可作健康探测（预期不是实际结果）：
+
+[source,shell]
+----
+curl --fail http://127.0.0.1:8081/api/v1/actuator/health
+----
+
+可选前端：在 `rbac-web` 执行 `npm ci`，再执行 `RBAC_API=http://127.0.0.1:8081 npm run dev -- --host 127.0.0.1`，打开本地5173端口。
+现行前端代理 `/api` 到 structured；这个 RBAC_API 不是已完成双后端切换的证明。
+接口字段及鉴权见 link:api.adoc[API]；正式质量验证须另在隔离测试环境按测试计划运行并记录结果。
+
+== 远端与后续目标（未核验）
+
+仓库有 Dockerfile、docker-compose.yml 和 deploy/ 下的 Compose/Swarm 脚本；定义存在不代表教师三台服务器已部署、服务健康或外网安全。
+本轮没有远程命令、镜像推送、节点变更或数据迁移授权，不提供远程覆盖和删库指令。
+旧手册的服务器规格、历史部署状态与口令检查描述不能当作当前运行证据；不得直接沿用开发默认配置上公网。
+
+未来需单独核验：两后端参数化构建/启动、前端选择后端、目标 JWK/iss/aud 与撤销、可信课程上游、Swarm secrets、节点标签与网络边界、备份恢复及回滚。
+三节点编排也不自动等于高可用；未取得教师部署权限或最新外部契约的验收项须标记无法核验，不以本地健康探测替代。

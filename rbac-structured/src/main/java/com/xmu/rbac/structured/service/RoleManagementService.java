@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * 角色管理：角色增删改、启用停用、角色权限的分配与回收（docs/06-detail-structured.md §5.6）。
+ * 角色管理：角色增删改、启用停用、角色权限的分配与回收（docs/architecture-structured.adoc）。
  *
  * <p>角色修改影响所有持有者，所以按「公司级」管理：
  * 全局角色（companyId 为空）只有超级管理员能改；公司内角色需要操作者在该公司根部门持有相应权限。

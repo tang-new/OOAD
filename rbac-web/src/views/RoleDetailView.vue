@@ -79,7 +79,7 @@ import { ROLE_STATUS_LABEL, formatTime, label } from '@/utils/format'
 import PermissionCode from '@/components/PermissionCode.vue'
 import GrantPermissionDialog from '@/components/GrantPermissionDialog.vue'
 
-/** 角色详情（docs/05-ui.md §3.5）：基本信息、权限（授予与回收）、用户。 */
+/** 角色详情（docs/requirements.adoc）：基本信息、权限（授予与回收）、用户。 */
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)

@@ -17,7 +17,7 @@ import java.util.Optional;
  * <p>键里带全局版本号：{@code rbac:grants:v<版本>:u<用户id>}。版本号存在 MySQL（{@link GrantVersionMapper}），
  * 和授权数据在同一个事务里加一；之后的请求读的是新版本的键，旧键没人再读，等 TTL 清掉。为什么不逐个删键：
  * 删键与「另一个请求刚从数据库读到旧数据、正要写回缓存」之间有竞争，旧数据可能被写回去；
- * 带版本号的键不会，因为那个请求写回的是旧版本的键，没有人再读它（docs/02-architecture.md §4.2）。
+ * 带版本号的键不会，因为那个请求写回的是旧版本的键，没有人再读它（docs/architecture-structured.adoc）。
  *
  * <p>Redis 不可用时缓存视为未命中，判定直接查数据库，结论不受影响。
  * Redis 只存数据、不管失效，所以它出任何故障都不会让旧授权继续生效。

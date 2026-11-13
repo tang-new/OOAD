@@ -93,7 +93,7 @@ import { useAuthStore } from '@/stores/auth'
 import BatchAssignDialog from '@/components/BatchAssignDialog.vue'
 import ImportReportView from '@/components/ImportReportView.vue'
 
-/** 组织管理（docs/05-ui.md §3.9）：部门树、按部门批量授权、导入三份 Excel。 */
+/** 组织管理（docs/requirements.adoc）：部门树、按部门批量授权、导入三份 Excel。 */
 const auth = useAuthStore()
 const router = useRouter()
 const companies = ref<CompanyView[]>([])

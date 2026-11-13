@@ -5,7 +5,7 @@ import type {
   ResourceType, ResourceView, Role, RoleDetail, SaveMenu, SystemView, UpdateUser, User, UserDetail, UserStatus,
 } from './types'
 
-// 45 个接口按契约的分组组织（docs/04-api.md §2）。/authz/check 由业务系统调用，控制台只用 explain。
+// 45 个接口按契约的分组组织（docs/api.adoc）。/authz/check 由业务系统调用，控制台只用 explain。
 
 export const authApi = {
   login: (username: string, password: string) =>

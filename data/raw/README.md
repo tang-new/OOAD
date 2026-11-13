@@ -12,13 +12,13 @@
 
 员工信息表含**一万条真实姓名与手机号**。`.gitignore` 已排除 `data/raw/*.xlsx`。
 
-组员需自行从课程网站下载并放入本目录，导入脚本会从这里读取。
+组员需自行从课程网站下载并放入本目录，再通过一期接口上传；服务不会自动读取此目录。
 
 ## 导入
 
-文件通过接口上传导入（不从本目录自动读取），步骤见 [`../docs/13-deployment.md`](../docs/13-deployment.md) §4.5，演示请求见 [`../deploy/rbac-demo.http`](../deploy/rbac-demo.http)：
+当前导入使用**一期接口，并非二阶段最终协议**。文件通过接口上传导入（不从本目录自动读取），步骤见 [部署说明](../../docs/deployment.adoc)，演示请求见 [rbac-demo.http](../../deploy/rbac-demo.http)：
 
 1. `POST /imports/permissions`：功能权限清单；
 2. `POST /imports/organization?companyCode=SZ&companyName=市政公司`：部门信息表 + 员工信息表。
 
-导入规则与真实数据的导入结果见 [`../docs/03-database.md`](../docs/03-database.md) §5。导入返回的报告列出无法处理的行（异常清单），检查时可作为展示材料。导入**不分配任何角色**，之后用批量授权人工分配。
+一期导入规则与真实数据的导入结果见 [数据库说明](../../docs/database.adoc)。导入返回的报告列出无法处理的行（异常清单），检查时可作为展示材料。导入**不分配任何角色**，之后用批量授权人工分配。

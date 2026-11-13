@@ -18,7 +18,7 @@ public final class StatsDtos {
                                Long targetDeptId) {
     }
 
-    /** Dashboard 的十一项指标，统计口径见 docs/05-ui.md §3.1。延迟单位毫秒，比率为 0–1。 */
+    /** Dashboard 的十一项指标，统计口径见 docs/requirements.adoc。延迟单位毫秒，比率为 0–1。 */
     public record DashboardView(long userCount, long roleCount, long permissionCount, long todayAuthzCount,
                                 double successRate, double failureRate, double p95LatencyMs, double p99LatencyMs,
                                 double qps, double cacheHitRate, long abnormalCount, LocalDateTime generatedAt) {

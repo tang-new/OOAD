@@ -12,7 +12,7 @@
         </el-card>
       </el-col>
     </el-row>
-    <p class="muted">统计时间 {{ formatTime(data?.generatedAt) }} · 每 10 秒刷新，页面不可见时暂停 · 口径见 docs/05-ui.md §3.1.1，全部来自审计日志中的真实事件</p>
+    <p class="muted">统计时间 {{ formatTime(data?.generatedAt) }} · 每 10 秒刷新，页面不可见时暂停 · 口径见 docs/requirements.adoc，全部来自审计日志中的真实事件</p>
   </div>
 </template>
 

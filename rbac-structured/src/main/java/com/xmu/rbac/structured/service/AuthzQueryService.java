@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 /**
  * 3.6 鉴权接口与权限解释接口（/authz/check、/authz/explain）。
  *
- * <p>先确定「谁能查谁」（docs/06 §5.2.3），再调用与拦截器相同的 {@link AuthorizationService#decide}：
+ * <p>先确定「谁能查谁」（docs/architecture-structured.adoc），再调用与拦截器相同的 {@link AuthorizationService#decide}：
  * <ul>
  *   <li>查自己：任何已登录用户都可以；</li>
  *   <li>查别人（业务系统代用户鉴权、管理员查看他人）：调用者必须在被查用户的部门持有
@@ -58,7 +58,7 @@ public class AuthzQueryService {
     /**
      * 返回被查用户的 id。查别人时校验调用者的查询范围：调用者必须在被查用户所属部门持有调用权限。
      * 不凭目标部门放行：管理控制台也调用 /authz/check，凭目标部门放行会让调用者逐个探出别家公司的人
-     * （docs/12-design-log.md R-20）。
+     * （docs/iteration-log.adoc R-20）。
      */
     Long resolveSubject(Operator caller, AuthzRequest req, String callerPermission) {
         User subject;

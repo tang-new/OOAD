@@ -32,7 +32,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       // 单测覆盖逻辑层（请求与错误处理、登录与权限状态、路由、指令、格式化）；
-      // 页面由 Playwright 端到端测试连真实后端覆盖（e2e/），见 docs/09-test-plan.md
+      // 页面由 Playwright 端到端测试连真实后端覆盖（e2e/），见 docs/test-plan.adoc
       include: ['src/{api,stores,router,utils,directives}/**/*.ts'],
       reporter: ['text-summary', 'html', 'lcov'],
       thresholds: { lines: 85, branches: 80 },

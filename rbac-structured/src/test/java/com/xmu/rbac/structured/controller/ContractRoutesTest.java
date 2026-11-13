@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** 「所有接口都受权限控制」的契约侧检查：读的是 rbac-contract 里的真实 rbac-api.yaml。 */
 class ContractRoutesTest {
 
-    /** RBAC0 阶段的接口数（docs/04-api.md §2 的总表）。 */
+    /** RBAC0 阶段的接口数（docs/api.adoc 的接口总表）。 */
     static final int OPERATIONS = 45;
 
     private static ContractRoutes routes;

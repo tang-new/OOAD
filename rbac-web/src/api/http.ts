@@ -2,7 +2,7 @@ import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from './types'
 
-/** 后端返回的业务错误：HTTP 状态 + 错误码 + 中文说明（docs/04-api.md §1.3）。 */
+/** 后端返回的业务错误：HTTP 状态 + 错误码 + 中文说明（docs/api.adoc）。 */
 export class ApiError extends Error {
   constructor(public status: number, public code: number, message: string) {
     super(message)
@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 /**
- * 统一错误处理的决策表（docs/05-ui.md §4.3）。只做判断，不做副作用，便于单测。
+ * 统一错误处理的决策表（docs/requirements.adoc）。只做判断，不做副作用，便于单测。
  * - login：令牌失效，清令牌回登录页
  * - password：首次登录须先改口令
  * - forbidden：缺少操作权限，刷新本地权限状态

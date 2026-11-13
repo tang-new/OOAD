@@ -2,7 +2,7 @@ package com.xmu.rbac.structured.controller;
 
 import java.time.OffsetDateTime;
 
-/** 统一响应。code = 0 成功，其余见 docs/04-api.md §1.3。 */
+/** 统一响应。code = 0 成功，其余见 docs/api.adoc。 */
 public record ApiResponse<T>(int code, String message, T data, OffsetDateTime timestamp) {
 
     public static <T> ApiResponse<T> ok(T data) {

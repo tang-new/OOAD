@@ -2,7 +2,7 @@
   "name": "rbac-web",
   "private": true,
   "version": "1.0.0",
-  "description": "统一授权中心前端（Vue 3 + TypeScript），界面设计见 docs/05-ui.md",
+  "description": "统一授权中心前端（Vue 3 + TypeScript），界面设计见 docs/requirements.adoc",
   "type": "module",
   "scripts": {
     "dev": "vite",

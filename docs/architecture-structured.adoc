@@ -1,0 +1,55 @@
+= 结构化架构：一期现状与 RBAC1 差距
+:toc:
+
+== 状态与依据
+
+当前业务实现仍为一期 RBAC0，运行模块为 `rbac-contract`、`rbac-structured`，前端为 `rbac-web`；阶段一已移除非核心的外部演示模块。
+本文收缩整理旧概要与结构化详细设计，不表示 RBAC1 已实现，也不沿用旧文档的测试通过声明。
+范围和优先级以 link:requirements.adoc[现行需求追踪]、link:migration-baseline.adoc[实施基线]为准。
+
+== 当前职责与调用链
+
+[source,text]
+----
+HTTP → Controller / PermissionInterceptor → Service → Mapper → MySQL / Redis
+                                      entity / dto：数据；config：装配
+----
+
+[cols="1,3"]
+|===
+|层 |一期职责
+|Controller |Spring MVC 参数绑定、响应包装、异常转换；不直接访问 Mapper。PermissionInterceptor 按契约执行认证及操作权限检查。
+|Service |无状态处理过程；业务判断、管理范围、授权上界、事务和审计调用集中于此；不靠实体行为或继承组织规则。
+|Mapper |Spring Data JPA 接口及 Redis 访问类；Mapper 是逻辑层名，不是 MyBatis，不承担业务判断。
+|辅助包 |entity 是表记录、只存外键 id；dto 是传输 record；config 负责依赖装配、时钟与契约加载。
+|===
+
+主要过程：AuthenticationService/TokenService 处理身份；AuthorizationService 统一判定；AuthzQueryService 控制谁能查谁；UserManagementService、AssignmentService、RoleManagementService 处理管理与指派；CatalogService、MenuService、OrgService 处理目录；ImportService 处理导入；AuditService、DashboardService 为一期审计和统计。
+ArchitectureTest 的依赖方向、实体只含数据、Service 无状态及禁用 MyBatis 等规则仍需实际构建验证，不能以文档代替结果。
+
+== 一期安全与数据流
+
+. ContractRoutes 读取现行契约中的 `security`、`x-required-permission`，与 MVC 路由启动时双向核对；未声明路由默认拒绝。
+. 令牌只携带身份而不携带权限；认证检查签名、有效期、Redis 注销、账号状态及 token_version。停用/删除账号和改密分别经账号状态或版本使旧令牌失效。
+. AuthorizationService 先检查主体，再读取启用角色的授权；有效超级管理员旁路位于主体检查之后。
+. 普通用户按权限匹配授权行，再逐条用指派的 `scope_dept_id` 部门路径判覆盖；不能把某角色权限与另一指派范围拼接。该 scope 是一期旧语义，*不是 RBAC1 部门准入*。
+. 拦截器只控制操作级权限；Service 再检查目标对象管理范围、授权上界及保护对象。菜单隐藏不是后端安全边界。
+
+== 事务、缓存与旧审计
+
+* 写操作以 Service 的 `@Transactional` 为边界；关联唯一键防重复，业务异常回滚。导入为事务处理，不自动指派角色。
+* MySQL `sys_grant_version` 与授权修改同事务递增；判定先读版本，再读取 Redis `rbac:grants:v<版本>:u<用户>`，未命中查库。读写事务内不回填缓存，避免缓存未提交数据。
+* Redis TTL 为十分钟，仅回收旧键；撤权正确性依靠版本而非等 TTL。当前只有 Redis 授权缓存，没有 L1。缓存故障回源；注销查询故障按已注销处理。
+* AuditService 的 record/recordDecision 使用独立 `REQUIRES_NEW` 同步写入，使拒绝/失败审计能在业务回滚后留下；但成功审计也独立提交，*不能保证成功业务与审计同成同败*。
+
+== RBAC1 重构目标（未完成）
+
+单公司、角色分系统、部门仅用于组织管理及直接指派准入；迁部门事务内回收不合资格的用户指派，不改共享角色权限，不保留业务数据 scope。
+新增同系统 senior→junior 角色 DAG（多父、传递、菱形去重、停用切断、并发防环），独立 API 操作登记及 UI↔API 映射。
+现有菜单树不等于角色 DAG，operationId 契约声明也不等于 API 登记模型。
+
+目标 S01–S06 的验环、准入、闭包、可信课程网关、幂等同步审计及成功事实同事务规则仍应在结构化 Service 中实现。
+L1/L2 版本一致性、audience/JWK、三层 AOP 日志及课程对象级授权联调均未由一期实现证明。
+热力图/统计大屏当前仍在业务代码中，待模型/前端重构时移除；旧外部演示模块已在阶段一退出构建与部署。
+
+接口见 link:api.adoc[API]，模型见 link:database.adoc[数据库]，验证见 link:test-plan.adoc[测试计划]；另一后端仅为 link:architecture-ddd.adoc[DDD 计划稿]。

@@ -1,0 +1,55 @@
+= 数据库：现行迁移与重构目标
+:toc:
+
+== 当前事实的唯一来源
+
+当前为 MySQL/JPA/Flyway 的一期 RBAC0 模型；Hibernate `ddl-auto: none`，表结构由以下实际脚本依次确定，不能只读 V1 推断最终结构：
+
+[cols="1,3"]
+|===
+|迁移 |作用
+|link:../rbac-contract/src/main/resources/db/migration/V1__rbac0_baseline.sql[V1 RBAC0 基线] |13 张业务表及内置组织、账号、角色、菜单、资源权限；包含旧公司与 scope 模型。
+|link:../rbac-contract/src/main/resources/db/migration/V2__grant_version.sql[V2 授权版本] |新增单行 sys_grant_version，与授权变更同事务递增；总计14张表。
+|link:../rbac-contract/src/main/resources/db/migration/V3__reserve_internal_user_ids.sql[V3 用户编号段] |将自增起点设为10000；1–9999供内部账号，SYSTEM 在服务层显式取号；不重新编号已有用户。
+|link:../rbac-contract/src/main/resources/db/migration/V4__drop_user_expiry.sql[V4 取消账号到期] |先停用已到期且启用的账号，再删除 expires_at；最终账号没有到期字段。
+|===
+
+旧 `docs/archive/sql` 仅属于Git历史，不是当前迁移入口。
+本轮基线在专用空测试库实际运行过V1–V4；未查询或操作任何存量生产库。
+SQL注释中的旧Markdown章节引用有意保持原样，以免仅因导航更新改变已执行迁移的checksum；
+原文可从 `363939a:docs/` 查阅。它们不作为当前需求入口，开发模型重构阶段再统一处理基线。
+
+== 一期模型与约束
+
+[cols="1,3"]
+|===
+|区域 |现行关系与关键边界
+|组织/身份 |sys_company → sys_department 部门树；sys_user 唯一所属部门并保留 company_id。部门 path 支持子树查询；负责人关联只是组织信息，不自动授权。
+|资源 |sys_software_system → sys_function_module → sys_resource；sys_action 与资源组成 sys_permission。resource_type 为 BUSINESS/MENU/API，不是新 UI/API 映射模型。
+|授权 |sys_role 的 company_id 可空，role_code 全局唯一，无 system_id；sys_role_permission 唯一(role_id, permission_id)，保留旧 self_only。
+|指派 |sys_user_role 唯一(user_id, role_id, scope_dept_id)，scope_dept_id 为旧适用部门，granted_by 只作审计，不形成级联授权依赖。
+|菜单 |sys_menu 为 parent_id 树，叶子挂资源；无独立 BUTTON 类型、无角色继承边。
+|审计 |sys_audit_log 存操作者/对象快照、事件、结果、原因及鉴权耗时等；不建对象外键，当前缺 requestId 幂等键、系统快照等新字段。
+|缓存版本 |sys_grant_version 的 id=1；Redis 授权键带此版本，数据库版本不是 Redis TTL。
+|===
+
+用户名/工号、权限码等有唯一索引；组织与授权引用有外键。用户逻辑删除且用户名不可复用；指派与角色权限物理删除；角色仍有指派时服务层拒绝删除，角色权限有级联外键；菜单有子节点时服务层拒绝删除。
+审计按当前代码只插入，不把它夸大为数据库防篡改机制。旧独立事务写审计不能保证成功事实和业务一致。
+
+导入依据三份 xlsx，只写组织、用户、资源与角色模板，不自动分配角色；歧义行进入异常清单。原始人员数据不应入库到 Git 或镜像。旧导入数量是历史报告，不是本轮结果。
+
+== RBAC1 目标（尚无对应迁移）
+
+* 收缩为单公司；保留用户唯一部门，移除废弃多公司、业务 scope/selfOnly 语义，不建立课程业务数据副本。
+* 部门只承担组织管理及直接角色准入；准入清单不同于用户角色指派。迁部门与不合资格指派回收同事务，不清空共享角色权限。
+* 角色归属系统，系统内编码唯一；新增同系统 senior→junior DAG 及防自环、跨系统、重复边、并发成环机制，支持多父、传递、停用切断和菱形去重。
+* UI 菜单/按钮树、独立 ApiOperation 登记、UI↔API 显式映射分开；现行 OAS operationId 不能冒充登记表。
+* 审计补 requestId 唯一性及内容一致性、系统/身份/trace 快照；同步幂等提交、系统隔离查询与业务成功审计同事务需要专项设计和验证。
+
+模型与验收见 link:requirements.adoc[需求追踪]、link:architecture-ddd.adoc[DDD 计划]、link:test-plan.adoc[测试计划]。
+
+== 重构与旧库边界
+
+link:migration-baseline.adoc[实施基线]确定重构优先于兼容：后续可重构开发空库基线，但这不是旧生产库升级方案。
+本轮未修改 V1–V4，不操作生产库，不删除 Flyway 历史，不提供清库步骤。
+已有旧库应维持匹配的一期镜像/schema；遇校验和冲突先停止并核对版本、备份及恢复方案，不以篡改历史掩盖差异。

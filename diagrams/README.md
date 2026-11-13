@@ -1,6 +1,6 @@
 # UML 模型与图
 
-课程**明确建议采用 StarUML**（https://staruml.io/）。本目录存放模型源文件与导出图。
+课程**明确建议采用 StarUML**（https://staruml.io/）。本目录存放模型源文件与导出图。**现有模型与导出图是一期历史产物，待按收缩后的当前文档更新，不能视为新设计图或二阶段最终模型。** 当前文档导航：[需求](../docs/requirements.adoc)、[结构化架构](../docs/architecture-structured.adoc)、[DDD 架构](../docs/architecture-ddd.adoc)、[数据库](../docs/database.adoc)、[部署](../docs/deployment.adoc)、[迭代记录](../docs/iteration-log.adoc)。
 
 ## 目录
 
@@ -10,7 +10,7 @@ diagrams/
 ├── src/                     Mermaid 参考源文件（用例图、领域模型导出图的来源）
 │   ├── er-diagram.mmd       数据库结构参考；当前 ER 导出图以 rbac.mdj 为准
 │   ├── usecase-overall.mmd  用例总图（Mermaid 无用例图类型，用 flowchart 表示）
-│   └── domain-model.mmd     领域模型（01-srs.md §3.1）
+│   └── domain-model.mmd     领域模型（需求文档；一期历史模型待更新）
 ├── export/                  SVG / PNG，供文档引用
 │   ├── er-diagram.svg/.png   本地已有的 StarUML 原生导出
 │   ├── usecase-overall.svg/.png  Mermaid 导出，待 StarUML 内核对
@@ -58,7 +58,7 @@ node diagrams/tools/gen-mdj.mjs --out <临时目录>/rbac-reference.mdj
 
 ## 工作方式
 
-文档撰写阶段用 **Mermaid** 内嵌在 Markdown 里，方便 GitHub 渲染与文本 diff。数据库结构以迁移脚本为准，StarUML 图以 `rbac.mdj` 为编辑来源；导出图的来源见上方目录。
+一期文档撰写阶段曾用 **Mermaid** 内嵌在 Markdown 里。当前文档已合并为 AsciiDoc，以上导航仅指向当前文档，不表示历史图已同步。已执行的数据库结构以现有迁移脚本为准；模型重构留待后续阶段。StarUML 图以 `rbac.mdj` 为编辑来源；导出图的来源见上方目录。
 
 **提交给老师之前，图必须在 StarUML 中核对并导出**：
 1. 课程明确建议使用 StarUML，交付物应符合课程要求；
@@ -68,7 +68,7 @@ node diagrams/tools/gen-mdj.mjs --out <临时目录>/rbac-reference.mdj
 - [ ] 用 StarUML 打开组合后的 `rbac.mdj`，确认三张图都能正常显示；
 - [ ] 调整布局（生成的连线是直线，部分会穿过其他元素）；
 - [ ] 从 StarUML 导出用例总图、领域模型的 PNG/SVG，替换对应 Mermaid 导出图；ER 图如有修改也同步导出。
-- [ ] 10/21 V4 删除了 `sys_user.expires_at`（docs/12 R-21）：在 StarUML 的 ER 图里删掉 `sys_user` 的 `expires_at` 列（字段数 105 → 104），重新导出 `er-diagram.png/svg`。Mermaid 源 `src/er-diagram.mmd`、`src/domain-model.mmd` 与生成器已同步；`domain-model` 导出图已重新生成。
+- [ ] 10/21 V4 删除了 `sys_user.expires_at`（[迭代记录](../docs/iteration-log.adoc) R-21）：在 StarUML 的 ER 图里删掉 `sys_user` 的 `expires_at` 列（字段数 105 → 104），重新导出 `er-diagram.png/svg`。Mermaid 源 `src/er-diagram.mmd`、`src/domain-model.mmd` 与生成器已同步；`domain-model` 导出图已重新生成。
 
 `.mdj` 是文本 JSON，但嵌套深、`_id` 互相引用，**冲突难以手工合并**。因此：
 
@@ -77,20 +77,22 @@ node diagrams/tools/gen-mdj.mjs --out <临时目录>/rbac-reference.mdj
 
 ## 需要绘制的图清单
 
+以下保留一期历史检查清单与完成标记；链接已切换到当前文档，勾选不代表模型已按新设计更新或验证。
+
 ### 迭代一（10/27 检查）
 
-- [x] 用例总图（`01-srs.md` §4.1–§4.2）——保留远端 Mermaid 导出与生成模型，待 StarUML 内核对
+- [x] 用例总图（[需求](../docs/requirements.adoc)）——保留远端 Mermaid 导出与生成模型，待 StarUML 内核对
 - [ ] 分包用例图 × 2（访问控制、授权服务）
-- [x] 领域模型类图（`01-srs.md` §3.1）——保留远端 Mermaid 导出与生成模型，待 StarUML 内核对
-- [x] ER 图（`03-database.md` §2，按当前迁移脚本）——保留本地 StarUML 原生模型与导出图
-- [ ] 数据流图 DFD Level 0 / 1 / 2（`06-detail-structured.md` §2）
-- [ ] 结构图 Structure Chart（`06-detail-structured.md` §2.4）
+- [x] 领域模型类图（[需求](../docs/requirements.adoc)）——保留远端 Mermaid 导出与生成模型，待 StarUML 内核对
+- [x] ER 图（[数据库](../docs/database.adoc)，一期迁移结构，待模型重构）——保留本地 StarUML 原生模型与导出图
+- [ ] 数据流图 DFD Level 0 / 1 / 2（[结构化架构](../docs/architecture-structured.adoc)）
+- [ ] 结构图 Structure Chart（[结构化架构](../docs/architecture-structured.adoc)）
 - [ ] 授权判定活动图
 - [ ] 组织架构示意图
 
 ### 迭代二（11/24 检查）
 
-- [ ] 面向对象设计类图（`07-detail-oo.md` §2）
+- [ ] 面向对象设计类图（[DDD 架构](../docs/architecture-ddd.adoc)）
 - [ ] 时序图：授权判定、分配角色、建立继承关系、缓存失效
 - [ ] 角色继承 DAG 示例图
 - [ ] 部署图

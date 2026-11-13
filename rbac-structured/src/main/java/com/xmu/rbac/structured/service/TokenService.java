@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /**
  * 1.3 令牌签发与解析。令牌只证明「你是谁」，不携带权限：
- * 权限每次请求都由判定过程重新计算，撤销角色后下一次请求立即生效（docs/02 §4.3）。
+ * 权限每次请求都由判定过程重新计算，撤销角色后下一次请求立即生效（docs/architecture-structured.adoc）。
  */
 @Service
 public class TokenService {

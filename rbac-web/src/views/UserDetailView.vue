@@ -24,7 +24,7 @@ import type { UserDetail } from '@/api/types'
 import UserDetailPanel from '@/components/UserDetailPanel.vue'
 import UserFormDialog from '@/components/UserFormDialog.vue'
 
-/** 用户详情（docs/05-ui.md §3.3）：基本信息、角色（可分配、回收）、有效权限。 */
+/** 用户详情（docs/requirements.adoc）：基本信息、角色（可分配、回收）、有效权限。 */
 const route = useRoute()
 const router = useRouter()
 const detail = ref<UserDetail | null>(null)

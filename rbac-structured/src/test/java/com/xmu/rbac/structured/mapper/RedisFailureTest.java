@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Redis 出故障时的降级口径（docs/02-architecture.md §4.2）：
+ * Redis 出故障时的降级口径（docs/architecture-structured.adoc）：
  * 授权缓存失效 → 当作未命中，直接查库，结论不变（版本号在 MySQL，Redis 故障不影响失效，见 AcceptanceTest.t12b）；令牌注销查询失败 → 按已注销处理（宁可重新登录）。
  */
 class RedisFailureTest {

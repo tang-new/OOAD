@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * 契约中每个接口声明的权限，是运行时拦截器的唯一权限来源（docs/04-api.md §1.4）。
+ * 契约中每个接口声明的权限，是运行时拦截器的唯一权限来源（docs/api.adoc）。
  * 键为「METHOD 路径模板」，如 {@code GET /users/{id}}，与 Spring 的最佳匹配模式逐字相同。
  */
 public final class ContractRoutes {
@@ -82,7 +82,7 @@ public final class ContractRoutes {
 
     /**
      * 反向检查：契约里声明了、但代码没有实现的接口。
-     * 只有正向检查时，「契约里写了」会被误当成「已经实现」（docs/12-design-log.md #22）。
+     * 只有正向检查时，「契约里写了」会被误当成「已经实现」（docs/iteration-log.adoc #22）。
      */
     public List<String> unimplemented(Collection<String> implementedKeys) {
         return routes.keySet().stream()

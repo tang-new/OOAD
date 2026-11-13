@@ -90,7 +90,7 @@ import BatchAssignDialog from '@/components/BatchAssignDialog.vue'
 import BatchResultView from '@/components/BatchResultView.vue'
 import UserFormDialog from '@/components/UserFormDialog.vue'
 
-/** 用户列表（docs/05-ui.md §3.2）：只列出管理范围内的用户，由后端按操作者的适用部门过滤。 */
+/** 用户列表（docs/requirements.adoc）：只列出管理范围内的用户，由后端按操作者的适用部门过滤。 */
 const router = useRouter()
 const query = reactive<UserQuery & { size: number }>({ keyword: '', departmentId: null, includeDescendants: true,
   status: '', userType: '', size: 20 })

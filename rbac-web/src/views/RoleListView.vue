@@ -77,7 +77,7 @@ import { orgApi, roleApi } from '@/api'
 import type { CompanyView, Role } from '@/api/types'
 import { ROLE_STATUS_LABEL, label } from '@/utils/format'
 
-/** 角色列表（docs/05-ui.md §3.4）：角色名称、角色编码、用户数、权限数、状态。 */
+/** 角色列表（docs/requirements.adoc）：角色名称、角色编码、用户数、权限数、状态。 */
 const router = useRouter()
 const roles = ref<Role[]>([])
 const companies = ref<CompanyView[]>([])

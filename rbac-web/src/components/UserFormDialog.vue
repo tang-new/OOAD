@@ -45,7 +45,7 @@ import { userApi } from '@/api'
 import type { User, UserType } from '@/api/types'
 import DeptTreeSelect from './DeptTreeSelect.vue'
 
-/** 新增 / 编辑用户（docs/05-ui.md §3.2）。规则与后端一致：临时用户无工号电话，用完由管理员停用；正式员工必须有工号。 */
+/** 新增 / 编辑用户（docs/requirements.adoc）。规则与后端一致：临时用户无工号电话，用完由管理员停用；正式员工必须有工号。 */
 const visible = defineModel<boolean>({ default: false })
 const props = defineProps<{ user: User | null }>()
 const emit = defineEmits<{ (e: 'done'): void }>()

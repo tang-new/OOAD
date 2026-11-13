@@ -82,7 +82,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { statsApi } from '@/api'
 import type { AuditLog, Page } from '@/api/types'
 
-/** 审计日志（docs/05-ui.md §3.8）：谁、什么时候、在哪里、对谁、做了什么、结果如何、为什么。 */
+/** 审计日志（docs/requirements.adoc）：谁、什么时候、在哪里、对谁、做了什么、结果如何、为什么。 */
 const route = useRoute()
 const router = useRouter()
 

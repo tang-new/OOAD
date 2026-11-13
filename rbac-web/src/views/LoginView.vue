@@ -30,7 +30,7 @@ const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 
-/** 登录失败的提示：不区分用户不存在与口令错误（docs/05-ui.md §3.0）。 */
+/** 登录失败的提示：不区分用户不存在与口令错误（docs/requirements.adoc）。 */
 const MESSAGES: Record<number, string> = {
   40102: '用户名或口令错误',
   40103: '连续登录失败次数过多，账号已锁定 15 分钟',

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 3.0 授权判定（docs/06-detail-structured.md §5.2）。
+ * 3.0 授权判定（docs/architecture-structured.adoc）。
  *
  * <pre>
  * 3.1 校验主体状态 → 3.2 读取授权数据（缓存 / 数据库）→ 3.3 超级管理员旁路
@@ -178,7 +178,7 @@ public class AuthorizationService {
      * <p>版本号必须在授权数据之前读：授权变更与版本号加一在同一个事务里提交，
      * 读到新版本号的请求随后读到的授权数据一定也是新的；读到旧版本号的请求即使读到了新数据，
      * 写回的也是旧版本的键，之后没有人再读它。所以 Redis 出任何故障都不会让回收的权限继续生效
-     * （docs/12-design-log.md #37）。代价是每次判定多一次按主键读一行，判定本来就要查 sys_user，缓存省下的是授权连表查询。
+     * （docs/iteration-log.adoc #37）。代价是每次判定多一次按主键读一行，判定本来就要查 sys_user，缓存省下的是授权连表查询。
      *
      * <p>在读写事务里不写回缓存：这时读到的可能包含本事务尚未提交的修改，事务回滚后它就是错的。
      */
@@ -243,8 +243,8 @@ public class AuthorizationService {
 
     /**
      * 管理操作的目标对象检查：操作者对目标部门持有该权限，否则 403。
-     * 拦截器只确认「能执行这一类操作」，具体对象是否在管理范围内由这里确认（docs/06 §5.4）。
-     * 拒绝时记一条 ACCESS_DENIED：用户、角色管理里所有「目标超出管理范围」都经过这里，一处记录即可（docs/06 §5.9）。
+     * 拦截器只确认「能执行这一类操作」，具体对象是否在管理范围内由这里确认（docs/architecture-structured.adoc）。
+     * 拒绝时记一条 ACCESS_DENIED：用户、角色管理里所有「目标超出管理范围」都经过这里，一处记录即可（docs/architecture-structured.adoc）。
      */
     public void requireInScope(Operator op, String permissionCode, Long targetDeptId) {
         Decision d = decide(op.userId(), permissionCode, targetDeptId, false);

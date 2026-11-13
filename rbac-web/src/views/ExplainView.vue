@@ -60,7 +60,7 @@ import { REASON_LABEL, label, roleAtScope } from '@/utils/format'
 import DeptTreeSelect from '@/components/DeptTreeSelect.vue'
 
 /**
- * 权限解释（docs/05-ui.md §3.10）。与鉴权接口共用同一个判定过程，只多返回 trace；前端不做任何推断。
+ * 权限解释（docs/requirements.adoc）。与鉴权接口共用同一个判定过程，只多返回 trace；前端不做任何推断。
  * 查别人时后端先检查调用者的范围，不满足返回 403。
  */
 const auth = useAuthStore()
