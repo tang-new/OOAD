@@ -6,7 +6,7 @@
 本文列现有测试设施及后续验收计划，*不是本轮测试报告*。
 旧文档的测试数量、覆盖率和通过结论均为历史记录；旧 target/ 报告不得当作本轮证据。
 实际Maven/Vitest/构建结果统一记录于link:iteration-log.adoc[迭代记录]；本文不是测试执行报告。
-本轮尚未执行Playwright或远程验收。
+M2已执行真实桌面/手机代理连通Playwright；尚未执行双系统业务E2E或远程验收。
 需求见 link:requirements.adoc[追踪表]，安全限制见 link:migration-baseline.adoc[实施基线]。
 
 == 现有一期验证设施
@@ -65,6 +65,19 @@ E2E 读取已构建的 structured jar，并启动后端18081及前端5174；JAVA
 报告位置为 `rbac-structured/target/site/jacoco/`、`rbac-web/coverage/` 和 Playwright/test-results 产物；必须与实际命令、退出码、提交及环境绑定。
 覆盖率只证明执行路径，不代替业务断言。
 
+== M2 独立骨架与前端连通
+
+`./mvnw -pl rbac-ddd -am clean verify` 不运行structured集成测试，不需要MySQL/Redis。
+骨架21项测试覆盖实际HTTP、健康标识、业务404和跨后端依赖反例，不能拿来代替RBAC1领域测试。
+
+前端 `npm run e2e:m2` 使用独立Playwright配置：启动真实DDD jar和同一Vue前端，仅以RBAC_API选择代理；
+不执行一期globalSetup、不建库、不清Redis。桌面/手机均确认health元数据来自DDD，并确认登录POST仍404。
+通过 `JAVA_HOME` 或JAVA_BIN选择Java21，通过PW_CHROMIUM选择兼容浏览器；缺浏览器属于环境失败而不是业务RED。
+截图在 `docs/evidence/m2/`，已实际打开核查，仅证明登录页呈现及连通，不证明登录业务可用。
+
+工程脚本测试复制到临时目录，以Docker/Maven替身检查默认值、显式环境优先、非法MODULE和旧服务保护；不会读取真实.env或执行发布。
+Windows运行Node脚本测试时可用BASH_TEST_SHELL指定实际Git Bash绝对路径，Linux默认使用PATH中的bash。
+
 == 新旧编号与共享黑盒目标
 
 一期 T01–T22 及 b 后缀一律记为 `RBAC0/Txx`，语义仍是旧多公司/scope等。
@@ -79,5 +92,5 @@ E2E 读取已构建的 structured jar，并启动后端18081及前端5174；JAVA
 * requestId 串行/并发重试、同键异体拒绝、审计写失败回滚、成功业务与审计同事务、敏感字段脱敏。
 * L1/L2、多副本撤权与延迟回填；双后端前端切换、桌面/手机真实 E2E、三层日志与 Swarm 配置。
 
-DDD、最新课程 OAS、教师部署权限和真实联调环境仍有缺口；无法核验项应保留为待验证，不用 Mock 演示或旧测试冒充完成。
+DDD业务、教师实际部署契约版本、部署权限和真实联调环境仍有缺口；无法核验项应保留为待验证，不用 Mock 演示或旧测试冒充完成。
 每次报告记录用例命名空间、环境、命令/退出码、断言及脱敏产物；一期回归通过不等于RBAC1需求验收通过。

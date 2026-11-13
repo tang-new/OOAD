@@ -49,7 +49,7 @@ jobs:
           cache-dependency-path: rbac-web/package-lock.json
       - run: npm ci --no-audit --no-fund
         working-directory: rbac-web
-      - run: node --test tools/project-layout.test.mjs diagrams/tools/gen-mdj.test.mjs
+      - run: node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
       - run: npx playwright install --with-deps chromium
         working-directory: rbac-web
       - run: npx playwright test
@@ -62,6 +62,39 @@ jobs:
             rbac-web/playwright-report/
             rbac-web/test-results/
       - run: docker compose build
+
+  ddd-skeleton:
+    # 不提供MySQL/Redis服务，证明骨架可独立启动；这不是DDD业务验收。
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -pl rbac-ddd -am clean verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: rbac-web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: rbac-web
+      - run: npx playwright install --with-deps chromium
+        working-directory: rbac-web
+      - run: npm run e2e:m2
+        working-directory: rbac-web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m2-ddd-browser
+          path: rbac-web/test-results/m2/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ddd-skeleton-jacoco
+          path: rbac-ddd/target/site/jacoco/
 
   web:
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@
 
 厦门大学 OOAD 课程设计。当前正在从一期结构化 RBAC0，分阶段重构为 **结构化 + DDD 两套 RBAC1 后端**。
 
-> **目标不等于已实现。** 当前业务后端仍是一期 RBAC0；角色 DAG、部门角色准入、课程中心七个身份/审计接口和独立 DDD 业务尚未交付。进度以测试、代码和真实提交为准，不沿用一期 README 的通过数量。
+> **目标不等于已实现。** 当前业务后端仍是一期 RBAC0；角色 DAG、部门角色准入、课程中心七个身份/审计接口和独立 DDD 业务尚未交付；DDD 已有可独立启动、明确 `businessReady=false` 的健康骨架。进度以测试、代码和真实提交为准，不沿用一期 README 的通过数量。
 
 ## 先读这些
 
@@ -13,7 +13,7 @@
 | [实施基线与决策](docs/migration-baseline.adoc) | 实际起始提交、工具、备份、资料缺口、迁移边界 |
 | [真实迭代记录](docs/iteration-log.adoc) | 已执行修改和验证；不伪造历史 |
 | [结构化设计](docs/architecture-structured.adoc) | 当前三层实现与二阶段差距 |
-| [DDD 设计](docs/architecture-ddd.adoc) | 明确标注尚未实现的职责与依赖方向 |
+| [DDD 设计](docs/architecture-ddd.adoc) | 当前骨架实况、包图及尚未实现的业务职责 |
 | [数据库](docs/database.adoc) | 当前迁移与目标模型的区别 |
 | [API](docs/api.adoc) | 现行契约与外部七接口目标 |
 | [测试计划](docs/test-plan.adoc) | 隔离测试、安全门槛、两实现共同验收 |
@@ -29,8 +29,7 @@
 rbac-contract/     当前唯一 OpenAPI、Flyway 迁移
 rbac-structured/   当前可运行的结构化业务后端（Java21 / Spring Boot3.3.5）
 rbac-web/          Vue3 / TypeScript 前端
-rbac-ddd/          双工程布局阶段新增，尚未交付业务实现
-  （计划）
+rbac-ddd/          独立启动骨架（默认8082），仅health/info，无RBAC业务
 deploy/           构建、Swarm脚本和环境模板
 docs/             当前生效需求、设计和验证记录
 diagrams/         一期图源/工具；不应冒充二阶段当前代码图
@@ -52,7 +51,7 @@ docker run -d --name rbac-phase2-test-mysql -p 127.0.0.1:13306:3306 \
 docker run -d --name rbac-phase2-test-redis -p 127.0.0.1:16379:6379 redis:7-alpine
 # 等数据库健康就绪；确认 JAVA_HOME 指向 JDK21
 ./mvnw -B -s deploy/maven-settings-huawei.xml verify
-node --test tools/project-layout.test.mjs diagrams/tools/gen-mdj.test.mjs
+node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
 
 cd rbac-web
 npm ci
@@ -64,7 +63,10 @@ npm run build
 Windows也可用 `mvnw.cmd` 和 PowerShell。生产密码/密钥不得复用上述测试值。
 JaCoCo报告在 `rbac-structured/target/site/jacoco/index.html`，本轮未完成的测试不能引用旧报告冒充通过。
 
-前端开发 `npm run dev`；当前默认代理到structured。双后端切换将在工程布局阶段实现并验证。
+前端开发 `npm run dev`，默认代理到structured；`RBAC_API=http://127.0.0.1:8082 npm run dev` 可切到DDD骨架。
+部署用 `MODULE=rbac-structured|rbac-ddd` 选择一个后端，同一前端镜像经稳定服务名 `rbac-backend` 代理，详见部署说明。
+DDD仅能健康连通，登录等业务返回404。`npm run e2e:m2` 独立验证真实桌面/手机代理，不清库；必要时通过 `JAVA_HOME`、`PW_CHROMIUM` 指定本机运行工具。
+已有Swarm旧服务改名需批准维护窗口；脚本不会自动清理旧服务或数据卷。
 
 ## 资料与安全
 

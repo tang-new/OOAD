@@ -1,0 +1,19 @@
+server:
+  port: ${SERVER_PORT:8082}
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: rbac-ddd
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      # 此骨架只发布非敏感的阶段标识，不包含连接串或环境信息。
+      show-details: always
+      show-components: always

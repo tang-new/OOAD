@@ -18,10 +18,11 @@
     <packaging>pom</packaging>
     <name>rbac-parent</name>
 
-    <!-- 共享契约与结构化后端；独立 DDD 后端在双工程布局阶段加入。 -->
+    <!-- 双后端仅共享契约与迁移，不共享核心业务实现。 -->
     <modules>
         <module>rbac-contract</module>
         <module>rbac-structured</module>
+        <module>rbac-ddd</module>
     </modules>
 
     <properties>

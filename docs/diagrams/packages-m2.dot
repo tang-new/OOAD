@@ -1,0 +1,40 @@
+digraph PackagesM2 {
+  graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.35", ranksep="0.8", fontname="Microsoft YaHei", label="M2 实际工程与依赖（DDD 仅启动骨架）", labelloc=t];
+  node [shape=folder, fontname="Microsoft YaHei", fontsize=12, style=filled, fillcolor="#eef4fb"];
+  edge [fontname="Microsoft YaHei", fontsize=10];
+
+  contract [label="rbac-contract\nOpenAPI / Flyway 资源"];
+  frontend [label="rbac-web\n同一份 Vue 前端"];
+  proxy [label="Nginx / Vite 代理\n/api/v1 保持不变", shape=box];
+  active [label="rbac-backend\nMODULE 选择一个实现", shape=box, fillcolor="#fff3d6"];
+
+  subgraph cluster_structured {
+    labelloc=b;
+    label="rbac-structured：现有 RBAC0 业务";
+    fontname="Microsoft YaHei";
+    color="#7a9ebd";
+    controller [label="controller"];
+    service [label="service"];
+    mapper [label="mapper\nJPA / Redis"];
+    controller -> service;
+    service -> mapper;
+  }
+
+  subgraph cluster_ddd {
+    labelloc=b;
+    label="rbac-ddd：M2-skeleton / businessReady=false";
+    fontname="Microsoft YaHei";
+    color="#7a9ebd";
+    bootstrap [label="RbacDddApplication\n独立 Boot 启动", shape=box];
+    health [label="infrastructure.health\nSkeletonHealthIndicator"];
+    empty [label="interfaces / application / domain\n仅 package-info，无业务类型", style="dashed,filled", fillcolor="#f4f4f4"];
+    bootstrap -> health [style=dotted, label="组件扫描"];
+  }
+
+  frontend -> proxy [style=dashed, label="同源 HTTP"];
+  proxy -> active [style=dashed];
+  active -> controller [style=dashed, label="默认 structured"];
+  active -> bootstrap [style=dashed, label="选择 ddd"];
+  controller -> contract;
+  bootstrap -> contract;
+}

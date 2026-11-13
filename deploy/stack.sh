@@ -6,12 +6,13 @@
 #   bash deploy/stack.sh label <数据节点> <应用节点>   按主机名打 rbac.role 标签（docker node ls 看主机名）
 #   bash deploy/stack.sh up                          读 .env、检查口令、部署或更新
 #   bash deploy/stack.sh ps                          各服务副本数与每个任务在哪台机器上
-#   bash deploy/stack.sh logs [服务名]               默认 rbac-structured
+#   bash deploy/stack.sh logs [服务名]               默认 rbac-backend
 #   bash deploy/stack.sh down                        删除整个栈（数据卷保留）
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 STACK="${STACK:-rbac}"
+. ./deploy/backend-module.sh
 
 load_env() {
   if [ ! -f .env ]; then
@@ -19,10 +20,13 @@ load_env() {
     exit 1
   fi
   # docker stack deploy 不读 .env（docker compose 才读），所以先导出成环境变量。
-  # 命令行上临时给的 TAG 优先，不能被 .env 里的 TAG= 空值覆盖
-  local _tag="${TAG-}"
+  # 显式环境优先于.env；空值最后回退默认配置。
+  local _tag="${TAG-}" _module="${MODULE-}" _registry="${REGISTRY-}"
   set -a; . ./.env; set +a
   TAG="${_tag:-${TAG-}}"
+  MODULE="${_module:-${MODULE-}}"
+  REGISTRY="${_registry:-${REGISTRY-}}"
+  select_backend_module
 }
 
 # 实验二要求每组数据库口令不同：拒绝模板值和本机开发用的默认值
@@ -74,11 +78,20 @@ case "$cmd" in
     check_secrets
     TAG="${TAG:-latest}"
     export TAG
-    echo "==> 部署栈 $STACK，镜像 ${REGISTRY}rbac-structured:${TAG}"
+    # 服务改名不能自动遗留旧写入节点或造成8081端口冲突；需受控维护迁移。
+    if docker service inspect "${STACK}_rbac-structured" >/dev/null 2>&1; then
+      echo "发现一期旧服务；请先批准维护窗口并核验旧服务已停，再部署rbac-backend。不会自动删服务或清库。" >&2
+      exit 1
+    fi
+    echo "==> 部署栈 $STACK，镜像 ${REGISTRY}${MODULE}:${TAG}"
     # --with-registry-auth：把本机 docker login 的 SWR 凭证转给工作节点，否则它们拉不到私有镜像
     docker stack deploy -c docker-compose.yml --with-registry-auth "$STACK"
     echo
-    echo "首次部署 MySQL 初始化约 30 秒，期间 rbac-structured 会重启几次，属正常现象。"
+    if [ "$MODULE" = rbac-structured ]; then
+      echo "首次部署需等待MySQL初始化；应用可能失败重启，必须核对最终健康状态。"
+    else
+      echo "DDD当前仅为健康骨架，businessReady=false，不具备登录或授权业务。"
+    fi
     echo "查看进度：bash deploy/stack.sh ps"
     ;;
   ps)
@@ -87,12 +100,12 @@ case "$cmd" in
     docker stack ps "$STACK" --format 'table {{.Name}}\t{{.Node}}\t{{.CurrentState}}\t{{.Error}}'
     ;;
   logs)
-    docker service logs --tail 100 -f "${STACK}_${2:-rbac-structured}"
+    docker service logs --tail 100 -f "${STACK}_${2:-rbac-backend}"
     ;;
   down)
     # stack rm 是异步的：命令返回时容器可能还在停。再次 up 之前先确认 ps 已经为空
     docker stack rm "$STACK"
-    echo "数据卷 ${STACK}_mysql-data 保留在数据节点上；要清库重来，在该节点执行 docker volume rm ${STACK}_mysql-data"
+    echo "数据卷 ${STACK}_mysql-data 保留；禁止将删除数据卷当作发布或回滚步骤。"
     ;;
   *)
     sed -n '2,10p' "$0"

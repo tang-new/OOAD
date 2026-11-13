@@ -26,6 +26,8 @@ Maven启动时仍为四模块基线；该结果不代表随后收缩版本已通
 
 == M1 收缩实施（本地门槛通过，导论远端待接收）
 
+提交：`196bcf6`（`refactor: shrink phase-one modules and consolidate current design docs`）。
+
 * 已移除一期演示业务模块及聚合/Compose/构建引用；中心正式鉴权逻辑和测试未随之删除。
 * 已移除一期人工审查运行包。HR-001在起始提交中的状态为“跨公司指派限制已修复、待人工复核”，不是当前未修复漏洞；未代签或自动关闭。
   本阶段不再支持多公司，但保留统一主体、明确目标对象和授予/回收边界的安全教训。
@@ -41,6 +43,44 @@ Maven启动时仍为四模块基线；该结果不代表随后收缩版本已通
 
 一期仍需迁移复查的风险：管理类selfOnly标记与管理范围判断不一致；ATOMIC失败清单可能包含范围外ID；成功审计独立事务可能早于业务提交。
 这些是一期历史风险，不声称本轮已修复。后续准入/审计/错误响应测试应保留对应安全预期。
+
+== M2 双后端工程布局（本地门槛通过）
+
+完成final任务二的本地子项：独立DDD骨架、共用契约、单个活动实现和同前端配置切换。
+只推进UI-01的连通部分，不关闭双后端RBAC1业务等价、T21/T22或外部联调。
+
+真实修改：父pom新增rbac-ddd；该模块独立Boot启动、健康/info、四层package-info及隔离测试；
+Compose/Nginx统一rbac-backend服务名；MODULE选择镜像和构建参数；build/stack共用白名单、显式环境优先与旧服务保护；
+CI新增无数据库DDD验证和独立浏览器连通套件；前端业务HTTP调用仍为/api/v1。
+
+先运行M2布局RED（模块/部署布局不满足），实现后通过；DDD在最小可启动应用中因缺健康/info元数据出现2个行为失败，之后GREEN。
+脚本替身测试额外验证默认值、显式覆盖、非法选择无副作用和旧服务阻断；不调用真实发布命令。
+测试编写中的一次JS语法错误已修复，不计作行为RED。
+
+实际最终命令与结果：
+
+* `./mvnw -B -s deploy/maven-settings-huawei.xml verify`：4模块成功，structured69 + DDD21 = 90通过，0失败/错误/跳过，JaCoCo门槛通过。
+* `./mvnw -B -s deploy/maven-settings-huawei.xml -pl rbac-ddd -am clean verify`：独立21通过；无数据库/cache运行依赖，健康类行覆盖100%。
+* 前端typecheck、42单测和生产build通过。
+* Node工程/脚本/模型测试17通过；Windows显式使用实际Git Bash。
+* structured和DDD两种MODULE均通过Compose配置校验；DDD通过stack配置渲染；三个部署脚本语法通过。非远程部署证明。
+* `npm run e2e:m2`：真实桌面/手机2通过。初次因缺Playwright浏览器失败，自动下载尝试超时；改以PW_CHROMIUM配置本机Chrome后真实通过，不将环境失败记成业务RED。
+
+原始日志位于仓库外 `m2-full-verify.log`、`m2-reactor-ddd.log`、`m2-final-web-*.log`、`m2-final-node.log`、`m2-browser-chrome.log` 等。
+Maven及测试实际使用Java21.0.7；机器默认java命令仍可能是Java8，不能混淆。
+测试容器为本轮独立实例并保持运行；没有操作生产服务。
+
+新增图与证据：link:diagrams/packages-m2.dot[工程图源]、link:diagrams/packages-m2.svg[SVG]、link:diagrams/packages-m2.png[PNG]；
+link:evidence/m2/desktop.png[桌面]、link:evidence/m2/mobile.png[手机]。
+图和两张截图均已实际打开核查。图只表达真实骨架/模块关系，不包含尚不存在的业务类。
+重新生成：`dot -Tsvg docs/diagrams/packages-m2.dot -o docs/diagrams/packages-m2.svg`，PNG使用同样命令的-Tpng。
+
+已知边界：DDD只发布health/info且businessReady=false；登录、用户和角色业务404；未做RBAC1、CloneFactory集成、Nginx容器运行或远端Swarm验证。
+原数据库/缓存连接仅供structured；DDD目前不连接任何数据库；后续不得默接生产旧库。
+旧Swarm服务改名须批准维护窗口并停旧写入，脚本不会自动prune/删卷；跨实现多副本滚动更新不能被当成严格单写保证。
+导论新远端、评分/PPT原件、教师实际部署契约与联调权限仍有未完成项。
+
+下一阶段：M3结构化业务模型/API重构，再做M4/M5双后端RBAC1；不得拿本阶段90测试通过冒充新需求已实现。
 
 == 一期设计记录的保留索引
 

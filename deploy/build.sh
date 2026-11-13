@@ -12,11 +12,14 @@ cd "$(dirname "$0")/.."
 
 # .env 里的 REGISTRY / TAG / BASE_IMAGE；命令行上临时给的环境变量优先
 if [ -f .env ]; then
-  _registry="${REGISTRY-}"; _tag="${TAG-}"; _base="${BASE_IMAGE-}"; _node="${NODE_IMAGE-}"; _nginx="${NGINX_IMAGE-}"
+  _registry="${REGISTRY-}"; _tag="${TAG-}"; _base="${BASE_IMAGE-}"; _node="${NODE_IMAGE-}"; _nginx="${NGINX_IMAGE-}"; _module="${MODULE-}"
   set -a; . ./.env; set +a
   REGISTRY="${_registry:-${REGISTRY-}}"; TAG="${_tag:-${TAG-}}"; BASE_IMAGE="${_base:-${BASE_IMAGE-}}"
   NODE_IMAGE="${_node:-${NODE_IMAGE-}}"; NGINX_IMAGE="${_nginx:-${NGINX_IMAGE-}}"
+  MODULE="${_module:-${MODULE-}}"
 fi
+. ./deploy/backend-module.sh
+select_backend_module
 TAG="${TAG:-$(git rev-parse --short HEAD)}"
 REGISTRY="${REGISTRY:-}"
 BASE_IMAGE="${BASE_IMAGE:-eclipse-temurin:21-jre}"
@@ -32,7 +35,7 @@ echo "==> 1/3 编译 + 全部测试 + Jacoco 门槛（任何一步失败都不�
 ./mvnw -B -s deploy/maven-settings-huawei.xml clean verify
 
 echo "==> 2/3 打镜像，标签 $TAG 与 latest，基础镜像 $BASE_IMAGE"
-for m in rbac-structured; do
+for m in "$MODULE"; do
   docker build --build-arg BASE_IMAGE="$BASE_IMAGE" --build-arg MODULE="$m" \
     -t "${REGISTRY}${m}:${TAG}" -t "${REGISTRY}${m}:latest" .
 done
@@ -42,7 +45,7 @@ docker build --build-arg NODE_IMAGE="$NODE_IMAGE" --build-arg NGINX_IMAGE="$NGIN
 
 if [ "${1:-}" = "push" ]; then
   echo "==> 3/3 推送到 ${REGISTRY}"
-  for m in rbac-structured rbac-web; do
+  for m in "$MODULE" rbac-web; do
     docker push "${REGISTRY}${m}:${TAG}"
     docker push "${REGISTRY}${m}:latest"
   done
@@ -51,4 +54,4 @@ else
   echo "==> 3/3 跳过推送（单机部署直接 docker compose up -d）"
 fi
 
-echo "Jacoco 报告：rbac-structured/target/site/jacoco/index.html"
+echo "所选后端：$MODULE；Jacoco 报告：${MODULE}/target/site/jacoco/index.html"

@@ -55,12 +55,14 @@ services:
       resources:
         limits: { memory: 200M }
 
-  rbac-structured:
-    image: ${REGISTRY:-}rbac-structured:${TAG:-latest}
+  # 单个活动后端：MODULE=rbac-structured（默认）或rbac-ddd。
+  rbac-backend:
+    image: ${REGISTRY:-}${MODULE:-rbac-structured}:${TAG:-latest}
     build:
       context: .
-      args: { MODULE: rbac-structured }
+      args: { MODULE: "${MODULE:-rbac-structured}" }
     environment:
+      SERVER_PORT: 8081
       DB_HOST: mysql
       DB_PASSWORD: ${DB_PASSWORD:-rbac}
       REDIS_HOST: redis
@@ -69,27 +71,27 @@ services:
       JAVA_OPTS: ${APP_JAVA_OPTS:--Xms256m -Xmx512m -XX:+UseG1GC}
     ports:
       - "8081:8081"
-    # 只能用列表形式：docker stack deploy 不接受 condition: service_healthy 这种写法，
-    # 会直接报 depends_on: must be a list。MySQL 未就绪时应用启动失败、自动重启，直到连上：
-    # 单机 compose 靠 restart，Swarm 靠 deploy.restart_policy（Swarm 忽略 restart 与 depends_on）
-    depends_on: [mysql, redis]
+    # structured等待数据库通过失败重启；DDD骨架本身不依赖MySQL/Redis。
+    # 无depends_on使DDD可用--no-deps单独启动；完整stack仍定义数据服务。
     restart: on-failure
     deploy:
       replicas: ${APP_REPLICAS:-1}
       placement:
         constraints: [node.labels.rbac.role == app]
       restart_policy: { condition: on-failure, delay: 10s }
+      update_config: { order: stop-first, parallelism: 1 }
       resources:
         limits: { memory: 700M }
 
-  # 前端（Vue 3）：Nginx 提供页面，/api 转发到 rbac-structured。浏览器访问 http://<节点>:80
+  # 同一前端镜像经稳定服务名代理所选后端，浏览器调用路径保持/api。
+  # MODULE只允许两个后端；使用build/stack脚本时会做白名单校验。
   rbac-web:
     image: ${REGISTRY:-}rbac-web:${TAG:-latest}
     build:
       context: ./rbac-web
     ports:
       - "80:80"
-    depends_on: [rbac-structured]
+    depends_on: [rbac-backend]
     deploy:
       placement:
         constraints: [node.labels.rbac.role == app]

@@ -3,7 +3,8 @@
 
 == 状态与依据
 
-当前业务实现仍为一期 RBAC0，运行模块为 `rbac-contract`、`rbac-structured`，前端为 `rbac-web`；阶段一已移除非核心的外部演示模块。
+当前业务实现仍为一期 RBAC0，模块为 `rbac-contract`、`rbac-structured` 与独立的 `rbac-ddd` 启动骨架，前端为 `rbac-web`；阶段一已移除非核心的外部演示模块。
+部署默认选择structured；DDD尚不承接业务。
 本文收缩整理旧概要与结构化详细设计，不表示 RBAC1 已实现，也不沿用旧文档的测试通过声明。
 范围和优先级以 link:requirements.adoc[现行需求追踪]、link:migration-baseline.adoc[实施基线]为准。
 
@@ -52,4 +53,4 @@ ArchitectureTest 的依赖方向、实体只含数据、Service 无状态及禁�
 L1/L2 版本一致性、audience/JWK、三层 AOP 日志及课程对象级授权联调均未由一期实现证明。
 热力图/统计大屏当前仍在业务代码中，待模型/前端重构时移除；旧外部演示模块已在阶段一退出构建与部署。
 
-接口见 link:api.adoc[API]，模型见 link:database.adoc[数据库]，验证见 link:test-plan.adoc[测试计划]；另一后端仅为 link:architecture-ddd.adoc[DDD 计划稿]。
+接口见 link:api.adoc[API]，模型见 link:database.adoc[数据库]，验证见 link:test-plan.adoc[测试计划]；另一后端为 link:architecture-ddd.adoc[DDD骨架及业务计划]。

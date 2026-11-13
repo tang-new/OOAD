@@ -65,11 +65,45 @@ curl --fail http://127.0.0.1:8081/api/v1/actuator/health
 现行前端代理 `/api` 到 structured；这个 RBAC_API 不是已完成双后端切换的证明。
 接口字段及鉴权见 link:api.adoc[API]；正式质量验证须另在隔离测试环境按测试计划运行并记录结果。
 
+== M2 双后端选择（本地验证，未远端发布）
+
+[source,shell]
+----
+# 独立DDD骨架构建：不运行structured，不需要数据库。
+./mvnw -pl rbac-ddd -am clean verify
+SERVER_ADDRESS=127.0.0.1 java -jar rbac-ddd/target/rbac-ddd.jar
+# 默认8082；业务不存在，健康信息必须明确businessReady=false。
+curl --fail http://127.0.0.1:8082/api/v1/actuator/health
+
+# 同一前端业务源码不变，仅改变开发代理目标。
+cd rbac-web
+RBAC_API=http://127.0.0.1:8082 npm run dev -- --host 127.0.0.1
+----
+
+正式构建/部署脚本以MODULE选择 `rbac-structured`（默认）或 `rbac-ddd`。
+显式环境优先于.env，非法值在构建/部署副作用前拒绝。
+同一Compose/Swarm定义仅有 `rbac-backend` 活动服务，镜像和Dockerfile参数均选择相同MODULE；
+前端Nginx始终代理 `http://rbac-backend:8081`，容器环境统一覆盖SERVER_PORT=8081。
+完整stack仍包含数据服务；DDD骨架单JAR独立启动不等于整个stack不含MySQL/Redis。
+
+[source,shell]
+----
+# 仅参数示意，发布前仍须隔离测试服务就绪并通过全工程verify。
+MODULE=rbac-ddd bash deploy/build.sh
+MODULE=rbac-ddd TAG=<已构建标签> bash deploy/stack.sh up
+----
+
+本轮只验证配置渲染/脚本替身行为和本地代理，未实际执行上述远程发布。
+一期服务 `${STACK}_rbac-structured` 改名为 `${STACK}_rbac-backend` 不是普通镜像更新：
+旧服务若仍存在，up脚本会拒绝，不能自动prune、删服务或删卷。
+须获准维护窗口、停旧写入并核验，再发布新的服务名和配套web镜像；回滚也需配套恢复。
+跨实现切换不能把多副本滚动更新当成严格单写保证；本阶段不操作旧生产库。
+
 == 远端与后续目标（未核验）
 
 仓库有 Dockerfile、docker-compose.yml 和 deploy/ 下的 Compose/Swarm 脚本；定义存在不代表教师三台服务器已部署、服务健康或外网安全。
 本轮没有远程命令、镜像推送、节点变更或数据迁移授权，不提供远程覆盖和删库指令。
 旧手册的服务器规格、历史部署状态与口令检查描述不能当作当前运行证据；不得直接沿用开发默认配置上公网。
 
-未来需单独核验：两后端参数化构建/启动、前端选择后端、目标 JWK/iss/aud 与撤销、可信课程上游、Swarm secrets、节点标签与网络边界、备份恢复及回滚。
+参数化构建/启动、配置选择及DDD代理连通已在M2本地验证。未来仍需单独核验：DDD业务与持久化隔离、目标JWK/iss/aud与撤销、可信课程上游、真实Swarm启动、secrets、节点标签/网络边界、备份恢复及回滚。
 三节点编排也不自动等于高可用；未取得教师部署权限或最新外部契约的验收项须标记无法核验，不以本地健康探测替代。

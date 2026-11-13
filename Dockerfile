@@ -9,7 +9,7 @@
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 
-ARG MODULE
+ARG MODULE=rbac-structured
 WORKDIR /app
 COPY ${MODULE}/target/${MODULE}.jar app.jar
 

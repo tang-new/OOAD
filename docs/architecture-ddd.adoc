@@ -1,11 +1,27 @@
-= DDD 架构计划稿（未实现）
+= DDD 启动骨架与后续业务架构计划
 :toc:
 
 == 边界
 
-当前仓库没有可独立启动的 DDD 后端；本文不是代码实况或交付声明。
+当前已建立可独立构建、启动的 `rbac-ddd` M2骨架，但尚无RBAC领域业务。
+只有本节和“实际骨架”描述当前源码；其余角色/聚合/仓储设计仍是计划，不是业务交付声明。
 旧面向对象骨架中的 rbac-oo、约束引擎、DataScope、RBAC2/3 与课程业务对象不作为现行设计依据。
 以 link:requirements.adoc[需求追踪]及 link:migration-baseline.adoc[实施基线]为准；一期实况见 link:architecture-structured.adoc[结构化架构]。
+
+== 实际骨架与验证
+
+`RbacDddApplication`只扫描自身包；运行依赖为契约资源、Web及Actuator，不含structured、JPA、MySQL、Redis或Flyway。
+`infrastructure.health.SkeletonHealthIndicator`发布health与info元数据：backend=ddd、stage=M2-skeleton、businessReady=false。
+默认8082、context-path=/api/v1；SERVER_PORT可覆盖为部署的8081。
+未实现登录/用户/角色等路径返回404；只暴露health/info，不暴露env/beans/metrics等运维详情。
+
+实际HTTP及探针/架构测试21通过；包含故意违规的测试专用依赖，证明跨后端规则确实会失败，而不是空扫描通过。
+domain/application/interfaces仅有package-info，不能据此声称DDD业务分层已实现。
+
+image::diagrams/packages-m2.svg[M2实际工程依赖]
+
+图源为link:diagrams/packages-m2.dot[DOT]，同时有link:diagrams/packages-m2.png[PNG]，已实际打开PNG核查。
+实线表示模块/分层依赖；虚线表示HTTP与选择路径；点线表示框架组件扫描，不表示角色业务调用。
 
 == 目标分层与依赖
 
@@ -26,7 +42,7 @@ infrastructure → domain（实现仓储/外部能力端口）
 |===
 
 领域仓储端口不能继承 JpaRepository；持久化实体不能冒充领域聚合。
-以后用 ArchUnit 与无容器领域单测约束依赖，当前没有这些 DDD 测试通过的证据。
+M2已有跨后端依赖的ArchUnit及反例验证；后续仍需领域层框架无关规则和无容器业务单测，当前不能拿空领域包冒充这些验证。
 
 == 六组设计目标
 
@@ -62,5 +78,6 @@ copyNotNull只适用包装类型，primitive可能生成非法null比较；白�
 
 两后端独立构建、启动，共用契约、逻辑数据库模型、迁移定义及共享黑盒夹具；不得共享角色闭包、准入等核心业务 Service/算法来抹平范式差异。
 相同外部请求应具有相同状态码、决策、审计与事务结果；使用相同逻辑夹具、各自隔离实例验证，而非两个实现同时污染一套测试数据。
-前端切后端、DDD 启动参数及参数化部署尚未落地，不能用一期桌面 E2E 证明完成。
+M2已落地同前端配置选择与DDD启动参数；真实浏览器在桌面/手机均能通过同源代理取得DDD身份，且登录业务仍404。
+这仅证明UI-01的连通子项，不证明两后端业务等价；M2验证结果不能替代RBAC1或两系统联调验收。
 验收与证据要求见 link:test-plan.adoc[测试计划]。
