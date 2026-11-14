@@ -62,6 +62,10 @@ class Deployment(unittest.TestCase):
    if name.endswith('ci.yml'):
     self.assertIn('ACCEPTANCE_JACOCO_AGENT=%s',script)
     self.assertIn('ACCEPTANCE_JACOCO_CLI=%s',script)
+ def test_ci_names_only_its_own_mysql_and_redis_for_real_restart_guards(self):
+  script=(ROOT/'.github/workflows/ci.yml').read_text(encoding='utf8')
+  for service in ['mysql','redis']:
+   self.assertIn("docker rename '${{ job.services."+service+".id }}' rbac-phase2-test-"+service,script)
  def test_windows_secrets_use_effective_per_file_acl(self):
   script=(ROOT/'deploy/full-secrets.sh').read_text(encoding='utf8')
   self.assertIn('"${USERNAME}:F"',script)

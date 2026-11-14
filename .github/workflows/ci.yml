@@ -49,8 +49,9 @@ jobs:
       - run: python tools/generate-rbac1-contract.py --check
       - run: python deploy/full-config-test.py
       - run: python tools/collect-acceptance-evidence.test.py
-      # Rename ONLY this job-owned service; contract migration script hardcodes this safe name.
+      # Rename ONLY this job's own services; real migration/restart guards require these safe names.
       - run: docker rename '${{ job.services.mysql.id }}' rbac-phase2-test-mysql
+      - run: docker rename '${{ job.services.redis.id }}' rbac-phase2-test-redis
       - name: Initialize only the job-owned backend test schemas
         run: >-
           docker exec rbac-phase2-test-mysql sh -c
