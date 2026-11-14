@@ -8,3 +8,21 @@ intro-spec-coding
 **/test-results
 **/playwright-report
 logs
+
+# Runtime private material and external source caches
+.runtime
+.cache
+**/*.pem
+**/*.key
+**/*.xlsx
+**/*.xls
+**/target/*
+!rbac-structured/target/rbac-structured.jar
+!rbac-ddd/target/rbac-ddd.jar
+!rbac-gateway/target/rbac-gateway.jar
+
+!rbac-gateway/target/*.jar
+
+# Deployment-tool bytecode is not an image input
+**/__pycache__
+**/*.pyc

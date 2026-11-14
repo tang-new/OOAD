@@ -11,6 +11,7 @@ FROM ${BASE_IMAGE}
 
 ARG MODULE=rbac-structured
 WORKDIR /app
+# Only the canonical verified artifact; never pick stale/candidate jars by glob.
 COPY ${MODULE}/target/${MODULE}.jar app.jar
 
 # 2G 内存的机器上同时跑 MySQL / Redis 时，堆必须封顶；部署时可用环境变量覆盖

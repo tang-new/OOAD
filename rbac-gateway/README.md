@@ -7,7 +7,7 @@ Java 21 / Spring Boot 3.3.5，无数据库、Redis或运行时模拟身份系统
 ./mvnw -N install -DskipTests
 ./mvnw -f rbac-contract/pom.xml install -DskipTests
 ./mvnw -f rbac-gateway/pom.xml -am clean verify
-java -jar rbac-gateway/target/rbac-gateway-0.1.0-SNAPSHOT.jar \
+java -jar rbac-gateway/target/rbac-gateway.jar \
   --gateway.identity-base-url=https://identity.example \
   --gateway.course-base-url=https://course.example \
   --gateway.issuer=rbac-center \

@@ -7,11 +7,15 @@ ARG NGINX_IMAGE=nginx:1.27-alpine
 FROM ${NODE_IMAGE} AS build
 WORKDIR /web
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# Normalize only registry host in this image layer; lock integrity remains enforced.
+ARG NPM_REGISTRY=https://registry.npmjs.org
+RUN sed -i "s#https://registry.npmmirror.com#${NPM_REGISTRY}#g" package-lock.json \
+    && npm ci --no-audit --no-fund --registry="${NPM_REGISTRY}"
 COPY . .
 RUN npm run build
 
 FROM ${NGINX_IMAGE}
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV RBAC_PORT=8081
 COPY --from=build /web/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 443

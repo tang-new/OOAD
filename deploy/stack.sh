@@ -11,6 +11,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Default entrypoint now uses the isolated, secret-backed seven-service stack.
+# The retained standalone fallback must never migrate/delete any existing service automatically.
+if [ -f deploy/full-stack.sh ]; then
+  exec bash deploy/full-stack.sh "$@"
+fi
+
 STACK="${STACK:-rbac}"
 . ./deploy/backend-module.sh
 

@@ -10,6 +10,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Full checkout uses the real two-system build. Keep standalone legacy script compatibility.
+if [ -f deploy/full-build.sh ]; then
+  exec bash deploy/full-build.sh "$@"
+fi
+
 # .env 里的 REGISTRY / TAG / BASE_IMAGE；命令行上临时给的环境变量优先
 if [ -f .env ]; then
   _registry="${REGISTRY-}"; _tag="${TAG-}"; _base="${BASE_IMAGE-}"; _node="${NODE_IMAGE-}"; _nginx="${NGINX_IMAGE-}"; _module="${MODULE-}"

@@ -1,53 +1,70 @@
-# Real two-center + gateway + teacher-course verification
+# Current canonical real two-center + gateway + teacher-course verification
 
-Completed: 2026-11-14T16:21:22.133Z. Overall PASS. No stub/provider/JWT fabrication.
+Completed: **2026-11-14T18:08:00.936Z**. **12/12 scenarios PASS** (structured6 + DDD6).
 
-External full report: `C:\Users\vintces\AppData\Local\Temp\m6-course-real-WUDc3F\report.json`
-External console log: `C:/Users/vintces/Downloads/m6-course-real-final47-canonical-ddd.log`
+**This final run uses the current default canonical target jars. It does not use the old final47 package or the old version-suffixed gateway jar.** No source code, runner, overlay, other module, Swarm service or volume was changed in this final rerun. Only this verification documentation was updated.
 
-| Business scenario | structured final47 | canonical DDD |
-|---|---|---|
-| term-management | PASS | PASS |
-| teacher-course-submission | PASS | PASS |
-| independent-course-review | PASS | PASS |
-| copy-leader-CC-and-teacher-qualification | PASS | PASS |
-| student-leader-join-approval | PASS | PASS |
-| oral-score-audit-POST-GET | PASS | PASS |
+Full machine-readable report: `C:\Users\vintces\AppData\Local\Temp\m6-course-real-KuOhSn\report.json`
+Console log: `C:/Users/vintces/Downloads/m18-course-real-current.log`
 
-## Exact executed bytes
-Each source jar was copied into a private temporary directory, hash-checked before/after copying, then executed from that copy. Source and candidate SHA256 match.
+## Six classes per real backend
 
-- structured final47: `D:\m3-structured-final47.jar`
-  - source/candidate SHA256: `e4a1542c6df02eb549fe4c171272af36c6a538cc72b27e39877a17a00b6c1207`
-- canonical DDD: `D:\Scripts\OOAD\rbac-ddd\target\rbac-ddd.jar`
-  - source/candidate SHA256: `1b410d6b5a31e211d37aec7306a00a41424b49d3fc7899bfb960c6a8cb42a650`
-- gateway: `D:\Scripts\OOAD\rbac-gateway\target\rbac-gateway-0.1.0-SNAPSHOT.jar`
-  - source/candidate SHA256: `2b53fd485a1df40c95fa5ce1dcf884a7343bb224a0566ed610e977c1345f2f1c`
-- patched teacher course: `D:\Scripts\OOAD\.cache\course-source\prepared\backend\target\course-project-backend-0.0.1-SNAPSHOT.jar`
-  - source/candidate SHA256: `464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a`
+| Business scenario | current structured | current DDD | actual HTTP |
+|---|---|---|---|
+| term-management | PASS | PASS | POST /terms 201 |
+| teacher-course-submission | PASS | PASS | GET /me 200; POST course 201; POST submit-review 200 |
+| independent-course-review | PASS | PASS | POST review 200 |
+| copy-leader-CC-and-teacher-qualification | PASS | PASS | leader/noCC 201; nonleader/CC 201; nonleader/noCC 403; admin-not-teacher 403 |
+| student-leader-join-approval | PASS | PASS | GET /me 200; PATCH join-request 200 |
+| oral-score-audit-POST-GET | PASS | PASS | PATCH oral-record 200; GET audit-logs 200 |
 
-## Actual evidence
-- Real center HTTP creates synthetic accounts, custom roles, API grants and department eligibility; actual `/auth/login` signs the user bearers. First-login password changes are performed through HTTP. No token is manually signed.
-- Real `/integration/authorities` confirms all three teacher users pass coarse copy operation; only the CC account has CC. Leader without CC returns201, unrelated teacher without CC returns403, nonteacher admin returns403.
-- Real source subjects are written into the new course fixture and resolved to actual local Teacher/Student records. Every business request goes through the real gateway.
-- Both databases confirm score88 and one actual approved group membership. Course audit GET finds the real center POST event with before70/after88.
-- Prior real run exposed DDD HTTP400 AUDIT_UNSAFE_FIELD for extra operationId/result JSON keys, yielding course503 AUDIT_UNCONFIRMED. The course overlay now sends the common flat safe-field schema; target retains the operation name. Latest specified jars pass without backend changes.
+## Exact current source / executed candidate hashes
+The runner copies each real fat jar into a private temporary directory and verifies source-before/source-after/candidate SHA256 equality. JVMs execute the copy, never hold target jars open.
+
+- **current structured**: `D:\Scripts\OOAD\rbac-structured\target\rbac-structured.jar`
+  - source SHA256: `9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05`
+  - executed candidate SHA256: `9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05`
+- **current canonical DDD**: `D:\Scripts\OOAD\rbac-ddd\target\rbac-ddd.jar`
+  - source SHA256: `f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38`
+  - executed candidate SHA256: `f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38`
+- **current gateway (default rbac-gateway.jar)**: `D:\Scripts\OOAD\rbac-gateway\target\rbac-gateway.jar`
+  - source SHA256: `8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c`
+  - executed candidate SHA256: `8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c`
+- **teacher course (unchanged latest overlay)**: `D:\Scripts\OOAD\.cache\course-source\prepared\backend\target\course-project-backend-0.0.1-SNAPSHOT.jar`
+  - source SHA256: `464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a`
+  - executed candidate SHA256: `464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a`
+
+## Real identity, authorization, database and audit evidence
+No central stub, fake provider or fabricated JWT is involved. The actual center HTTP APIs create synthetic departments/accounts/roles/grants, perform first-login password changes, and sign real user tokens. Every six-class business request goes through the real gateway and real teacher executable/JPA.
+
+Subjects come from the actual center-created accounts and are mapped into only the new dedicated course database. They are not hard-coded:
+- **structured** leader: `rbac-22d8cd20-3ca1-4179-9c8e-9123c4885ad2` → Teacher `1`; student leader: `rbac-1f358fa9-0d1b-4416-9b86-9e7ff46c1099` → Student `610001`.
+  - Actual course DB score: **88**; approved persisted group memberships: **1**.
+  - Actual external audit POST, read back through scoped course GET: **before70 → after88**; audit ID `52`, requestId `1a5a4e5e-b72b-4a29-9a7e-7bbe845b74b9`.
+- **ddd** leader: `rbac-abb0c3a0-b247-40da-a9d1-ac37c4a3efe4` → Teacher `1`; student leader: `rbac-8c10803e-cad2-468f-9e3a-f0ea1845315b` → Student `610001`.
+  - Actual course DB score: **88**; approved persisted group memberships: **1**.
+  - Actual external audit POST, read back through scoped course GET: **before70 → after88**; audit ID `51`, requestId `83610155-e9ef-4393-86d7-a8ea551768e4`.
+
+For both centers the real authorities endpoint confirms all three teacher sessions have teacher identity and coarse copy-operation allowed=true; only CC_TEACHER has CC. The four real copy outcomes above therefore prove teacher qualification is not CC and operation admission is not fine-grained CC.
 
 ## Isolation and cleanup
-- Explicit JDK21, whitelist-only child environment, canonical SPRING_APPLICATION_JSON pins datasource/Flyway/Redis/key files/audit key; `--spring.config.location=classpath:/`. Every fetch rejects redirects.
-- New unique databases only: center loopback13306; course loopback13316. No Swarm service/volume or old database was changed.
-- Center readiness probe waits until ApplicationRunners finish; source structured policy ddl-auto=none is preserved, DDD/course validate schemas.
+Explicit JDK21; whitelist-only child environment; canonical SPRING_APPLICATION_JSON pins datasource, Flyway, Redis, JWT files and audit key. All JVMs use `--spring.config.location=classpath:/`; all fetch calls reject redirects. Ports are independently allocated loopback ports. Only newly generated center13306/course13316 database names pass the destructive-operation allowlist. No old DB, Swarm service or volume was touched.
 
-- structured: `m6_course_real_center_structured_1794672935601_eb6a7ef3` and `m6_course_real_course_structured_1794672935601_eb6a7ef3` dropped and absence verified; own children exited, own Redis namespace cleared, private jars/keys deleted: **{'children': True, 'databases': True, 'redis': True, 'secrets': True}**.
-- ddd: `m6_course_real_center_ddd_1794673103772_0a35ca82` and `m6_course_real_course_ddd_1794673103772_0a35ca82` dropped and absence verified; own children exited, own Redis namespace cleared, private jars/keys deleted: **{'children': True, 'databases': True, 'redis': True, 'secrets': True}**.
+- **structured** center DB: `m6_course_real_center_structured_1794679444791_dbaf2443`; course DB: `m6_course_real_course_structured_1794679444791_dbaf2443`.
+  - Own child JVMs stopped and awaited: **PASS**; both own DBs dropped and absence verified: **PASS**; own Redis namespace removed: **PASS**; private copied jars/keys removed: **PASS**.
+- **ddd** center DB: `m6_course_real_center_ddd_1794679540701_3aef482a`; course DB: `m6_course_real_course_ddd_1794679540701_3aef482a`.
+  - Own child JVMs stopped and awaited: **PASS**; both own DBs dropped and absence verified: **PASS**; own Redis namespace removed: **PASS**; private copied jars/keys removed: **PASS**.
 
-## Reproduce
+## Reproduction and existing guards
+From the repository root, with explicit JDK21 JAVA_HOME and dedicated REAL_CENTER_DB_PASSWORD / REAL_COURSE_DB_PASSWORD supplied privately:
 ```bash
-cd course-integration/tests
-npm ci
-export JAVA_HOME="D:/Software/Eclipse Adoptium/jdk-21.0.7.6-hotspot"
-# Supply REAL_CENTER_DB_PASSWORD and REAL_COURSE_DB_PASSWORD without printing them.
-REAL_STRUCTURED_JAR="D:/m3-structured-final47.jar" node run-real-centers.mjs --module=both
+unset REAL_STRUCTURED_JAR REAL_DDD_JAR REAL_GATEWAY_JAR REAL_COURSE_JAR
+node course-integration/tests/run-real-centers.mjs --module=both
 ```
+Run `npm ci` in `course-integration/tests` first if its mysql2 dependency is not installed. No password or token is printed.
 
-No commit/push was made. This verifies immutable jar candidates, not the currently deployed Swarm images. Rebuilding the course image from the new jar and formal candidate Swarm acceptance remain with the deployment owner.
+- `node --check` passed for run-real-centers.mjs, live-six-api.mjs, real-provision.mjs and real-environment.mjs.
+- Existing course real-environment/fixture database guard tests: **2/2 PASS**.
+- Existing acceptance database guard test: **PASS** (`m18-course-real-fixtureguard.log`); unrelated tests were not rerun by that focused command.
+
+This proves the current canonical immutable jar combination. It does not claim deployment/image verification or rerun unrelated backend JUnit/coverage gates. No remaining failure or cross-module code fix was found in this requested final real-course rerun. No commit or push was made.

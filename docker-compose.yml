@@ -1,102 +1,189 @@
-# 一份编排文件，两种用法（docs/deployment.adoc）：
-#   docker compose up -d                              单机：开发、CI、检查演示
-#   bash deploy/stack.sh up                           Swarm 集群（见 docs/deployment.adoc）
-# deploy: 段只在 Swarm 下生效，单机 compose 忽略。
-#
-# 服务器放置方式见 docs/deployment.adoc；本轮未验证远端运行态：
-#   节点标签 rbac.role=data → MySQL + Redis；rbac.role=app → 应用服务。
-#
-# 口令与密钥从 .env 读取（不入库），模板见 deploy/env.example。
-# 注意 docker stack deploy 不会自动读 .env，所以集群部署一律走 deploy/stack.sh。
-# 下面 :- 后面的默认口令只给本机开发和 CI 用；stack.sh 发现 .env 里还是默认值会拒绝部署。
-
-# 版本号不能省：课程服务器是 Ubuntu 18.04 + apt 的 docker.io（20.10），它的 docker stack deploy
-# 遇到没写 version 的文件会报 unsupported Compose file version: 1.0。新版 docker compose 会提示
-# version 已过时，忽略即可。
-version: "3.8"
-
+version: '3.8'
+# Same isolated definition for compose and Swarm. No backend/data ports published.
 services:
   mysql:
-    # 服务器上拉不到 Docker Hub 时，换成 SWR 上的镜像（env.example 有例子）
     image: ${MYSQL_IMAGE:-mysql:8.0}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --innodb-buffer-pool-size=256M       # 2G 机器：给 MySQL 留 ~700MB
-      - --max-connections=200
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: rbac
-      MYSQL_USER: rbac
-      MYSQL_PASSWORD: ${DB_PASSWORD:-rbac}
-      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
     volumes:
       - mysql-data:/var/lib/mysql
-    # 不对外暴露 3306：云服务器公网 IP 上开放数据库端口会被扫库。
-    # 需要连库时：docker compose exec mysql mysql -urbac -p rbac
+    secrets:
+      - mysql-root-password
+      - center-db-password
+      - course-db-password
+    configs:
+      - source: mysql-init
+        target: /docker-entrypoint-initdb.d/10-databases.sh
+        mode: 0555
+    networks: [private]
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test: [CMD-SHELL, 'mysqladmin ping -h 127.0.0.1 --silent']
       interval: 5s
-      timeout: 3s
-      retries: 30
+      retries: 60
     deploy:
-      placement:
-        constraints: [node.labels.rbac.role == data]
-      resources:
-        limits: { memory: 800M }
-
-  # 授权数据缓存（带版本号失效）与登出令牌登记（docs/architecture-structured.adoc）
+      replicas: 1
+      placement: {constraints: ['node.role == manager']}
+      resources: {limits: {memory: 1500M}}
   redis:
     image: ${REDIS_IMAGE:-redis:7-alpine}
-    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    command: [redis-server, --maxmemory, 128mb, --maxmemory-policy, allkeys-lru]
+    networks: [private]
     deploy:
-      placement:
-        constraints: [node.labels.rbac.role == data]
-      resources:
-        limits: { memory: 200M }
-
-  # 单个活动后端：MODULE=rbac-structured（默认）或rbac-ddd。
+      replicas: 1
+      resources: {limits: {memory: 256M}}
   rbac-backend:
-    image: ${REGISTRY:-}${MODULE:-rbac-structured}:${TAG:-latest}
+    image: ${REGISTRY:-}${MODULE:-rbac-structured}:${TAG:-local}
     build:
       context: .
-      args: { MODULE: "${MODULE:-rbac-structured}" }
+      args: {MODULE: '${MODULE:-rbac-structured}'}
     environment:
-      SERVER_PORT: 8081
-      DB_HOST: mysql
-      DB_PASSWORD: ${DB_PASSWORD:-rbac}
-      REDIS_HOST: redis
-      RBAC_JWT_SECRET: ${RBAC_JWT_SECRET:-dev-only-secret-change-me-at-least-32-bytes!!}
-      RBAC_INITIAL_PASSWORD: ${RBAC_INITIAL_PASSWORD:-Init@2026}
-      JAVA_OPTS: ${APP_JAVA_OPTS:--Xms256m -Xmx512m -XX:+UseG1GC}
-    ports:
-      - "8081:8081"
-    # structured等待数据库通过失败重启；DDD骨架本身不依赖MySQL/Redis。
-    # 无depends_on使DDD可用--no-deps单独启动；完整stack仍定义数据服务。
-    restart: on-failure
+      SERVER_PORT: ${RBAC_PORT:-8081}
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/rbac_center?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: rbac_center
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      RBAC_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt-private.pem
+      RBAC_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt-public.pem
+      RBAC_JWT_KID: ${JWT_KID:-rbac1-acceptance-1}
+      RBAC_JWT_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: ${SECURITY_LOG_LEVEL:-INFO}
+      JAVA_OPTS: ${APP_JAVA_OPTS:--Xms128m -Xmx768m}
+      LOGGING_LEVEL_COM_XMU_RBAC_STRUCTURED_CONTROLLER: ${API_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_STRUCTURED_SERVICE: ${SERVICE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_STRUCTURED_MAPPER: ${PERSISTENCE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_STRUCTURED_CONFIG_LAYERLOGGINGASPECT: ${LAYER_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_DDD_INTERFACES: ${API_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_DDD_APPLICATION: ${SERVICE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_DDD_INFRASTRUCTURE: ${PERSISTENCE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_COM_XMU_RBAC_DDD_INFRASTRUCTURE_LOGGING_LAYERLOGGINGASPECT: ${LAYER_LOG_LEVEL:-INFO}
+    secrets:
+      - source: center-db-password
+        target: spring.datasource.password
+      - source: bootstrap-password
+        target: rbac.bootstrap-password
+      # DDD currently reads this exact uppercase placeholder; same secret, not a second value.
+      - source: bootstrap-password
+        target: RBAC_BOOTSTRAP_PASSWORD
+      - source: audit-service-key
+        target: rbac.audit-service-key
+      - jwt-private.pem
+      - jwt-public.pem
+    networks: [private]
     deploy:
-      replicas: ${APP_REPLICAS:-1}
-      placement:
-        constraints: [node.labels.rbac.role == app]
-      restart_policy: { condition: on-failure, delay: 10s }
-      update_config: { order: stop-first, parallelism: 1 }
-      resources:
-        limits: { memory: 700M }
-
-  # 同一前端镜像经稳定服务名代理所选后端，浏览器调用路径保持/api。
-  # MODULE只允许两个后端；使用build/stack脚本时会做白名单校验。
-  rbac-web:
-    image: ${REGISTRY:-}rbac-web:${TAG:-latest}
+      replicas: 1
+      update_config: {order: stop-first, parallelism: 1}
+      rollback_config: {order: stop-first, parallelism: 1}
+      restart_policy: {condition: on-failure, delay: 10s}
+      resources: {limits: {memory: 1200M}}
+  rbac-gateway:
+    image: ${REGISTRY:-}rbac-gateway:${TAG:-local}
     build:
-      context: ./rbac-web
-    ports:
-      - "80:80"
-    depends_on: [rbac-backend]
+      context: .
+      args: {MODULE: rbac-gateway}
+    environment:
+      SERVER_PORT: ${GATEWAY_PORT:-8090}
+      IDENTITY_BASE_URL: http://rbac-backend:${RBAC_PORT:-8081}
+      COURSE_BASE_URL: http://course-backend:${COURSE_PORT:-8080}
+      GATEWAY_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
+      GATEWAY_JWK_SET_URI: http://rbac-backend:${RBAC_PORT:-8081}/.well-known/jwks.json
+      GATEWAY_ALLOW_HTTP: 'true'
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: ${SECURITY_LOG_LEVEL:-INFO}
+    networks: [private]
     deploy:
-      placement:
-        constraints: [node.labels.rbac.role == app]
-      resources:
-        limits: { memory: 64M }
-
+      replicas: 1
+      restart_policy: {condition: on-failure, delay: 10s}
+      resources: {limits: {memory: 768M}}
+  rbac-web:
+    image: ${REGISTRY:-}rbac-web:${TAG:-local}
+    build: {context: ./rbac-web}
+    environment:
+      RBAC_PORT: ${RBAC_PORT:-8081}
+    configs:
+      - source: rbac-nginx
+        target: /etc/nginx/templates/default.conf.template
+    secrets: [tls.key, tls.crt]
+    ports:
+      - '${RBAC_TLS_PORT:-8443}:443'
+    networks: [private]
+    deploy:
+      replicas: 1
+      restart_policy: {condition: on-failure, delay: 5s}
+      resources: {limits: {memory: 128M}}
+  course-backend:
+    image: ${REGISTRY:-}course-backend:${TAG:-local}
+    build:
+      context: ${COURSE_BUILD:-.cache/course-source/prepared}/backend
+      dockerfile: ${COURSE_DOCKERFILE:-../../../../deploy/full-course-backend.Dockerfile}
+    environment:
+      SERVER_PORT: ${COURSE_PORT:-8080}
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/rbac_course?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: rbac_course
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      RBAC_JWT_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
+      SPRING_PROFILES_ACTIVE: integration
+      IDENTITY_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
+      IDENTITY_JWK_SET_URI: http://rbac-backend:${RBAC_PORT:-8081}/.well-known/jwks.json
+      IDENTITY_BASE_URL: http://rbac-backend:${RBAC_PORT:-8081}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: rbac_course
+      DB_USER: rbac_course
+      LOGGING_LEVEL_CN_EDU_XMU_PROJECTMGT_API: ${API_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_CN_EDU_XMU_PROJECTMGT_SERVICE: ${SERVICE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_CN_EDU_XMU_PROJECTMGT_INFRASTRUCTURE: ${PERSISTENCE_LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_CLIENT: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: ${SECURITY_LOG_LEVEL:-INFO}
+    secrets:
+      - source: course-db-password
+        target: spring.datasource.password
+      - source: audit-service-key
+        target: app.integration.service-key
+      - source: course-db-password
+        target: DB_PASSWORD
+    networks: [private]
+    deploy:
+      replicas: 1
+      restart_policy: {condition: on-failure, delay: 10s}
+      resources: {limits: {memory: 1200M}}
+  course-web:
+    image: ${REGISTRY:-}course-web:${TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/full-course-web.Dockerfile
+    environment:
+      RBAC_PORT: ${RBAC_PORT:-8081}
+      GATEWAY_PORT: ${GATEWAY_PORT:-8090}
+    configs:
+      - source: course-nginx
+        target: /etc/nginx/templates/default.conf.template
+    secrets: [tls.key, tls.crt]
+    ports:
+      - '${COURSE_TLS_PORT:-9443}:443'
+    networks: [private]
+    deploy:
+      replicas: 1
+      restart_policy: {condition: on-failure, delay: 5s}
+      resources: {limits: {memory: 128M}}
+networks:
+  private:
+    driver: overlay
+    attachable: true
 volumes:
   mysql-data:
+secrets:
+  mysql-root-password: {file: '${RUNTIME_DIR:-.runtime/full}/mysql-root-password'}
+  center-db-password: {file: '${RUNTIME_DIR:-.runtime/full}/center-db-password'}
+  course-db-password: {file: '${RUNTIME_DIR:-.runtime/full}/course-db-password'}
+  bootstrap-password: {file: '${RUNTIME_DIR:-.runtime/full}/bootstrap-password'}
+  audit-service-key: {file: '${RUNTIME_DIR:-.runtime/full}/audit-service-key'}
+  jwt-private.pem: {file: '${RUNTIME_DIR:-.runtime/full}/jwt-private.pem'}
+  jwt-public.pem: {file: '${RUNTIME_DIR:-.runtime/full}/jwt-public.pem'}
+  tls.key: {file: '${RUNTIME_DIR:-.runtime/full}/tls.key'}
+  tls.crt: {file: '${RUNTIME_DIR:-.runtime/full}/tls.crt'}
+configs:
+  mysql-init: {file: ./deploy/full-mysql-init.sh}
+  rbac-nginx: {file: ./rbac-web/nginx.conf}
+  course-nginx: {file: ./deploy/full-course-nginx.conf}

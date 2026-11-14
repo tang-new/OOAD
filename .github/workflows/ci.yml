@@ -1,32 +1,32 @@
-# 每次 push / PR（docs/test-plan.adoc）：
-#   verify：后端编译 + 全部测试（连真实 MySQL、Redis）+ Jacoco 门槛；再用同一套服务跑前端端到端测试；最后验证镜像能构建
-#   web：前端类型检查 + 单元测试与覆盖率门槛 + 生产构建
 name: ci
-
 on:
   push:
     branches: [main]
   pull_request:
-
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # 集成测试连的数据库与缓存，端口与本机开发时一致（rbac-structured/src/test/resources/application-test.yml）
+    timeout-minutes: 60
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: rbac_test
+          MYSQL_ROOT_PASSWORD: ci-isolated-only
         ports: ['13306:3306']
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
-          --health-interval=5s --health-timeout=3s --health-retries=30
+          --health-cmd="mysqladmin ping -h localhost --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=60
       redis:
         image: redis:7-alpine
         ports: ['16379:6379']
         options: >-
-          --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=3s --health-retries=20
+          --health-cmd="redis-cli ping" --health-interval=5s --health-retries=30
+    env:
+      ACCEPTANCE_DB_PASSWORD: ci-isolated-only
+      E2E_DB_PASSWORD: ci-isolated-only
+      DB_PASSWORD: ci-isolated-only
+      TEST_DB_PASSWORD: ci-isolated-only
+      RBAC_DB_PASSWORD: ci-isolated-only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -34,86 +34,95 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      # GitHub 的机器在境外，直连 Maven Central，不用华为云镜像
-      - run: ./mvnw -B verify
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: jacoco-report
-          path: rbac-structured/target/site/jacoco/
-      # 前端端到端：真实的 jar + 同一个 MySQL、Redis + 生产构建的前端，在 Chromium 里走完整流程
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
-          cache-dependency-path: rbac-web/package-lock.json
+          cache-dependency-path: |
+            rbac-web/package-lock.json
+            tools/acceptance/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML openapi-spec-validator
+      - run: bash tools/install-clonefactory.sh
+      - run: python tools/generate-rbac1-contract.py --check
+      - run: python deploy/full-config-test.py
+      - run: python tools/collect-acceptance-evidence.test.py
+      # Rename ONLY this job-owned service; contract migration script hardcodes this safe name.
+      - run: docker rename '${{ job.services.mysql.id }}' rbac-phase2-test-mysql
+      - name: Initialize only the job-owned backend test schemas
+        run: >-
+          docker exec rbac-phase2-test-mysql sh -c
+          'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -e "CREATE DATABASE rbac1_structured_test CHARACTER SET utf8mb4; CREATE DATABASE rbac1_ddd_test CHARACTER SET utf8mb4;"'
+      # Run normal JUnit and package jars before collecting out-of-process HTTP coverage.
+      - run: bash mvnw -B -ntp clean package
+      - run: python tools/generate-rbac1-contract-test.py
+      - run: node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
+      - name: Locate the Maven-cached JaCoCo 0.8.12 runtime agent
+        shell: bash
+        run: |
+          source deploy/full-jacoco-agent.sh
+          printf 'ACCEPTANCE_JACOCO_AGENT=%s\n' "$ACCEPTANCE_JACOCO_AGENT" >> "$GITHUB_ENV"
+          printf 'ACCEPTANCE_JACOCO_CLI=%s\n' "$ACCEPTANCE_JACOCO_CLI" >> "$GITHUB_ENV"
+      - run: npm ci && npm test
+        working-directory: tools/acceptance
+      - run: npm run acceptance
+        id: http-acceptance
+        working-directory: tools/acceptance
+      # Merge JUnit + real HTTP exec files before applying the original unmodified thresholds.
+      # Do NOT clean or rerun JUnit here: both would risk losing the already collected evidence.
+      - run: bash mvnw -B -ntp verify -DskipTests
+        if: ${{ !cancelled() && steps.http-acceptance.outcome != 'skipped' }}
+      - name: Verify actual compiled UML on this runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y graphviz fonts-noto-cjk
+          python tools/render-rbac1-design.test.py
+          python tools/render-rbac1-design.py --strict-compiled
+          python tools/render-rbac1-design.py --check
       - run: npm ci --no-audit --no-fund
         working-directory: rbac-web
-      - run: node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
+      - run: npm run typecheck && npm run test:coverage && npm run build
+        working-directory: rbac-web
       - run: npx playwright install --with-deps chromium
         working-directory: rbac-web
-      - run: npx playwright test
+      # Sequential; each suite owns a unique fixture DB. Both are real business backends.
+      - run: npm run e2e
         working-directory: rbac-web
+        env:
+          E2E_MODULE: rbac-structured
+      - run: npm run e2e
+        working-directory: rbac-web
+        env:
+          E2E_MODULE: rbac-ddd
+      - run: bash tools/prepare-course.sh --build
+      - name: Retain and execute all pinned upstream course tests
+        run: bash course-integration/tests/run-domain-tests.sh
+      - name: Real two-center, gateway and course acceptance
+        run: |
+          npm ci --prefix course-integration/tests
+          node course-integration/tests/run-real-centers.mjs --module=both
+        env:
+          REAL_CENTER_DB_PASSWORD: ci-isolated-only
+          REAL_COURSE_DB_PASSWORD: m6-course-local-only
+      - run: |
+          docker build --build-arg MODULE=rbac-structured -t rbac-structured:ci .
+          docker build --build-arg MODULE=rbac-ddd -t rbac-ddd:ci .
+          docker build --build-arg MODULE=rbac-gateway -t rbac-gateway:ci .
+          docker build -t rbac-web:ci rbac-web
+          docker build -f deploy/full-course-backend.Dockerfile -t course-backend:ci .cache/course-source/prepared/backend
+          docker build -f deploy/full-course-web.Dockerfile -t course-web:ci .
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: verification-reports
           path: |
+            **/target/site/jacoco/
+            **/target/surefire-reports/
+            rbac-web/coverage/
             rbac-web/playwright-report/
             rbac-web/test-results/
-      - run: docker compose build
-
-  ddd-skeleton:
-    # 不提供MySQL/Redis服务，证明骨架可独立启动；这不是DDD业务验收。
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-      - run: ./mvnw -B -pl rbac-ddd -am clean verify
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: rbac-web/package-lock.json
-      - run: npm ci --no-audit --no-fund
-        working-directory: rbac-web
-      - run: npx playwright install --with-deps chromium
-        working-directory: rbac-web
-      - run: npm run e2e:m2
-        working-directory: rbac-web
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: m2-ddd-browser
-          path: rbac-web/test-results/m2/
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ddd-skeleton-jacoco
-          path: rbac-ddd/target/site/jacoco/
-
-  web:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: rbac-web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: rbac-web/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm run typecheck
-      - run: npm run test:coverage
-      - run: npx vite build
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: web-coverage
-          path: rbac-web/coverage/
+            docs/design/
+            /tmp/m6-course-real-*/report.json
+            ~/Downloads/rbac1-context-extracted/*e2e*

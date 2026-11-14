@@ -1,4 +1,4 @@
-> Follow-up: real two-center + real gateway + real course acceptance now passes both six-class runs on final47/canonicalDDD. See `REAL-CENTERS-VERIFICATION.md`; older image IDs below predate the flat audit-schema fix.
+> Final follow-up: the current default canonical structured + DDD targets and current `rbac-gateway.jar` passed all 12 real-course scenarios. See `REAL-CENTERS-VERIFICATION.md` and external `m18-course-real-current.log`. This is not the old final47 run; older image IDs below are historical.
 
 # Verified locally
 

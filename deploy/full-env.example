@@ -1,0 +1,20 @@
+# Copy to trusted .env (ignored), or export values explicitly; exports take precedence.
+# No password/key values here. full-secrets.sh creates owner-only .runtime material.
+MODULE=rbac-structured
+STACK=rbac1-acceptance
+TAG=local
+REGISTRY=
+RBAC_PORT=8081
+COURSE_PORT=8080
+GATEWAY_PORT=8090
+RBAC_TLS_PORT=8443
+COURSE_TLS_PORT=9443
+JWT_ISSUER=https://identity.rbac1.local
+JWT_KID=rbac1-acceptance-1
+API_LOG_LEVEL=INFO
+SERVICE_LOG_LEVEL=INFO
+PERSISTENCE_LOG_LEVEL=INFO
+LAYER_LOG_LEVEL=INFO
+SECURITY_LOG_LEVEL=INFO
+# JAVA_HOME must explicitly point at JDK21 for build/tests.
+# No remote endpoints, existing stack names, or existing production volumes are supported.

@@ -1,0 +1,1122 @@
+{
+  "format": "rbac1-local-final-dual-swarm-v1",
+  "timestamp": "2026-11-14T18:31:44Z",
+  "status": "local-final-dual-runtime-passed",
+  "localFinalDeploymentAccepted": true,
+  "finalProjectAcceptance": "Main must combine with remaining project/browser acceptance; this evidence does not assert those ran",
+  "externalDeployment": {
+    "performed": false,
+    "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted"
+  },
+  "stack": "rbac1-acceptance",
+  "tag": "local-final-20261115-022901",
+  "activeModule": "rbac-ddd",
+  "prerequisites": {
+    "status": "prerequisites-passed",
+    "sharedReport": {
+      "file": "report.json",
+      "sha256": "ebb098e2c1d856a25a524836f7eece46c73a6846057f427780d25b112ab048ab",
+      "counts": {
+        "structured": 25,
+        "ddd": 25
+      },
+      "T21": "pass",
+      "exitCode": 0
+    },
+    "reactorVerify": {
+      "file": "m17-final-verify.log",
+      "sha256": "4f5fd55c39c7ce90d62f478a55bfb28e35357b9c69a7c2f140e67f8095b4ce5b",
+      "status": "BUILD SUCCESS",
+      "modules": [
+        "rbac-contract",
+        "rbac-structured",
+        "rbac-ddd",
+        "rbac-gateway"
+      ]
+    },
+    "canonicalArtifacts": {
+      "rbac-structured": {
+        "path": "rbac-structured/target/rbac-structured.jar",
+        "sha256": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
+        "bytes": 85036578
+      },
+      "rbac-ddd": {
+        "path": "rbac-ddd/target/rbac-ddd.jar",
+        "sha256": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
+        "bytes": 70393043
+      },
+      "rbac-gateway": {
+        "path": "rbac-gateway/target/rbac-gateway.jar",
+        "sha256": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+        "bytes": 28749757
+      },
+      "course-backend": {
+        "path": ".cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar",
+        "sha256": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a",
+        "bytes": 88358580
+      }
+    },
+    "junit": {
+      "rbac-contract": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportFiles": 1
+      },
+      "rbac-structured": {
+        "tests": 49,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportFiles": 7
+      },
+      "rbac-ddd": {
+        "tests": 112,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportFiles": 19
+      },
+      "rbac-gateway": {
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportFiles": 3
+      }
+    }
+  },
+  "sameFrontendImageIds": true,
+  "samePersistentVolumes": true,
+  "controlledSwitchEvidence": {
+    "rbac-structured": {
+      "stack": "rbac1-acceptance",
+      "nextModule": "rbac-structured",
+      "nextTag": "local-final-20261115-022901",
+      "before": {
+        "at": "2026-11-14T18:29:51.608574+00:00",
+        "services": {
+          "rbac-web": {
+            "service": "rbac1-acceptance_rbac-web",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-web:candidate-20261114-230011",
+            "containers": [
+              {
+                "containerId": "b9a74b81e26b17b20f3484f3b32fe8871bfc58140d3ed7534734217edeb06f8c",
+                "imageId": "sha256:9a7c2382b6dcb06cc1eea49261ebfdb43f8533b57e9de0f2f5e4eabd8e8dcab8"
+              }
+            ]
+          },
+          "course-web": {
+            "service": "rbac1-acceptance_course-web",
+            "desiredReplicas": 1,
+            "configuredImage": "course-web:candidate-20261114-230011",
+            "containers": [
+              {
+                "containerId": "def094558ca3530090a82d336ce7e111581ff3708627c0bd9c3597a44d6bac1e",
+                "imageId": "sha256:dcc49d713f699b2101a797202670b4d02e15b51a5705272a6d68441a7865c461"
+              }
+            ]
+          },
+          "rbac-gateway": {
+            "service": "rbac1-acceptance_rbac-gateway",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-gateway:candidate-20261114-230011",
+            "containers": [
+              {
+                "containerId": "e5701cb6355fef878a99d5635ec077b7ec42c2c192ab7e785ccd9f4d4ded1098",
+                "imageId": "sha256:e0b0a80535f04789355ddf39b14a4e5d722cbe4c5e5db803814b438c33c8f7d7"
+              }
+            ]
+          },
+          "course-backend": {
+            "service": "rbac1-acceptance_course-backend",
+            "desiredReplicas": 1,
+            "configuredImage": "course-backend:candidate-20261114-230011",
+            "containers": [
+              {
+                "containerId": "2ad104d6abcf2ae972f3f6d892262b46f5f443d99864ee6aa7419b4de8499627",
+                "imageId": "sha256:3d09f92c5bc966f3f7b41472235421a09f53e19929ee797a6a07820fd72d50a1"
+              }
+            ]
+          },
+          "rbac-backend": {
+            "service": "rbac1-acceptance_rbac-backend",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-ddd:candidate-20261114-230011",
+            "containers": [
+              {
+                "containerId": "96cd14059ea6fc0da0dbe87610ab4378bacad72772dd600b0a5bb9aec247f3e3",
+                "imageId": "sha256:78211497c644fb862dfd5ebf293223eccedc30d7036cdc6e95a67535adb765dd"
+              }
+            ]
+          },
+          "mysql": {
+            "service": "rbac1-acceptance_mysql",
+            "desiredReplicas": 1,
+            "configuredImage": "mysql:8.0",
+            "containers": [
+              {
+                "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+                "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39"
+              }
+            ]
+          },
+          "redis": {
+            "service": "rbac1-acceptance_redis",
+            "desiredReplicas": 1,
+            "configuredImage": "redis:7-alpine",
+            "containers": [
+              {
+                "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+                "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0"
+              }
+            ]
+          }
+        }
+      },
+      "stopped": {
+        "at": "2026-11-14T18:30:22.669583+00:00",
+        "services": {
+          "rbac-web": {
+            "service": "rbac1-acceptance_rbac-web",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-web:candidate-20261114-230011",
+            "containers": []
+          },
+          "course-web": {
+            "service": "rbac1-acceptance_course-web",
+            "desiredReplicas": 0,
+            "configuredImage": "course-web:candidate-20261114-230011",
+            "containers": []
+          },
+          "rbac-gateway": {
+            "service": "rbac1-acceptance_rbac-gateway",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-gateway:candidate-20261114-230011",
+            "containers": []
+          },
+          "course-backend": {
+            "service": "rbac1-acceptance_course-backend",
+            "desiredReplicas": 0,
+            "configuredImage": "course-backend:candidate-20261114-230011",
+            "containers": []
+          },
+          "rbac-backend": {
+            "service": "rbac1-acceptance_rbac-backend",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-ddd:candidate-20261114-230011",
+            "containers": []
+          },
+          "mysql": {
+            "service": "rbac1-acceptance_mysql",
+            "desiredReplicas": 1,
+            "configuredImage": "mysql:8.0",
+            "containers": [
+              {
+                "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+                "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39"
+              }
+            ]
+          },
+          "redis": {
+            "service": "rbac1-acceptance_redis",
+            "desiredReplicas": 1,
+            "configuredImage": "redis:7-alpine",
+            "containers": [
+              {
+                "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+                "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0"
+              }
+            ]
+          }
+        },
+        "allFiveApplicationServicesStopped": true,
+        "sameMySqlRedisContainers": true
+      }
+    },
+    "rbac-ddd": {
+      "stack": "rbac1-acceptance",
+      "nextModule": "rbac-ddd",
+      "nextTag": "local-final-20261115-022901",
+      "before": {
+        "at": "2026-11-14T18:30:51.420479+00:00",
+        "services": {
+          "rbac-web": {
+            "service": "rbac1-acceptance_rbac-web",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-web:local-final-20261115-022901",
+            "containers": [
+              {
+                "containerId": "580435342d0d79bc301ea8226cc69d510462d4aa99acaaa22449641a6a38fca5",
+                "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b"
+              }
+            ]
+          },
+          "course-web": {
+            "service": "rbac1-acceptance_course-web",
+            "desiredReplicas": 1,
+            "configuredImage": "course-web:local-final-20261115-022901",
+            "containers": [
+              {
+                "containerId": "21a5fd94f6a60d57b82ec0eec7ac4312a7ada0489a324cdb6b8954f91bbb1eee",
+                "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129"
+              }
+            ]
+          },
+          "rbac-gateway": {
+            "service": "rbac1-acceptance_rbac-gateway",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-gateway:local-final-20261115-022901",
+            "containers": [
+              {
+                "containerId": "6106015a5b31791a317fae934023f9f05b1b6543fc9cec18d11396709e3ba54e",
+                "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053"
+              }
+            ]
+          },
+          "course-backend": {
+            "service": "rbac1-acceptance_course-backend",
+            "desiredReplicas": 1,
+            "configuredImage": "course-backend:local-final-20261115-022901",
+            "containers": [
+              {
+                "containerId": "7edf8040492a79103613b2fb5b32a125f073635eb96a6bc94b55351f00ccae25",
+                "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0"
+              }
+            ]
+          },
+          "rbac-backend": {
+            "service": "rbac1-acceptance_rbac-backend",
+            "desiredReplicas": 1,
+            "configuredImage": "rbac-structured:local-final-20261115-022901",
+            "containers": [
+              {
+                "containerId": "385cda0df70164f17c4fe5d0cf27889bce7af1187b215a9f86ffb68c90c21997",
+                "imageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3"
+              }
+            ]
+          },
+          "mysql": {
+            "service": "rbac1-acceptance_mysql",
+            "desiredReplicas": 1,
+            "configuredImage": "mysql:8.0",
+            "containers": [
+              {
+                "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+                "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39"
+              }
+            ]
+          },
+          "redis": {
+            "service": "rbac1-acceptance_redis",
+            "desiredReplicas": 1,
+            "configuredImage": "redis:7-alpine",
+            "containers": [
+              {
+                "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+                "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0"
+              }
+            ]
+          }
+        }
+      },
+      "stopped": {
+        "at": "2026-11-14T18:31:22.236109+00:00",
+        "services": {
+          "rbac-web": {
+            "service": "rbac1-acceptance_rbac-web",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-web:local-final-20261115-022901",
+            "containers": []
+          },
+          "course-web": {
+            "service": "rbac1-acceptance_course-web",
+            "desiredReplicas": 0,
+            "configuredImage": "course-web:local-final-20261115-022901",
+            "containers": []
+          },
+          "rbac-gateway": {
+            "service": "rbac1-acceptance_rbac-gateway",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-gateway:local-final-20261115-022901",
+            "containers": []
+          },
+          "course-backend": {
+            "service": "rbac1-acceptance_course-backend",
+            "desiredReplicas": 0,
+            "configuredImage": "course-backend:local-final-20261115-022901",
+            "containers": []
+          },
+          "rbac-backend": {
+            "service": "rbac1-acceptance_rbac-backend",
+            "desiredReplicas": 0,
+            "configuredImage": "rbac-structured:local-final-20261115-022901",
+            "containers": []
+          },
+          "mysql": {
+            "service": "rbac1-acceptance_mysql",
+            "desiredReplicas": 1,
+            "configuredImage": "mysql:8.0",
+            "containers": [
+              {
+                "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+                "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39"
+              }
+            ]
+          },
+          "redis": {
+            "service": "rbac1-acceptance_redis",
+            "desiredReplicas": 1,
+            "configuredImage": "redis:7-alpine",
+            "containers": [
+              {
+                "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+                "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0"
+              }
+            ]
+          }
+        },
+        "allFiveApplicationServicesStopped": true,
+        "sameMySqlRedisContainers": true
+      }
+    }
+  },
+  "moduleSwitch": "Controlled stop-write barrier; all five old application/edge containers stopped before next deploy; no strict rolling single-writer claim",
+  "rounds": {
+    "rbac-structured": {
+      "format": "rbac1-local-swarm-v1",
+      "module": "rbac-structured",
+      "stack": "rbac1-acceptance",
+      "timestamp": "2026-11-14T18:30:23Z",
+      "tls": "self-signed local acceptance only; NOT public trust",
+      "stage": "local-final",
+      "finalAcceptance": false,
+      "verificationScope": "Seven-service runtime health, local TLS, private-route denial, published-port isolation and exact image identity; not final business acceptance",
+      "status": "local-final-runtime-passed",
+      "services": [
+        {
+          "name": "rbac1-acceptance_mysql",
+          "image": "mysql:8.0",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "center-db-password",
+            "course-db-password",
+            "mysql-root-password"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 3 hours ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "124xp0v6ni0j54kiuz48kxx86",
+              "Image": "mysql:8.0",
+              "Name": "rbac1-acceptance_mysql.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+          "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+          "expectedLocalImageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+          "imageMatchesLocalBuild": true,
+          "persistentVolumes": [
+            {
+              "name": "rbac1-acceptance_mysql-data",
+              "destination": "/var/lib/mysql"
+            }
+          ],
+          "health": "healthy"
+        },
+        {
+          "name": "rbac1-acceptance_redis",
+          "image": "redis:7-alpine",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [],
+          "tasks": [
+            {
+              "CurrentState": "Running 3 hours ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "xw68ibqw9v46zxm1l4w2ewru1",
+              "Image": "redis:7-alpine",
+              "Name": "rbac1-acceptance_redis.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+          "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0",
+          "expectedLocalImageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0",
+          "imageMatchesLocalBuild": true,
+          "ping": "PONG"
+        },
+        {
+          "name": "rbac1-acceptance_rbac-backend",
+          "image": "rbac-structured:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "rbac.audit-service-key",
+            "RBAC_BOOTSTRAP_PASSWORD",
+            "rbac.bootstrap-password",
+            "spring.datasource.password",
+            "jwt-private.pem",
+            "jwt-public.pem"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 3 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "zm4bmtg76kn8m9lpr9qlvr2tj",
+              "Image": "rbac-structured:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-backend.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "385cda0df70164f17c4fe5d0cf27889bce7af1187b215a9f86ffb68c90c21997",
+          "imageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3",
+          "expectedLocalImageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_rbac-gateway",
+          "image": "rbac-gateway:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [],
+          "tasks": [
+            {
+              "CurrentState": "Running 4 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "q9nqlfoa2bm6ul0r9pqfna162",
+              "Image": "rbac-gateway:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-gateway.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "6106015a5b31791a317fae934023f9f05b1b6543fc9cec18d11396709e3ba54e",
+          "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "expectedLocalImageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_rbac-web",
+          "image": "rbac-web:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [
+            {
+              "Protocol": "tcp",
+              "TargetPort": 443,
+              "PublishedPort": 8443,
+              "PublishMode": "ingress"
+            }
+          ],
+          "secretTargets": [
+            "tls.crt",
+            "tls.key"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 5 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "gintdfhsks3jqm7cbw4plfea1",
+              "Image": "rbac-web:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-web.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "580435342d0d79bc301ea8226cc69d510462d4aa99acaaa22449641a6a38fca5",
+          "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "expectedLocalImageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_course-backend",
+          "image": "course-backend:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "app.integration.service-key",
+            "spring.datasource.password",
+            "DB_PASSWORD"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 5 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "0kvphd5ma3r8t0cs3cw2yqiwf",
+              "Image": "course-backend:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_course-backend.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "7edf8040492a79103613b2fb5b32a125f073635eb96a6bc94b55351f00ccae25",
+          "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
+          "expectedLocalImageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_course-web",
+          "image": "course-web:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [
+            {
+              "Protocol": "tcp",
+              "TargetPort": 443,
+              "PublishedPort": 9443,
+              "PublishMode": "ingress"
+            }
+          ],
+          "secretTargets": [
+            "tls.crt",
+            "tls.key"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 6 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "m07amtbj3exikj0b7f394gs2l",
+              "Image": "course-web:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_course-web.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "21a5fd94f6a60d57b82ec0eec7ac4312a7ada0489a324cdb6b8954f91bbb1eee",
+          "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
+          "expectedLocalImageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
+          "imageMatchesLocalBuild": true
+        }
+      ],
+      "probes": [
+        {
+          "url": "http://course-backend:8080/actuator/health",
+          "via": "owned course-web overlay task",
+          "passed": true
+        },
+        {
+          "url": "http://rbac-gateway:8090/api/v1/actuator/health",
+          "via": "owned course-web overlay task",
+          "passed": true
+        },
+        {
+          "url": "http://course-backend:8080/api/terms",
+          "via": "owned course-web overlay task",
+          "status": 401,
+          "expected": 401,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/",
+          "status": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/",
+          "status": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/api/v1/actuator/health",
+          "status": 200,
+          "expected": 200,
+          "passed": true,
+          "health": "UP"
+        },
+        {
+          "url": "https://localhost:8443/integration/authorities",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/identity/users/1",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/integration/authorities",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/identity/users/1",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/api/terms",
+          "status": 401,
+          "expected": 401,
+          "passed": true
+        }
+      ],
+      "docker": {
+        "NodeID": "wgezev07y7l5lcl6wqojfxzc3",
+        "NodeAddr": "192.168.65.3",
+        "LocalNodeState": "active",
+        "ControlAvailable": true,
+        "Error": "",
+        "Nodes": 1,
+        "Managers": 1,
+        "Cluster": {
+          "ID": "1v8xgt7ffdyytrrgf9plwn1by",
+          "Version": {
+            "Index": 10
+          },
+          "CreatedAt": "2026-11-14T14:18:28.082086553Z",
+          "UpdatedAt": "2026-11-14T14:18:28.619223932Z",
+          "Spec": {
+            "Name": "default",
+            "Labels": {},
+            "Orchestration": {
+              "TaskHistoryRetentionLimit": 5
+            },
+            "Raft": {
+              "SnapshotInterval": 10000,
+              "KeepOldSnapshots": 0,
+              "LogEntriesForSlowFollowers": 500,
+              "ElectionTick": 10,
+              "HeartbeatTick": 1
+            },
+            "Dispatcher": {
+              "HeartbeatPeriod": 5000000000
+            },
+            "CAConfig": {
+              "NodeCertExpiry": 7776000000000000
+            },
+            "TaskDefaults": {},
+            "EncryptionConfig": {
+              "AutoLockManagers": false
+            }
+          },
+          "TLSInfo": {
+            "TrustRoot": "-----BEGIN CERTIFICATE-----\nMIIBajCCARCgAwIBAgIUPKi7DCaw7uaoTCQ080XBFzWJN1UwCgYIKoZIzj0EAwIw\nEzERMA8GA1UEAxMIc3dhcm0tY2EwHhcNMjYxMTE0MTQxMzAwWhcNNDYxMTA5MTQx\nMzAwWjATMREwDwYDVQQDEwhzd2FybS1jYTBZMBMGByqGSM49AgEGCCqGSM49AwEH\nA0IABEw6RPL5px+Vpt/foQv1Hvut2tA08RJg2l2YiUAVEQ2CY2YJUIb3Ti6skrqR\nRhNn+VXfDN70ye8tIanR7Qvoh/ijQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMB\nAf8EBTADAQH/MB0GA1UdDgQWBBSpY1RB96graOJ05aXO4szKEqo7CDAKBggqhkjO\nPQQDAgNIADBFAiAwIzbtTwdLCGwnktaWmptR2pY0DpjSmMJ3ZILAKBr8OQIhALz7\nqkJ5nZ61j/bGl8ONR0799dxxI+6panXZ8gnDZEp8\n-----END CERTIFICATE-----\n",
+            "CertIssuerSubject": "MBMxETAPBgNVBAMTCHN3YXJtLWNh",
+            "CertIssuerPublicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETDpE8vmnH5Wm39+hC/Ue+63a0DTxEmDaXZiJQBURDYJjZglQhvdOLqySupFGE2f5Vd8M3vTJ7y0hqdHtC+iH+A=="
+          },
+          "RootRotationInProgress": false,
+          "DefaultAddrPool": null,
+          "SubnetSize": 24,
+          "DataPathPort": 4789
+        }
+      },
+      "nodes": [
+        {
+          "Availability": "Active",
+          "EngineVersion": "29.8.0",
+          "Hostname": "docker-desktop",
+          "ID": "wgezev07y7l5lcl6wqojfxzc3",
+          "ManagerStatus": "Leader",
+          "Self": true,
+          "Status": "Ready",
+          "TLSStatus": "Ready"
+        }
+      ],
+      "tlsEndpoints": [
+        {
+          "port": 8443,
+          "protocol": "TLSv1.3",
+          "cipher": "TLS_AES_256_GCM_SHA384",
+          "certificateSha256": "429ecf4ea65f64d996ad632ba97193325d220466cdb4d4e2ba92228742fc31f9",
+          "trust": "local self-signed, not public trust"
+        },
+        {
+          "port": 9443,
+          "protocol": "TLSv1.3",
+          "cipher": "TLS_AES_256_GCM_SHA384",
+          "certificateSha256": "429ecf4ea65f64d996ad632ba97193325d220466cdb4d4e2ba92228742fc31f9",
+          "trust": "local self-signed, not public trust"
+        }
+      ]
+    },
+    "rbac-ddd": {
+      "format": "rbac1-local-swarm-v1",
+      "module": "rbac-ddd",
+      "stack": "rbac1-acceptance",
+      "timestamp": "2026-11-14T18:31:23Z",
+      "tls": "self-signed local acceptance only; NOT public trust",
+      "stage": "local-final",
+      "finalAcceptance": false,
+      "verificationScope": "Seven-service runtime health, local TLS, private-route denial, published-port isolation and exact image identity; not final business acceptance",
+      "status": "local-final-runtime-passed",
+      "services": [
+        {
+          "name": "rbac1-acceptance_mysql",
+          "image": "mysql:8.0",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "center-db-password",
+            "course-db-password",
+            "mysql-root-password"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 3 hours ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "124xp0v6ni0j54kiuz48kxx86",
+              "Image": "mysql:8.0",
+              "Name": "rbac1-acceptance_mysql.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "8b7262b81b0465436cd5abd31cd9a41ac3a32b021ea1696690ab3f20fed063f5",
+          "imageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+          "expectedLocalImageId": "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+          "imageMatchesLocalBuild": true,
+          "persistentVolumes": [
+            {
+              "name": "rbac1-acceptance_mysql-data",
+              "destination": "/var/lib/mysql"
+            }
+          ],
+          "health": "healthy"
+        },
+        {
+          "name": "rbac1-acceptance_redis",
+          "image": "redis:7-alpine",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [],
+          "tasks": [
+            {
+              "CurrentState": "Running 3 hours ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "xw68ibqw9v46zxm1l4w2ewru1",
+              "Image": "redis:7-alpine",
+              "Name": "rbac1-acceptance_redis.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "c2d31ed59e4309da5d6d8502487a1baf4ba6c6be22e692c26ec62266e37e9dad",
+          "imageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0",
+          "expectedLocalImageId": "sha256:bb8953020f6597e47d5d699a9910a25d77a69608dbd58e0f722940598ed85fc0",
+          "imageMatchesLocalBuild": true,
+          "ping": "PONG"
+        },
+        {
+          "name": "rbac1-acceptance_rbac-backend",
+          "image": "rbac-ddd:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "rbac.audit-service-key",
+            "rbac.bootstrap-password",
+            "RBAC_BOOTSTRAP_PASSWORD",
+            "spring.datasource.password",
+            "jwt-private.pem",
+            "jwt-public.pem"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 4 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "dkq6ixcxr4m75c1uf8rubrz1b",
+              "Image": "rbac-ddd:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-backend.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "f032d4eea1d4a197a0c2411b74908e2a201b397162ad0a7dac97428b0b93d9c1",
+          "imageId": "sha256:66eac4f97dd8c8b2d248c7ace5dea9d02e323b5191ba973a0bf342c199e4d377",
+          "expectedLocalImageId": "sha256:66eac4f97dd8c8b2d248c7ace5dea9d02e323b5191ba973a0bf342c199e4d377",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_rbac-gateway",
+          "image": "rbac-gateway:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [],
+          "tasks": [
+            {
+              "CurrentState": "Running 4 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "hapvf7yfgca1vvog0rafsxpmc",
+              "Image": "rbac-gateway:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-gateway.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "97988e2bbbe814280e0c987d6c852459b94952c222074f857461ca0b1d5940f4",
+          "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "expectedLocalImageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_rbac-web",
+          "image": "rbac-web:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [
+            {
+              "Protocol": "tcp",
+              "TargetPort": 443,
+              "PublishedPort": 8443,
+              "PublishMode": "ingress"
+            }
+          ],
+          "secretTargets": [
+            "tls.crt",
+            "tls.key"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 5 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "intdv2k69ezp3hvrvnyvhpv71",
+              "Image": "rbac-web:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_rbac-web.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "3cbbb2f5808917fb1039e96859e70653ee911a1bf96c92a22beadbc3450cb5e1",
+          "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "expectedLocalImageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_course-backend",
+          "image": "course-backend:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [],
+          "secretTargets": [
+            "app.integration.service-key",
+            "spring.datasource.password",
+            "DB_PASSWORD"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 5 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "bc9v1tmb7hb79lup1pq4kogdy",
+              "Image": "course-backend:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_course-backend.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "5fb166a15165e3204fecb1080b9f5e89ad9e39211c4aa898cca1640366a66bc7",
+          "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
+          "expectedLocalImageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
+          "imageMatchesLocalBuild": true
+        },
+        {
+          "name": "rbac1-acceptance_course-web",
+          "image": "course-web:local-final-20261115-022901",
+          "replicas": 1,
+          "ports": [
+            {
+              "Protocol": "tcp",
+              "TargetPort": 443,
+              "PublishedPort": 9443,
+              "PublishMode": "ingress"
+            }
+          ],
+          "secretTargets": [
+            "tls.crt",
+            "tls.key"
+          ],
+          "tasks": [
+            {
+              "CurrentState": "Running 5 seconds ago",
+              "DesiredState": "Running",
+              "Error": "",
+              "ID": "zp2jtmiy6h39ynpqtpa6v09oy",
+              "Image": "course-web:local-final-20261115-022901",
+              "Name": "rbac1-acceptance_course-web.1",
+              "Node": "docker-desktop",
+              "Ports": ""
+            }
+          ],
+          "containerId": "4ffe990626707e7fd7c5817d4f542f36178f3b00fb035169a384dfe89be0f592",
+          "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
+          "expectedLocalImageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
+          "imageMatchesLocalBuild": true
+        }
+      ],
+      "probes": [
+        {
+          "url": "http://course-backend:8080/actuator/health",
+          "via": "owned course-web overlay task",
+          "passed": true
+        },
+        {
+          "url": "http://rbac-gateway:8090/api/v1/actuator/health",
+          "via": "owned course-web overlay task",
+          "passed": true
+        },
+        {
+          "url": "http://course-backend:8080/api/terms",
+          "via": "owned course-web overlay task",
+          "status": 401,
+          "expected": 401,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/",
+          "status": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/",
+          "status": 200,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/api/v1/actuator/health",
+          "status": 200,
+          "expected": 200,
+          "passed": true,
+          "health": "UP"
+        },
+        {
+          "url": "https://localhost:8443/integration/authorities",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:8443/identity/users/1",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/integration/authorities",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/identity/users/1",
+          "status": 403,
+          "expected": 403,
+          "passed": true
+        },
+        {
+          "url": "https://localhost:9443/api/terms",
+          "status": 401,
+          "expected": 401,
+          "passed": true
+        }
+      ],
+      "docker": {
+        "NodeID": "wgezev07y7l5lcl6wqojfxzc3",
+        "NodeAddr": "192.168.65.3",
+        "LocalNodeState": "active",
+        "ControlAvailable": true,
+        "Error": "",
+        "Nodes": 1,
+        "Managers": 1,
+        "Cluster": {
+          "ID": "1v8xgt7ffdyytrrgf9plwn1by",
+          "Version": {
+            "Index": 10
+          },
+          "CreatedAt": "2026-11-14T14:18:28.082086553Z",
+          "UpdatedAt": "2026-11-14T14:18:28.619223932Z",
+          "Spec": {
+            "Name": "default",
+            "Labels": {},
+            "Orchestration": {
+              "TaskHistoryRetentionLimit": 5
+            },
+            "Raft": {
+              "SnapshotInterval": 10000,
+              "KeepOldSnapshots": 0,
+              "LogEntriesForSlowFollowers": 500,
+              "ElectionTick": 10,
+              "HeartbeatTick": 1
+            },
+            "Dispatcher": {
+              "HeartbeatPeriod": 5000000000
+            },
+            "CAConfig": {
+              "NodeCertExpiry": 7776000000000000
+            },
+            "TaskDefaults": {},
+            "EncryptionConfig": {
+              "AutoLockManagers": false
+            }
+          },
+          "TLSInfo": {
+            "TrustRoot": "-----BEGIN CERTIFICATE-----\nMIIBajCCARCgAwIBAgIUPKi7DCaw7uaoTCQ080XBFzWJN1UwCgYIKoZIzj0EAwIw\nEzERMA8GA1UEAxMIc3dhcm0tY2EwHhcNMjYxMTE0MTQxMzAwWhcNNDYxMTA5MTQx\nMzAwWjATMREwDwYDVQQDEwhzd2FybS1jYTBZMBMGByqGSM49AgEGCCqGSM49AwEH\nA0IABEw6RPL5px+Vpt/foQv1Hvut2tA08RJg2l2YiUAVEQ2CY2YJUIb3Ti6skrqR\nRhNn+VXfDN70ye8tIanR7Qvoh/ijQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMB\nAf8EBTADAQH/MB0GA1UdDgQWBBSpY1RB96graOJ05aXO4szKEqo7CDAKBggqhkjO\nPQQDAgNIADBFAiAwIzbtTwdLCGwnktaWmptR2pY0DpjSmMJ3ZILAKBr8OQIhALz7\nqkJ5nZ61j/bGl8ONR0799dxxI+6panXZ8gnDZEp8\n-----END CERTIFICATE-----\n",
+            "CertIssuerSubject": "MBMxETAPBgNVBAMTCHN3YXJtLWNh",
+            "CertIssuerPublicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETDpE8vmnH5Wm39+hC/Ue+63a0DTxEmDaXZiJQBURDYJjZglQhvdOLqySupFGE2f5Vd8M3vTJ7y0hqdHtC+iH+A=="
+          },
+          "RootRotationInProgress": false,
+          "DefaultAddrPool": null,
+          "SubnetSize": 24,
+          "DataPathPort": 4789
+        }
+      },
+      "nodes": [
+        {
+          "Availability": "Active",
+          "EngineVersion": "29.8.0",
+          "Hostname": "docker-desktop",
+          "ID": "wgezev07y7l5lcl6wqojfxzc3",
+          "ManagerStatus": "Leader",
+          "Self": true,
+          "Status": "Ready",
+          "TLSStatus": "Ready"
+        }
+      ],
+      "tlsEndpoints": [
+        {
+          "port": 8443,
+          "protocol": "TLSv1.3",
+          "cipher": "TLS_AES_256_GCM_SHA384",
+          "certificateSha256": "429ecf4ea65f64d996ad632ba97193325d220466cdb4d4e2ba92228742fc31f9",
+          "trust": "local self-signed, not public trust"
+        },
+        {
+          "port": 9443,
+          "protocol": "TLSv1.3",
+          "cipher": "TLS_AES_256_GCM_SHA384",
+          "certificateSha256": "429ecf4ea65f64d996ad632ba97193325d220466cdb4d4e2ba92228742fc31f9",
+          "trust": "local self-signed, not public trust"
+        }
+      ]
+    }
+  },
+  "externalLogDirectory": "C:\\Users\\vintces\\Downloads\\rbac1-context-extracted\\m9-local-final-20261115-022901",
+  "automationChecks": {
+    "deploymentSafetyTests": 10,
+    "legacyCompatibilityTests": 5,
+    "shellSyntax": "passed",
+    "diffWhitespace": "passed"
+  }
+}
