@@ -32,6 +32,13 @@ esac
   }
 }
 
+test('CI exports before the isolated course database verifier and builds the real frontend separately', () => {
+  const ci = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
+  assert.doesNotMatch(ci, /bash tools\/prepare-course\.sh --build/)
+  assert.ok(ci.indexOf('bash tools/prepare-course.sh') < ci.indexOf('bash course-integration/tests/run-domain-tests.sh'))
+  assert.ok(ci.includes('working-directory: course-integration/frontend'))
+})
+
 test('course transport retries remain bounded and never export after three failures', t => {
   const result = fixture(t)({ FAIL_COUNT: '9' })
   assert.equal(result.status, 128, result.stderr)

@@ -97,9 +97,13 @@ jobs:
         working-directory: rbac-web
         env:
           E2E_MODULE: rbac-ddd
-      - run: bash tools/prepare-course.sh --build
+      # Export first; only the next step starts the dedicated course DB and pins its datasource.
+      - run: bash tools/prepare-course.sh
       - name: Retain and execute all pinned upstream course tests
         run: bash course-integration/tests/run-domain-tests.sh
+      - name: Build the actual course frontend
+        working-directory: course-integration/frontend
+        run: npm ci && npm run build
       - name: Real two-center, gateway and course acceptance
         run: |
           npm ci --prefix course-integration/tests
