@@ -1,0 +1,5204 @@
+{
+  "format": "rbac1-http-acceptance-v1",
+  "startedAt": "2026-11-14T18:11:08.770Z",
+  "finishedAt": "2026-11-14T18:18:54.944Z",
+  "command": "node tools/acceptance/run.mjs --module=both",
+  "rows": [
+    {
+      "module": "structured",
+      "scenario": "SETUP | root password change and isolated fixture through HTTP",
+      "status": "pass",
+      "durationMs": 12807,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "48bf7f61ff13a7dfcb75fd913af511c5fd78f8d9e7f64a2c3f64167a568802e4"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62ed3124472efa633f0ae29ebd8690f8d6d0557b3a5fbc3df27843b8593ae2ea"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d77abeeba438a0969b39cbc0141ed02cf000fd0bf748c08eebf23a91dab6195f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Abutton&kind=UI&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "e7067d24e8d9d73e5edf1cd3252bad0c51ac3519fae2ddae89842dd1016b257e"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Aapi&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2473de3ec0d1697a478f5168a268d00ba7f099a7e84e11a1a32dc8e3a7dd5696"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Aread&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "7bfacf178c456fbcdd72546d4584669c911183dab3049b0170a3873496b5d133"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Awrite&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "b51552b4ab86df8fe8f3958b0ae63856b1dd8826bcc6f1fcf7435732e6fa69ba"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f1106ab8b93fa9ad5e87fd4e7cdc3a60a2ba0bc1fe68142620d66ffe5d44e346"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "115c41b1429c3c5dbfba507c567c84a95419143741e44ffdd0f14ed9730f7908"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5569d23459fba2bdfd3eacca6c3202db5dee743b0872bd0b049dc4640d51303f"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "EXT-01 JWT RS256 / JWKS exact claims and bare me",
+      "status": "pass",
+      "durationMs": 898,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/.well-known/jwks.json",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "6db4df99a714c47490ed42e10dc4a65d1f89e9007a70738fccbb1f6cdfdae336"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        }
+      ],
+      "result": {
+        "name": "fixture_user",
+        "no": "FIX-fixture_user",
+        "permissions": [
+          "fixture:button"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "subject": "@subject:\"fixture_user\""
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "EXT-01 login input boundaries and invalid credentials",
+      "status": "pass",
+      "durationMs": 202,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 401,
+          "code": "INVALID_CREDENTIALS",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "AUTHZ simulation UI API explanation and inactive target never invalidates caller",
+      "status": "pass",
+      "durationMs": 2381,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3ad485c8a60c9a9f0646b29fe069d2d6fc1410cc9c4c089effe12316aac3c645"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/explain",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5132682bc0b698fe6824acba3196b0ed127cc4cb2999d3c969e69c8afdc4c169"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3ad485c8a60c9a9f0646b29fe069d2d6fc1410cc9c4c089effe12316aac3c645"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "bbcd24cdc0f5abbc3bf0acf61f208de4bd09884bf88745aee583a3beed92e0a1"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 400,
+          "code": "INVALID_AUTHORIZATION_REQUEST",
+          "responseDigest": "73e59b91971f104ec581c92b6aad0b37c6b6bfbaf446f26243c47dda730f5d2a"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8b6161db8ec3c4b3c3970b2a5cd963679a7c9f9a4de85e1ebdca13db03548f6d"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/explain",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c3b635170a6e24559432ae2cfbcf891c9a8dfec4c47ce05ae4a214cc5e717f8d"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "94c2da2eed22ef09cee150cea5b2e1f38e622a20aedea3e9c2d849176581eeb3"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "29a2d3c8af184c99ed5089073389100964e61b81e76f4a921d0d8eefec1d22e4"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "NFR-02 reject signed wrong aud iss kid future iat expired exp and forged signature",
+      "status": "pass",
+      "durationMs": 487,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ID-06 root course aud never grants center / system isolation and disable",
+      "status": "pass",
+      "durationMs": 2485,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users",
+          "status": 403,
+          "code": "AUDIENCE_MISMATCH",
+          "responseDigest": "c2cce6ce2d509e3670f3e1680c15e5b7b09a98093146351abfab2a45e252e9db"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users",
+          "status": 403,
+          "code": "AUDIENCE_MISMATCH",
+          "responseDigest": "c2cce6ce2d509e3670f3e1680c15e5b7b09a98093146351abfab2a45e252e9db"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "94c2da2eed22ef09cee150cea5b2e1f38e622a20aedea3e9c2d849176581eeb3"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/unknown-fixture-permission",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/unknownFixtureOperation",
+          "status": 404,
+          "code": "API_OPERATION_NOT_FOUND",
+          "responseDigest": "21ef958de930a5c396931e911aaab6e466e966a3284a61725ea17fd9630b6b57"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "08b309ab3fccfedea5f0d896ffb1500410d985b4ce5b167c09024f137a5da664"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/%22%40system%3A%5C%22course-project-management%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62e02372db714c15ffe2979b81428d4c401096627ecc765315288252889889ba"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/%22%40system%3A%5C%22course-project-management%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c009c31b8976b81d1c97b7b576ffdd885564653d7242350e2266ae480d9dd006"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ROLE-02/03 DAG single multiple transitive diamond dedup source paths",
+      "status": "pass",
+      "durationMs": 8162,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "20cdcc095457fa8279129098127e0ee27f42d7bc6b7121e8dfe0a2aa4df9ccd5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "477cbe98ccd984778bc6f8b2127f9d21561ee9a0cf6fd406900d5caecac64ffc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "94b128dd3ca33e7dc61d2559d031789ae2af8e9a81f3364544cc9007fd3c4171"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "45c8fcf62e5cc63561cc519396f4667927734065c8bcd154182881c98643107f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Adag&kind=UI&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1e6b3fe8ebecfe5054aa43ac641785042588680ae2b7fc3c69a436a500793914"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "074e6d6653efda929d05af4717dbf3d90c3da0c3f1f8779a78e27607b0628197"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5c7702ac9a9ec92e75d58c6ba4cee824526f3b7bff8abb9b20bc60a9d8201b4a"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_EDGE_EXISTS",
+          "responseDigest": "5dde7a9fef82c1970ee6748f9cdbb17ddf57e1d059867bab0abaeabb32a94cc3"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "fb4a55089b1a12db86e93a2e2660af5abdb799ab8c7db9105ccd016c181ed100"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "253930a921774f733d06c50c39d68fbcccd0a37ae92a3c6ab5ea30071058c3c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22rbac-center%5C%22%2C%5C%22DAG_CENTER%5C%22%5D%22",
+          "status": 400,
+          "code": "CROSS_SYSTEM_ROLE",
+          "responseDigest": "1c5cad93bb90bb64db8cdb4c0a036c540000ae02a988468a5cb5f08ac48c6703"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "dca6481b1e9b1ab0139a2d5ac3dd3ab196ddf79daa44b8bcf064311f614d04c8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d404e7c371e115796524d41a7a8412aa7a793755ba4851d48de4fa09077d5e6c"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a8119ec93a1fe6b4b51716baa9144cf950a520277dfe01e03f1198a5f3010877"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "cf45b9336cbea63a4c9f7082210ed5a515c5056a70a40e7a6f4a67219a2af555"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "eefa082d9ac976a31b54506c06de63f43fc301f159f79d58250327daa3492aae"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0c71ec63fb139d9cb963f9fd51a92bd6524b264b564543eb41d2a28b6e3cae3b"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        }
+      ],
+      "result": {
+        "permission": "fixture:dag",
+        "roles": 4
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "ROLE-03 concurrent reverse edges serialized with DB invariant",
+      "status": "pass",
+      "durationMs": 1212,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "223e7d6a88cb88dacffcc0bf9c8a4bb9abc160624337b3a98414e4adddc1b46f"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1219cd5facb9e8fd3614eaa18f85d5a33f827b236e170ec975d9579640819fa6"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        }
+      ],
+      "result": {
+        "edges": 1
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "ROLE-05 eligibility even root / PATCH cannot smuggle status department",
+      "status": "pass",
+      "durationMs": 779,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2ed4c46fd49229500bf3e7aa2cd982f8be8425d7168df20e3c1be575f5051072"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 403,
+          "code": "ROLE_NOT_ASSIGNABLE_IN_DEPARTMENT",
+          "responseDigest": "6ddbad1ece25f825149613b1a80fe6aab744def3e3b294f894c00dc493b1c90e"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ID-05 department move revokes only moved user not shared role",
+      "status": "pass",
+      "durationMs": 3024,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "85fe809b2e6d9d2bec26e79db8f538031f16ce0023e54b867e903934cdf44ada"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_peer%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "601b8ccd8b586ce04122c86329208bfe6434bb8e9caa7ff0226aa072934fa86c"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/department",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "304b3f9b643b0f550c41819ae95c4a81470fc0acc524f3c44127eeae392f0e9b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments?systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "612fd625051f277cd6f7c31f920e0d1d59d5f559a0fa58111d4a36fb7a58123c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/department",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a7f0b11af32ca7849f845b1a84c7f41236acfd69bf96d7570912db077b0dea88"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "4eaf28e763c3f0c0c3329392bba863d2dc709e045cf71b9eeeb94574c06136c9"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "RES-03 UI-only no API / mapping kind same-system / unknown deny",
+      "status": "pass",
+      "durationMs": 5400,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "746ac9a28485d60c9f4ed0eeeb4aef41caa894a28befad7921a913f0a8fa17d1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22UI_ONLY%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_SIBLING%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3b4a69b79f1bdb0c4a3f17887aa6e5630f244c8ae3cbc8513661379911a34669"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_ui_only%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0e276f6a8e7b7ded195c8dbdeafe453e80b2d82a23d684da478f2b5329b5bc02"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d51bb98e689cebb6c292753cc780e19dc6b4d8d1a4b32ec0287368f6be0a4fb9"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0c5e02d473ed3bb9327e3db2403c86cdd0950165f0b0949e7c180da1b739f701"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Acenter%3Aapi&kind=API&pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "75c849db3c4971f54e667880acede4adb531d810dd6656ca2af29129736d7243"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/course-project-management/ui-api-mappings",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/rbac-center/api-operations?keyword=listUsers&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "615d6f06b156b79a65bad104ae2ace4c86c7062b95143423631724074769e2fc"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/course-project-management/ui-api-mappings",
+          "status": 400,
+          "code": "CROSS_SYSTEM_MAPPING",
+          "responseDigest": "2ac3f67512baa0e6f8f1f096f3b2e85ab6dd1e0cc5ec02bc77a3a2acbd832b08"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/fixture-not-registered",
+          "status": 403,
+          "code": "API_NOT_REGISTERED",
+          "responseDigest": "722d2f4b5697b4c3a7c2a7fb49bc28233d9406364afa088d62a62e1ea7b849f4"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "EXT-03 frozen real course operation metadata six classes / copyCourse teacher not CC",
+      "status": "pass",
+      "durationMs": 4859,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=createTerm&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d0c8986b5eee502ad20aa6041f220e38093bf27f707ccb669a490fef47074c46"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=copyCourse&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "92348fec275139a995c50fdfae7a8798faabcbbbe21c785de4a2c2b3d8475912"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=importRoster&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "4c259a1a486f5a00a209c9d6d56f1ff49d9b408b671acfd822488e50c553c5fa"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=createGroupJoinRequest&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "7f01b9ab1d608a8e9f89f6c46e894c428bfb413e188dcb82cf6357049312e7c8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=submitMaterials&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a17355d064fb642fde1ad4cedbfbc299d3db89c19171da2f1ef4728f2e963d01"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=bookOralSlot&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "64e81ffd083cb1b4ca089fa84b36b6b03d3a9195bd549f214b641f27ca186b90"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=course%3Aaccess&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8068cb608b91a5c1626710e9329ad49b3e7c5f12d090ea7c695caf0fcc58dfa8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/copyCourse",
+          "status": 200,
+          "code": null,
+          "responseDigest": "e69c0ed32736fec96d4b7fd2e1321d820a2003749909093fbfa050c75cb8032b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8063f0592d12267a3604b46f2c65c4370268a888415933217f3324cb778a9de9"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_STUDENT%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "932ec60892489e3eedb8eb5805c85ebf7cfad81cb49e6161f1fd5d13b7caf87f"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_STUDENT_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "b8bba4e51aea10dc5d3c86aa1e5f7043a8f21d87bd7f334fb6d83699e76e2376"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_student%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "20e7df0032847ce6c3bcf97a1d2959a80bd177e6300cb3adf73afb0aaa50f82b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/copyCourse",
+          "status": 200,
+          "code": null,
+          "responseDigest": "5a9b81873367e9789d456396c055b2bfa0bb7893d0ba89c7bbdb32043994b328"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "EXT private service projection never confuses teacher entry with CC and forbids public identity leaks",
+      "status": "pass",
+      "durationMs": 2246,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/integration/authorities",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "GET",
+          "path": "/integration/authorities",
+          "status": 200,
+          "code": null,
+          "responseDigest": "61a84e9e7908b6b8b8e46bef86414ca406144d4a1803b746d0d1c7dcfe935f7d"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%22%40subject%3A%5C%22fixture_user%5C%22%22",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0a506ffe8220dfb1dc34276833c60da70df9f1434c063c4e71682e321b1fae48"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "13abc09ff5c2410ee9f7489a341d3353524489b2bd58fbe70304ede4521e7b91"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1361a56a51162e52f0dd1349623c3bfcf1db0c3b4bfc0d64dd9fed7a4d1d525f"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_course_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "cadda3208009cf658f29a1a64073405ec8383e0900e66b83023f4832a9261085"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%22%40subject%3A%5C%22fixture_user%5C%22%22",
+          "status": 200,
+          "code": null,
+          "responseDigest": "58558e4607438d8d4278de5a886f2d670ca56fcc32e8a3a40623b56254210a4d"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%7B%22%24unresolvedReference%22%3A%22subject%22%2C%22value%22%3A%22missing-fixture-subject%22%7D",
+          "status": 404,
+          "code": "IDENTITY_USER_NOT_FOUND",
+          "responseDigest": "0002c61392f0154d891bcffec0504be5eb9499f26dae12f8f684253358124ea7"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ROLE-06 nonroot department admin no shared writes or sibling management",
+      "status": "pass",
+      "durationMs": 3187,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "407d3d6d950b7f77827a6d290cdd080dc2b9820e5985ab9a20637a132ce6b8e9"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c5fd09f706a28f790e41ac0fafaffd3f12d61e8c251199210d66e1fe45c07cc7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_dept_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "bc27c80a57952d66e3136bd529e07b2c50e21bab88d777f0f9f3f945ad29654e"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_dept_admin%5C%22%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "26752fbe42c5af66e448e1770260b6251f12f76436fa1ddc274f595dfabbd7c3"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22",
+          "status": 403,
+          "code": "ROOT_DEPARTMENT_REQUIRED",
+          "responseDigest": "70014c10dab4bbad9d436bbfde8db609db2dce36c2704c51b10aa5096470c13b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2cd055c711f0e0a321672afa81f624eb5d9f78996de365255b505d48ab493a70"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_sibling%5C%22%22",
+          "status": 403,
+          "code": "OUT_OF_MANAGE_SCOPE",
+          "responseDigest": "b142e79877e389a767191e48cfb35ea3e1667c3fd84d86ff63a779facf222265"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_sibling%5C%22%22/department",
+          "status": 403,
+          "code": "OUT_OF_MANAGE_SCOPE",
+          "responseDigest": "b142e79877e389a767191e48cfb35ea3e1667c3fd84d86ff63a779facf222265"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ROLE upper bound / enable and inheritance cannot elevate root-department non-super admin",
+      "status": "pass",
+      "durationMs": 5065,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "407d3d6d950b7f77827a6d290cdd080dc2b9820e5985ab9a20637a132ce6b8e9"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "03528ab452ac0e6d05e135c84fc32fbfd3abf2a6f38fdda739527c085704e570"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3064e08ce7af43e5141579d7624844127ab171f669e0ec2a7a625c48b11143e9"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_bound_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ba8eeb574e42f84450f94dde5fe92e0fb097dd1acda63a4039337862e67c62e0"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0a0bd2bd0fe01f5b178a91ab3bf6bfd903e6bf569bee1108a630a57782059d22"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8bfe5fe6cd7dc5f57be7a76b6b0ae1a150b8862cb2030e1738c781430565314e"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_WEAK%5C%22%5D%22/permissions",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_WEAK%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "521d5731a049642263163d25428d348c716e2be4652a3a1ebbc17fd5eed868a7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_bound_target%5C%22%22/role-assignments",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "26c8661a2c9a6f61ede253f5aa9c942716ad4bfb9b6a994b2a4db255f2683ebd"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/status",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "NFR-03 two JVM L1/L2 warmed revoke next access both false",
+      "status": "pass",
+      "durationMs": 2841,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "654ee0a88442ccb42232ae09f87ba6ebc3c85ccb5a23f270d26ad1302f6cbb46"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "AUD-01 trusted key both methods / input enum UUID prefix target / actor spoof",
+      "status": "pass",
+      "durationMs": 845,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_UNSAFE_FIELD",
+          "responseDigest": "c7fb19d952f5286c9eaf0c63622a889f457f225f52ddbf2711d4b5df3ab69d32"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "93f90d03b9750beac058f14fe2433108a5ff126d99eeec882591f8f644505094"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "e0a67cbd4016f166aded54c855b69ed1f37c93b96a431388132753869ff9eb04"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "f9f76a500e89c24634d650200f9fbaf4390dd497c12a799cac086029ea227008"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "c07383e66b9a98f6f9d19a07c1b8c14a815f71416414fa8567bcda716b1e0f66"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "AUD-01 same key same body same ID / conflict / 20 concurrent one DB row",
+      "status": "pass",
+      "durationMs": 1972,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "bee5e1d53ceaaa6417bb2d46358d8979a88aafeffbc18eb7a85346e5c0264744"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "bee5e1d53ceaaa6417bb2d46358d8979a88aafeffbc18eb7a85346e5c0264744"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c0d6df9ae70ffdfef30101efd7df64174d2bfb4bbd1efb9a27bc744b88149616"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_audit_peer%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "231683201b116d3aeeedaa1aad5b169ead516b37b2aa9c1d1e24f2155662d4cf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        }
+      ],
+      "result": {
+        "rows": 1
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "AUD-02 system isolation paging actor target time inclusive boundaries",
+      "status": "pass",
+      "durationMs": 3838,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "8003093245da2245d69ca3d4ed2320ab1dc253834c5647203255bd72564547a0"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=1&pageSize=2",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f9472b34725e57664098a9621ac86e9bf8c5ad2e92f837ffb9ea905351466a37"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=2&pageSize=2",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ef7086d6fa1a7d8a3225d5bbca9bf9449f463248fe912d4b9a3d061aeae386df"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?actor=fixture_user&actorId=%22%40user%3A%5C%22fixture_user%5C%22%22&from=%40time%3Aaudit-boundary%3A0ms&page=1&pageSize=1&target=fixture_boundary&to=%40time%3Aaudit-boundary%3A0ms",
+          "status": 200,
+          "code": null,
+          "responseDigest": "54e76d49abe009c25cb800556a60740c4c34e97e359446c70c3e907a8ea0c8b6"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=%40time%3Aaudit-boundary%3A1ms&target=fixture_boundary",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ffce3bf8bee98e51a7781ae444d1dd40b1911bf40d941325cca3c16811032039"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?pageSize=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=invalid",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=2030-01-01T00%3A00%3A00Z&to=2020-01-01T00%3A00%3A00Z",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "049d7d63583ea7f964e417cc1b64a236f7505c02a7d33ffdaedc65ec8b41e0bc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "257e5872161e5aec9a2737b4552a850b2b1e8df6174b0a7fd8698d6ef10635bf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Aread&kind=API&pageSize=100&systemCode=fixture-other",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "6d0ec66be04e2007fc04f8d8ab0eb18d6bc83b1e3f36de7198b3c22b51d5e278"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Awrite&kind=API&pageSize=100&systemCode=fixture-other",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "971cf9c4828a7b0369f1f5fdd4433a8709c07a3345737097bcd0c91840fdf82b"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22fixture-other%5C%22%2C%5C%22OTHER_AUDIT%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_SIBLING%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "27a25b52429bc10a8039e7f5f9b27a126cc36300ca00431801499cf534dabe72"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_other_system%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ae31bd7fcfc963c4fad4854c3b635f8fab100fed1b10240d0c513b8ee44e523d"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?target=fixture_boundary",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ffce3bf8bee98e51a7781ae444d1dd40b1911bf40d941325cca3c16811032039"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "AUD-05 trigger failure role mutation rollback no false SUCCESS",
+      "status": "pass",
+      "durationMs": 575,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0489d3ff3248f1960ba756675eadc62ebeb5028ecfc99ba3b6b42059ce3db816"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22ROLLBACK_ROLE%5C%22%5D%22",
+          "status": 503,
+          "code": "SERVICE_UNAVAILABLE",
+          "responseDigest": "a028766b061c600ef31745920855c991e445ac9bc457d625a57c92a70d6ca5d7"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ID-04 10000 synthetic SQL users keyword department DB pagination max100",
+      "status": "pass",
+      "durationMs": 3725,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=1&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f4f64c782d034baf2fd9c56eb621a9072e2f06c911423f710fc00d7f9a53335f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=2&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5c0d587cd1767d2e060d5dc0180d302bb63cb6d194aa5d134102ab19d20014c5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=50&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "21f7980d4a64773d97115a1188eb21815c08e0b3b32ba121bc05f3826825d734"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=51&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f2f4f7fdc5fed148d952d62d0c9353d6ddee142728f25c4b98c868632c6deec6"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=10000&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "139623d341875adea56f0f7933192011c6e434616285ecad05ae2e6c07aad6a4"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?pageSize=101",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?page=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?pageSize=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?page=-1",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        }
+      ],
+      "result": {
+        "inserted": 10000,
+        "matching": 5000
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "ID-03 disable enable never resurrects previous token",
+      "status": "pass",
+      "durationMs": 1571,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "35c216881dd109a6ea2ee2434ca5b73ef93b9429995962fd1428a5c90162ec4b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ea44eb7c00b956041ba836d6d224196d003bbb273423a972cce1472faf384737"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "ID-03 logout204 durable DB jti across owned process restart",
+      "status": "pass",
+      "durationMs": 45783,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/logout",
+          "status": 204,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        }
+      ],
+      "result": {
+        "persistentRevocations": 1
+      }
+    },
+    {
+      "module": "structured",
+      "scenario": "NFR-06 external JVM logs never contain fixture secrets or JWT",
+      "status": "pass",
+      "durationMs": 800,
+      "observations": [],
+      "result": null
+    },
+    {
+      "module": "structured",
+      "scenario": "NFR-04 final database postconditions and no orphan/cross-system facts",
+      "status": "pass",
+      "durationMs": 19,
+      "observations": [],
+      "result": {
+        "badIdentity": 0,
+        "bulk": 10000,
+        "crossEdges": 0,
+        "crossPermissions": 0,
+        "ineligible": 0,
+        "users": 10012
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "SETUP | root password change and isolated fixture through HTTP",
+      "status": "pass",
+      "durationMs": 13313,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "48bf7f61ff13a7dfcb75fd913af511c5fd78f8d9e7f64a2c3f64167a568802e4"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62ed3124472efa633f0ae29ebd8690f8d6d0557b3a5fbc3df27843b8593ae2ea"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d77abeeba438a0969b39cbc0141ed02cf000fd0bf748c08eebf23a91dab6195f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Abutton&kind=UI&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "e7067d24e8d9d73e5edf1cd3252bad0c51ac3519fae2ddae89842dd1016b257e"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Aapi&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2473de3ec0d1697a478f5168a268d00ba7f099a7e84e11a1a32dc8e3a7dd5696"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Aread&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "7bfacf178c456fbcdd72546d4584669c911183dab3049b0170a3873496b5d133"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Awrite&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "b51552b4ab86df8fe8f3958b0ae63856b1dd8826bcc6f1fcf7435732e6fa69ba"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f1106ab8b93fa9ad5e87fd4e7cdc3a60a2ba0bc1fe68142620d66ffe5d44e346"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "115c41b1429c3c5dbfba507c567c84a95419143741e44ffdd0f14ed9730f7908"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5569d23459fba2bdfd3eacca6c3202db5dee743b0872bd0b049dc4640d51303f"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "EXT-01 JWT RS256 / JWKS exact claims and bare me",
+      "status": "pass",
+      "durationMs": 641,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/.well-known/jwks.json",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "6db4df99a714c47490ed42e10dc4a65d1f89e9007a70738fccbb1f6cdfdae336"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        }
+      ],
+      "result": {
+        "name": "fixture_user",
+        "no": "FIX-fixture_user",
+        "permissions": [
+          "fixture:button"
+        ],
+        "roles": [
+          "teacher"
+        ],
+        "subject": "@subject:\"fixture_user\""
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "EXT-01 login input boundaries and invalid credentials",
+      "status": "pass",
+      "durationMs": 517,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 401,
+          "code": "INVALID_CREDENTIALS",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "AUTHZ simulation UI API explanation and inactive target never invalidates caller",
+      "status": "pass",
+      "durationMs": 3705,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3ad485c8a60c9a9f0646b29fe069d2d6fc1410cc9c4c089effe12316aac3c645"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/explain",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5132682bc0b698fe6824acba3196b0ed127cc4cb2999d3c969e69c8afdc4c169"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3ad485c8a60c9a9f0646b29fe069d2d6fc1410cc9c4c089effe12316aac3c645"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "bbcd24cdc0f5abbc3bf0acf61f208de4bd09884bf88745aee583a3beed92e0a1"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/check",
+          "status": 400,
+          "code": "INVALID_AUTHORIZATION_REQUEST",
+          "responseDigest": "73e59b91971f104ec581c92b6aad0b37c6b6bfbaf446f26243c47dda730f5d2a"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8b6161db8ec3c4b3c3970b2a5cd963679a7c9f9a4de85e1ebdca13db03548f6d"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/authorization/explain",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c3b635170a6e24559432ae2cfbcf891c9a8dfec4c47ce05ae4a214cc5e717f8d"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "94c2da2eed22ef09cee150cea5b2e1f38e622a20aedea3e9c2d849176581eeb3"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "29a2d3c8af184c99ed5089073389100964e61b81e76f4a921d0d8eefec1d22e4"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "NFR-02 reject signed wrong aud iss kid future iat expired exp and forged signature",
+      "status": "pass",
+      "durationMs": 766,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ID-06 root course aud never grants center / system isolation and disable",
+      "status": "pass",
+      "durationMs": 2506,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users",
+          "status": 403,
+          "code": "AUDIENCE_MISMATCH",
+          "responseDigest": "c2cce6ce2d509e3670f3e1680c15e5b7b09a98093146351abfab2a45e252e9db"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users",
+          "status": 403,
+          "code": "AUDIENCE_MISMATCH",
+          "responseDigest": "c2cce6ce2d509e3670f3e1680c15e5b7b09a98093146351abfab2a45e252e9db"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 200,
+          "code": null,
+          "responseDigest": "94c2da2eed22ef09cee150cea5b2e1f38e622a20aedea3e9c2d849176581eeb3"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/unknown-fixture-permission",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/unknownFixtureOperation",
+          "status": 404,
+          "code": "API_OPERATION_NOT_FOUND",
+          "responseDigest": "21ef958de930a5c396931e911aaab6e466e966a3284a61725ea17fd9630b6b57"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "08b309ab3fccfedea5f0d896ffb1500410d985b4ce5b167c09024f137a5da664"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/%22%40system%3A%5C%22course-project-management%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62e02372db714c15ffe2979b81428d4c401096627ecc765315288252889889ba"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/%22%40system%3A%5C%22course-project-management%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c009c31b8976b81d1c97b7b576ffdd885564653d7242350e2266ae480d9dd006"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ROLE-02/03 DAG single multiple transitive diamond dedup source paths",
+      "status": "pass",
+      "durationMs": 14381,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "20cdcc095457fa8279129098127e0ee27f42d7bc6b7121e8dfe0a2aa4df9ccd5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "477cbe98ccd984778bc6f8b2127f9d21561ee9a0cf6fd406900d5caecac64ffc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "94b128dd3ca33e7dc61d2559d031789ae2af8e9a81f3364544cc9007fd3c4171"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "45c8fcf62e5cc63561cc519396f4667927734065c8bcd154182881c98643107f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Adag&kind=UI&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1e6b3fe8ebecfe5054aa43ac641785042588680ae2b7fc3c69a436a500793914"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "074e6d6653efda929d05af4717dbf3d90c3da0c3f1f8779a78e27607b0628197"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5c7702ac9a9ec92e75d58c6ba4cee824526f3b7bff8abb9b20bc60a9d8201b4a"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_EDGE_EXISTS",
+          "responseDigest": "5dde7a9fef82c1970ee6748f9cdbb17ddf57e1d059867bab0abaeabb32a94cc3"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "fb4a55089b1a12db86e93a2e2660af5abdb799ab8c7db9105ccd016c181ed100"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_D%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "253930a921774f733d06c50c39d68fbcccd0a37ae92a3c6ab5ea30071058c3c7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22rbac-center%5C%22%2C%5C%22DAG_CENTER%5C%22%5D%22",
+          "status": 400,
+          "code": "CROSS_SYSTEM_ROLE",
+          "responseDigest": "1c5cad93bb90bb64db8cdb4c0a036c540000ae02a988468a5cb5f08ac48c6703"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "dca6481b1e9b1ab0139a2d5ac3dd3ab196ddf79daa44b8bcf064311f614d04c8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d404e7c371e115796524d41a7a8412aa7a793755ba4851d48de4fa09077d5e6c"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a8119ec93a1fe6b4b51716baa9144cf950a520277dfe01e03f1198a5f3010877"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "cf45b9336cbea63a4c9f7082210ed5a515c5056a70a40e7a6f4a67219a2af555"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "eefa082d9ac976a31b54506c06de63f43fc301f159f79d58250327daa3492aae"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_B%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0c71ec63fb139d9cb963f9fd51a92bd6524b264b564543eb41d2a28b6e3cae3b"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_C%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22DAG_A%5C%22%5D%22/effective-permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "9a5ec4b8be7625f10d16e48a7b1743e71a3fd93c71aa1d4fc9e8bc1588b2dbcc"
+        }
+      ],
+      "result": {
+        "permission": "fixture:dag",
+        "roles": 4
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "ROLE-03 concurrent reverse edges serialized with DB invariant",
+      "status": "pass",
+      "durationMs": 2034,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "223e7d6a88cb88dacffcc0bf9c8a4bb9abc160624337b3a98414e4adddc1b46f"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1219cd5facb9e8fd3614eaa18f85d5a33f827b236e170ec975d9579640819fa6"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22",
+          "status": 409,
+          "code": "ROLE_CYCLE",
+          "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
+        }
+      ],
+      "result": {
+        "edges": 1
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "ROLE-05 eligibility even root / PATCH cannot smuggle status department",
+      "status": "pass",
+      "durationMs": 1495,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2ed4c46fd49229500bf3e7aa2cd982f8be8425d7168df20e3c1be575f5051072"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 403,
+          "code": "ROLE_NOT_ASSIGNABLE_IN_DEPARTMENT",
+          "responseDigest": "6ddbad1ece25f825149613b1a80fe6aab744def3e3b294f894c00dc493b1c90e"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ID-05 department move revokes only moved user not shared role",
+      "status": "pass",
+      "durationMs": 5685,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "85fe809b2e6d9d2bec26e79db8f538031f16ce0023e54b867e903934cdf44ada"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_peer%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "601b8ccd8b586ce04122c86329208bfe6434bb8e9caa7ff0226aa072934fa86c"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/department",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "304b3f9b643b0f550c41819ae95c4a81470fc0acc524f3c44127eeae392f0e9b"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments?systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "612fd625051f277cd6f7c31f920e0d1d59d5f559a0fa58111d4a36fb7a58123c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/department",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a7f0b11af32ca7849f845b1a84c7f41236acfd69bf96d7570912db077b0dea88"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "4eaf28e763c3f0c0c3329392bba863d2dc709e045cf71b9eeeb94574c06136c9"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "RES-03 UI-only no API / mapping kind same-system / unknown deny",
+      "status": "pass",
+      "durationMs": 11343,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "746ac9a28485d60c9f4ed0eeeb4aef41caa894a28befad7921a913f0a8fa17d1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22UI_ONLY%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_SIBLING%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3b4a69b79f1bdb0c4a3f17887aa6e5630f244c8ae3cbc8513661379911a34669"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_ui_only%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0e276f6a8e7b7ded195c8dbdeafe453e80b2d82a23d684da478f2b5329b5bc02"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d51bb98e689cebb6c292753cc780e19dc6b4d8d1a4b32ec0287368f6be0a4fb9"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0c5e02d473ed3bb9327e3db2403c86cdd0950165f0b0949e7c180da1b739f701"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/ui-resources",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=fixture%3Acenter%3Aapi&kind=API&pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "75c849db3c4971f54e667880acede4adb531d810dd6656ca2af29129736d7243"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems/course-project-management/api-operations",
+          "status": 404,
+          "code": "PERMISSION_NOT_FOUND",
+          "responseDigest": "1c1f93759c39e530a7060a0a66307bfce4df2d4b4a190bc5133ce35f3eb7cf21"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/course-project-management/ui-api-mappings",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/rbac-center/api-operations?keyword=listUsers&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "615d6f06b156b79a65bad104ae2ace4c86c7062b95143423631724074769e2fc"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/systems/course-project-management/ui-api-mappings",
+          "status": 400,
+          "code": "CROSS_SYSTEM_MAPPING",
+          "responseDigest": "2ac3f67512baa0e6f8f1f096f3b2e85ab6dd1e0cc5ec02bc77a3a2acbd832b08"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/fixture-not-registered",
+          "status": 403,
+          "code": "API_NOT_REGISTERED",
+          "responseDigest": "722d2f4b5697b4c3a7c2a7fb49bc28233d9406364afa088d62a62e1ea7b849f4"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "EXT-03 frozen real course operation metadata six classes / copyCourse teacher not CC",
+      "status": "pass",
+      "durationMs": 15276,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=createTerm&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "d0c8986b5eee502ad20aa6041f220e38093bf27f707ccb669a490fef47074c46"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=copyCourse&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "92348fec275139a995c50fdfae7a8798faabcbbbe21c785de4a2c2b3d8475912"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=importRoster&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "4c259a1a486f5a00a209c9d6d56f1ff49d9b408b671acfd822488e50c553c5fa"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=createGroupJoinRequest&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "7f01b9ab1d608a8e9f89f6c46e894c428bfb413e188dcb82cf6357049312e7c8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=submitMaterials&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "a17355d064fb642fde1ad4cedbfbc299d3db89c19171da2f1ef4728f2e963d01"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/systems/course-project-management/api-operations?keyword=bookOralSlot&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "64e81ffd083cb1b4ca089fa84b36b6b03d3a9195bd549f214b641f27ca186b90"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=course%3Aaccess&kind=API&pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8068cb608b91a5c1626710e9329ad49b3e7c5f12d090ea7c695caf0fcc58dfa8"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "852417545b4a93f76f97c43899f3bb163c7b33c12dd4dd406d107e2caaf33f68"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/copyCourse",
+          "status": 200,
+          "code": null,
+          "responseDigest": "e69c0ed32736fec96d4b7fd2e1321d820a2003749909093fbfa050c75cb8032b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8063f0592d12267a3604b46f2c65c4370268a888415933217f3324cb778a9de9"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_STUDENT%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/departments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "932ec60892489e3eedb8eb5805c85ebf7cfad81cb49e6161f1fd5d13b7caf87f"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_STUDENT_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "b8bba4e51aea10dc5d3c86aa1e5f7043a8f21d87bd7f334fb6d83699e76e2376"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_student%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "20e7df0032847ce6c3bcf97a1d2959a80bd177e6300cb3adf73afb0aaa50f82b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/copyCourse",
+          "status": 200,
+          "code": null,
+          "responseDigest": "5a9b81873367e9789d456396c055b2bfa0bb7893d0ba89c7bbdb32043994b328"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "EXT private service projection never confuses teacher entry with CC and forbids public identity leaks",
+      "status": "pass",
+      "durationMs": 7715,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/integration/authorities",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "GET",
+          "path": "/integration/authorities",
+          "status": 200,
+          "code": null,
+          "responseDigest": "61a84e9e7908b6b8b8e46bef86414ca406144d4a1803b746d0d1c7dcfe935f7d"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%22%40subject%3A%5C%22fixture_user%5C%22%22",
+          "status": 403,
+          "code": "PERMISSION_DENIED",
+          "responseDigest": "0066d699a540b72c27cf5bd17faafa327914c4ec47a1d08adc8b8750e3a3a5d6"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=course-project-management",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0a506ffe8220dfb1dc34276833c60da70df9f1434c063c4e71682e321b1fae48"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "13abc09ff5c2410ee9f7489a341d3353524489b2bd58fbe70304ede4521e7b91"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "1361a56a51162e52f0dd1349623c3bfcf1db0c3b4bfc0d64dd9fed7a4d1d525f"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_course_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "cadda3208009cf658f29a1a64073405ec8383e0900e66b83023f4832a9261085"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%22%40subject%3A%5C%22fixture_user%5C%22%22",
+          "status": 200,
+          "code": null,
+          "responseDigest": "58558e4607438d8d4278de5a886f2d670ca56fcc32e8a3a40623b56254210a4d"
+        },
+        {
+          "method": "GET",
+          "path": "/identity/users/%7B%22%24unresolvedReference%22%3A%22subject%22%2C%22value%22%3A%22missing-fixture-subject%22%7D",
+          "status": 404,
+          "code": "IDENTITY_USER_NOT_FOUND",
+          "responseDigest": "0002c61392f0154d891bcffec0504be5eb9499f26dae12f8f684253358124ea7"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ROLE-06 nonroot department admin no shared writes or sibling management",
+      "status": "pass",
+      "durationMs": 5218,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "407d3d6d950b7f77827a6d290cdd080dc2b9820e5985ab9a20637a132ce6b8e9"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_DEPT%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c5fd09f706a28f790e41ac0fafaffd3f12d61e8c251199210d66e1fe45c07cc7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_dept_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "bc27c80a57952d66e3136bd529e07b2c50e21bab88d777f0f9f3f945ad29654e"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_dept_admin%5C%22%22",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "26752fbe42c5af66e448e1770260b6251f12f76436fa1ddc274f595dfabbd7c3"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22",
+          "status": 403,
+          "code": "ROOT_DEPARTMENT_REQUIRED",
+          "responseDigest": "70014c10dab4bbad9d436bbfde8db609db2dce36c2704c51b10aa5096470c13b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "2cd055c711f0e0a321672afa81f624eb5d9f78996de365255b505d48ab493a70"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_sibling%5C%22%22",
+          "status": 403,
+          "code": "OUT_OF_MANAGE_SCOPE",
+          "responseDigest": "b142e79877e389a767191e48cfb35ea3e1667c3fd84d86ff63a779facf222265"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_sibling%5C%22%22/department",
+          "status": 403,
+          "code": "OUT_OF_MANAGE_SCOPE",
+          "responseDigest": "b142e79877e389a767191e48cfb35ea3e1667c3fd84d86ff63a779facf222265"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ROLE upper bound / enable and inheritance cannot elevate root-department non-super admin",
+      "status": "pass",
+      "durationMs": 10800,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/roles?pageSize=100&systemCode=rbac-center",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "407d3d6d950b7f77827a6d290cdd080dc2b9820e5985ab9a20637a132ce6b8e9"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "03528ab452ac0e6d05e135c84fc32fbfd3abf2a6f38fdda739527c085704e570"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "3064e08ce7af43e5141579d7624844127ab171f669e0ec2a7a625c48b11143e9"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_bound_admin%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ba8eeb574e42f84450f94dde5fe92e0fb097dd1acda63a4039337862e67c62e0"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0a0bd2bd0fe01f5b178a91ab3bf6bfd903e6bf569bee1108a630a57782059d22"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "8bfe5fe6cd7dc5f57be7a76b6b0ae1a150b8862cb2030e1738c781430565314e"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_WEAK%5C%22%5D%22/permissions",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_WEAK%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5B%5C%22seed%5C%22%2C%5C%22headquarters%5C%22%5D%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "521d5731a049642263163d25428d348c716e2be4652a3a1ebbc17fd5eed868a7"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_bound_target%5C%22%22/role-assignments",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "26c8661a2c9a6f61ede253f5aa9c942716ad4bfb9b6a994b2a4db255f2683ebd"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22BOUND_STRONG%5C%22%5D%22/status",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "responseDigest": "398553de0761b5e1f16ad2775ddde3459ecade1b8a3fbc8dd08bd3a01cea3de8"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "NFR-03 two JVM L1/L2 warmed revoke next access both false",
+      "status": "pass",
+      "durationMs": 5719,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f3fe11d71f59675554fb831df91bf0e32ab90779ba7283e729f68e5c052ac84c"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "654ee0a88442ccb42232ae09f87ba6ebc3c85ccb5a23f270d26ad1302f6cbb46"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "3a60061947d350e063c1e5f3255de367587628dcd0a355766ec128b5b36c4d14"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/api-permissions/fixtureOperation",
+          "status": 200,
+          "code": null,
+          "responseDigest": "fae10fa19522ec8e4246fb2c72b92d5d94e58a57effe6d1ffc63f2993e6bfa3e"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22FX_TEACHER%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/permissions/fixture%3Abutton",
+          "status": 200,
+          "code": null,
+          "responseDigest": "af0da34c17b64921ff8e70fffbc89b6fa7a9445ef03cf8407b99d913231acb00"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "AUD-01 trusted key both methods / input enum UUID prefix target / actor spoof",
+      "status": "pass",
+      "durationMs": 2440,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 403,
+          "code": "AUDIT_SERVICE_REQUIRED",
+          "responseDigest": "73975156597881731878c959f16b8130c95418ac06730c461796930b6e5c2cae"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_UNSAFE_FIELD",
+          "responseDigest": "c7fb19d952f5286c9eaf0c63622a889f457f225f52ddbf2711d4b5df3ab69d32"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "93f90d03b9750beac058f14fe2433108a5ff126d99eeec882591f8f644505094"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "e0a67cbd4016f166aded54c855b69ed1f37c93b96a431388132753869ff9eb04"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "f9f76a500e89c24634d650200f9fbaf4390dd497c12a799cac086029ea227008"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "c07383e66b9a98f6f9d19a07c1b8c14a815f71416414fa8567bcda716b1e0f66"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "AUD-01 same key same body same ID / conflict / 20 concurrent one DB row",
+      "status": "pass",
+      "durationMs": 4851,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "bee5e1d53ceaaa6417bb2d46358d8979a88aafeffbc18eb7a85346e5c0264744"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "bee5e1d53ceaaa6417bb2d46358d8979a88aafeffbc18eb7a85346e5c0264744"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "c0d6df9ae70ffdfef30101efd7df64174d2bfb4bbd1efb9a27bc744b88149616"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_audit_peer%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "231683201b116d3aeeedaa1aad5b169ead516b37b2aa9c1d1e24f2155662d4cf"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "2c92612b8e110e11c03dcd23c6183a254a8dbc428e495a12ded3e835803e7a47"
+        }
+      ],
+      "result": {
+        "rows": 1
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "AUD-02 system isolation paging actor target time inclusive boundaries",
+      "status": "pass",
+      "durationMs": 7271,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 201,
+          "code": null,
+          "responseDigest": "8003093245da2245d69ca3d4ed2320ab1dc253834c5647203255bd72564547a0"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=1&pageSize=2",
+          "status": 200,
+          "code": null,
+          "responseDigest": "f9472b34725e57664098a9621ac86e9bf8c5ad2e92f837ffb9ea905351466a37"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=2&pageSize=2",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ef7086d6fa1a7d8a3225d5bbca9bf9449f463248fe912d4b9a3d061aeae386df"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?actor=fixture_user&actorId=%22%40user%3A%5C%22fixture_user%5C%22%22&from=%40time%3Aaudit-boundary%3A0ms&page=1&pageSize=1&target=fixture_boundary&to=%40time%3Aaudit-boundary%3A0ms",
+          "status": 200,
+          "code": null,
+          "responseDigest": "54e76d49abe009c25cb800556a60740c4c34e97e359446c70c3e907a8ea0c8b6"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=%40time%3Aaudit-boundary%3A1ms&target=fixture_boundary",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ffce3bf8bee98e51a7781ae444d1dd40b1911bf40d941325cca3c16811032039"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?page=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?pageSize=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=invalid",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?from=2030-01-01T00%3A00%3A00Z&to=2020-01-01T00%3A00%3A00Z",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/systems",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "049d7d63583ea7f964e417cc1b64a236f7505c02a7d33ffdaedc65ec8b41e0bc"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "257e5872161e5aec9a2737b4552a850b2b1e8df6174b0a7fd8698d6ef10635bf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Aread&kind=API&pageSize=100&systemCode=fixture-other",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "6d0ec66be04e2007fc04f8d8ab0eb18d6bc83b1e3f36de7198b3c22b51d5e278"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/permissions?keyword=audit%3Awrite&kind=API&pageSize=100&systemCode=fixture-other",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "62a1ea87f5522360659d17aa16169d10818f766dcac3cfd778094b4bcfe8d6db"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "971cf9c4828a7b0369f1f5fdd4433a8709c07a3345737097bcd0c91840fdf82b"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22fixture-other%5C%22%2C%5C%22OTHER_AUDIT%5C%22%5D%22/permissions",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/departments/%22%40department%3A%5C%22FX_SIBLING%5C%22%22/assignable-roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "27a25b52429bc10a8039e7f5f9b27a126cc36300ca00431801499cf534dabe72"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_other_system%5C%22%22/role-assignments",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ae31bd7fcfc963c4fad4854c3b635f8fab100fed1b10240d0c513b8ee44e523d"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/password",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/audit-logs",
+          "status": 400,
+          "code": "AUDIT_DUPLICATE_CONFLICT",
+          "responseDigest": "9dce7b11ffd7401aaa01cb9d3bfa91f1c46335b4d9703ffd598095716c9f63df"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/audit-logs?target=fixture_boundary",
+          "status": 200,
+          "code": null,
+          "responseDigest": "ffce3bf8bee98e51a7781ae444d1dd40b1911bf40d941325cca3c16811032039"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "AUD-05 trigger failure role mutation rollback no false SUCCESS",
+      "status": "pass",
+      "durationMs": 814,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/api/v1/roles",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "0489d3ff3248f1960ba756675eadc62ebeb5028ecfc99ba3b6b42059ce3db816"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22ROLLBACK_ROLE%5C%22%5D%22",
+          "status": 503,
+          "code": "SERVICE_UNAVAILABLE",
+          "responseDigest": "a028766b061c600ef31745920855c991e445ac9bc457d625a57c92a70d6ca5d7"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ID-04 10000 synthetic SQL users keyword department DB pagination max100",
+      "status": "pass",
+      "durationMs": 3061,
+      "observations": [
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=1&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f4f64c782d034baf2fd9c56eb621a9072e2f06c911423f710fc00d7f9a53335f"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=2&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "5c0d587cd1767d2e060d5dc0180d302bb63cb6d194aa5d134102ab19d20014c5"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=50&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "21f7980d4a64773d97115a1188eb21815c08e0b3b32ba121bc05f3826825d734"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=51&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "f2f4f7fdc5fed148d952d62d0c9353d6ddee142728f25c4b98c868632c6deec6"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?departmentId=%22%40department%3A%5C%22FX_DEPT%5C%22%22&keyword=fixture_bulk_&page=10000&pageSize=100",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "139623d341875adea56f0f7933192011c6e434616285ecad05ae2e6c07aad6a4"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?pageSize=101",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?page=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?pageSize=0",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/users?page=-1",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "responseDigest": "1d26352bd22dec573fe88c9c3877f43ca1f358c8ee4f52d0f23d99c7e996bcbf"
+        }
+      ],
+      "result": {
+        "inserted": 10000,
+        "matching": 5000
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "ID-03 disable enable never resurrects previous token",
+      "status": "pass",
+      "durationMs": 2621,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "35c216881dd109a6ea2ee2434ca5b73ef93b9429995962fd1428a5c90162ec4b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/%22%40user%3A%5C%22fixture_user%5C%22%22/status",
+          "status": 200,
+          "code": "OK",
+          "responseDigest": "ea44eb7c00b956041ba836d6d224196d003bbb273423a972cce1472faf384737"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        }
+      ],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "ID-03 logout204 durable DB jti across owned process restart",
+      "status": "pass",
+      "durationMs": 42826,
+      "observations": [
+        {
+          "method": "POST",
+          "path": "/auth/login",
+          "status": 200,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/logout",
+          "status": 204,
+          "code": null,
+          "responseDigest": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/me",
+          "status": 401,
+          "code": "UNAUTHENTICATED",
+          "responseDigest": "8758655d1bae7bc9e4383ec79d848bd8d73c8843fe77037953d2aeb2e60f42e1"
+        }
+      ],
+      "result": {
+        "persistentRevocations": 1
+      }
+    },
+    {
+      "module": "ddd",
+      "scenario": "NFR-06 external JVM logs never contain fixture secrets or JWT",
+      "status": "pass",
+      "durationMs": 258,
+      "observations": [],
+      "result": null
+    },
+    {
+      "module": "ddd",
+      "scenario": "NFR-04 final database postconditions and no orphan/cross-system facts",
+      "status": "pass",
+      "durationMs": 31,
+      "observations": [],
+      "result": {
+        "badIdentity": 0,
+        "bulk": 10000,
+        "crossEdges": 0,
+        "crossPermissions": 0,
+        "ineligible": 0,
+        "users": 10012
+      }
+    },
+    {
+      "module": "comparison",
+      "scenario": "T21 normalized success/error/DB equivalence",
+      "status": "pass"
+    }
+  ],
+  "exitCode": 0,
+  "summary": {
+    "pass": 51,
+    "fail": 0
+  },
+  "modules": {
+    "structured": {
+      "jarSha256": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
+      "logDirectory": "retained outside repository",
+      "database": "unique disposable fixture, cleaned",
+      "ports": [
+        19081,
+        19181
+      ]
+    },
+    "ddd": {
+      "jarSha256": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
+      "logDirectory": "retained outside repository",
+      "database": "unique disposable fixture, cleaned",
+      "ports": [
+        19082,
+        19182
+      ]
+    }
+  }
+}

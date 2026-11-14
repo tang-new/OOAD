@@ -1,0 +1,75 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S01-structured-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: ManagementController" as ctl
+participant "svc: ManagementService" as svc
+participant "auth: AuthorizationService" as auth
+participant "repo: Store" as repo
+participant "audit: AuditService" as audit
+activate obj
+obj -> ctl: 1. addRoleInheritance(actor, seniorId, juniorId)
+activate ctl
+ctl -> svc: 2. inherit(actor, senior, junior, true)
+activate svc
+group local write transaction: lock before grant reads
+svc -> auth: 3. lock()
+activate auth
+deactivate auth
+svc -> auth: 4. center(actor, rbac:role:edit)
+activate auth
+deactivate auth
+svc -> auth: 5. root(actor)
+activate auth
+deactivate auth
+svc -> auth: 6. captureUpper(actor)
+activate auth
+deactivate auth
+svc -> auth: 7. protectRole(actor, seniorRole)
+activate auth
+deactivate auth
+svc -> auth: 8. protectRole(actor, juniorRole)
+activate auth
+deactivate auth
+svc -> repo: 9. one(RoleHierarchy.class, predicate, senior, junior)
+activate repo
+deactivate repo
+note over svc
+reachable(junior, senior): DFS queries outgoing edges.
+Self / cross-system / duplicate / cycle throws BizException and aborts interaction.
+end note
+alt legal new edge
+svc -> repo: 10. save(edge)
+activate repo
+deactivate repo
+svc -> svc: 11. changedUpper(actor, seniorRole)
+activate svc
+deactivate svc
+note over auth
+upper compares captured pre-mutation actor snapshot,
+not the newly modified self grants.
+end note
+else invalid graph
+svc --> obj: BizException; rollback
+end
+note over svc
+finish: Store.flush → preserveAdministrator → g.version++
+end note
+svc -> audit: 12. success(actor, operation, target)
+activate audit
+deactivate audit
+end
+note over svc
+Transaction proxy commits only normal return.
+Any exception aborts: no edge/version/SUCCESS fact persists.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

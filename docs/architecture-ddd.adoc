@@ -1,83 +1,75 @@
-= DDD 启动骨架与后续业务架构计划
+= RBAC1 DDD架构：独立领域实现与证据边界
 :toc:
 
-== 边界
+== 当前事实
 
-当前已建立可独立构建、启动的 `rbac-ddd` M2骨架，但尚无RBAC领域业务。
-只有本节和“实际骨架”描述当前源码；其余角色/聚合/仓储设计仍是计划，不是业务交付声明。
-旧面向对象骨架中的 rbac-oo、约束引擎、DataScope、RBAC2/3 与课程业务对象不作为现行设计依据。
-以 link:requirements.adoc[需求追踪]及 link:migration-baseline.adoc[实施基线]为准；一期实况见 link:architecture-structured.adoc[结构化架构]。
+rbac-ddd已包含真实domain、application、interfaces及infrastructure业务类型，*不再是只有health/info的M2启动骨架*。
+它独立使用JPA/MySQL、Redis、Flyway、JWT与缓存适配，仅共享rbac-contract的纯HTTP协议类型/错误词汇、开发DDL及外部黑盒夹具，不依赖rbac-structured业务。
+本文按现行生产源码说明；部分旧package-info/类名仍带Skeleton，不应据此否认现有业务，也不能据源码存在宣称最终验收完成。
 
-== 实际骨架与验证
+RbacDddApplication扫描自身包；默认8082，部署SERVER_PORT可统一为`${RBAC_PORT:-8081}`；没有全局context-path。
+ImplementationHealthIndicator已替代旧骨架探针，元数据为backend=ddd、stage=M5-RBAC1-verified、businessReady=true；整体仍由真实依赖探针汇总，不能把实现标识当外部部署背书。
+当前112项DDD测试与25场景真HTTP及T21已通过；源码存在不是证明，结果与hash见最终验收报告。旧“业务404/无需数据库/只21骨架测试”均不是现行事实。
+依据为link:implementation-contract.adoc[实施合同]、link:schema-contract.adoc[15表合同]、link:course-integration-contract.adoc[课程私有投影合同]。
 
-`RbacDddApplication`只扫描自身包；运行依赖为契约资源、Web及Actuator，不含structured、JPA、MySQL、Redis或Flyway。
-`infrastructure.health.SkeletonHealthIndicator`发布health与info元数据：backend=ddd、stage=M2-skeleton、businessReady=false。
-默认8082、context-path=/api/v1；SERVER_PORT可覆盖为部署的8081。
-未实现登录/用户/角色等路径返回404；只暴露health/info，不暴露env/beans/metrics等运维详情。
-
-实际HTTP及探针/架构测试21通过；包含故意违规的测试专用依赖，证明跨后端规则确实会失败，而不是空扫描通过。
-domain/application/interfaces仅有package-info，不能据此声称DDD业务分层已实现。
-
-image::diagrams/packages-m2.svg[M2实际工程依赖]
-
-图源为link:diagrams/packages-m2.dot[DOT]，同时有link:diagrams/packages-m2.png[PNG]，已实际打开PNG核查。
-实线表示模块/分层依赖；虚线表示HTTP与选择路径；点线表示框架组件扫描，不表示角色业务调用。
-
-== 目标分层与依赖
+== 依赖方向与真实职责
 
 [source,text]
 ----
-interfaces → application → domain
-infrastructure → domain（实现仓储/外部能力端口）
-启动装配组合各层，domain 不反向依赖任何外层
+interfaces.rest → application → domain / domain.port
+infrastructure → domain.port（端口实现）/ domain（恢复模型）
+Spring启动装配全部技术组件；domain不反向依赖外层或框架
 ----
 
 [cols="1,3"]
+|层 |现行类型及职责
+|interfaces.rest |IdentityController、DirectoryController、RoleController、ResourceController、AuthorizationController与IntegrationIdentityController映射HTTP；RestSupport/DirectoryViews/ResourceViews及dto白名单组装VO；ApiExceptionAdvice输出裸错误；RegisteredApiInterceptor使用服务端路由与认证上下文，不计算角色闭包。
+|application |IdentityApplicationService、DirectoryApplicationService、RoleApplicationService、ResourceApplicationService、AuthorizationApplicationService、AuditApplicationService、IntegrationIdentityApplicationService编排用例；事务内锁/加载、调用领域规则、保存、版本递增及审计。GrantIntegrityService加载变更后事实供最后管理员策略判断。
+|domain |Role、User为有行为模型；RoleHierarchy为DAG值图；DepartmentEligibility、AuthorizationPolicy、OrganizationPolicy、ResourcePolicy、LastAdministratorPolicy承载规则；AuditFact表达不可变审计事实及幂等重放约束；ApiOperation、Permission区分全局策略与权限种类。
+|domain.port |AuthorizationRepository、DirectoryRepository、ResourceRepository、AuditRepository、EffectiveCache、OperationContract、CredentialEncoder、TokenProvider定义能力边界；不继承JpaRepository，不引入JPA/Redis/HTTP对象。
+|infrastructure |JpaAuthorizationRepositoryAdapter、JpaDirectoryRepositoryAdapter、JpaResourceRepositoryAdapter、JpaAuditRepositoryAdapter实现仓储；独立entity与repository为持久化模型。VersionedEffectiveCache实现L1/L2；RsaTokenProvider/BcryptCredentialEncoder负责密码学；BootstrapInitializer做占位口令引导；OpenApiOperationContract/RouteContractVerifier读取及核验合同；LayerLoggingAspect记录技术元数据。
 |===
-|目标层 |职责及禁止事项
-|interfaces |HTTP 入参、响应与异常映射，不计算角色闭包或准入。
-|application |用例编排、事务边界、身份上下文、调用仓储及领域行为，不复制核心业务判断。
-|domain |聚合、实体、值对象、领域策略及仓储端口；*无 Spring、JPA、Redis、HTTP 等技术依赖*，不使用持久化注解或框架基类。
-|infrastructure |JPA 持久化记录与领域对象转换、Redis 缓存、JWT/外部 HTTP 适配、日志和端口实现；不侵入领域模型。
-|===
 
-领域仓储端口不能继承 JpaRepository；持久化实体不能冒充领域聚合。
-M2已有跨后端依赖的ArchUnit及反例验证；后续仍需领域层框架无关规则和无容器业务单测，当前不能拿空领域包冒充这些验证。
+领域对象与持久化实体分离：RoleEntity不是Role聚合；适配器恢复领域状态和保存变化，不把JPA实体直接传入Controller。
+应用可以依赖Spring事务与JSON编排，但不能依赖infrastructure实体或JpaRepository；domain只依赖JDK/自身端口，不能依赖Spring/JPA/Jackson或application/interfaces。
+BackendIsolationTest、DomainArchitectureTest包括生产类扫描及故意违规反例；这些规则不能靠空包通过冒充DDD实现，也不代替业务验收。
 
-== 六组设计目标
-
-下列名称是候选职责，不表示类或接口已存在。
+== 六组实际协作
 
 [cols="1,3"]
+|场景 |真实职责分配与必须保留的安全期望
+|S01 继承加边 |RoleApplicationService先lockGrants，加载RoleHierarchy；RoleHierarchy.link拒绝自环、跨系统、重复及反向可达；应用保存边、检查上界/最后管理员、递增版本并同事务审计。数据库锁负责并发串行化，必须实际测反向并发。
+|S02 准入与调动 |User.assign调用DepartmentEligibility.requireEligible；User.transfer仅保留目标部门允许的本人角色；DirectoryApplicationService核对组织管理原/新范围、锁用户并保存，不改共享Role定义。
+|S03 有效权限 |RoleHierarchy.paths保留有效路径、停用节点切断；AuthorizationPolicy.calculate计算直接/有效角色、去重权限和多条来源，identityRole投影受控。应用加载事实/版本并协调缓存，不从UI映射推导API。
+|S04 课程准入 |ApiOperation/AuthorizationPolicy判定系统级permission/requiredRole；可信课程网关另由固定method/path解析operationId；私有authorities投影真实API能力/ROLE_身份。teacher准入不能伪造CC，教师Service保留对象规则。
+|S05 幂等审计 |AuditFact.requireReplay绑定来源系统、主体和payload_hash；AuditApplicationService规范化安全JSON并使用独立插入事务，唯一冲突回滚后重读，提交后201；外部查询按aud隔离。
+|S06 敏感业务 |应用事务在同一MySQL提交业务、全局版本与SUCCESS审计；LastAdministratorPolicy保护可用性不变量。拒绝事实独立事务，不以AOP技术日志代替审计。
 |===
-|场景 |计划中的领域责任
-|S01 继承加边 |RoleGraph 管理同系统 senior→junior DAG 不变量及可达性验环；基础设施提供锁/持久化能力，应用事务协调，必须验证并发反向加边。
-|S02 部门准入指派 |DepartmentEligibility 策略检查直接角色资格；User 的指派行为拒绝不合资格角色；移部门回收不合资格指派，不改 Role 的共享定义。
-|S03 有效权限 |Role/RoleGraph 计算直接、继承及有效集合，去重并保留来源，停用节点切断路径；不引入业务部门数据范围。
-|S04 课程网关 |领域策略按系统与登记操作判定；可信网关由路由解析 operationId，不信客户端伪造值。课程对象级权限仍归课程 Service。
-|S05 审计接收 |审计事实及幂等内容规则由领域表达；数据库 requestId 唯一约束保证并发重试，应用同步提交后响应；不引入异步消息替代权威写入。
-|S06 敏感业务 |领域行为产出真实业务事实；应用以同一数据库事务保存业务与成功审计；失败/拒绝审计另行处理，不能伪造成功。
-|===
 
-用户唯一所属部门；角色归属系统；UI 菜单/按钮树与角色 DAG 分离；UI 权限与 API 权限为独立集合，显式映射而不互相推论。
-不为凑模式数量引入责任链、约束或多租户；具体聚合边界、锁粒度与 UML 应随实现和测试补齐。
+上述为已存在的职责，不是六组验收已全部通过。尤其并发、完整新闭包授权上界、最后管理员间接破坏、故障回滚、跨aud和规范化幂等仍必须用真实数据库及黑盒证明。
 
-== CloneFactory 源码核验（尚未接入）
+== 路由、缓存与安全配置
 
-已核对参考仓库 `854d0e09e250bc5462267f63ecacdcff32161104` 的clonefactory：
-依赖 `cn.edu.xmu:clonefactory:0.0.1-SNAPSHOT`，Java21，javapoet1.13.0；生成类为
-`cn.edu.xmu.clonefactory.util.CloneFactory`，须在annotationProcessorPaths显式配置处理器。
+OpenApiOperationContract读取中心64项OAS，RouteContractVerifier核对实际Controller及持久注册；受保护API元数据不能被管理入口弱化。
+HttpSecurityConfiguration关闭会话、表单和Basic；Bearer与细粒度授权由接入层/应用统一验证，不能将框架permitAll理解成匿名业务开放。
+根/auth七操作与两个私有投影已有Controller；私有端点即使公开代理阻断仍需有效Bearer和服务密钥，身份查询还需TEC与admin，不能接收客户端subject/system指定目标权限上下文。
 
-源码按getX/setX访问器生成浅拷贝，不支持record accessor、标准boolean isX或自动类型转换。
-当前我方record DTO不能直接假设可复制；后续需使用安全边界Bean并先写独立编译/映射测试。
-copyNotNull只适用包装类型，primitive可能生成非法null比较；白名单/排除优先级、ID/actor/密码不可覆盖都要实际验证。
-字段复制不替代领域构造和业务行为，不能把旧结构化Entity复制成DDD领域模型。
-未安装依赖、未运行处理器，不宣称CloneFactory已集成。
+AuthorizationApplicationService每次读取MySQL授权版本，写事务内不消费/回填缓存；VersionedEffectiveCache以namespace:authz:system:user:version为键。
+当前DDD适配为Caffeine L1约30秒、Redis L2约60秒，TTL只清理旧键；Redis异常回源，权威数据库失败不能以旧缓存放行。与结构化缓存实现/TTL不同不改变即时撤权合同，跨JVM与延迟回填仍须验收。
+MySQL持久化jti撤销，改密更新tokenVersion；RsaTokenProvider签发RS256单aud身份JWT，生产配置共享私钥/公钥、issuer/kid及轮换旧公钥，临时密钥只在明确dev/test配置下允许。
 
-== 双后端一致性门槛（待建设）
+LayerLoggingAspect覆盖interfaces/application及持久化/身份/缓存适配，记录traceId/layer/class/method/duration/result/exceptionType；不记录参数、返回对象、异常消息、token或服务密钥。日志不等于审计事务。
 
-两后端独立构建、启动，共用契约、逻辑数据库模型、迁移定义及共享黑盒夹具；不得共享角色闭包、准入等核心业务 Service/算法来抹平范式差异。
-相同外部请求应具有相同状态码、决策、审计与事务结果；使用相同逻辑夹具、各自隔离实例验证，而非两个实现同时污染一套测试数据。
-M2已落地同前端配置选择与DDD启动参数；真实浏览器在桌面/手机均能通过同源代理取得DDD身份，且登录业务仍404。
-这仅证明UI-01的连通子项，不证明两后端业务等价；M2验证结果不能替代RBAC1或两系统联调验收。
-验收与证据要求见 link:test-plan.adoc[测试计划]。
+== CloneFactory边界
+
+两后端POM已显式配置`cn.edu.xmu:clonefactory:0.0.1-SNAPSHOT`及CopyProcessor；当前DDD实际在创建/编辑边界Bean和RoleState/RoleEntity、RoleResult/RoleView间调用生成CloneFactory。
+工具按getX/setX浅拷贝，不自动复制record accessor、boolean isX或转换类型。受控Bean采用包装类型及字段白名单；不复制密码、actor、系统归属或实体内部状态到外部VO。
+聚合构造与业务行为仍由领域负责；字段复制不等于领域规则，也不能把结构化实体借来伪装DDD模型。
+CloneBoundaryTest与架构测试需随实际构建验证，不能仅因处理器在POM就声称安全映射验收完成。
+
+== 双后端最终门槛
+
+两后端分别构建/启动、各用隔离库与缓存命名空间，复用同一逻辑黑盒请求/预期，不复用授权算法。
+共享HTTP验收需比较状态码、稳定错误码、规范化成功体、审计与最终数据库事实；同一前端切换验证真实登录、组织/角色DAG/UI/API管理及桌面/手机路径，不再测“登录404”作为成功。
+同源代理、健康UP、M2截图、单个领域单测或历史覆盖率都不能替代这一门槛。
+当前本地实际验证见link:final-acceptance.adoc[最终验收]与link:test-plan.adoc[测试计划]；DDD行88.77%/分支71.50%，application约86.82%并执行原85%业务层门槛。外部部署与未执行容量/灾备不据此推定。另一实现见link:architecture-structured.adoc[结构化架构]。

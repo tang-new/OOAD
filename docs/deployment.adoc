@@ -1,109 +1,94 @@
-= structured 安全本地启动与部署边界
+= RBAC1 本地双实现部署与边界
 :toc:
 
-== 当前状态
+== 已执行，不是配置推测
 
-当前运行目标是一期 `rbac-structured`，不是 RBAC1 或 DDD。
-Spring Boot 3.3.5、Java21、Maven wrapper 3.9.9；前端 Vue3/TypeScript，需 Node20+。
-link:migration-baseline.adoc[实施基线]已指出本机默认 Java8，启动/构建前应显式选择 Java21 并检查版本。
-本轮测试启动过隔离MySQL/Redis及Spring测试上下文，但未作正式服务部署、镜像构建或远端运行态验证；以下不是部署成功报告。
+最终本地标签 `local-final-20261115-022901`：分别选择structured、DDD执行两轮七服务验收，每轮7/7服务、11/11探针通过，最终保留DDD。
+两轮复用相同中心/课程前端镜像；MySQL/Redis容器与数据卷未变。TLS1.3、私有路径403、未认证课程401、内部健康、MySQL healthy、Redis PONG和实际镜像SHA256匹配均有记录。
+完整不可变镜像/容器ID、两轮探针及停写切换证据见link:../deploy/deployment-evidence.json[真实运行证据]。
 
-== 隔离前提
+这是本机Docker Desktop单manager的授权隔离Swarm，不是外部生产或三服务器高可用验收。TLS证书本地自签，不冒称公共可信CA；未提供的远端条件、容量与整机恢复未验证。
 
-* 仅使用新建、专用、可丢弃的本地 MySQL8 与 Redis7；容器端口只绑定127.0.0.1，不能复用远程连接、部署数据卷或共享 Redis。
-* 本地手工开发可使用 MySQL `127.0.0.1:23306`、Redis `127.0.0.1:26379` 与专用空库 `rbac_local`，预先由本地管理员创建专用数据库用户并授权该库；这不是仓库已提供的 Compose 配置。
-* 自动测试另限127.0.0.1:13306/16379，独立测试实例，绝不能把手工运行实例当测试库。测试会清理数据，见 link:test-plan.adoc[测试隔离]。
-* 启动即由 Flyway 执行 link:database.adoc[V1–V4]；Hibernate 不建表。遇旧库、checksum mismatch 或未知迁移历史立即停止，先核对版本和备份，不绕过校验、不删除历史。
-* 数据库口令、JWT 密钥、初始口令仅在本地环境或受控凭据设施中设置，不粘贴到仓库、截图、共享终端记录或日志。本文不给真实密钥或默认口令。
+== 拓扑与运行环境
 
-== 构建与启动（本地 Bash 示例）
+* Java21、中心Spring Boot3.3.5、Maven3.9.9、MySQL8、Redis7、Node22/Vue3。
+* 稳定服务名rbac-backend通过MODULE选择rbac-structured或rbac-ddd，仅一个活动中心；两套业务实现不共用服务代码。
+* 七服务：rbac-web、rbac-backend、rbac-gateway、course-web、course-backend、mysql、redis。
+* 只发布两边缘TLS，默认中心 `https://localhost:8443`、课程 `https://localhost:9443/course/`；中心/课程业务后端、gateway、MySQL和Redis不公开端口。
+* 中心代理/api、/auth、/.well-known；课程代理/auth和/.well-known到中心，业务/api仅经gateway进入真实教师后端。
+* 两边缘拒绝/integration和/identity；可信服务key不进入浏览器、镜像环境明文或日志。
+* 生产RSA通过共享文件和Swarm secrets，不使用临时key；configtree提供数据库口令、bootstrap和服务key。角色/权限不放JWT，注销事实存MySQL。
 
-先设置本机实际 Java21 的 JAVA_HOME 并将其 bin 放在 PATH 首位，再检查：
+== 安全边界
 
-[source,shell]
-----
-java -version
-./mvnw -version
-./mvnw -pl rbac-structured -am -DskipTests package
-----
+新V1/V2仅用于新的开发空库；不得套到旧生产RBAC0库、删除Flyway历史或绕过checksum。
+构建/测试实例仅loopback13306/16379，课程测试13316，与部署私有数据卷隔离；禁止把运行中的部署数据库当测试库。
+任何脚本不得prune、删除旧服务/卷、误杀共享JVM或操作其它stack；旧服务名冲突应拒绝并请求维护窗口，不自动迁移。
 
-此处 `-DskipTests` 仅生成本地待验证产物，不是发布门槛，更不表示测试通过。
-Windows 可用 mvnw.cmd；若依赖下载需镜像，可加现有 `-s deploy/maven-settings-huawei.xml`。
-根工程全栈部署会占用公开应用端口；此处只启动回环环境中的单后端，不直接执行全栈脚本。阶段一已移除旧外部演示服务。
+运行秘密默认保存在被忽略的 `.runtime/full/`，Unix owner-only、Windows显式当前用户ACL；只生成缺失文件，不覆盖已有RSA/证书/口令。
+root在DDL中只有UNINITIALIZED占位，首次启动从bootstrap-password初始化，没有固定公开root口令。首次使用应改密；bootstrap只作用于未初始化账号，不是改密后的密码恢复入口。
 
-在专用 MySQL/Redis 已就绪、且 DB_USER 是预先创建的本地专用账号后设置下列参数。
-敏感项用交互读取或本地凭据管理器注入；JWT 密钥应使用本地随机生成的足够强值（至少32字节），不用示例值。
+== 构建与质量门槛
 
-[source,shell]
-----
-export DB_URL='jdbc:mysql://127.0.0.1:23306/rbac_local?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false'
-export DB_USER=rbac_local
-export REDIS_HOST=127.0.0.1 REDIS_PORT=26379
-export SERVER_ADDRESS=127.0.0.1 SERVER_PORT=8081
-read -r -s -p '本地数据库口令: ' DB_PASSWORD; echo
-export DB_PASSWORD
-read -r -s -p '本地 JWT 密钥: ' RBAC_JWT_SECRET; echo
-export RBAC_JWT_SECRET
-read -r -s -p '本地新建/导入用户初始口令: ' RBAC_INITIAL_PASSWORD; echo
-export RBAC_INITIAL_PASSWORD
-java -jar rbac-structured/target/rbac-structured.jar
-----
-
-本地 URL 的非 TLS 参数仅限回环开发，不是生产连接模板。
-现行可选环境项还包括 DB_HOST/PORT/NAME（未设 DB_URL 时组合）、DB_POOL_SIZE；设置完整 DB_URL 时应检查没有遗留远程值。
-RBAC_INITIAL_PASSWORD 只作用于未显式给口令的新建/导入用户，*不修改 V1 内置 root 的初始凭据*。
-V1 含固定内置账号，首次启动必须保持回环访问，使用受控方式取得初始化凭据，完成首次改密并重新登录；在此之前不得公开服务。JWT 环境覆盖也不等于账号初始化安全问题已被重构修复。
-
-另一个本地终端可作健康探测（预期不是实际结果）：
+先按link:test-plan.adoc[测试计划]正常执行JUnit和真实HTTP，再执行原覆盖门槛。原70%行/60%分支、service85%均保留，DDD application也执行同85%。
+不能用skipTests打包冒称测试通过；最终verify的skipTests仅避免重复前序已真实运行的JUnit，仍合并HTTP exec、report及check。
 
 [source,shell]
 ----
-curl --fail http://127.0.0.1:8081/api/v1/actuator/health
+# 显式JAVA_HOME21；专用测试服务及实际测试凭据已就绪。
+bash tools/install-clonefactory.sh
+bash tools/prepare-course.sh --build
+./mvnw clean package
+source deploy/full-jacoco-agent.sh
+export ACCEPTANCE_DB_PASSWORD='<专用测试实例凭据>'
+(cd tools/acceptance && npm ci && npm test && npm run acceptance)
+./mvnw verify -DskipTests
 ----
 
-可选前端：在 `rbac-web` 执行 `npm ci`，再执行 `RBAC_API=http://127.0.0.1:8081 npm run dev -- --host 127.0.0.1`，打开本地5173端口。
-现行前端代理 `/api` 到 structured；这个 RBAC_API 不是已完成双后端切换的证明。
-接口字段及鉴权见 link:api.adoc[API]；正式质量验证须另在隔离测试环境按测试计划运行并记录结果。
+前端typecheck、38项逻辑单测、构建及两实现desktop/mobile要另外真实运行；教师原440测试和真实双中心六类12联调分别记录，不以HTTP stub替代。
+当前精确canonical jar为各模块 `target/<module>.jar`，Dockerfile不再用通配符误装候选/旧包；课程使用固定上游的单一精确jar。
 
-== M2 双后端选择（本地验证，未远端发布）
+== 可复现本地Swarm验收
+
+参数模板为 `deploy/full-env.example`，显式环境优先于.env；非法MODULE在副作用前拒绝。秘密值只在本机受控设施设置，不粘贴进仓库或共享终端。
 
 [source,shell]
 ----
-# 独立DDD骨架构建：不运行structured，不需要数据库。
-./mvnw -pl rbac-ddd -am clean verify
-SERVER_ADDRESS=127.0.0.1 java -jar rbac-ddd/target/rbac-ddd.jar
-# 默认8082；业务不存在，健康信息必须明确businessReady=false。
-curl --fail http://127.0.0.1:8082/api/v1/actuator/health
-
-# 同一前端业务源码不变，仅改变开发代理目标。
-cd rbac-web
-RBAC_API=http://127.0.0.1:8082 npm run dev -- --host 127.0.0.1
+bash deploy/full-secrets.sh
+# 仅在本机尚未初始化Swarm、且操作者确认该独立Docker环境可用时初始化；不操作已有远端集群。
+# docker swarm init
+SHARED_REPORT='<最新全绿shared report.json绝对路径>' \
+REACTOR_LOG='<全模块门槛成功日志绝对路径>' \
+bash deploy/full-final.sh
 ----
 
-正式构建/部署脚本以MODULE选择 `rbac-structured`（默认）或 `rbac-ddd`。
-显式环境优先于.env，非法值在构建/部署副作用前拒绝。
-同一Compose/Swarm定义仅有 `rbac-backend` 活动服务，镜像和Dockerfile参数均选择相同MODULE；
-前端Nginx始终代理 `http://rbac-backend:8081`，容器环境统一覆盖SERVER_PORT=8081。
-完整stack仍包含数据服务；DDD骨架单JAR独立启动不等于整个stack不含MySQL/Redis。
+final gate先校验真实Surefire最少2/49/112/25且无失败/错误/skip、两个25场景及T21成功、全模块verify成功、可执行jar及当前jar等于HTTP运行快照；任一未过都在镜像构建前拒绝。
+脚本创建不可覆盖的local-final-*标签，六镜像构建后再次检查jar未变，再进行structured→DDD两轮受控切换与运行验证。
+每次切换先停写、等待旧五个应用/边缘容器全部停止，保留MySQL/Redis及卷，再发布新模块；不能把普通滚动更新冒充严格单写。
 
 [source,shell]
 ----
-# 仅参数示意，发布前仍须隔离测试服务就绪并通过全工程verify。
-MODULE=rbac-ddd bash deploy/build.sh
-MODULE=rbac-ddd TAG=<已构建标签> bash deploy/stack.sh up
+# 只查看本任务新stack，不扩展到其它项目。
+docker stack services rbac1-acceptance
+MODULE=rbac-ddd TAG=local-final-20261115-022901 DEPLOYMENT_STAGE=local-final \
+EVIDENCE_FILE=.runtime/full/manual-recheck.json bash deploy/full-verify.sh
 ----
 
-本轮只验证配置渲染/脚本替身行为和本地代理，未实际执行上述远程发布。
-一期服务 `${STACK}_rbac-structured` 改名为 `${STACK}_rbac-backend` 不是普通镜像更新：
-旧服务若仍存在，up脚本会拒绝，不能自动prune、删服务或删卷。
-须获准维护窗口、停旧写入并核验，再发布新的服务名和配套web镜像；回滚也需配套恢复。
-跨实现切换不能把多副本滚动更新当成严格单写保证；本阶段不操作旧生产库。
+最终证据使用自己的immutable tag；重新验证时需选择同一个真实TAG，不能用local默认tag冒充已部署版本。
+回滚只在已验证的RBAC1镜像/配置间按同样停写屏障操作，不能把一期RBAC0旧镜像直接接到新基线。
 
-== 远端与后续目标（未核验）
+== 初次业务使用
 
-仓库有 Dockerfile、docker-compose.yml 和 deploy/ 下的 Compose/Swarm 脚本；定义存在不代表教师三台服务器已部署、服务健康或外网安全。
-本轮没有远程命令、镜像推送、节点变更或数据迁移授权，不提供远程覆盖和删库指令。
-旧手册的服务器规格、历史部署状态与口令检查描述不能当作当前运行证据；不得直接沿用开发默认配置上公网。
+. 在本机安全取得 `.runtime/full/bootstrap-password`，中心以root登录并自行改密。
+. 通过中心管理UI建立业务部门及course-project-management的准入角色，创建合成/授权账号，分别指派admin、teacher、student。不要删掉总部SUPER_ADMIN准入以免触发最后管理员保护。
+. 课程管理员在真实课程系统维护Teacher/Student与中心稳定subject的绑定；不按名字猜身份，不伪造teacher/CC。
+. 使用业务账号从课程前端登录。中心root不是隐式课程teacher；copyCourse仍需全局teacher及组长/真实CC对象规则。
 
-参数化构建/启动、配置选择及DDD代理连通已在M2本地验证。未来仍需单独核验：DDD业务与持久化隔离、目标JWK/iss/aud与撤销、可信课程上游、真实Swarm启动、secrets、节点标签/网络边界、备份恢复及回滚。
-三节点编排也不自动等于高可用；未取得教师部署权限或最新外部契约的验收项须标记无法核验，不以本地健康探测替代。
+自动化联调使用独占新库、真实中心API和合成数据，见link:../course-integration/REAL-CENTERS-VERIFICATION.md[12例证据]，不把测试fixture灌入部署数据卷。
+
+== 仍未声称的事项
+
+* 外部服务器、外网域名/公共证书、镜像远端发布与三节点HA不是本地证据覆盖的范围。
+* 未对其它服务、旧库或现有生产卷做迁移、停机、删除、恢复演练。
+* 中心与课程跨库同步HTTP不是分布式原子事务；业务提交而审计未确认的503窗口及同UUID有限重试必须如实保留。
+* GitHub CI状态需在最终push后按实际run核对，不能把本地通过称为远端CI成功。

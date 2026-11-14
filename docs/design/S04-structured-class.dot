@@ -1,0 +1,11 @@
+digraph G { graph [overlap=true,splines=line,outputorder=edgesfirst,pad=0.3,bgcolor="white",label="S04-structured-class — current source snapshot",labelloc=t]; node [shape=plain,fontname="Microsoft YaHei",fontsize=15]; edge [color="#49627b",arrowsize=1.2,fontname="Microsoft YaHei"];
+"svc" [pos="0,0!",label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10"><TR><TD ALIGN="LEFT" BGCOLOR="#dcecff">AuthBoundary</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">- identity: IdentityClient</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">public void authorize(String, String)</TD></TR></TABLE>>];
+"repo" [pos="-1000,0!",label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10"><TR><TD ALIGN="LEFT" BGCOLOR="#dcecff">«interface» IdentityClient</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff"> </TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">public abstract ResponseEntity&lt;IdentityClient.Decision&gt; check(String, String)</TD></TR></TABLE>>];
+"ctl" [pos="0,360!",label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10"><TR><TD ALIGN="LEFT" BGCOLOR="#dcecff">GatewayController</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">- auth: AuthBoundary<BR ALIGN="LEFT"/>- routes: RouteRegistry</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">public ResponseEntity&lt;byte[]&gt; forward(HttpServletRequest) throws IOException</TD></TR></TABLE>>];
+"route" [pos="1000,0!",label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10"><TR><TD ALIGN="LEFT" BGCOLOR="#dcecff">RouteRegistry</TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff"> </TD></TR><HR/><TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">public String resolve(String, String)</TD></TR></TABLE>>];
+"svc" -> "repo" [style=solid,arrowhead=vee,label="identity",fontsize=14];
+"ctl" -> "svc" [style=solid,arrowhead=vee,label="auth",fontsize=14];
+"ctl" -> "route" [style=solid,arrowhead=vee,label="routes",fontsize=14];
+"_top" [pos="0,480!",shape=point,width=0,height=0,style=invis,label=""];
+"_bottom" [pos="0,-480!",shape=point,width=0,height=0,style=invis,label=""];
+}

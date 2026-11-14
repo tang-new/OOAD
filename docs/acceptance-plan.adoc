@@ -85,6 +85,10 @@ npm run acceptance -- --module=both
 反例测试保证错误部门、错误subject、错误继承路径和颠倒分页顺序不能被归一化掩盖。
 JWT/JWKS不比较随机密钥内容，而分别做密码学和字段断言。
 不把两个相同的错误实现当一致通过：对比前要求双方每个场景都 pass。
+唯一并发例外是ROLE-03中未指派、空权限的RACE_A/RACE_B对称反向写：调度器可任选获胜方向。
+原始HTTP方向与结果完整保存，每边必须恰好一200/OK和一409/ROLE_CYCLE，SQL还必须证明唯一持久边恰是获胜请求的方向；
+T21仅对此固定隔离角色对比较合法结果集，拒绝其它角色、重复方向、双成功。其它关系、顺序、版本一概不宽免。
+对应反例测试证明该规则不会抹掉普通DAG路径或分页顺序差异。
 
 [cols="1,3"]
 |===
@@ -99,15 +103,17 @@ JWT/JWKS不比较随机密钥内容，而分别做密码学和字段断言。
 数据库分页通过可观测输出与数据库 LIMIT/OFFSET 校验；是否内部使用 JPA 真正数据库分页还需实现代理的 SQL/源码/性能证据，本黑盒不冒称能观察内部加载方式。
 不关闭共享 Redis/MySQL，因此不能将本套误称为完成整个实例宕机测试；本地同步审计故障通过仅自有 schema 的 trigger 注入。
 
-== 工具护栏和真实候选执行
+== 工具护栏与候选至最终的真实执行
 
-独立 package-lock 已生成；最新 `npm test`：17项通过、0失败、0跳过，包含类型化引用反例、两个真实本地 stub 的302/307/308不外发、环境污染隔离和数据库护栏。
+独立 package-lock 已生成；最新 `npm test`：21项通过、0失败、0跳过，包含类型化引用反例、两个真实本地 stub 的302/307/308不外发、环境污染隔离和数据库护栏。
 JVM白名单继承基础系统环境，`SPRING_APPLICATION_JSON` 同时固定 datasource/Flyway/Redis/namespace/密钥；只加载 classpath 配置，不继承外部 Spring/JVM覆盖，不把密码放CLI。
 运行前将 jar 复制到私有临时目录，避免Windows执行句柄锁住Maven产物。
 
 覆盖率用仅loopback的JaCoCo TCP agent，停机前使用官方dump CLI获取非空exec（Windows终止进程不执行Java shutdown hook，不能只依赖dumponexit）。
 先正常 `clean package` 跑JUnit并打包，运行共享HTTP，再 `verify -DskipTests` 合并exec并执行原覆盖率门槛；中间不得clean。`source deploy/full-jacoco-agent.sh` 可定位agent和官方CLI。
 
-首轮候选真实运行已完成但不是GREEN：structured候选jar无Main-Class，登记ENVIRONMENT_BLOCKED；DDD有20项通过，另有JWT错误aud、审计时间边界等真实待修复以及一次transport阻断。
+历史首轮候选不是GREEN（以下故障现已修复）：structured候选jar无Main-Class，登记ENVIRONMENT_BLOCKED；DDD有20项通过，另有JWT错误aud、审计时间边界等真实待修复以及一次transport阻断。
 RES-03首轮创建BUTTON未提供MENU父节点属于测试fixture错误，已补合法父节点，不放宽后端约束。
-外部 `m10-shared-first/report.json` 保存逐项结果、候选jar hash和非空dump；需修复后最终重跑，不以候选结果宣称交付。
+外部 `m10-shared-first/report.json` 保留初轮结果/hash/dump。最终 `m18-shared-both`：structured25、DDD25、T21通过，共51 PASS，0 FAIL、exit0；同轮实际运行快照与canonical SHA相等，两侧各三份非空dump。
+其前m17的T21拒绝合法相反调度获胜方向，后来只对上述隔离对称角色对做合法结果集判定并增强DB方向校验，未改backend或重建，不删除普通关系/顺序/version差异。
+可移植完整结果见link:acceptance/shared-http.json[实际HTTP观察]；原始失败、仓库外JVM日志与m18原报告保留，不抹历史，也不把早期candidate当最终包。

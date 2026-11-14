@@ -1,0 +1,182 @@
+{
+  "format": "rbac1-portable-local-evidence-v1",
+  "scope": "Derived from actual normal JUnit, real HTTP, browser and course reports. Raw logs remain outside Git; no external deployment or CI claim.",
+  "junit": {
+    "rbac-contract": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "rbac-structured": {
+      "tests": 49,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "rbac-ddd": {
+      "tests": 112,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "rbac-gateway": {
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "coverage": {
+    "rbac-structured": {
+      "all": {
+        "LINE": {
+          "covered": 1497,
+          "missed": 121,
+          "percent": 92.5216
+        },
+        "BRANCH": {
+          "covered": 668,
+          "missed": 264,
+          "percent": 71.6738
+        }
+      },
+      "serviceOrApplication": {
+        "LINE": {
+          "covered": 1320,
+          "missed": 117,
+          "percent": 91.858
+        },
+        "BRANCH": {
+          "covered": 645,
+          "missed": 261,
+          "percent": 71.1921
+        }
+      }
+    },
+    "rbac-ddd": {
+      "all": {
+        "LINE": {
+          "covered": 2497,
+          "missed": 316,
+          "percent": 88.7664
+        },
+        "BRANCH": {
+          "covered": 705,
+          "missed": 281,
+          "percent": 71.501
+        }
+      },
+      "serviceOrApplication": {
+        "LINE": {
+          "covered": 830,
+          "missed": 126,
+          "percent": 86.8201
+        },
+        "BRANCH": {
+          "covered": 228,
+          "missed": 144,
+          "percent": 61.2903
+        }
+      }
+    },
+    "rbac-gateway": {
+      "all": {
+        "LINE": {
+          "covered": 178,
+          "missed": 13,
+          "percent": 93.1937
+        },
+        "BRANCH": {
+          "covered": 125,
+          "missed": 15,
+          "percent": 89.2857
+        }
+      }
+    }
+  },
+  "sharedHttp": {
+    "pass": 51,
+    "fail": 0,
+    "sourceReportSha256": "ebb098e2c1d856a25a524836f7eece46c73a6846057f427780d25b112ab048ab"
+  },
+  "verify": {
+    "log": "m17-final-verify.log",
+    "sha256": "4f5fd55c39c7ce90d62f478a55bfb28e35357b9c69a7c2f140e67f8095b4ce5b",
+    "status": "BUILD SUCCESS",
+    "phase": "verify after prior normal JUnit and HTTP; no repeated JUnit in this phase"
+  },
+  "course": {
+    "sourceReportSha256": "b4cc72060fc16618a16d5f2d519b3b65b00884a0bc6a58d21a953705d520aa72",
+    "upstream": "fde08d5dd417abc543145aff33ca8378deb9ca36",
+    "modules": {
+      "structured": {
+        "pass": 6,
+        "cleanup": {
+          "children": true,
+          "databases": true,
+          "redis": true,
+          "secrets": true
+        },
+        "jars": {
+          "center": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
+          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
+        },
+        "persisted": {
+          "score": 88,
+          "approvedMemberships": 1
+        },
+        "audit": {
+          "auditId": 52,
+          "auditRequestId": "1a5a4e5e-b72b-4a29-9a7e-7bbe845b74b9",
+          "before": 70,
+          "after": 88
+        }
+      },
+      "ddd": {
+        "pass": 6,
+        "cleanup": {
+          "children": true,
+          "databases": true,
+          "redis": true,
+          "secrets": true
+        },
+        "jars": {
+          "center": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
+          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
+        },
+        "persisted": {
+          "score": 88,
+          "approvedMemberships": 1
+        },
+        "audit": {
+          "auditId": 51,
+          "auditRequestId": "83610155-e9ef-4393-86d7-a8ea551768e4",
+          "before": 70,
+          "after": 88
+        }
+      }
+    }
+  },
+  "frontendUnit": {
+    "pass": 38,
+    "sourceReportSha256": "a79d5e2be091ad1e868c5b89331a6550ded4f3069de4b80b0b5414de02b16504"
+  },
+  "browser": [
+    {
+      "log": "m8-web-visual-structured-20261115-020039.log",
+      "sha256": "ab72b7419297f2386e382fd084f3f203a76245275e9f9933070d2b6eecb40fc2",
+      "pass": 2,
+      "scope": "one backend, desktop and mobile, loaded-state screenshots"
+    },
+    {
+      "log": "m8-web-visual-ddd-20261115-015638.log",
+      "sha256": "a6192bc7a8987c02938f82494087a3aeea4e2bd0a8e1bae62e7e27c2ea6416cf",
+      "pass": 2,
+      "scope": "one backend, desktop and mobile, loaded-state screenshots"
+    }
+  ],
+  "junitTotal": 188
+}

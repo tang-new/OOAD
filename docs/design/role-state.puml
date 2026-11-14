@@ -1,0 +1,23 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+hide empty description
+left to right direction
+title Role actual two-state behavior (DDD domain + application guard)
+[*] --> ENABLED : create(... enabled=true ...)
+ENABLED --> DISABLED : changeStatus(false)
+DISABLED --> ENABLED : changeStatus(true)
+note bottom of ENABLED
+Repeated status assignment is legal (self transition).
+end note
+note bottom of DISABLED
+Role.changeStatus is an assignment, not an event publisher.
+status → requireRoleManagement → changeStatus;
+when enabling: upperBound; then saveRole → complete.
+complete → GrantIntegrityService.requireAdministrator
+→ version + same-transaction audit.
+Privileged actor may disable a role only if integrity holds.
+Structured: ManagementService.roleStatus assigns string status;
+finish → preserveAdministrator prevents last admin loss.
+No fictitious RoleStatusChangedEvent.
+end note
+@enduml

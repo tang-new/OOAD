@@ -1,0 +1,85 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S02-ddd-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: DirectoryController" as ctl
+participant "svc: DirectoryApplicationService" as svc
+participant "auth: AuthorizationApplicationService" as auth
+participant "repo: AuthorizationRepository" as repo
+participant "user: User" as user
+participant "audit: AuditApplicationService" as audit
+participant "directory: DirectoryRepository" as directory
+participant "eligibility: DepartmentEligibility" as eligibility
+participant "integrity: GrantIntegrityService" as integrity
+activate obj
+obj -> ctl: 1. assign(bearer, userId, input)
+activate ctl
+ctl -> svc: 2. assign(principal, userId, roleId)
+activate svc
+group local write transaction
+svc -> repo: 3. lockGrants()
+activate repo
+deactivate repo
+svc -> auth: 4. require(principal, rbac:assignment:edit, false)
+activate auth
+deactivate auth
+svc -> directory: 5. user(userId, true)
+activate directory
+deactivate directory
+note over svc
+managed(actor, department) checks OrganizationPolicy scope.
+end note
+svc -> repo: 6. role(roleId)
+activate repo
+deactivate repo
+svc -> auth: 7. upperBound(actor, systemCode, proposed)
+activate auth
+deactivate auth
+svc -> repo: 8. eligibility(departmentId)
+activate repo
+deactivate repo
+alt user inactive / department mismatch
+svc -> user: 9. assign(role, eligibility)
+activate user
+user --> obj: DomainException; abort / rollback
+deactivate user
+else user admits assignment
+svc -> user: 10. assign(role, eligibility)
+activate user
+user -> eligibility: 11. requireEligible(role)
+activate eligibility
+deactivate eligibility
+deactivate user
+note over eligibility
+Missing eligibility or disabled role throws here.
+User then rejects duplicate direct assignment; all exceptions
+abort before DirectoryRepository.assign.
+end note
+svc -> directory: 12. assign(userId, roleId, actor.id())
+activate directory
+deactivate directory
+end
+svc -> integrity: 13. requireAdministrator()
+activate integrity
+deactivate integrity
+svc -> repo: 14. advanceVersion()
+activate repo
+deactivate repo
+svc -> audit: 15. local(actor, rbac-center, ROLE_ASSIGNED, subject, SUCCESS, null)
+activate audit
+deactivate audit
+end
+note over svc
+Assignment, administrator-integrity check, version and SUCCESS audit
+share the transaction; exceptions cannot commit a partial success.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

@@ -1,0 +1,213 @@
+= 当前源码图索引
+
+自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。
+
+== LOGIN-ddd-class
+
+image::LOGIN-ddd-class.svg[LOGIN-ddd-class]
+
+link:LOGIN-ddd-class.png[PNG] / link:LOGIN-ddd-class.dot[DOT]
+
+== LOGIN-ddd-sequence
+
+image::LOGIN-ddd-sequence.svg[LOGIN-ddd-sequence]
+
+link:LOGIN-ddd-sequence.png[PNG] / link:LOGIN-ddd-sequence.puml[PlantUML]
+
+== S01-ddd-class
+
+image::S01-ddd-class.svg[S01-ddd-class]
+
+link:S01-ddd-class.png[PNG] / link:S01-ddd-class.dot[DOT]
+
+== S01-ddd-sequence
+
+image::S01-ddd-sequence.svg[S01-ddd-sequence]
+
+link:S01-ddd-sequence.png[PNG] / link:S01-ddd-sequence.puml[PlantUML]
+
+== S01-structured-class
+
+image::S01-structured-class.svg[S01-structured-class]
+
+link:S01-structured-class.png[PNG] / link:S01-structured-class.dot[DOT]
+
+== S01-structured-sequence
+
+image::S01-structured-sequence.svg[S01-structured-sequence]
+
+link:S01-structured-sequence.png[PNG] / link:S01-structured-sequence.puml[PlantUML]
+
+== S02-ddd-class
+
+image::S02-ddd-class.svg[S02-ddd-class]
+
+link:S02-ddd-class.png[PNG] / link:S02-ddd-class.dot[DOT]
+
+== S02-ddd-sequence
+
+image::S02-ddd-sequence.svg[S02-ddd-sequence]
+
+link:S02-ddd-sequence.png[PNG] / link:S02-ddd-sequence.puml[PlantUML]
+
+== S02-structured-class
+
+image::S02-structured-class.svg[S02-structured-class]
+
+link:S02-structured-class.png[PNG] / link:S02-structured-class.dot[DOT]
+
+== S02-structured-sequence
+
+image::S02-structured-sequence.svg[S02-structured-sequence]
+
+link:S02-structured-sequence.png[PNG] / link:S02-structured-sequence.puml[PlantUML]
+
+== S03-ddd-class
+
+image::S03-ddd-class.svg[S03-ddd-class]
+
+link:S03-ddd-class.png[PNG] / link:S03-ddd-class.dot[DOT]
+
+== S03-ddd-sequence
+
+image::S03-ddd-sequence.svg[S03-ddd-sequence]
+
+link:S03-ddd-sequence.png[PNG] / link:S03-ddd-sequence.puml[PlantUML]
+
+== S03-structured-class
+
+image::S03-structured-class.svg[S03-structured-class]
+
+link:S03-structured-class.png[PNG] / link:S03-structured-class.dot[DOT]
+
+== S03-structured-sequence
+
+image::S03-structured-sequence.svg[S03-structured-sequence]
+
+link:S03-structured-sequence.png[PNG] / link:S03-structured-sequence.puml[PlantUML]
+
+== S04-ddd-class
+
+image::S04-ddd-class.svg[S04-ddd-class]
+
+link:S04-ddd-class.png[PNG] / link:S04-ddd-class.dot[DOT]
+
+== S04-ddd-policy-sequence
+
+image::S04-ddd-policy-sequence.svg[S04-ddd-policy-sequence]
+
+link:S04-ddd-policy-sequence.png[PNG] / link:S04-ddd-policy-sequence.puml[PlantUML]
+
+== S04-ddd-sequence
+
+image::S04-ddd-sequence.svg[S04-ddd-sequence]
+
+link:S04-ddd-sequence.png[PNG] / link:S04-ddd-sequence.puml[PlantUML]
+
+== S04-structured-class
+
+image::S04-structured-class.svg[S04-structured-class]
+
+link:S04-structured-class.png[PNG] / link:S04-structured-class.dot[DOT]
+
+== S04-structured-sequence
+
+image::S04-structured-sequence.svg[S04-structured-sequence]
+
+link:S04-structured-sequence.png[PNG] / link:S04-structured-sequence.puml[PlantUML]
+
+== S05-ddd-class
+
+image::S05-ddd-class.svg[S05-ddd-class]
+
+link:S05-ddd-class.png[PNG] / link:S05-ddd-class.dot[DOT]
+
+== S05-ddd-sequence
+
+image::S05-ddd-sequence.svg[S05-ddd-sequence]
+
+link:S05-ddd-sequence.png[PNG] / link:S05-ddd-sequence.puml[PlantUML]
+
+== S05-structured-class
+
+image::S05-structured-class.svg[S05-structured-class]
+
+link:S05-structured-class.png[PNG] / link:S05-structured-class.dot[DOT]
+
+== S05-structured-sequence
+
+image::S05-structured-sequence.svg[S05-structured-sequence]
+
+link:S05-structured-sequence.png[PNG] / link:S05-structured-sequence.puml[PlantUML]
+
+== S06-ddd-class
+
+image::S06-ddd-class.svg[S06-ddd-class]
+
+link:S06-ddd-class.png[PNG] / link:S06-ddd-class.dot[DOT]
+
+== S06-ddd-sequence
+
+image::S06-ddd-sequence.svg[S06-ddd-sequence]
+
+link:S06-ddd-sequence.png[PNG] / link:S06-ddd-sequence.puml[PlantUML]
+
+== S06-structured-class
+
+image::S06-structured-class.svg[S06-structured-class]
+
+link:S06-structured-class.png[PNG] / link:S06-structured-class.dot[DOT]
+
+== S06-structured-sequence
+
+image::S06-structured-sequence.svg[S06-structured-sequence]
+
+link:S06-structured-sequence.png[PNG] / link:S06-structured-sequence.puml[PlantUML]
+
+== SIM-ddd-class
+
+image::SIM-ddd-class.svg[SIM-ddd-class]
+
+link:SIM-ddd-class.png[PNG] / link:SIM-ddd-class.dot[DOT]
+
+== SIM-ddd-sequence
+
+image::SIM-ddd-sequence.svg[SIM-ddd-sequence]
+
+link:SIM-ddd-sequence.png[PNG] / link:SIM-ddd-sequence.puml[PlantUML]
+
+== ddd-packages
+
+image::ddd-packages.svg[ddd-packages]
+
+link:ddd-packages.png[PNG] / link:ddd-packages.dot[DOT]
+
+== role-senior-junior-dag
+
+image::role-senior-junior-dag.svg[role-senior-junior-dag]
+
+link:role-senior-junior-dag.png[PNG] / link:role-senior-junior-dag.dot[DOT]
+
+== role-state
+
+image::role-state.svg[role-state]
+
+link:role-state.png[PNG] / link:role-state.puml[PlantUML]
+
+== schema-15-er
+
+image::schema-15-er.svg[schema-15-er]
+
+link:schema-15-er.png[PNG] / link:schema-15-er.dot[DOT]
+
+== structured-packages
+
+image::structured-packages.svg[structured-packages]
+
+link:structured-packages.png[PNG] / link:structured-packages.dot[DOT]
+
+== swarm-deployment
+
+image::swarm-deployment.svg[swarm-deployment]
+
+link:swarm-deployment.png[PNG] / link:swarm-deployment.puml[PlantUML]

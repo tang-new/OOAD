@@ -1,55 +1,71 @@
-= 数据库：现行迁移与重构目标
+= RBAC1 数据库：开发空库契约
 :toc:
 
-== 当前事实的唯一来源
+== 适用范围与唯一来源
 
-当前为 MySQL/JPA/Flyway 的一期 RBAC0 模型；Hibernate `ddl-auto: none`，表结构由以下实际脚本依次确定，不能只读 V1 推断最终结构：
-
-[cols="1,3"]
-|===
-|迁移 |作用
-|link:../rbac-contract/src/main/resources/db/migration/V1__rbac0_baseline.sql[V1 RBAC0 基线] |13 张业务表及内置组织、账号、角色、菜单、资源权限；包含旧公司与 scope 模型。
-|link:../rbac-contract/src/main/resources/db/migration/V2__grant_version.sql[V2 授权版本] |新增单行 sys_grant_version，与授权变更同事务递增；总计14张表。
-|link:../rbac-contract/src/main/resources/db/migration/V3__reserve_internal_user_ids.sql[V3 用户编号段] |将自增起点设为10000；1–9999供内部账号，SYSTEM 在服务层显式取号；不重新编号已有用户。
-|link:../rbac-contract/src/main/resources/db/migration/V4__drop_user_expiry.sql[V4 取消账号到期] |先停用已到期且启用的账号，再删除 expires_at；最终账号没有到期字段。
-|===
-
-旧 `docs/archive/sql` 仅属于Git历史，不是当前迁移入口。
-本轮基线在专用空测试库实际运行过V1–V4；未查询或操作任何存量生产库。
-SQL注释中的旧Markdown章节引用有意保持原样，以免仅因导航更新改变已执行迁移的checksum；
-原文可从 `363939a:docs/` 查阅。它们不作为当前需求入口，开发模型重构阶段再统一处理基线。
-
-== 一期模型与约束
+当前共享开发基线为MySQL 8、InnoDB、utf8mb4与UTC TIMESTAMP(3)，不是一期RBAC0结构。
+link:schema-contract.adoc[冻结物理列合同]规定15张业务表的精确列、可空性和约束；两个后端实体/领域对象可独立设计，但不得更换物理字段。
+结构化配置Hibernate ddl-auto=none，DDD配置ddl-auto=validate；建表均由Flyway，不以Hibernate自动更新替代迁移。
 
 [cols="1,3"]
 |===
-|区域 |现行关系与关键边界
-|组织/身份 |sys_company → sys_department 部门树；sys_user 唯一所属部门并保留 company_id。部门 path 支持子树查询；负责人关联只是组织信息，不自动授权。
-|资源 |sys_software_system → sys_function_module → sys_resource；sys_action 与资源组成 sys_permission。resource_type 为 BUSINESS/MENU/API，不是新 UI/API 映射模型。
-|授权 |sys_role 的 company_id 可空，role_code 全局唯一，无 system_id；sys_role_permission 唯一(role_id, permission_id)，保留旧 self_only。
-|指派 |sys_user_role 唯一(user_id, role_id, scope_dept_id)，scope_dept_id 为旧适用部门，granted_by 只作审计，不形成级联授权依赖。
-|菜单 |sys_menu 为 parent_id 树，叶子挂资源；无独立 BUTTON 类型、无角色继承边。
-|审计 |sys_audit_log 存操作者/对象快照、事件、结果、原因及鉴权耗时等；不建对象外键，当前缺 requestId 幂等键、系统快照等新字段。
-|缓存版本 |sys_grant_version 的 id=1；Redis 授权键带此版本，数据库版本不是 Redis TTL。
+|现行迁移 |职责
+|link:../rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql[V1 RBAC1 schema] |创建15表、FK、联合唯一、CHECK和查询索引；用户自增起点10000。
+|link:../rbac-contract/src/main/resources/db/migration/V2__rbac1_seed.sql[V2 RBAC1 seed] |总部/Finance/Engineering、两系统、六角色、准入、root占位哈希、UI/API目录、显式角色权限及UI↔API映射、全局授权版本行。
 |===
 
-用户名/工号、权限码等有唯一索引；组织与授权引用有外键。用户逻辑删除且用户名不可复用；指派与角色权限物理删除；角色仍有指派时服务层拒绝删除，角色权限有级联外键；菜单有子节点时服务层拒绝删除。
-审计按当前代码只插入，不把它夸大为数据库防篡改机制。旧独立事务写审计不能保证成功事实和业务一致。
+旧V1–V4只保留在Git历史，不再作为当前classpath迁移。*仅允许新空开发/测试库执行此V1/V2*，不是旧生产库升级方案。
+禁止将新基线连接生产或已有一期库、篡改其Flyway历史/checksum、clean生产、用baseline-on-migrate掩盖冲突。
+已有旧库应继续使用匹配的一期镜像/schema；需要升级时另行制定备份、兼容迁移与恢复方案，本轮不操作旧库。
+打包前clean构建，避免target/classes残留旧脚本进入jar。
 
-导入依据三份 xlsx，只写组织、用户、资源与角色模板，不自动分配角色；歧义行进入异常清单。原始人员数据不应入库到 Git 或镜像。旧导入数量是历史报告，不是本轮结果。
+== 15表及职责
 
-== RBAC1 目标（尚无对应迁移）
+[cols="1,3"]
+|===
+|表 |关系与关键约束
+|sys_system |code唯一；status与version；系统码rbac-center、course-project-management。
+|sys_department |parent_id自引用、code唯一、path；用户唯一所属部门；总部path=/1/。
+|sys_user |subject和username各自唯一；password_hash、name、no、phone、department_id、status、token_version、must_change_password、failed_login_count、locked_until、version、created_at。用户名不可复用；无company或到期列。
+|sys_role |system_id归属系统，UNIQUE(system_id,code)；description、status、builtin、identity_role、version。identity_role只能为空或student/teacher/admin。
+|sys_permission |UI/API分种类，UNIQUE(system_id,kind,code)；启停与version。
+|sys_role_permission |角色直接权限，UNIQUE(role_id,permission_id)；继承权限不冗余写回。
+|sys_user_role |直接指派，UNIQUE(user_id,role_id)；assigned_by可空且关联用户，assigned_at。无scope部门。
+|sys_department_allowed_role |部门直接角色准入，UNIQUE(department_id,role_id)；准入不等于自动指派。
+|sys_role_hierarchy |senior_role_id→junior_role_id，联合唯一，CHECK拒绝自环；允许多父，仍须事务验环。
+|sys_ui_resource |同系统MENU/BUTTON树，parent_id自引用，permission_id关联UI权限；route/component可空；UNIQUE(system_id,code)。
+|sys_api_operation |真实operation_id、method、path_template、permission_id、required_role、access_policy、enabled、version；系统内operationId与method/path分别唯一；PROTECTED至少有权限或角色条件。
+|sys_ui_api_mapping |UI资源/API操作显式多对多；联合唯一。仅追踪，不隐式赋权。
+|sys_token_revocation |jti主键、subject、expires_at、created_at；MySQL权威撤销事实，不依赖Redis存活。
+|sys_grant_version |固定id=1、version；全局授权写互斥/缓存版本，不是JWT token_version或实体乐观锁。
+|sys_audit_log |request_id全局唯一；source_system_code、origin、操作者快照、event_type、object_type/object_id、target、前后JSON、result/reason、trace_id、payload_hash、occurred_at；不建业务FK。
+|===
 
-* 收缩为单公司；保留用户唯一部门，移除废弃多公司、业务 scope/selfOnly 语义，不建立课程业务数据副本。
-* 部门只承担组织管理及直接角色准入；准入清单不同于用户角色指派。迁部门与不合资格指派回收同事务，不清空共享角色权限。
-* 角色归属系统，系统内编码唯一；新增同系统 senior→junior DAG 及防自环、跨系统、重复边、并发成环机制，支持多父、传递、停用切断和菱形去重。
-* UI 菜单/按钮树、独立 ApiOperation 登记、UI↔API 显式映射分开；现行 OAS operationId 不能冒充登记表。
-* 审计补 requestId 唯一性及内容一致性、系统/身份/trace 快照；同步幂等提交、系统隔离查询与业务成功审计同事务需要专项设计和验证。
+完整类型及NOT NULL/NULL逐列以schema合同与V1为准。普通外键防孤儿；同系统、UI/API kind、树/DAG无环、最后超级管理员与授权上界由持锁写事务负责，不夸大为SQL CHECK已全部表达。
+MySQL不允许CHECK引用自增id，部门/UI树自指和长环必须在服务/领域事务中校验。
 
-模型与验收见 link:requirements.adoc[需求追踪]、link:architecture-ddd.adoc[DDD 计划]、link:test-plan.adoc[测试计划]。
+== 授权写事务与缓存
 
-== 重构与旧库边界
+授权事实变化先排他锁sys_grant_version(id=1)，再修改系统/角色/权限、继承/映射/指派/准入或用户状态/部门；最后version+1及SUCCESS审计与业务一起提交。
+部门迁移锁用户、核对原/新管理范围、回收目标部门不准入的本人指派，不修改共享角色权限。替换准入同样回收不合资格指派；任何路径都保护最后有效SUPER_ADMIN。
+根实体version仅处理可选HTTP version冲突，不代替图写互斥；L1/L2缓存键必须包含system+user+权威version，事务内禁止回填。
+Redis故障可受限回源，MySQL不可用必须503，不能用旧缓存放行或让注销令牌复活。
 
-link:migration-baseline.adoc[实施基线]确定重构优先于兼容：后续可重构开发空库基线，但这不是旧生产库升级方案。
-本轮未修改 V1–V4，不操作生产库，不删除 Flyway 历史，不提供清库步骤。
-已有旧库应维持匹配的一期镜像/schema；遇校验和冲突先停止并核对版本、备份及恢复方案，不以篡改历史掩盖差异。
+== 种子、编号与保密
+
+root显式id=1、subject=rbac-u1，password_hash为UNINITIALIZED；只有该哨兵仍存在时，受控启动从RBAC_BOOTSTRAP_PASSWORD生成哈希，不重置既有口令。不得硬编码公开初始密码。
+中心角色SUPER_ADMIN/RBAC_ADMIN/AUDITOR，课程角色teacher/student/admin；所有直接准入明确插入，root的SUPER_ADMIN总部准入必须存在。
+除root的中心角色外不自动指派用户；正式员工、选课名单与隐私不进入种子/Git/镜像。对接按code/subject查找，不依赖示例自增ID。
+
+课程teacher API权限仅course:access、audit:read、audit:write、CRS，student仅course:access、audit:write；admin逐项关联全部实际API权限。UI权限单独种子，映射不得变成授权捷径。
+目录证据见link:../rbac-contract/src/main/resources/catalog/course-operations.json[课程真实操作]、link:../rbac-contract/src/main/resources/catalog/ui-api-coverage.csv[可审阅覆盖矩阵]。
+
+== 审计存储及验证边界
+
+外部origin=COURSE，内部origin=INTERNAL；外部actor_roles_json仅受控identityRole投影。requestId唯一性及payload_hash绑定来源系统、主体和规范化内容；唯一冲突回滚后再读，不在rollback-only事务继续查询。
+外部插入独立事务提交后返回201；本地SUCCESS审计与敏感业务同事务，拒绝事实另行独立事务。
+审计无业务FK、不随用户/角色删除；索引为(source_system_code,occurred_at,id)、(source_system_code,actor_id,occurred_at,id)、(source_system_code,object_type,object_id,occurred_at,id)。
+只插入的应用约定不是数据库防篡改承诺；跨课程DB与中心DB的HTTP调用不具备分布式原子性。
+
+link:../tools/generate-rbac1-contract.py[生成/静态校验工具]和link:../tools/generate-rbac1-contract-test.py[真实Flyway迁移校验工具]提供独立验证入口；后者只重建专用13306容器内rbac1_schema_contract_test，不碰rbac_test。
+工具存在或曾通过不代表双后端当前所有用例通过；本隔离文档任务不执行迁移，真实事务/并发验收见link:test-plan.adoc[测试计划]。

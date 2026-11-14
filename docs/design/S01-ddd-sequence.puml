@@ -1,0 +1,89 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S01-ddd-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: RoleController" as ctl
+participant "svc: RoleApplicationService" as svc
+participant "auth: AuthorizationApplicationService" as auth
+participant "repo: AuthorizationRepository" as repo
+participant "graph: RoleHierarchy" as graph
+participant "audit: AuditApplicationService" as audit
+participant "integrity: GrantIntegrityService" as integrity
+activate obj
+obj -> ctl: 1. link(bearer, seniorId, juniorId)
+activate ctl
+ctl -> svc: 2. link(principal, senior, junior, true)
+activate svc
+group local write transaction: lock before grant reads
+svc -> repo: 3. lockGrants()
+activate repo
+deactivate repo
+svc -> auth: 4. require(principal, rbac:role:edit, true)
+activate auth
+deactivate auth
+svc -> repo: 5. role(senior)
+activate repo
+deactivate repo
+svc -> repo: 6. role(junior)
+activate repo
+deactivate repo
+svc -> auth: 7. requireRoleManagement(actor, role)
+activate auth
+deactivate auth
+svc -> auth: 8. requireRoleManagement(actor, other)
+activate auth
+deactivate auth
+note over auth
+Role.requireManageable checks SUPER_ADMIN capability.
+Cross-system rejected before graph mutation.
+end note
+svc -> repo: 9. hierarchy(role.systemCode())
+activate repo
+deactivate repo
+alt self / cycle / duplicate
+svc -> graph: 10. link(senior, junior)
+activate graph
+graph --> obj: DomainException; abort / rollback
+deactivate graph
+else valid edge
+svc -> graph: 11. link(senior, junior)
+activate graph
+deactivate graph
+svc -> auth: 12. requireGraphGrant(actor, graph, senior)
+activate auth
+deactivate auth
+svc -> auth: 13. upperBound(actor, systemCode, proposed)
+activate auth
+deactivate auth
+note over auth
+requireGrantable traverses even disabled nodes:
+no pre-planted path to SUPER_ADMIN; permission-set inclusion alone is insufficient.
+end note
+svc -> repo: 14. saveEdges(systemCode, graph.edges())
+activate repo
+deactivate repo
+end
+svc -> integrity: 15. requireAdministrator()
+activate integrity
+deactivate integrity
+svc -> repo: 16. advanceVersion()
+activate repo
+deactivate repo
+svc -> audit: 17. local(actor, system, type, target, SUCCESS, null)
+activate audit
+deactivate audit
+end
+note over svc
+Transaction proxy commits only normal return.
+Any exception aborts: no edge/version/SUCCESS fact persists.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-11-14T19:02:36.315892+00:00",
+  "hashRules": {
+    "algorithm": "SHA-256",
+    "textNormalization": "CRLF bytes (0D 0A) -> LF (0A) ONLY; no stripping, decoding, BOM removal, standalone CR or whitespace normalization",
+    "textSuffixes": [
+      ".adoc",
+      ".cmd",
+      ".conf",
+      ".dot",
+      ".java",
+      ".json",
+      ".log",
+      ".md",
+      ".properties",
+      ".puml",
+      ".py",
+      ".sh",
+      ".sql",
+      ".svg",
+      ".txt",
+      ".xml",
+      ".yaml",
+      ".yml"
+    ],
+    "textNames": [
+      ".gitattributes",
+      ".gitignore",
+      "Dockerfile"
+    ],
+    "binaryRule": "All other files, especially .class/.jar/.png, hashed byte-for-byte; never normalize binary CRLF",
+    "methodAndOrderGuards": "Unchanged declaration/javap and ordered callsite checks; this only canonicalizes text line endings"
+  },
+  "strictCompiled": true,
+  "status": "STRICT_COMPILED_CHECKED",
+  "warnings": [],
+  "checks": {
+    "classBoxes": "PASS",
+    "classEdgesThirdPartyBoxes": "PASS",
+    "symbols": "PASS",
+    "orderedSourceCallChains": "PASS",
+    "sourceHashesStable": "PASS",
+    "sequenceActivationBalance": "PASS",
+    "plantumlSyntax": "PASS",
+    "pngVisualInspection": "MANUAL_REQUIRED",
+    "tests": "NOT_RUN",
+    "deployment": "ARCHIVED_LOCAL_FINAL_CHECKED_NO_NEW_LIVE_PROBE"
+  }
+}

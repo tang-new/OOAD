@@ -1,0 +1,47 @@
+= UML PNG 目视复核记录
+
+已审阅图稿共 35 种。本轮只更新最终部署归档说明；按原始 PNG SHA 比较实际变化并打开部署图，其余图摘要相同则沿用上一轮真实目视记录。当前快照见 link:visual-review.json[目视摘要]，源/class 哈希规则见 link:source-index.json[源索引]。
+
+== 最新复核范围
+
+[cols="2,5",options="header"]
+|===
+|图组 |已打开文件
+|S01 类图 |S01-ddd-class.png；S01-structured-class.png
+|S02 类图 |S02-ddd-class.png；S02-structured-class.png
+|S03 类图 |S03-ddd-class.png；S03-structured-class.png
+|S04 类图 |S04-ddd-class.png；S04-structured-class.png
+|S05 类图 |S05-ddd-class.png；S05-structured-class.png
+|S06 类图 |S06-ddd-class.png；S06-structured-class.png
+|S01 顺序 |S01-ddd-sequence.png；S01-structured-sequence.png
+|S02 顺序 |S02-ddd-sequence.png；S02-structured-sequence.png
+|S03 顺序 |S03-ddd-sequence.png；S03-structured-sequence.png
+|S04 顺序 |S04-ddd-sequence.png；S04-structured-sequence.png；S04-ddd-policy-sequence.png
+|S05 顺序 |S05-ddd-sequence.png；S05-structured-sequence.png
+|S06 顺序 |S06-ddd-sequence.png；S06-structured-sequence.png
+|登录锁 |LOGIN-ddd-class.png；LOGIN-ddd-sequence.png
+|管理端模拟 |SIM-ddd-class.png；SIM-ddd-sequence.png
+|包图 |ddd-packages.png；structured-packages.png
+|ER/DAG |schema-15-er.png；role-senior-junior-dag.png
+|状态/部署 |role-state.png；swarm-deployment.png
+|===
+
+== 发现、修订和目视结论
+
+* S01 DDD 类图加入真实 Role 特殊能力方法、RoleHierarchy.requireGrantable 与 role 字段关联。序列先保护 senior/junior，再 link、图授权上界、保存、管理员完整性、版本和审计；不把“停用”当作取消 SUPER_ADMIN 能力。
+* S02 展开 upperBound → User.assign → DepartmentEligibility.requireEligible → DirectoryRepository.assign，重复指派检查位于 eligibility 之后，未画错异常来源或把保存放到校验之前。
+* S03 DDD 加入 reads/cache 关联，显示只读外层事务的 fresh 回调、三次版本括号、状态检查与 get/put 复查；结构化单独显示事务内直接计算与非事务缓存 miss 内计算，不再把计算放在重试循环之后。
+* S04 课程转发只出现在 allowed 分支。DDD 的 stableApi 策略、身份与权限版本括号单独展开，主图 ref 指向细图；未知 aud 401 与未知 operation 区分。
+* S05 标明 AuditFact 构造器与结构化 record 的毫秒规范化、CHAR(36) 映射；并发冲突后的重读在新事务，不在已失败事务中继续。
+* S06 类图以 RoleApplicationService 为中心，加入 GrantIntegrityService；顺序图中实际持久化调用处发出异常，未伪造审计方法逐层异常转发。SUCCESS 与业务同事务，DENIED 独立事务，AOP 不等于 commit。
+* 新增登录锁图：attempt 正常返回 null 之后才由外层 login 抛 401，失败计数事务不会因该 HTTP 凭据异常回滚。
+* 新增 SIM 两图实际表达 explain → 私有 check → unavailableReason；停用目标不会继续 effective/api，reason/trace 的已验证对齐清楚可见。没有把模拟查询错误地接到 Role.status / SUCCESS 审计上。Repository 的 identity(long)/identity(String) 重载都保留真实签名。
+* 部署图读取最终本地 rounds 双轮证据：structured→DDD 各 7 服务、11 探针、相同前端和持久资源，最终 DDD；图中明确已归档本地通过，不再误写 PENDING，也不声称 renderer 做了 live probe 或外部部署。
+
+类框三段、Service 中心、role 关联标签、Adapter→Repository 实现箭头可读，未见重叠、穿第三方类框或方法文本裁切。循环体短执行条完整位于 loop 内；作为该算法调用者的外层 execution 可覆盖控制片段。回调分支注明 Supplier 间接调用及省略的内部循环，不冒充直接 Java 调用。长序列图应打开原始 PNG/SVG 阅读，不压缩到论文单栏。
+
+== 自动与人工证明的边界
+
+自动通过的项目是类/方法及实现关系存在、类框/穿框几何、执行条平衡、PlantUML 语法、25 组指定方法体的调用点词法顺序、源码/class 哈希稳定；不证明全程序调用图、所有异常分支或业务等价性。运行结果见 link:verification.adoc[本轮核验]。
+本轮严格生成状态为 STRICT_COMPILED_CHECKED。之前并发修改源码/重编译曾使门禁真实拒绝混合快照；没有通过改时间戳或关闭检查假造成功。源码最终统一错误码后，主代理仍需最后一次 strict-compiled / check 与变化图的目视校正。
+本地业务通过不是由目视推出：m18 25+25/T21 共 51 PASS 有 canonical SHA 归档，188 JUnit 与原覆盖指标已另回读 XML，见 business-evidence.json。最终本地双 Swarm 已由真实归档验收；每轮 runtime-only 标记不冒充项目完整证明，外部部署不宣称。工具回归现为 7 项；文本 SHA 只归一化 CRLF→LF，PNG 等二进制仍逐字节，因此图稿像素摘要不会被文本归一化抹平。

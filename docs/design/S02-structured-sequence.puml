@@ -1,0 +1,64 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S02-structured-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: ManagementController" as ctl
+participant "svc: ManagementService" as svc
+participant "auth: AuthorizationService" as auth
+participant "repo: Store" as repo
+participant "audit: AuditService" as audit
+activate obj
+obj -> ctl: 1. createUserRoleAssignment(actor, userId, input)
+activate ctl
+ctl -> svc: 2. assign(actor, userId, roleId)
+activate svc
+group local write transaction
+svc -> auth: 3. lock()
+activate auth
+deactivate auth
+svc -> auth: 4. center(actor, rbac:assignment:edit)
+activate auth
+deactivate auth
+svc -> auth: 5. captureUpper(actor)
+activate auth
+deactivate auth
+svc -> auth: 6. scope(actor, user.departmentId)
+activate auth
+deactivate auth
+note over svc
+ACTIVE user and enabled role/system required.
+end note
+svc -> repo: 7. one(DepartmentAllowedRole.class, predicate, departmentId, roleId)
+activate repo
+deactivate repo
+alt admitted
+svc -> auth: 8. upper(actor, systemCode, proposed)
+activate auth
+deactivate auth
+svc -> repo: 9. save(ur)
+activate repo
+deactivate repo
+else disabled / forbidden
+svc --> obj: BizException; abort / rollback
+end
+note over svc
+finish: Store.flush → preserveAdministrator → g.version++
+end note
+svc -> audit: 10. success(actor, ROLE_ASSIGNED, userId)
+activate audit
+deactivate audit
+end
+note over svc
+Assignment, administrator-integrity check, version and SUCCESS audit
+share the transaction; exceptions cannot commit a partial success.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

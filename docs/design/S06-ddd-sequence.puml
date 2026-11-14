@@ -1,0 +1,89 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S06-ddd-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: RoleController" as ctl
+participant "svc: RoleApplicationService" as svc
+participant "auth: AuthorizationApplicationService" as auth
+participant "role: Role" as role
+participant "repo: AuthorizationRepository" as repo
+participant "audit: AuditApplicationService" as audit
+participant "integrity: GrantIntegrityService" as integrity
+participant "auditRepo: AuditRepository" as auditRepo
+activate obj
+obj -> ctl: 1. status(bearer, id, input)
+activate ctl
+ctl -> svc: 2. status(principal, id, enabled)
+activate svc
+group same local transaction: business + integrity + version + SUCCESS audit
+svc -> repo: 3. lockGrants()
+activate repo
+deactivate repo
+svc -> auth: 4. require(principal, rbac:role:edit, true)
+activate auth
+deactivate auth
+svc -> repo: 5. role(id)
+activate repo
+deactivate repo
+svc -> auth: 6. requireRoleManagement(actor, role)
+activate auth
+deactivate auth
+svc -> role: 7. changeStatus(enabled)
+activate role
+deactivate role
+opt enabling
+svc -> auth: 8. upperBound(actor, systemCode, proposed)
+activate auth
+deactivate auth
+end
+svc -> repo: 9. saveRole(role)
+activate repo
+deactivate repo
+svc -> integrity: 10. requireAdministrator()
+activate integrity
+deactivate integrity
+note over integrity
+active identities + current graph/permissions → LastAdministratorPolicy.
+No effective SUPER_ADMIN → 409; outer transaction rolls back.
+end note
+svc -> repo: 11. advanceVersion()
+activate repo
+deactivate repo
+alt audit persistence throws
+svc -> audit: 12. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
+activate audit
+audit -> auditRepo: 13. append(fact)
+activate auditRepo
+auditRepo --> obj: persistence failure; rollback, no business success
+deactivate auditRepo
+deactivate audit
+else persisted in caller transaction
+svc -> audit: 14. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
+activate audit
+audit -> auditRepo: 15. append(fact)
+activate auditRepo
+deactivate auditRepo
+deactivate audit
+note over audit
+DDD local derives actual actor identity-role snapshot before append.
+No independent SUCCESS commit; timestamps have millisecond precision.
+end note
+end
+end
+note over svc
+Spring interceptor COMMIT after normal method return; failure blocks success response.
+end note
+note over audit
+denied is a separate REQUIRES_NEW DENIED event, not business SUCCESS.
+AOP method/log timing is neither audit_log nor proof of DB commit.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

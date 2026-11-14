@@ -1,0 +1,55 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S04-structured-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "gw: GatewayController" as gw
+participant "route: RouteRegistry" as route
+participant "boundary: AuthBoundary" as boundary
+participant "http: IdentityClient" as http
+participant "ctl: AuthController" as ctl
+participant "auth: AuthorizationService" as auth
+participant "proxy: ProxyClient" as proxy
+activate obj
+obj -> gw: 1. forward(request)
+activate gw
+gw -> route: 2. resolve(request.method, request.URI)
+activate route
+deactivate route
+gw -> boundary: 3. authorize(operationId, bearer)
+activate boundary
+boundary -> http: 4. check(operationId, bearer)
+activate http
+http -> ctl: 5. api(actor, operationId)
+activate ctl
+note over ctl
+Identity verified first; DDD unknown aud becomes 401 TOKEN_INVALID, not 404.
+end note
+ctl -> auth: 6. api(userId, systemCode, operationId)
+activate auth
+deactivate auth
+deactivate ctl
+deactivate http
+alt invalid identity / unknown operation / denied / timeout
+boundary --> obj: GatewayFailure 401 / 403 / 503
+else allowed
+note over boundary
+Only HTTP 200 with matching operationId and non-null allowed is interpretable.
+end note
+deactivate boundary
+gw -> proxy: 7. forward(request, bytes, traceId)
+activate proxy
+deactivate proxy
+note over proxy
+Course object-level 403 is preserved.
+Gateway does NOT invent course success audit or course Service methods.
+end note
+end
+deactivate gw
+deactivate obj
+@enduml

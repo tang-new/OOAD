@@ -1,0 +1,45 @@
+= RBAC1 最终本地交付验收
+:toc:
+
+== 结论与范围
+
+结构化和独立DDD两实现、本地真实课程集成、网关、同一前端、代码对应UML及本地双模块Swarm已完成验证。
+本页不声称外部服务器、公共CA、三节点HA、整机灾备或尚未执行的GitHub CI通过。
+
+机器可读摘要见link:acceptance/local-results.json[本地结果]、link:acceptance/shared-http.json[完整共享HTTP观察]与link:../deploy/deployment-evidence.json[本地真实运行态]。
+原日志留在仓库外；摘要由link:../tools/collect-acceptance-evidence.py[收集器]从实际结果派生，去除本机私有路径，不制造测试结果。
+
+== 最终结果
+
+[cols="2,3"]
+|===
+|组 |实际结果
+|JUnit |188/188，contract2、structured49、DDD112、gateway25；零failure/error/skip。健康标识更新又重跑2+5，不重复累计。
+|双后端共享 |25+25与T21，共51 PASS，m18最终运行与canonical SHA完全一致；两边各两JVM，真实MySQL/Redis。
+|前端 |38/38单测，逻辑行/分支100%，typecheck/build通过；PC/手机×两后端4/4真实E2E。
+|课程 |教师原440/440；最终canonical真实中心+gateway+课程六类×两侧12/12，核对入组、成绩88及审计70→88。
+|质量 |原整体70%行/60%分支、service85%未降；DDD application也执行85%。structured92.52/71.67，DDD88.77/71.50，gateway93.19/89.29。
+|业务层行 |structured service91.86%，DDD application约86.82%。
+|合同/持久化 |64中心操作、80课程操作、15表V1/V2；真实迁移、重复迁移、约束负例及OAS引用检查。
+|设计 |35幅可维护图、160源码类、25方法体调用顺序检查、7绘图器回归；严格编译检查不被冒称业务证明。
+|本地Swarm |immutable local-final-20261115-022901，structured→DDD各7/7服务、11/11探针，最终DDD；相同前端、MySQL/Redis及卷保持不变。
+|===
+
+关键安全补强和实际回归覆盖包括：空SUPER_ADMIN提权、确定交错的旧授权返回、登录锁持久化、目标停用解释、审计时间精度、跨测试库缓存命名空间、实体CHAR/TINYINT、中心非200错误放行、私有服务信任与Windows进程/密钥边界。
+环境阻断和夹具错误留存原始失败记录，不冒称业务RED。对称反向并发允许合法先获锁方向不同，但精确验证成功方向落库；其它关联、版本和分页顺序不去噪。
+
+== 可查看内容
+
+* link:acceptance/screenshots/README.adoc[16张真实已加载PC/手机页面]，只含合成fixture，不把Vite截图当Swarm浏览器探测。
+* link:final-design.adoc[六组结构化/DDD对应设计]、link:design/index.adoc[图源与PNG/SVG]；文本哈希按Git规范化LF，class/jar等二进制按真实字节。
+* link:../course-integration/REAL-CENTERS-VERIFICATION.md[最新课程12例完整hash]；不引用旧final47包冒充新canonical。
+* link:team-history-integration.adoc[团队29提交整合账本]；正常双亲merge保留历史，退休目录不恢复。
+* link:deployment.adoc[运行地址、首次账号、停写切换、秘密和回滚边界]。
+
+== 安全与限制
+
+没有默认公开root口令、JWT角色claim、浏览器服务key、真实员工表或生产数据迁移。
+新基线只用于空开发库，未改旧rbac_test或生产库/旧迁移；所有自动化只清本次自有资源，未动其它容器或数据卷。
+本地TLS自签，当前只证明授权本机单manager，不据此声称外网信任或外部服务器运行。
+同步审计保持明确跨库未确认窗口；没有引入MQ/Outbox，也没有把日志幂等伪装成整个业务请求幂等。
+未提供的新版评分原件、课堂OO设计PPT及外部部署条件仍需真实核验，不编造验收。

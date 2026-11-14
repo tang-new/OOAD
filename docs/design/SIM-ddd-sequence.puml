@@ -1,0 +1,82 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title SIM-ddd-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: AuthorizationController" as ctl
+participant "rest: RestSupport" as rest
+participant "auth: AuthorizationApplicationService" as auth
+participant "directory: DirectoryApplicationService" as directory
+participant "repo: AuthorizationRepository" as repo
+activate obj
+obj -> ctl: 1. explain(bearer, input)
+activate ctl
+ctl -> ctl: 2. check(bearer, input, true)
+activate ctl
+ctl -> rest: 3. principal(bearer)
+activate rest
+deactivate rest
+ctl -> auth: 4. require(principal, rbac:authz:invoke, false)
+activate auth
+deactivate auth
+note over ctl
+Validate UI permission vs API operationId input contract;
+choose explicit target userId or actor.id().
+end note
+opt target differs from actor
+ctl -> directory: 5. user(principal, targetUserId)
+activate directory
+deactivate directory
+end
+ctl -> auth: 6. unavailableReason(targetUserId, system)
+activate auth
+auth -> repo: 7. systemEnabled(system)
+activate repo
+deactivate repo
+auth -> repo: 8. identity(targetUserId)
+activate repo
+deactivate repo
+alt missing target
+auth --> obj: 404 USER_NOT_FOUND; abort
+else existing target
+note over auth
+non-ACTIVE → USER_DISABLED; otherwise disabled system → SYSTEM_DISABLED;
+active user + enabled system → null
+end note
+end
+auth --> ctl: unavailable
+deactivate auth
+alt unavailable != null
+note over ctl
+empty effective; allowed=false; reason=unavailable;
+explain trace=[ACTOR_AUTHENTICATED, unavailable]; fresh traceId.
+No effective()/api() call for unavailable target.
+end note
+else available target
+ctl -> auth: 9. effective(targetUserId, system)
+activate auth
+deactivate auth
+opt API decision
+ctl -> auth: 10. api(targetUserId, system, operationId)
+activate auth
+deactivate auth
+end
+note over ctl
+UI uses Effective.has; reason ALLOW or DENY;
+explain trace records TOKEN_VALID, USER_SYSTEM_ACTIVE and requirement result
+end note
+end
+note over ctl
+RestSupport.ok supplies HTTP envelope; target disabled is a DENY result,
+not authentication failure of the requesting administrator.
+No business mutation or SUCCESS audit occurs in this simulation.
+end note
+deactivate ctl
+deactivate ctl
+deactivate obj
+@enduml

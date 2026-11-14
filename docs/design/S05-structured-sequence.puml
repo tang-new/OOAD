@@ -1,0 +1,74 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S05-structured-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: AuthController" as ctl
+participant "svc: AuditService" as svc
+participant "repo: Store" as repo
+participant "fact: AuditLog" as fact
+activate obj
+obj -> ctl: 1. write(actor, key, input)
+activate ctl
+note over ctl
+authenticated actor + service key + audit:write; no client-supplied actor
+end note
+ctl -> svc: 2. external(actor, input, key)
+activate svc
+note over svc,fact
+whitelist → canonical JSON → payload hash;
+record truncates occurredAt to MILLIS; requestId maps CHAR(36).
+POST time, persisted TIMESTAMP(3), replay and [at,at] query agree.
+end note
+group REQUIRES_NEW first attempt
+svc -> repo: 3. one(AuditLog.class, requestId predicate)
+activate repo
+deactivate repo
+alt existing requestId
+svc -> svc: 4. same(existing, payload)
+activate svc
+deactivate svc
+note over svc
+same content → old id; different content → 400 conflict
+end note
+else new requestId
+svc -> repo: 5. save(log)
+activate repo
+deactivate repo
+svc -> repo: 6. flush()
+activate repo
+deactivate repo
+end
+end
+alt concurrent unique-key violation
+note over svc
+failed insert transaction rolled back BEFORE catch re-read
+end note
+group separate REQUIRES_NEW
+svc -> repo: 7. one(AuditLog.class, requestId predicate)
+activate repo
+deactivate repo
+svc -> svc: 8. same(existing, payload)
+activate svc
+deactivate svc
+note over svc
+missing existing → rethrow DB exception; existing content rechecked
+end note
+end
+else committed first attempt
+note over svc
+canonical record is durable
+end note
+end
+note over svc,ctl
+201 only after commit. Timeout retry uses original requestId; SQL failure is not 201.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

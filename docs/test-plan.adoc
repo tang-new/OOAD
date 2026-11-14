@@ -1,96 +1,107 @@
-= 测试计划与证据边界
+= RBAC1 测试与验收证据
 :toc:
 
-== 状态
+== 真实结果与边界
 
-本文列现有测试设施及后续验收计划，*不是本轮测试报告*。
-旧文档的测试数量、覆盖率和通过结论均为历史记录；旧 target/ 报告不得当作本轮证据。
-实际Maven/Vitest/构建结果统一记录于link:iteration-log.adoc[迭代记录]；本文不是测试执行报告。
-M2已执行真实桌面/手机代理连通Playwright；尚未执行双系统业务E2E或远程验收。
-需求见 link:requirements.adoc[追踪表]，安全限制见 link:migration-baseline.adoc[实施基线]。
+当前代码已经执行真实验证，不再以“DDD骨架/源码已落位”作为完成门槛。
 
-== 现有一期验证设施
-
-[cols="1,3"]
+[cols="2,2,4"]
 |===
-|设施 |现有目的（不是本轮结果）
-|ArchitectureTest |三层依赖、数据实体、Service 无状态、不继承业务逻辑及禁用 MyBatis。
-|ContractRoutesTest |现行 OAS 权限声明、路由双向匹配与内置权限一致性。
-|RedisFailureTest |缓存降级、令牌注销查询失败时拒绝。
-|AcceptanceTest |一期 RBAC0 登录、角色并集、旧部门 scope/管理范围、撤权、菜单、审计、多副本等。
-|ManagementApiTest |管理接口成功/失败分支、授权上界、编号段、账号/角色保护及审计。
-|ExcelImportIntegrationTest |虚构 xlsx、歧义行、重复导入和角色模板同步。
-|Vitest / Playwright |前端逻辑单测及真实后端桌面 Chromium E2E；不是移动端或双后端 RBAC1 证明。
+|验证组 |实际结果 |证据/范围
+|后端JUnit |188个不同测试通过，0失败/错误/跳过 |contract 2、structured 49、DDD 112、gateway 25；正常test阶段真实运行。健康标识更新另重跑2个健康单测与5个真实HTTP测试，不重复累计成新测试数。
+|共享HTTP |25+25+T21，共51 PASS |两侧每次各两真实JVM、MySQL/Redis；最终m18-shared-both，运行快照hash与canonical完全相同。
+|前端逻辑 |38/38 |typecheck/build通过；保留85%行、80%分支门槛，实测逻辑行/分支100%。
+|真实浏览器 |两后端各desktop/mobile，4/4 |最新visual-structured-20261115-020039、visual-ddd-20261115-015638；等待数据/节点/边/审计行后截图。
+|原教师测试 |440/440 |固定上游源码，保留原断言；仅两处身份fixture修正独立patch记录。
+|课程真实联调 |六类×两中心，12/12 |真实中心建号/授权/签token，真实gateway、课程JPA和同步审计；核对入组、成绩88与审计70→88，不是center stub。
+|合同与DDL |64中心、80课程操作；15表 |真实Flyway V1/V2、validate、重复迁移与9项负约束；OAS语义/$ref/operationId检查。
+|布局与工具 |Node布局16、验收工具21、部署安全10、旧脚本兼容5 |保护环境、默认拒绝、类型化引用、固定上游、私有路径及进程/库/缓存所有权。
+|设计 |绘图器7项、35图 |实际编译/方法签名、25组方法体调用顺序及源码hash；不能把静态图当业务或部署证明。
 |===
 
-关键授权与事务测试连接 *真实 MySQL 8 与 Redis 7*，经 HTTP 检查结果；不得用 H2 或仅 Mock 替代外键、原生 SQL、唯一约束和并发一致性验证。
+真实课程完整hash与结果见link:../course-integration/REAL-CENTERS-VERIFICATION.md[课程最终证据]；截图见link:acceptance/screenshots/README.adoc[已加载真实页面]。
+本地Swarm以link:../deploy/deployment-evidence.json[独立运行证据]记账，不从上述结果外推外部服务器、公共CA或整实例灾难恢复。
 
-== 隔离与运行前检查
+== 设施不是替代证据
 
-集成基类会 Flyway clean/migrate、恢复表快照并清理 Redis；E2E 会新建 `rbac_e2e_<时间戳>` 数据库并清空 Redis 5号库。
-这些是破坏性测试行为，*只能连接本机专用可丢弃实例*，不能指向生产、共享开发库或部署数据卷。
-Redis 的逻辑库编号不是实例隔离的替代品。
+* 结构化Architecture/MappingSafety/协议测试验证三层方向、真正Spring Data持久化、CloneFactory白名单与严格DTO；MockMvc集成测试使用真实专用MySQL/Redis，不是H2。
+* DDD领域、ArchUnit正反例、映射、真实RSA、持久化/安全/审计测试分别验证纯领域规则、独立适配器、真实锁/事务、跨JVM持久锁定等；不能用纯领域测试代替SQL并发。
+* ImplementationHealthIndicator发布已通过本地契约验收的实现标识；真实数据库/缓存探针仍参与总体health，businessReady不是外部部署背书。
+* 共享HTTP不导入任一实现的Service/算法；实际请求与DB后置条件比较，既要求每侧独立正确，也要求公共协议等价。
+* 网关25项使用真实HTTP边界故障测试；真实课程12例另启动真实三个jar并落库，不能拿边界stub替代业务。
 
-* 本阶段仅允许127.0.0.1:13306 的测试 MySQL 与127.0.0.1:16379 的测试 Redis，容器端口应只绑定回环；预先核实实例身份、库名和配置，不能只看端口。
-* 后端参数：TEST_DB_URL（明确 rbac_test）、TEST_DB_USER、TEST_DB_PASSWORD、TEST_REDIS_HOST、TEST_REDIS_PORT；测试 Redis 默认逻辑库0，仍须独占实例。
-* E2E 另核对 E2E_DB_HOST（含端口，如127.0.0.1:13306）、E2E_DB、E2E_DB_USER、E2E_DB_PASSWORD、E2E_REDIS_HOST/PORT，不能因 Java 测试变量已设置就假定 E2E 也隔离。确认全局 setup 将清理专用 Redis 的5号库。
-* 使用 Java21，显式核对 JAVA_HOME 与 `java -version`；本机默认 Java8 不可直接使用。前端需 Node20+；口令及 Token 不写入报告、命令示例或仓库。
+== 隔离和失败关闭
 
-隔离确认且依赖已就绪后，可在仓库根目录执行以下待运行命令（Windows 使用 mvnw.cmd）：
+* 专用实例为loopback MySQL13306、Redis16379；课程测试另用13316。不得连接生产、旧rbac_test或共享Swarm数据卷。
+* structured集成测试在Spring启动前固定并校验专用datasource/Flyway，精确rbac1_structured_test；自身稳定UUID cache namespace，只清自身前缀，不再清structured:*。
+* DDD集成库为rbac1_ddd_test；JUnit测试profile从TEST_DB_PASSWORD读取专用口令，不进入生产jar。环境白名单不继承外部Spring/JVM覆盖。
+* shared只创建rbac1_contract_<实现>_<时间戳>_<随机>，E2E只创建rbac1_e2e_<实现>_<时间戳>；不得接受调用者指定既有库。
+* 子JVM使用本次私有临时jar副本，避免Windows锁住target；只终止自有且仍存活的child，等待退出后才清自建库。端口冲突安全拒绝，不杀已有进程。
+* datasource/Flyway/Redis/namespace/keys经canonical Spring JSON固定，只加载classpath配置；不因设置一个DB_URL就假定两实现都读取它。
+* 私钥、口令、服务key、有效JWT不进入Git/报告/日志；测试为合成fixture，无真实人员。只用有权限的测试凭据。
+* JAVA_HOME严格21、Node22+；缺工具/依赖/readiness或清理错误属于ENVIRONMENT_BLOCKED，不冒称业务RED或PASS。
+
+== 正确执行顺序
+
+外部真实HTTP覆盖必须先收集，再应用原门槛；不能先在未完整收集时把verify失败当成功，也不能降低阈值。
 
 [source,shell]
 ----
-./mvnw -pl rbac-structured -am verify
-cd rbac-web
-npm ci
-npm run typecheck
-npm run test:coverage
-npm run build
-npm run e2e
+# 明确JAVA_HOME为JDK21；先确认专用MySQL/Redis与建库权限。
+bash tools/install-clonefactory.sh
+python tools/generate-rbac1-contract.py --check
+python tools/generate-rbac1-contract-test.py
+node --test tools/*.test.mjs
+./mvnw clean package                       # 正常执行全部JUnit，不跳过
+source deploy/full-jacoco-agent.sh          # 官方agent和官方dump CLI
+export ACCEPTANCE_DB_PASSWORD='<专用测试实例凭据>'
+(cd tools/acceptance && npm ci && npm test && npm run acceptance)
+./mvnw verify -DskipTests                   # 合并exec、report、原check；不是跳过未跑JUnit
 ----
 
-E2E 读取已构建的 structured jar，并启动后端18081及前端5174；JAVA_BIN 可指定 Java21，PW_CHROMIUM 可指定浏览器。测试配置和夹具以仓库现有文件为准，执行前必须再次核对。
+Windows的SIGTERM实际上终止进程、不执行Java shutdown hook，因此使用仅loopback的JaCoCo TCP agent，并在停止自有JVM前以官方CLI dump，要求文件非空。
+每次JVM启动/重启选择新的私有agent端口，不能抢固定诊断端口或误dump其它进程。中间禁止clean破坏已收集exec。
+最终部署gate同时要求真实Surefire数量、0失败/错误/跳过、全模块verify成功、shared全部成功及当前jar等于实际运行快照，不能凭一个skipTests成功日志伪造测试。
 
-== 覆盖率门槛（配置，不是测量结果）
+前端：`npm ci`、`npm run typecheck`、`npm run test:coverage`、`npm run build`，分别以E2E_MODULE=rbac-structured/rbac-ddd执行`npm run e2e`。
+仅允许显式JAVA_HOME，PW_CHROMIUM可指定浏览器；不接受绕过JDK核验的任意JAVA_BIN。
+课程、UML和本地部署使用各自目录的可复现脚本，状态分别记账。
 
-[cols="2,1,2"]
+== 覆盖率：门槛未降
+
+[cols="2,2,2"]
 |===
-|范围 |门槛 |依据
-|后端整体行/分支 |≥70% / ≥60% |根 POM 的 JaCoCo verify 检查
-|后端 service 行 |≥85% |根 POM 包规则
-|前端逻辑行/分支 |≥85% / ≥80% |rbac-web/vite.config.ts
+|范围 |门槛 |最终实际
+|structured整体行/分支 |70% / 60% |92.5216% / 71.6738%
+|structured service行 |85% |91.8580%
+|DDD整体行/分支 |70% / 60% |88.7664% / 71.5010%
+|DDD application行 |同原service 85%，防包名绕过 |约86.82%
+|gateway整体行/分支 |70% / 60% |93.1937% / 89.2857%
+|前端逻辑行/分支 |85% / 80% |100% / 100%
 |===
 
-后端排除 dto、entity、config 及启动类；前端逻辑覆盖 api/stores/router/utils/directives，不把页面覆盖统计混入其中。
-报告位置为 `rbac-structured/target/site/jacoco/`、`rbac-web/coverage/` 和 Playwright/test-results 产物；必须与实际命令、退出码、提交及环境绑定。
-覆盖率只证明执行路径，不代替业务断言。
+父POM原dto/entity/config/启动类排除未扩大；新增DDD application同等级门槛，而非只让无service包的DDD绕过。
+前端原api/stores/router/utils/directives覆盖范围保留，页面由真实E2E补证。覆盖达标不替代行为、安全或部署验证。
 
-== M2 独立骨架与前端连通
+== 关键矩阵
 
-`./mvnw -pl rbac-ddd -am clean verify` 不运行structured集成测试，不需要MySQL/Redis。
-骨架21项测试覆盖实际HTTP、健康标识、业务404和跨后端依赖反例，不能拿来代替RBAC1领域测试。
+. DAG多父/传递/菱形、多来源、停用路径切断、同系统、自环/重复/并发拒绝及立即撤权。
+. 对称反向并发允许任一请求合法先获锁，但两侧都须一成功一ROLE_CYCLE，SQL唯一边必须与成功请求方向一致；仅该隔离角色对按合法结果集比较，其它关系/顺序/version不去噪。
+. 部门直接准入（含超级管理员）、子树管理、调动仅回收本人不合资格指派、禁止改共享角色旁路。
+. 操作者变更前上界冻结；空权限SUPER_ADMIN仍是特殊能力，非超管不能编辑/指派/继承；最后有效管理员不可间接锁死。
+. RS256/issuer/aud/kid/iat/exp/签名/轮换、单aud无角色claim、状态/tokenVersion、跨JVM注销及Redis清理后仍拒绝。
+. UI/API独立、映射不赋权、同system/kind引用缺失404且不得写入非法元数据，未知路由默认拒绝。
+. 模拟/解释验证UI/API、错误组合、停用目标200 false USER_DISABLED且有效管理员不被踢出。
+. 七个教师裸/auth操作、两私有投影最小字段与双凭据、网关可信路由/固定上游/拒绝身份头和URL伪造；中心非200不得进入课程。
+. 审计UUID/四事件/前缀/500字/安全JSON；同键串行并发同id、跨主体/系统异体拒绝；业务与SUCCESS同事务、trigger故障真实回滚，DENIED独立。
+. 两实例预热L1/L2后撤权、确定交错版本重算/持续变化503、10,000合成用户数据库分页、日志无fixture秘密。
+. 同Vue真实两后端PC/手机、TLS/私网/secrets/镜像一致性与本地受控切换；不冒称外部部署或整机恢复。
 
-前端 `npm run e2e:m2` 使用独立Playwright配置：启动真实DDD jar和同一Vue前端，仅以RBAC_API选择代理；
-不执行一期globalSetup、不建库、不清Redis。桌面/手机均确认health元数据来自DDD，并确认登录POST仍404。
-通过 `JAVA_HOME` 或JAVA_BIN选择Java21，通过PW_CHROMIUM选择兼容浏览器；缺浏览器属于环境失败而不是业务RED。
-截图在 `docs/evidence/m2/`，已实际打开核查，仅证明登录页呈现及连通，不证明登录业务可用。
+旧多公司/scope/selfOnly预期按link:requirements.adoc[映射]替换，仍适用的认证/越权/事务/缓存/保护/保密断言保留，不加skip伪绿。
+中心与课程跨库同步HTTP不是分布式事务；同UUID有限重试及未确认错误如实保留，不以Outbox/MQ掩盖。
 
-工程脚本测试复制到临时目录，以Docker/Maven替身检查默认值、显式环境优先、非法MODULE和旧服务保护；不会读取真实.env或执行发布。
-Windows运行Node脚本测试时可用BASH_TEST_SHELL指定实际Git Bash绝对路径，Linux默认使用PATH中的bash。
+== 真实失败保留
 
-== 新旧编号与共享黑盒目标
-
-一期 T01–T22 及 b 后缀一律记为 `RBAC0/Txx`，语义仍是旧多公司/scope等。
-新验收一律使用 `RBAC1/Txx`、`RBAC1/DAG-*`、`RBAC1/ORG-*`、`RBAC1/API-C*`、`RBAC1/AUD-T*` 等命名空间；相同数字不表示同一需求，也不能复用旧通过结论。
-
-双后端共享黑盒测试尚待建设：共用请求、响应、逻辑夹具和预期，分别对独立启动且数据隔离的 structured/DDD 运行，不共享业务算法。
-重点覆盖：
-
-* DAG 多父/传递/菱形/停用切断、跨系统拒绝及并发反向加边防环。
-* 部门准入、迁部门只回收不合资格指派、不修改共享角色；系统/audience 隔离。
-* 七外部接口精确字段及HTTP码、UI/API权限分离、可信网关与真实课程对象级拒绝。
-* requestId 串行/并发重试、同键异体拒绝、审计写失败回滚、成功业务与审计同事务、敏感字段脱敏。
-* L1/L2、多副本撤权与延迟回填；双后端前端切换、桌面/手机真实 E2E、三层日志与 Swarm 配置。
-
-DDD业务、教师实际部署契约版本、部署权限和真实联调环境仍有缺口；无法核验项应保留为待验证，不用 Mock 演示或旧测试冒充完成。
-每次报告记录用例命名空间、环境、命令/退出码、断言及脱敏产物；一期回归通过不等于RBAC1需求验收通过。
+初期plain jar、CHAR/TINYINT实体校验、缺测试口令、Redis调度超时及固定agent端口冲突均如实记录为环境/启动阻塞后修复。
+非法BUTTON缺父节点属于夹具错误；类型化引用404按真实OAS校正且增加DB不落非法记录断言；并发先获锁方向差异按受控合法结果集比较并增强落库方向断言。
+原始RED/阻塞日志保留在仓库外；最终成功不抹去之前失败，不将“源码存在”或“重新命名错误”替代权限规则与真实落库证明。

@@ -1,0 +1,68 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S06-structured-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "ctl: ManagementController" as ctl
+participant "svc: ManagementService" as svc
+participant "auth: AuthorizationService" as auth
+participant "role: Role" as role
+participant "repo: Store" as repo
+participant "audit: AuditService" as audit
+activate obj
+obj -> ctl: 1. setRoleStatus(actor, id, input)
+activate ctl
+ctl -> svc: 2. roleStatus(actor, id, status)
+activate svc
+group same local transaction: business + integrity + version + SUCCESS audit
+svc -> auth: 3. lock()
+activate auth
+deactivate auth
+note over svc,auth
+begin: center/root authorization → captureUpper before mutation
+end note
+svc -> auth: 4. protectRole(actor, role)
+activate auth
+deactivate auth
+note over svc,role
+managed Role.status = status; enable → changedUpper
+finish flushes → preserveAdministrator → increments GrantVersion
+GrantVersion Java Long id maps physical TINYINT, not BIGINT.
+end note
+alt audit persistence throws
+svc -> audit: 5. success(actor, ROLE_STATUS, target)
+activate audit
+audit -> repo: 6. save(log)
+activate repo
+repo --> obj: persistence failure; rollback, no business success
+deactivate repo
+deactivate audit
+else persisted in caller transaction
+svc -> audit: 7. success(actor, ROLE_STATUS, target)
+activate audit
+audit -> repo: 8. save(log)
+activate repo
+deactivate repo
+deactivate audit
+note over audit
+DDD local derives actual actor identity-role snapshot before append.
+No independent SUCCESS commit; timestamps have millisecond precision.
+end note
+end
+end
+note over svc
+Spring interceptor COMMIT after normal method return; failure blocks success response.
+end note
+note over audit
+denied is a separate REQUIRES_NEW DENIED event, not business SUCCESS.
+AOP method/log timing is neither audit_log nor proof of DB commit.
+end note
+deactivate svc
+deactivate ctl
+deactivate obj
+@enduml

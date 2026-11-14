@@ -1,0 +1,77 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title S04-ddd-policy-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "auth: AuthorizationApplicationService" as auth
+participant "reads: AuthorizationReadTransaction" as reads
+participant "repo: AuthorizationRepository" as repo
+participant "policy: AuthorizationPolicy" as policy
+activate obj
+obj -> auth: 1. api(userId, system, operationId)
+activate auth
+alt actual outer transaction is read-only
+auth -> reads: 2. fresh(query callback)
+activate reads
+reads -> auth: 3. stableApi(userId, system, operationId)
+activate auth
+deactivate auth
+note over reads,repo
+callback within REQUIRES_NEW READ_COMMITTED readOnly;
+freshenRead clears JPA context per attempt; same bracket as below.
+end note
+deactivate reads
+else normal invocation
+auth -> auth: 4. stableApi(userId, system, operationId)
+activate auth
+loop at most 3 attempts
+auth -> repo: 5. version()
+activate repo
+deactivate repo
+auth -> repo: 6. operation(system, operationId)
+activate repo
+deactivate repo
+note over auth
+unknown operation → 404 API_OPERATION_NOT_FOUND;
+public/authenticated policy never bypasses target identity status.
+end note
+auth -> repo: 7. identity(userId)
+activate repo
+deactivate repo
+opt ACTIVE target
+auth -> auth: 8. effective(userId, system)
+activate auth
+deactivate auth
+auth -> repo: 9. identity(userId)
+activate repo
+deactivate repo
+opt target still ACTIVE
+auth -> policy: 10. allows(operation, effective)
+activate policy
+deactivate policy
+end
+end
+auth -> repo: 11. version()
+activate repo
+deactivate repo
+note over auth
+unchanged version → return allowed; changed → retry
+end note
+end
+alt all attempts unstable
+auth --> obj: DomainException 503 AUTHORIZATION_UNSTABLE
+else stable result
+note over auth
+inactive/missing target → allowed=false
+end note
+end
+deactivate auth
+end
+deactivate auth
+deactivate obj
+@enduml

@@ -1,0 +1,688 @@
+[
+  {
+    "scenario": "S01",
+    "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+    "method": "link",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+    "sourceSha256": "bd8bae0461d4bdf8e70b9cdddaf0cd68d88e66f4370a1e321123576109c05acf",
+    "bodySha256": "841391e1917e0f8096e3619a5346e203367f6f4ec70d98c966996e13219bb913",
+    "orderedTokens": [
+      "repository.lockGrants()",
+      "authorization.require(",
+      "repository.role(senior)",
+      "repository.role(junior)",
+      "authorization.requireRoleManagement(actor,role)",
+      "authorization.requireRoleManagement(actor,other)",
+      "repository.hierarchy(",
+      "graph.link(",
+      "authorization.requireGraphGrant(",
+      "authorization.upperBound(",
+      "repository.saveEdges(",
+      "complete("
+    ],
+    "normalizedOffsets": [
+      0,
+      62,
+      126,
+      160,
+      184,
+      232,
+      394,
+      441,
+      506,
+      565,
+      714,
+      768
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S01/S06",
+    "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+    "method": "complete",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+    "sourceSha256": "bd8bae0461d4bdf8e70b9cdddaf0cd68d88e66f4370a1e321123576109c05acf",
+    "bodySha256": "e9a4185300fcbf086d42d21f88d9ceff04bf23d32abdd90fc8e17b589f63210f",
+    "orderedTokens": [
+      "integrity.requireAdministrator()",
+      "repository.advanceVersion()",
+      "audits.local("
+    ],
+    "normalizedOffsets": [
+      0,
+      33,
+      61
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S02",
+    "class": "com.xmu.rbac.ddd.application.DirectoryApplicationService",
+    "method": "assign",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+    "sourceSha256": "83599c6796fa2a90cd1883e17962e358aaf5938c3a46563bcba868bb006ba671",
+    "bodySha256": "fd2bc8c02fc9650b68d7c66295e3c20f447cdaee44671b6b44ad4351c6f023c0",
+    "orderedTokens": [
+      "grants.lockGrants()",
+      "actor(",
+      "directory.user(id,true)",
+      "managed(",
+      "grants.role(roleId)",
+      "authorization.upperBound(",
+      "aggregate(profile).assign(",
+      "directory.assign(",
+      "done("
+    ],
+    "normalizedOffsets": [
+      0,
+      58,
+      111,
+      135,
+      182,
+      202,
+      395,
+      486,
+      525
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S02",
+    "class": "com.xmu.rbac.ddd.application.DirectoryApplicationService",
+    "method": "done",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+    "sourceSha256": "83599c6796fa2a90cd1883e17962e358aaf5938c3a46563bcba868bb006ba671",
+    "bodySha256": "6b137893e85cc0f91aed2d6d7d4d5284269cf04e2842f5bf8b638063e292283a",
+    "orderedTokens": [
+      "integrity.requireAdministrator()",
+      "grants.advanceVersion()",
+      "audits.local("
+    ],
+    "normalizedOffsets": [
+      0,
+      33,
+      57
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "SIM",
+    "class": "com.xmu.rbac.ddd.interfaces.rest.AuthorizationController",
+    "method": "check",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/AuthorizationController.java",
+    "sourceSha256": "87462afcd792ebb4a3cd357100703a547f723f80760ba3f97a19e5c323b94e90",
+    "bodySha256": "9d4d758b7a6cc22fc7fe16a8797e2b9fc5ca73fff2f99d301fe55028e27ce2fa",
+    "orderedTokens": [
+      "rest.principal(",
+      "authorization.require(",
+      "directory.user(",
+      "authorization.unavailableReason(",
+      "authorization.effective(",
+      "authorization.api(",
+      "result.put(\"allowed\"",
+      "result.put(\"reason\"",
+      "result.put(\"trace\""
+    ],
+    "normalizedOffsets": [
+      33,
+      94,
+      399,
+      448,
+      558,
+      790,
+      892,
+      922,
+      1059
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "SIM",
+    "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+    "method": "unavailableReason",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+    "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "bodySha256": "14a8b7bb27f3bb07d052d1074294596fb9909a4ab92084eb9e913bf56c59af2d",
+    "orderedTokens": [
+      "repository.systemEnabled(system)",
+      "repository.identity(userId)",
+      "DomainException.require(target!=null",
+      "return\"USER_DISABLED\"",
+      "returnenabled?null:\"SYSTEM_DISABLED\""
+    ],
+    "normalizedOffsets": [
+      15,
+      87,
+      115,
+      211,
+      233
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S02",
+    "class": "com.xmu.rbac.ddd.infrastructure.persistence.JpaDirectoryRepositoryAdapter",
+    "method": "saveUser",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java",
+    "sourceSha256": "6315677bb91fff9c22164b03d08007be553e8e8cfa29dfd5b27a4f2c22245b56",
+    "bodySha256": "487527961f6b78f83e84c7bc410254b2132f0d74d29157b7117902d4be5ee352",
+    "orderedTokens": [
+      "e.setSubject(",
+      "UUID.randomUUID()",
+      "em.persist(e)",
+      "em.flush()",
+      "returnuser(e)"
+    ],
+    "normalizedOffsets": [
+      103,
+      142,
+      518,
+      533,
+      544
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S03",
+    "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+    "method": "effective",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+    "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "bodySha256": "6c5eb78fbcbd1317a447fed56dc4d961d9cf6309c0a105c9f2a95a69839d7fb3",
+    "orderedTokens": [
+      "reads.fresh(",
+      "stableEffective(",
+      "returnstableEffective("
+    ],
+    "normalizedOffsets": [
+      150,
+      166,
+      198
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S03",
+    "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+    "method": "stableEffective",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+    "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "bodySha256": "639864a97c7392d900da7484a52afef0d9b8d51fb7237cd0cfe7c00c79eac5ce",
+    "orderedTokens": [
+      "repository.freshenRead()",
+      "repository.version()",
+      "repository.systemEnabled(",
+      "repository.identity(userId)",
+      "cache.get(",
+      "policy.calculate(",
+      "repository.version()",
+      "cache.put(",
+      "repository.version()"
+    ],
+    "normalizedOffsets": [
+      200,
+      237,
+      282,
+      377,
+      568,
+      761,
+      896,
+      950,
+      1002
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S04",
+    "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+    "method": "stableApi",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+    "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "bodySha256": "3e34b44a7da7c55b3405653c7ea63da9b1735e9832fdfd522924c07e8d8ad7c8",
+    "orderedTokens": [
+      "repository.freshenRead()",
+      "repository.version()",
+      "repository.operation(",
+      "repository.identity(user)",
+      "effective(user,system)",
+      "repository.identity(user)",
+      "policy.allows(",
+      "repository.version()"
+    ],
+    "normalizedOffsets": [
+      169,
+      206,
+      250,
+      400,
+      537,
+      567,
+      649,
+      698
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S01/S02",
+    "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+    "method": "upperBound",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+    "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "bodySha256": "7b807cb95a3d1aa86310a327a6aa413931408e6a00e3113918e7f01152e173cd",
+    "orderedTokens": [
+      "effective(actor.id(),\"rbac-center\")",
+      "repository.hierarchy(system).requireGrantable(",
+      "policy.requireWithin("
+    ],
+    "normalizedOffsets": [
+      18,
+      184,
+      249
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S06",
+    "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+    "method": "status",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+    "sourceSha256": "bd8bae0461d4bdf8e70b9cdddaf0cd68d88e66f4370a1e321123576109c05acf",
+    "bodySha256": "f134c66850e21fbc48e5dbd402d5ce04338d9dca1e24116ee36afbec3e76441d",
+    "orderedTokens": [
+      "repository.lockGrants()",
+      "authorization.require(",
+      "repository.role(id)",
+      "authorization.requireRoleManagement(",
+      "role.changeStatus(",
+      "authorization.upperBound(",
+      "repository.saveRole(",
+      "complete("
+    ],
+    "normalizedOffsets": [
+      0,
+      62,
+      126,
+      146,
+      194,
+      396,
+      589,
+      615
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S05",
+    "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+    "method": "external",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+    "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+    "bodySha256": "d851961ddbc2b481e0f33ce28a801557c7896e02f2113acd92d80d255cc11c33",
+    "orderedTokens": [
+      "canonical(before)",
+      "canonical(after)",
+      "newAuditFact(",
+      "fresh.execute(",
+      "repository.find(requestId)",
+      "existing.requireReplay(fact)",
+      "repository.append(fact)",
+      "catch(DataIntegrityViolationException",
+      "fresh.execute(",
+      "repository.find(requestId)",
+      "existing.requireReplay(fact)"
+    ],
+    "normalizedOffsets": [
+      398,
+      460,
+      627,
+      853,
+      894,
+      940,
+      991,
+      1019,
+      1072,
+      1113,
+      1172
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S06",
+    "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+    "method": "local",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+    "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+    "bodySha256": "d5859432fc6ab16c7b6c4c0a17dfb793bbeed34458417d2dfe9567c8dc74e086",
+    "orderedTokens": [
+      "grants.systemEnabled(",
+      "grants.assignments(",
+      "grants.hierarchy(",
+      "grants.permissions(",
+      "newAuditFact(",
+      "repository.append(fact)"
+    ],
+    "normalizedOffsets": [
+      84,
+      195,
+      233,
+      258,
+      425,
+      705
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "LOGIN",
+    "class": "com.xmu.rbac.ddd.application.IdentityApplicationService",
+    "method": "login",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IdentityApplicationService.java",
+    "sourceSha256": "0e2b24af5e8f6aef72aae49bea38ac6edc028f83aacfafcfea97e805bd98c65e",
+    "bodySha256": "c3cec7a6e01bc7c26505f9ece8aa7ab53121d5684c218f23db68573e2380c60f",
+    "orderedTokens": [
+      "loginAttempts.attempt(",
+      "DomainException.require(token!=null",
+      "returntoken"
+    ],
+    "normalizedOffsets": [
+      12,
+      60,
+      123
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "LOGIN",
+    "class": "com.xmu.rbac.ddd.application.LoginAttemptApplicationService",
+    "method": "attempt",
+    "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/LoginAttemptApplicationService.java",
+    "sourceSha256": "4411d9ab3c5163fea67be41442a441b2353f3094972079d1033050d05caa0094",
+    "bodySha256": "fdbe5e1741b5e8a2f16a0b49f0fb29b3ff1fe32e1d9ad68c99d6ae71150406ba",
+    "orderedTokens": [
+      "repository.lockLogin(",
+      "policy.locked(",
+      "encoder.matches(",
+      "policy.evaluate(",
+      "repository.saveLoginState(",
+      "if(!result.accepted())",
+      "audits.local(",
+      "returnnull",
+      "repository.systemEnabled(",
+      "tokens.issue(",
+      "audits.local("
+    ],
+    "normalizedOffsets": [
+      40,
+      245,
+      285,
+      363,
+      439,
+      518,
+      541,
+      620,
+      656,
+      724,
+      780
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S01/S02/S06",
+    "class": "com.xmu.rbac.structured.service.ManagementService",
+    "method": "begin",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+    "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "bodySha256": "5263a407d6bfbd7fd5313a1f86ce6036daee6c44f4acd5b3656fa0dd1940e7b6",
+    "orderedTokens": [
+      "az.lock()",
+      "az.center(",
+      "az.root(",
+      "az.captureUpper("
+    ],
+    "normalizedOffsets": [
+      20,
+      30,
+      64,
+      75
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S01/S02/S06",
+    "class": "com.xmu.rbac.structured.service.ManagementService",
+    "method": "finish",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+    "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "bodySha256": "865810436bca8b9b93e29d76aa68d420a054654a595f2fc1cad58a8108f6600e",
+    "orderedTokens": [
+      "db.flush()",
+      "az.preserveAdministrator()",
+      "g.version++",
+      "audit.success("
+    ],
+    "normalizedOffsets": [
+      0,
+      11,
+      38,
+      50
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S01",
+    "class": "com.xmu.rbac.structured.service.ManagementService",
+    "method": "inherit",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+    "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "bodySha256": "98bc71c073bb6ffcc31dbbf4c84b515364796d47310db2ce8e42d1d4354963c6",
+    "orderedTokens": [
+      "begin(",
+      "az.protectRole(a,s)",
+      "az.protectRole(a,j)",
+      "db.one(",
+      "reachable(junior,senior)",
+      "db.save(edge)",
+      "changedUpper(",
+      "finish("
+    ],
+    "normalizedOffsets": [
+      14,
+      113,
+      133,
+      248,
+      402,
+      542,
+      556,
+      660
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S02",
+    "class": "com.xmu.rbac.structured.service.ManagementService",
+    "method": "assign",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+    "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "bodySha256": "c1779fb39f36fffa5a9a87d5209e2cc250e052ee694847fd0c0e3f1dcd67109d",
+    "orderedTokens": [
+      "begin(",
+      "az.scope(",
+      "db.one(",
+      "az.upper(",
+      "db.save(ur)",
+      "finish("
+    ],
+    "normalizedOffsets": [
+      14,
+      84,
+      368,
+      529,
+      703,
+      715
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S03",
+    "class": "com.xmu.rbac.structured.service.AuthorizationService",
+    "method": "snapshot",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+    "sourceSha256": "cb02a30c71fcffcf976c2882eb2f6b1d3ba77bb7eb61cbb693f344283ba43dc1",
+    "bodySha256": "fb3324ee2ae86b6be924a76fbcd9a46453ff098c2bf9850c327469b683a9f103",
+    "orderedTokens": [
+      "active(u,s)",
+      "if(tx)",
+      "for(intattempt=0",
+      "version()",
+      "namespace+\":authz:\"",
+      "l1.get(",
+      "redis.opsForValue().get(",
+      "calculate(",
+      "if(version!=version())",
+      "l1.put(",
+      "redis.opsForValue().set("
+    ],
+    "normalizedOffsets": [
+      62,
+      146,
+      194,
+      244,
+      264,
+      323,
+      463,
+      625,
+      661,
+      722,
+      785
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S06",
+    "class": "com.xmu.rbac.structured.service.ManagementService",
+    "method": "roleStatus",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+    "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "bodySha256": "8f6a04d6bff50bbbdcef20765bf91991085ffae2d2b8018dda86bce17708e307",
+    "orderedTokens": [
+      "begin(",
+      "az.protectRole(",
+      "r.status=status",
+      "changedUpper(",
+      "finish("
+    ],
+    "normalizedOffsets": [
+      14,
+      93,
+      113,
+      157,
+      175
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S05",
+    "class": "com.xmu.rbac.structured.service.AuditService",
+    "method": "external",
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+    "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+    "bodySha256": "d41f476ffd68e92fc41a950408092ef4678c6d44670d070571c872833ca1091c",
+    "orderedTokens": [
+      "trusted(",
+      "authz.permission(",
+      "safe(input.before()",
+      "safe(input.after()",
+      "isolated.execute(",
+      "db.one(",
+      "same(existing,payload)",
+      "db.save(log)",
+      "db.flush()",
+      "catch(DataIntegrityViolationException",
+      "isolated.execute(",
+      "db.one(",
+      "same(log,payload)"
+    ],
+    "normalizedOffsets": [
+      0,
+      17,
+      403,
+      432,
+      894,
+      937,
+      1011,
+      1286,
+      1299,
+      1330,
+      1384,
+      1422,
+      1506
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S04",
+    "class": "com.xmu.rbac.gateway.GatewayController",
+    "method": "forward",
+    "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayController.java",
+    "sourceSha256": "b7ac76d31f042d65c7ed4847ef28546df72a0223efe80819ac56593e312c0aa5",
+    "bodySha256": "cdb1d8dbb98da6f59ddef1a68b429c89d44129a1eead72ef52c15384f59ccf62",
+    "orderedTokens": [
+      "routes.resolve(",
+      "auth.authorize(",
+      "BoundedBody.read(",
+      "proxy.forward("
+    ],
+    "normalizedOffsets": [
+      84,
+      144,
+      219,
+      320
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  },
+  {
+    "scenario": "S04",
+    "class": "com.xmu.rbac.gateway.AuthBoundary",
+    "method": "authorize",
+    "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/AuthBoundary.java",
+    "sourceSha256": "674a34952f043254e05f4e3a09963418461740e92583c459650c5f4776642d95",
+    "bodySha256": "0277b19a48cd620a2b0de61ea2ff7e0e94386dcb244abf14dc6a1ca56782e737",
+    "orderedTokens": [
+      "identity.check(",
+      "response.getStatusCode().value()!=200",
+      "response.getBody()",
+      "operationId.equals(decision.operationId())",
+      "if(!decision.allowed())"
+    ],
+    "normalizedOffsets": [
+      61,
+      530,
+      658,
+      697,
+      824
+    ],
+    "status": "ORDERED_SOURCE_CHECKED",
+    "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+  }
+]

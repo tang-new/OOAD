@@ -1,0 +1,124 @@
+= RBAC1 两范式口试卡
+:toc:
+
+设计入口：link:final-design.adoc[当前设计]；图、路径及哈希：link:design/index.adoc[图索引]、link:design/source-index.json[符号索引]。本卡讨论代码。本轮严格编译图核验为 STRICT_COMPILED_CHECKED，绘图器 7 项回归通过（原 5 项 + 文本/二进制哈希 2 项）；m18 本地两版 25+25 场景及 T21 全绿、188 JUnit 全过，当前覆盖指标已回读核对。本地最终双实现 Swarm 已有真实归档；绘图器不是 live probe，本任务未 push。方法名变化以重生成后的索引为准。
+
+== 开场：为什么不是两个换包名的 CRUD
+
+相同的是外部 RBAC1 语义、数据库十五表及统一身份/审计协议。结构化将规则放在 `ManagementService`、`AuthorizationService` 等事务脚本；DDD 将图规则放入 `RoleHierarchy`、指派放入 `User/DepartmentEligibility`、权限并集及上界放入 `AuthorizationPolicy`。应用服务仍负责事务和多仓储协调。
+仓储适配器不是领域对象，CloneFactory 不是权限算法；有更多类不自动等于更好的设计。
+
+== S01：A 继承 B，B 继承 C，再令 C 继承 A 会怎样
+
+* 结构化：`ManagementService.inherit` 在 `begin` 获取授权锁后读边，调用私有 `reachable(junior, senior)`；能到达 senior 就拒绝。
+* DDD：`RoleApplicationService.link` 获取 `AuthorizationRepository.lockGrants`，装载角色和图；`RoleHierarchy.link` 负责自环、同系统、可达性和重复边不变量，应用服务保存边、上界、版本和审计。
+* GRASP：图有全部角色和边，是 Information Expert。单个 Role 无法独自证明全图无环。ApplicationService 是 Controller，不是图算法专家。
+* 追问“两个线程 A→B 与 B→A”：DFS 自身不解决并发；必须锁后读新图，事务持锁直到提交。应出示并发测试与最终 DB 边，不用图代替测试。
+* 追问“数据库 CHECK 是否足够”：CHECK 可以禁止 senior=junior，唯一键可禁止重复，一般环和跨系统关系还要业务检查。
+* 追问“SUPER_ADMIN 没有直接权限、还停用了，是否可当普通角色管理”：不行。Role.superAdministratorCapability 表达独立能力；requireManageable 要求特权 actor。RoleHierarchy.requireGrantable 检查可达特殊能力时不切断停用节点，防止预埋边等待启用。权限集合包含关系不能代替能力保护。
+* 结构化 begin 在变更前 captureUpper 冻结 actor 授权快照，再 protectRole / changedUpper；不能修改自己后用新权限为新权限背书。
+
+== S02：部门允许某角色，员工是否自动拥有它
+
+不会。`DepartmentAllowedRole` 是准入集合，`UserRole` 才是直接赋予事实。
+
+* 结构化 `ManagementService.assign` 顺序检查用户 ACTIVE、管理范围、角色/系统可用、部门准入、操作者授权上界，再创建 UserRole。
+* DDD `DirectoryApplicationService.assign` 加载并检查跨对象上下文，调用 `User.assign(role, eligibility)`；`DepartmentEligibility.requireEligible` 检查资格与角色启用。实际没有名为 RoleAssignment 的独立类，答辩不能指着不存在的类说它保护规则。
+* 调部门：DDD `User.transfer` 用目标资格集合交集保留角色；应用层删除被回收的持久化 assignment。结构化 `moveUser` 查询目标准入并删除不合法 UserRole。两者不能清空 RolePermission，那会影响所有人。
+* GRASP：User 知道自己的状态/部门/直接角色；Eligibility 知道 allowedRoleIds；管理范围和授权上界是另一层跨对象规则，不挤进简单 DTO。
+
+== S03：菱形继承、停用中间角色、旧 token
+
+夹具 A→B、A→C、B→D、C→D，D 有 p4。有效权限只含一条 p4，但来源可有两条路径。停用 B 后 A→C→D 仍有效。
+
+* 结构化：`AuthorizationService.snapshot → calculate → walk`；集合去重，路径用于解释，遇到停用/缺失节点停止该路径。
+* DDD：effective → fresh/stableEffective。stableEffective 将目标状态、缓存 get、必要的 calculate 和缓存 put 包在权威版本复查中，最多三次，不稳定 503；非 ACTIVE 目标空权限。AuthorizationPolicy.calculate 管集合，RoleHierarchy.paths/visit 管路径。
+* 追问“只重试版本为什么不够”：外层只读事务可能复用旧的一致性快照/持久化上下文。AuthorizationReadTransaction.fresh 是独立 Bean 的 REQUIRES_NEW READ_COMMITTED readOnly 回调；每次尝试 repository.freshenRead → JpaAdapter EntityManager.clear。写事务必须保留未提交事实，不能机械使用这个独立读事务。
+* 结构化 namespace 来自 rbac.cache.namespace；事务内不读写缓存，非事务使用 namespace:authz:system:user:version。独立数据库若共用 namespace，版本数碰巧相同也可能读错库的缓存。
+* 管理端 check/explain 已先调用 unavailableReason；停用模拟目标返回 allowed=false / USER_DISABLED，trace 为 ACTOR_AUTHENTICATED / USER_DISABLED，与结构化一致且已进 m18 新增共享场景和 T21。不要把 stableEffective 的内部空集合实现误说成对外投影仍不一致。见 SIM 图；这不是 UML-S06 业务成功审计流程。
+* 不能把 JWT 的 roles 当权威授权结果。旧 token 仍要检查数据库用户/系统状态、撤销事实和授权版本；事务内绕过缓存，避免校验刚修改的数据时读到旧值。
+* 追问“Redis 宕机就允许吗”：不能。缓存不是权威。具体降级、503 和版本竞态必须展示两版当前源码及真实故障结果；不能笼统声称缓存永远正确。
+* GRASP：领域 Policy 便于纯内存测试，但数据库状态、跨实例撤权仍需要真实 MySQL/Redis 集成测试。
+
+== S04：网关允许，为什么课程 Service 还能拒绝
+
+`GatewayController.forward` 先 `RouteRegistry.resolve(method, URI)`，再 `AuthBoundary.authorize` 经 `IdentityClient.check` 调中心，允许后 `ProxyClient.forward`。operationId 是可信路由匹配结果，不是前端可自由传入的特权声明。
+
+* 中心结构化路径：`AuthController.api → AuthorizationService.api`。
+* 中心 DDD 路径：IdentityController.api → AuthorizationApplicationService.api → fresh/stableApi；版本括号内读 operation、identity、effective，再读 identity 才 allows，尾部版本不等重试。只给权限集合加版本，仍可能用旧 operation.enabled 误放行。
+* 追问“未知 aud 是不存在资源，所以 404 吗”：不是。aud 是身份声明，validate 将未知系统的 404 翻成 401 TOKEN_INVALID；真正未知 operation 才是 API_OPERATION_NOT_FOUND。
+* 中心回答“此身份是否具有该全局 API 资格”；课程系统回答“此教师是否为此班/组的合法操作者”。后者的对象级 403 不能由中心越俎代庖。
+* 无映射、中心 401/403/404、超时、allowed 为空或 operationId 不匹配，都不能当 allowed=true。网关 503 是不可用，不等于已授权。
+* 本套图不画未核对的课程领域类/方法，也不把权限中心两后端算成两个业务系统。部署负责人必须证实课程服务不能从另一个端口绕过边界。
+
+== S05：先查不存在再插入，为什么还不够
+
+两个线程都可能查不到。`sys_audit_log.request_id` 的唯一键是最终防线；冲突发生后原事务不能继续当成功事务使用。
+
+* 结构化 `AuditService.external` 使用 REQUIRES_NEW 的 `TransactionTemplate`，查询/插入/flush；唯一冲突退出事务后在新事务查回，`same` 比较规范化 payload 摘要。
+* DDD `AuditApplicationService.external` 同样编排事务，依赖 `AuditRepository.find/append`；`AuditFact.requireReplay` 保护 system/subject/hash 的重放一致性。`JpaAuditRepositoryAdapter` 只处理持久化映射，不决定业务白名单。
+* 同 requestId 同内容返回原 id；异体是稳定冲突，不覆盖历史；查不回已存在记录时原异常不能被吞掉。
+* 追问“用 POST 返回的 at 做 [at,at] 查询为什么会漏”：DB TIMESTAMP(3) 只有毫秒。AuditFact 紧凑构造器与结构化 record 都先截毫秒，保证响应/重放/查询同精度。AuditLog.requestId 映射 CHAR(36)，GrantVersion Java Long id 映射 TINYINT，不应为图方便改物理类型。
+* Actor 从 token 与中心权威身份派生，不允许 body 伪造；外部还要服务密钥和写审计资格。JSON 白名单、排序规范化和大小限制先于保存。
+* 网络超时但中心已提交：必须用原 requestId 重试。课程事务和中心事务不是分布式原子事务；若调用方没有可靠保留和重试，必须承认审计丢失窗口。不引入 MQ/Outbox 掩盖范围。
+* GRASP：AuditFact 是不可变事实和重放一致性的 Expert；应用服务是事务协调者；Adapter 是低耦合转换边界。
+
+== S06：AOP 已打印成功，还能算业务失败吗
+
+可以。方法返回不等于数据库事务代理已提交。AOP 的层级、耗时、异常类型是运行日志，不是 audit_log 事实，更不是原子性证明。
+
+* 结构化 ManagementService.roleStatus → finish → AuditService.success；DDD status → requireRoleManagement → Role.changeStatus → saveRole → complete → GrantIntegrityService.requireAdministrator → advanceVersion → AuditApplicationService.local。
+* GrantIntegrityService 在同一写事务读取变更后的有效管理员事实，交 LastAdministratorPolicy；不存在有效管理员则回滚。local 还派生实际受控身份角色快照，不再默认为空。
+* SUCCESS 审计加入调用者业务事务；审计写失败或最终 commit 失败，不能返回业务成功，业务与成功日志一起回滚。
+* `AuditService.denied` / `AuditApplicationService.denied` 使用独立 REQUIRES_NEW 保存 DENIED。这是被拒绝事实，不能作为业务变更成功。必须再检查实际入口是否调用这些方法，存在方法不意味着覆盖所有拒绝路径。
+* 本地同步写无需领域事件总线；当前不声称存在 RoleStatusChangedEvent、消费者、ACK 或死信。
+
+== 补充：为什么第五次错误密码能持久锁定，而接口仍返回 401
+
+真实链：IdentityApplicationService.login → LoginAttemptApplicationService.attempt。attempt @Transactional 内 lockLogin、LoginAttemptPolicy.evaluate、saveLoginState、LOGIN_DENIED 同步保存；返回 null 让事务正常提交，再由外层 login 抛 401。若在同一个事务里先 throw，计数会跟着回滚。
+
+第五次错误锁 900 秒，锁定中保留计数/时间，过期从零重新计数，正确凭据清零；只有 ACTIVE 且未锁才匹配密码。不存在账号返回 null；系统停用或 DB/审计异常仍会回滚 attempt，不能说所有失败都提交了计数。见 LOGIN-ddd 类图/顺序图。
+
+== DTO/VO、CloneFactory：请指出真实一行代码
+
+. DDD `RoleController.create`：CreateRoleRequest → `CloneFactory.copy(new RoleCommand(), input)`。principal 单独验证，不从 DTO 拷。
+. DDD `RestSupport.role`：显式从 Role 构建 RoleResult，再复制为 RoleView；boolean enabled 到字符串 status 不是字段同名复制能代替的计算。
+. DDD `JpaAuthorizationRepositoryAdapter.restore/saveRole`：RoleEntity ↔ RoleState 的同名字段复制；系统码、权限集合、关联写入与 Role 合法构造显式处理。
+. 结构化 `ManagementController.name`：DisplayName → NameChange；id、actorId 标注排除。当前响应主要是 Views/Map，不能捏造不存在的统一 VO 层。
+
+“CloneFactory 是不是 GoF Factory Method？”不是。它是注解处理器生成的复制重载，不存在抽象创建者按子类型决定产品的那个语义。
+“会不会绕过领域不变量？”因此不能把 ORM 图无脑复制成 Role；必须经合法恢复/构造路径，关联和安全字段手工控制，并执行 clean build 和 round-trip 测试。
+“为什么不用 copyNotNull 做所有 PATCH？”null=不修改 与 null=明确清空 是不同契约，不能盲拷统一处理。
+“统一 ApiErrors 是否把两实现业务合并了？”不是。它只有 HTTP status/code/message 词汇投影，Advice/Handler 使用，领域算法仍独立；成功 envelope 也保留 data:null。DDD 新用户 subject 在首次 INSERT 前直接生成最终 UUID，避免技术性第二次 UPDATE 消耗乐观版本，不是新增权限规则。
+
+== 真实的不变量归属，不夸大充血程度
+
+[cols="2,5",options="header"]
+|===
+|对象 |实际行为及边界
+|Role |rename/replacePermissions 保护局部不变量；changeStatus 是赋值；superAdministratorCapability/requireManageable 保护特殊能力。最后有效管理员由 GrantIntegrityService + LastAdministratorPolicy 保护。
+|RoleHierarchy |构造与 link/unlink/paths 保护同系统无环；requireGrantable 不忽略停用节点上的特殊能力路径。事务串行化由应用层负责。
+|User |assign、transfer、changeStatus；唯一部门、直接角色、停用/删除与 tokenVersion。不是自己查数据库。
+|DepartmentEligibility |requireEligible、retained；准入与角色交集，不给予共享权限。
+|AuthorizationPolicy |calculate、allows、requireWithin；集合、默认拒绝和提权上界，不验 JWT 密码学。
+|AuditFact |构造时 requestId/target 检查、at 截毫秒、不可变快照；requireReplay，不进行 HTTP 和 SQL。
+|LoginAttemptPolicy |locked/evaluate；5 次错误、900 秒锁、过期和成功复位；不自行开事务或保存账号。
+|===
+
+== 修改规则时哪种更合适
+
+若新增“禁止某类角色跨系统赋予”的规则，先确定归属：Role/图/资格 Policy 的局部不变量，还是应用层跨聚合上下界。结构化通常改集中 Service 的 if 与查询；DDD 通常改领域行为及测试，再由应用编排装载必要上下文。实际修改范围应展示真实 diff，不能杜撰历史。
+
+简单 CRUD：结构化流程短、转换少；DDD 端口和装配有额外维护成本。复杂图和资格规则：DDD 规则内聚、可脱离 JPA 测试，但应用一致性和数据库故障仍不可省略。Repository 是依赖倒置，不是让每张表都强行对应一个聚合；当前端口按能力组织，而不是十五表十五仓储。
+
+== 现场验收请说什么、不说什么
+
+* 可以展示源码方法、生成命令、当前 source-index 哈希、逐张 PNG、精确生成状态。
+* 不能把严格编译/源码顺序校验冒充 m18 业务测试。25 组调用点顺序检查仍需人工复核分支，不能代替运行调用图；本地业务通过有其独立报告/字节边界。
+* 最终本地 Swarm 已通过：tag local-final-20261115-022901，structured→DDD 各 7 服务、11 探针，前端及持久资源保持不变，最终 DDD。证据在 rounds 两层读取；顶层 localFinalDeploymentAccepted=true，每轮 finalAcceptance=false 仅限制 runtime 证据范围，不等于本地部署未验。
+* 最终课程当前 canonical 12/12；m18 的 25+25/T21 共 51 PASS 与 canonical SHA 一致；m17 verify 全 gate 绿、188 JUnit 全绿、前端 38 单测及 4 视觉 E2E 全绿。LINE 为 92.52/88.77/93.19%，BRANCH 为 71.67/71.50/89.29%；DDD application 86.82%，与 service 同守 85% 门槛，无降门槛。
+* 健康类现为 ImplementationHealthIndicator / component implementation，stage=M5-RBAC1-verified、businessReady=true；改名后 2 health + 5 HTTP 额外复验通过，不代表外部服务器/CI 已验；最终本地 Swarm 另有真实归档。
+* 文本哈希仅归一化 CRLF→LF，二进制 class/jar/png 逐字节。独立 CR、BOM、空白均保留；不是通过忽略源码或放宽方法顺序门禁消除误报。
+* 源码持续变化时，先编译再 `python tools/render-rbac1-design.py --strict-compiled`，最后 `--check`；图源不是冻结事实，必须随实际方法和分支校正。
+
+* m17 原 50+1 保留为合法 race 胜方不同的比较误报；m18 仅白名单独立空权限 race 比较合法结果集并核对 SQL 最终持久方向。普通关联和顺序仍严格，比较器 21 项回归通过。外部部署未执行，不把归档或 renderer 冒充新 live probe。

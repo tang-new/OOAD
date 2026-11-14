@@ -1,0 +1,200 @@
+{
+  "recordedAt": "2026-11-14T19:04:11.640555+00:00",
+  "snapshotGeneratedAt": "2026-11-14T19:02:36.315892+00:00",
+  "status": "STRICT_COMPILED_CHECKED",
+  "strictCompiled": true,
+  "hashRules": {
+    "algorithm": "SHA-256",
+    "textNormalization": "CRLF bytes (0D 0A) -> LF (0A) ONLY; no stripping, decoding, BOM removal, standalone CR or whitespace normalization",
+    "textSuffixes": [
+      ".adoc",
+      ".cmd",
+      ".conf",
+      ".dot",
+      ".java",
+      ".json",
+      ".log",
+      ".md",
+      ".properties",
+      ".puml",
+      ".py",
+      ".sh",
+      ".sql",
+      ".svg",
+      ".txt",
+      ".xml",
+      ".yaml",
+      ".yml"
+    ],
+    "textNames": [
+      ".gitattributes",
+      ".gitignore",
+      "Dockerfile"
+    ],
+    "binaryRule": "All other files, especially .class/.jar/.png, hashed byte-for-byte; never normalize binary CRLF",
+    "methodAndOrderGuards": "Unchanged declaration/javap and ordered callsite checks; this only canonicalizes text line endings"
+  },
+  "currentJavaFilesContainingCRLF": 103,
+  "compiledSourceClasses": 160,
+  "orderedSourceCallChains": 25,
+  "figures": 35,
+  "rendererTests": {
+    "command": "python tools/render-rbac1-design.test.py",
+    "tests": 7,
+    "failures": 0,
+    "originalGuardTestsPreserved": 5,
+    "newHashRegressions": 2,
+    "result": "OK",
+    "log": "renderer-tests.log"
+  },
+  "strictRender": {
+    "command": "python tools/render-rbac1-design.py --strict-compiled",
+    "result": "STRICT_COMPILED_CHECKED"
+  },
+  "check": {
+    "command": "python tools/render-rbac1-design.py --check",
+    "exitCode": 0,
+    "output": "Source hashes match saved diagram snapshot. Not a test/deployment assertion."
+  },
+  "businessAcceptance": {
+    "stage": "m18-shared / m17-final-verify",
+    "source": "Final portable actually executed archive; this design worker only read it, not rerunning business HTTP or deployment",
+    "structured": "25/25 PASS",
+    "ddd": "25/25 PASS",
+    "T21": "PASS",
+    "totalPass": 51,
+    "canonicalJarIdentity": "Both shared HTTP jarSha256 values match final canonical; current four JARs byte-for-byte checked",
+    "verify": "m17 BUILD SUCCESS; all gates green",
+    "comparisonToolRegressions": "21 PASS reported by main; narrow race legal-set comparison and persisted SQL direction, not broad ordering/association normalization"
+  },
+  "junitReportsReadBack": {
+    "tests": 188,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "coverageReadBack": {
+    "rbac-structured": {
+      "path": "rbac-structured/target/site/jacoco/jacoco.xml",
+      "sha256": "895a3381c6b9ea921a4ad67dc7e53260124a0ed87edf26e9666a36cd468e1b98",
+      "LINE": {
+        "covered": 1497,
+        "missed": 121,
+        "percent": 92.52
+      },
+      "BRANCH": {
+        "covered": 668,
+        "missed": 264,
+        "percent": 71.67
+      }
+    },
+    "rbac-ddd": {
+      "path": "rbac-ddd/target/site/jacoco/jacoco.xml",
+      "sha256": "4fedb4cee9d7004b696cdd908d7a840d3560478b9320a17b0f93c710de44705b",
+      "LINE": {
+        "covered": 2497,
+        "missed": 316,
+        "percent": 88.77
+      },
+      "BRANCH": {
+        "covered": 705,
+        "missed": 281,
+        "percent": 71.5
+      },
+      "applicationLINE": {
+        "covered": 830,
+        "missed": 126,
+        "percent": 86.82
+      }
+    },
+    "rbac-gateway": {
+      "path": "rbac-gateway/target/site/jacoco/jacoco.xml",
+      "sha256": "361300583754b25125417b14c13c523f35954ee1989bb6971af5480bf3773050",
+      "LINE": {
+        "covered": 178,
+        "missed": 13,
+        "percent": 93.19
+      },
+      "BRANCH": {
+        "covered": 125,
+        "missed": 15,
+        "percent": 89.29
+      }
+    }
+  },
+  "serviceAndApplicationGate": "Same original 85% LINE; application 86.82%; no gate reduction",
+  "health": {
+    "productionClass": "com.xmu.rbac.ddd.infrastructure.health.ImplementationHealthIndicator",
+    "component": "implementation",
+    "stage": "M5-RBAC1-verified",
+    "businessReady": true,
+    "extraRecheckReportedByMain": {
+      "health": 2,
+      "HTTP": 5,
+      "passed": true
+    },
+    "warning": "Rechecks are not added again to the 188 unique JUnit count"
+  },
+  "businessEvidence": "business-evidence.json",
+  "swarm": {
+    "status": "local-final-dual-runtime-passed",
+    "tag": "local-final-20261115-022901",
+    "localFinalDeploymentAccepted": true,
+    "activeModule": "rbac-ddd",
+    "sameFrontendImageIds": true,
+    "samePersistentVolumes": true,
+    "sameDataServiceContainers": true,
+    "externalDeployment": {
+      "performed": false,
+      "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted"
+    }
+  },
+  "course12of12": "Final current canonical 12/12 PASS, archived portable report",
+  "visualReview": {
+    "readThisRound": [
+      "swarm-deployment.png"
+    ],
+    "unchangedRawDigests": 34,
+    "snapshot": "visual-review.json"
+  },
+  "historicalCompileEvidence": {
+    "log": "compile-verification.log",
+    "scope": "prior round compile-only, not a new Maven test/package execution"
+  },
+  "commitPush": "NOT_PERFORMED",
+  "deploymentRounds": {
+    "rbac-structured": {
+      "serviceCount": 7,
+      "probeCount": 11,
+      "passedProbes": 11,
+      "stage": "local-final",
+      "status": "local-final-runtime-passed",
+      "finalAcceptance": false,
+      "nodes": [
+        {
+          "Hostname": "docker-desktop",
+          "Status": "Ready",
+          "ManagerStatus": "Leader",
+          "TLSStatus": "Ready"
+        }
+      ]
+    },
+    "rbac-ddd": {
+      "serviceCount": 7,
+      "probeCount": 11,
+      "passedProbes": 11,
+      "stage": "local-final",
+      "status": "local-final-runtime-passed",
+      "finalAcceptance": false,
+      "nodes": [
+        {
+          "Hostname": "docker-desktop",
+          "Status": "Ready",
+          "ManagerStatus": "Leader",
+          "TLSStatus": "Ready"
+        }
+      ]
+    }
+  },
+  "frontend": "38 unit + 4 loaded-state desktop/mobile visual E2E PASS from separate archived execution"
+}

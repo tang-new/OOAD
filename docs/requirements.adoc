@@ -1,99 +1,105 @@
 = RBAC1 当前需求与实施追踪
 :toc:
 
-== 权威入口及状态
+== 权威入口及状态解释
 
-完整输入快照：link:sources/requirements-final.md[需求文档-final]；
-上一阶段反馈：link:sources/phase1-feedback.md[需求更改]。
-完整需求的正常/异常流、数学定义、七接口协议和验收矩阵以该快照为准，本文件不另造第二套协议。
-用户后续明确：*重构优先于迁移、兼容*；冲突解释见link:migration-baseline.adoc[实施基线]。
+完整输入为link:sources/requirements-final.md[需求文档-final]与link:sources/phase1-feedback.md[阶段反馈]；用户明确*重构优先于迁移、兼容*。
+现行精确协议/物理列以link:implementation-contract.adoc[实施合同]、link:schema-contract.adoc[数据库合同]、link:course-integration-contract.adoc[课程集成补充合同]为准；历史起点见link:migration-baseline.adoc[实施基线]。
+管理与提供方唯一机器合同为link:../rbac-contract/src/main/resources/openapi/rbac-api.yaml[64操作OAS]，当前为15表V1/V2开发空库基线。
 
-当前仍是一期结构化RBAC0实现。下表是*差距追踪*，不是功能已完成声明。
-“部分基础”只表示代码或契约存在，运行状态以本轮测试证据为准。
-管理API的精确现行路径唯一来源：link:../rbac-contract/src/main/resources/openapi/rbac-api.yaml[OpenAPI]。
-外部七接口暂未实现，不得把一期 `/api/v1/auth/*` 包装响应当成兼容实现。
+结构化和DDD均已存在RBAC1业务代码；不能再称“当前仍是一期”或“DDD只有骨架”。七个/auth操作及两个私有身份投影也已有Controller/应用实现。
+当前本地证据已完成：后端188项JUnit、两侧25+25真实HTTP及T21比较、同前端PC/手机4例、教师原440项和真实双中心课程12例。
+原覆盖率门槛全部通过，DDD应用层也执行与结构化service相同的85%行门槛；源码35图按实际编译/方法体核对。
+并发对称反向边允许合法调度获胜顺序不同，但必须一成功一拒绝且唯一落库方向与成功请求完全一致，不在普通归一化中删除关系或版本。
+本地Swarm与外部部署分别记账；外部服务器、新评分原件及课堂PPT未提供，不据上述结果宣称外部验收。
 
-== 固定范围
+== 固定范围与安全不变量
 
-单公司；用户唯一所属部门；部门只承担组织管理和直接角色指派准入。
-角色权限不带业务数据部门范围；移部门不修改共享角色定义，只回收不合资格指派。
-角色继承为同系统 senior→junior DAG，支持多父、传递、菱形去重、停用节点切断和并发防环。
-UI菜单/按钮树与角色DAG是两种模型；API独立登记并显式映射，默认拒绝。
-权限中心保存统一身份和集中审计；课程业务的对象级授权仍由课程Service负责。
+* 单组织、用户唯一所属部门；没有公司模型。部门用于组织管理子树与直接角色准入，不提供业务数据范围。
+* 角色归属系统，senior→junior同系统DAG支持多父、传递、菱形去重与来源路径；停用节点切断。写事务持授权锁防并发成环。
+* 移部门只回收不合资格的本人指派，不清空共享角色权限；超级管理员也必须满足目标部门准入。授权上界包括目标系统有效权限及identityRole，不能经共享定义影响管理范围外人员。
+* UI菜单/按钮与API权限分种类；API目录独立登记、UI↔API显式映射只追踪、不赋权；未知操作默认拒绝。
+* JWT无角色权限claim、稳定sub/单aud，状态/撤销先于超级管理员旁路；MySQL为授权版本与jti撤销事实源，缓存故障不得用旧许可放行。
+* 权限中心保存统一身份和集中审计，不保存课程业务副本；教师Service保留对象授权，copyCourse全局teacher不等于非组长拥有CC。
+* 外部审计与私有身份投影双重验证用户Bearer及可信服务密钥；公开代理拒绝私有根前缀，浏览器不获得服务密钥或完整API能力清单。
+* 不实现RBAC2/3、多租户、业务scope/selfOnly、临时授权、风险看板、热力图/统计大屏；dashboard仅基础计数。
 
-不实现RBAC2/3、热力图、风险看板、临时授权、业务数据范围、多租户及课程业务副本。
+== 逐项源码追踪与本地验收关联
 
-== 逐项追踪
+S指structured的service/controller，D指DDD的application/domain/interfaces。两者内部模型独立；精确类职责见两份架构页。
+测试编号采用RBAC1命名空间，保留原需求ID避免遗漏。下表给出代码与验收目标的关联；逐项实际运行结果、候选hash和限制以验收报告/原始记录为准，不把一行源码位置冒充该性质的运行证明。
 
-`S` 为 `rbac-structured/src/main/java/com/xmu/rbac/structured/`。
-DDD目前仅有可启动骨架和健康探针；表内未来业务接口/实体仍是目标，不表示已登记。
-测试编号使用 `RBAC1/` 命名空间；一期相同T编号不能作为新验收证据。
-
-[cols="1,2,3,2,1"]
+[cols="1,2,3,2"]
 |===
-|ID |API/页面目标 |一期证据/模型差距 |目标测试/图 |状态
-|ID-01 |系统注册启停/系统页 |CatalogController只有系统查询；System缺状态 |SELF-04；系统包图 |需修改
-|ID-02 |统一登录 |AuthenticationService；缺稳定sub/audience隔离 |API-C01/03；登录图 |需修改
-|ID-03 |登录/退出/本人信息 |AuthController有一期接口，外部字段/状态码不同 |API-C01/03/08 |需修改
-|ID-04 |用户分页检索/编辑/状态 |UserController已有基础；需拆部门迁移 |分页边界；用户图 |部分基础
-|ID-05 |独立用户部门迁移 |UserManagementService.update不回收指派 |ORG-05/06；S02 |需修改
-|ID-06 |分系统用户角色 |Role缺system_id，UserRole含废弃scope |SELF-03/04；S03 |需修改
-|ID-07 |凭据安全/稳定主体 |BCrypt基础；subject及映射缺失 |API-C02/13 |需修改
-|ROLE-01 |角色CRUD及独立状态 |RoleController编辑混合status；角色码全局唯一 |角色状态用例；S06 |需修改
-|ROLE-02 |直接/继承/有效权限页 |RolePermission已有；没有继承计算 |DAG-01–04/15；S03 |需修改
-|ROLE-03 |角色DAG加删边 |无继承表、算法或接口 |DAG-05–07/11；S01 |待实现
-|ROLE-04 |同系统及启停传播 |无系统隔离和DAG状态传播 |DAG-08/09；S03 |待实现
-|ROLE-05 |按部门准入指派 |AssignmentService检查scope而非资格清单 |ORG-02；S02 |需重构
-|ROLE-06 |部门管理员组织管理 |旧scope需与业务数据范围解耦 |ORG-03/04；S02 |需重构
-|ROLE-07 |角色删除/撤销一致性 |已有删除保护；缺继承边处理 |DAG-13；角色图 |需修改
-|ROLE-08 |分系统有效角色详情 |UserDetail保留旧部门授权行 |DAG-12/15；S03 |需修改
-|RES-01 |系统菜单/按钮树 |Menu已有树，无BUTTON与系统状态 |UI投影；资源图 |需修改
-|RES-02 |ApiOperation登记 |只有OAS operationId，无独立登记模型 |T11；S04 |待实现
-|RES-03 |UI↔API显式映射 |旧模型没有映射表 |T10/11；资源图 |待实现
-|RES-04 |API双向覆盖校验 |ContractRoutes启动双向核对可复用 |T11；包图 |部分基础
-|RES-05 |资源树CRUD安全 |MenuService防环基础；需扩展类型状态 |树环/孤儿用例 |需修改
-|RES-06 |菜单按钮继承投影 |前端has权限基础；没有DAG语义 |T10；UI测试 |需修改
-|EXT-01 |五个/auth鉴权端点 |无兼容外部契约 |API-C01–08/13；S04 |待实现
-|EXT-02 |两个/auth/audit-logs端点 |只有内部审计GET |API-C09–12；S05 |待实现
-|EXT-03 |课程OAS操作注册 |未取得最新OAS |T11；映射矩阵 |外部依赖
-|EXT-04 |可信路由网关 |无正式课程网关 |T13/14；S04 |待实现
-|EXT-05 |课程Service对象检查 |不复制课程业务；须真实对接验证 |T12；S04 |外部依赖
-|EXT-06 |两系统UI权限隔离 |一期仅中心UI；缺audience |SELF-04；J03 |需修改
-|EXT-07 |联调/失败重试/撤权 |无课程集成证据 |API-C14/15；J03/04 |外部依赖
-|AUD-01 |POST外部审计 |无requestId唯一键 |AUD-T01–03；S05 |待实现
-|AUD-02 |GET系统隔离审计 |旧AuditService需扩字段/查询契约 |AUD-T10/11；S05 |需修改
-|AUD-03 |敏感事实/拒绝追踪 |一期已有安全事件；缺继承及系统身份 |T18/20；S06 |需修改
-|AUD-04 |API/Service/Infrastructure AOP |无本轮三层日志证据 |T20；分层图 |待实现
-|AUD-05 |业务/成功审计同事务 |旧REQUIRES_NEW不满足成功事实一致性 |AUD-T04/08；S06 |需重构
-|AUD-06 |requestId/traceId等字段 |旧AuditLog缺幂等及系统快照字段 |AUD-T09/11 |需修改
-|UI-01 |同前端配置切双后端 |M2骨架与同源代理切换已验证；无DDD业务 |M2桌面/手机连通；T21未完成 |部分完成
-|UI-02 |用户/部门/DAG/API等核心页 |已有一期管理页，无DAG/API映射 |J01–04；UI结构 |需修改
-|UI-03 |直接/继承权限展示 |无继承来源模型 |DAG-04/15 |待实现
-|UI-04 |分页检索/后端准入角色选择 |用户分页基础；角色/资格待改 |ORG-02；分页测试 |需修改
-|UI-05 |桌面/手机实际E2E及日志 |一期Playwright仅桌面 |T20/21；截图 |需修改
-|UI-06 |移除热力图/统计大屏 |一期Dashboard/ECharts |路由及依赖检查 |待收缩
-|NFR-01 |默认拒绝/明确HTTP码 |拦截器基础；外部错误契约待实现 |SELF/异常契约 |部分基础
-|NFR-02 |JWT iss/aud/kid/JWK/revocation |一期JWT及Redis注销，缺完整目标协议 |API-C08/13 |需修改
-|NFR-03 |L1/L2版本化即时失效 |V2全局版本+Redis可复用；无L1 |DAG-14/延迟回填 |需修改
-|NFR-04 |ACID/图并发/审计一致性 |Service事务基础；无图锁及新审计语义 |DAG-11；AUD-T04 |需修改
-|NFR-05 |防伪造身份/operation/上游 |一期入口认证基础；无可信课程网关 |SELF-03；T13 |需修改
-|NFR-06 |敏感字段白名单脱敏 |需新增AOP/审计快照专项验证 |AUD-T09/10 |需修改
-|NFR-07 |环境配置/Swarm secrets |现有env/Swarm定义；新JWK/上游待改 |T22；部署图 |需修改
+|ID |需求 |现行源码/资源落点 |对应验收目标
+|ID-01 |系统注册/启停 |S ManagementService；D DirectoryApplicationService；sys_system |SELF-04，禁用即时拒绝
+|ID-02 |统一登录 |S AuthenticationService/TokenService；D IdentityApplicationService/RsaTokenProvider |API-C01/03，单aud
+|ID-03 |退出/本人信息 |两侧身份Controller、持久撤销及UI投影 |API-C01/03/08，旧token拒绝
+|ID-04 |用户分页/编辑/状态 |两侧管理/Directory接口及数据库分页 |页边界、严格DTO、状态独立
+|ID-05 |独立部门迁移 |S moveUser；D User.transfer/Directory用例 |ORG-05/06，指派回收原子性
+|ID-06 |分系统角色指派 |sys_user_role、sys_role.system_id；独立指派用例 |SELF-03/04，跨系统隔离
+|ID-07 |凭据/稳定主体 |subject唯一、BCrypt、UNINITIALIZED引导 |API-C02/13，泄漏/不可复用
+|ROLE-01 |角色CRUD与状态 |S ManagementService；D Role/RoleApplicationService |独立状态、乐观冲突、保护
+|ROLE-02 |直接/继承/有效权限 |两侧闭包与EffectiveVO来源投影 |DAG-01–04/15
+|ROLE-03 |角色DAG加删边 |S inherit/reachable；D RoleHierarchy.link/unlink |DAG-05–07/11，并发防环
+|ROLE-04 |同系统/停用切断 |两侧闭包状态过滤、DAG写校验 |DAG-08/09
+|ROLE-05 |部门准入 |sys_department_allowed_role；D DepartmentEligibility |ORG-02，超级管理员不旁路
+|ROLE-06 |组织子树管理员 |S scope/root；D OrganizationPolicy |ORG-03/04，共享定义根部门限制
+|ROLE-07 |退役及撤销一致性 |两侧清理指派/边/权限/准入、最后管理员策略 |DAG-13，间接锁死/回滚
+|ROLE-08 |用户分系统有效详情 |用户权限入口与EffectiveVO |DAG-12/15，来源去重
+|RES-01 |MENU/BUTTON树 |sys_ui_resource及两侧资源用例 |父菜单不授按钮
+|RES-02 |ApiOperation目录 |sys_api_operation、课程80真实业务目录 |T11，未知默认拒绝
+|RES-03 |UI↔API映射 |sys_ui_api_mapping、CSV覆盖矩阵 |T10/11，不隐式赋权
+|RES-04 |OAS双向校验 |S RouteRegistry/WebConfig/Bootstrap；D RouteContractVerifier |T11，新增/缺失路由阻断
+|RES-05 |资源树CRUD |S ResourceService；D ResourcePolicy |树环、孤儿、跨系统/kind拒绝
+|RES-06 |菜单/按钮有效投影 |两侧menus及前端权限守卫 |T10，继承与停用传播
+|EXT-01 |五个/auth身份鉴权 |两侧Auth/IdentityController |API-C01–08/13，裸响应
+|EXT-02 |两个/auth审计操作 |两侧同步审计写/查询 |API-C09–12，服务密钥
+|EXT-03 |教师真实OAS注册 |固定fde08d5dd417abc543145aff33ca8378deb9ca36快照，排除7 provider |T11，全部80业务元数据及copyCourse
+|EXT-04 |可信课程网关 |rbac-gateway及固定上游配置 |T13/14，伪造头/operationId/URL拒绝
+|EXT-05 |教师对象规则/私有能力 |authorities及identity查询，课程Service不替换 |T12，组长例外/非组长CC
+|EXT-06 |两系统UI隔离 |aud下UI投影与独立UI种子 |SELF-04，API不混入/auth/me
+|EXT-07 |联调/重试/撤权 |真实课程准备/共享HTTP及E2E设施 |API-C14/15，J03/04；未确认如实失败
+|AUD-01 |幂等同步写入 |request_id唯一、payload_hash、独立提交 |AUD-T01–03，串行/并发重试
+|AUD-02 |系统隔离查询 |source_system_code/origin、SQL分页 |AUD-T10/11
+|AUD-03 |敏感/拒绝事实 |两侧本地success/denied入口 |T18/20，拒绝独立事务
+|AUD-04 |三层AOP |两侧LayerLoggingAspect、trace |T20，三层关联/不泄漏
+|AUD-05 |业务与成功审计同事务 |两侧事务用例与同步审计 |AUD-T04/08，注入写失败回滚
+|AUD-06 |幂等/来源/追踪字段 |sys_audit_log新物理列、AuditFact |AUD-T09/11，安全JSON/稳定快照
+|UI-01 |同前端切双后端 |RBAC_API/E2E_MODULE、共享部署MODULE |T21，真实业务而非登录404
+|UI-02 |12页核心管理 |Vue用户/部门/角色DAG/UI/API映射等 |J01–04，桌面/手机
+|UI-03 |直接/继承来源 |EffectiveVO.sources及角色/用户页面 |DAG-04/15
+|UI-04 |分页/准入角色选择 |后端数据库分页与assignable-roles |ORG-02，真实后端拒绝越权
+|UI-05 |E2E/日志证据 |Playwright desktop/mobile、三层日志 |T20/21；不得以构建替代
+|UI-06 |移除废弃大屏 |路由/依赖收缩、基础dashboard |无热力图/统计接口回流
+|NFR-01 |默认拒绝/HTTP码 |两侧拦截器、裸Error映射 |SELF/严格DTO/异常契约
+|NFR-02 |JWT/JWK/撤销 |独立RSA提供者与MySQL撤销 |API-C08/13，过期/签名/轮换
+|NFR-03 |版本化L1/L2 |S内存+Redis；D Caffeine+Redis |DAG-14，多JVM/延迟回填
+|NFR-04 |ACID/并发 |全局授权锁、用户锁、事务审计 |DAG-11，AUD-T04
+|NFR-05 |防身份/路由伪造 |可信路由解析、Bearer+服务密钥 |SELF-03，T13
+|NFR-06 |脱敏/白名单 |DTO/VO、审计安全JSON与技术日志 |AUD-T09/10
+|NFR-07 |环境/Swarm secrets |共享部署定义与私有网络/密钥文件 |T22，本地双实现七服务/停写切换已实测；外部/整机恢复未测
 |===
 
-== 必须同外部行为、不同内部职责的六组设计
+== 六组范式对照与新旧测试映射
 
-S01角色继承加边验环；S02部门准入角色指派；S03有效角色权限闭包；
-S04课程API网关鉴权；S05审计幂等同步写入；S06敏感业务和审计同事务。
-两后端外部契约、数据库逻辑和业务结果一致；结构化规则在Service，DDD规则在领域对象/策略，应用层只编排。
-当前只锁定用例，尚未生成与不存在的代码相冒充的类图。
+S01继承验环、S02准入指派/调动、S03闭包、S04课程准入、S05审计幂等、S06业务/成功审计同事务必须外部等价、内部职责不同。
+结构化规则在Service过程，DDD规则在Role/User/RoleHierarchy/领域策略，应用编排端口及事务；不得共享算法让对比失真。
 
-== 阶段门槛
+一期多公司/scope/selfOnly断言不能原样套入RBAC1，也不能顺手删除仍适用的安全预期：
 
-. M0：读资料、盘点、隔离基线测试和可回退证据。
-. M1：删除旧演示与审查运行引用；合并现行文档；导论独立仓库核验后再移除。
-. M2：DDD独立启动骨架、共同契约、可切换前端和统一参数化部署。
-. M3/M4：结构化收缩模型、系统化资源、部门准入、角色DAG及并发/缓存验证。
-. M5–M9：独立DDD、外部七接口/网关、前端、同步审计、UML和Swarm验收。
+[cols="2,3"]
+|===
+|历史断言 |RBAC1保留/替换
+|公司隔离、scope部门覆盖 |替换为系统/aud隔离、组织管理子树、部门直接准入；继续拒绝跨边界读取/写入。
+|旧资源×动作、菜单、selfOnly |替换为UI/API独立、BUTTON、真实ApiOperation及显式映射；保留默认拒绝和服务端授权。
+|旧角色并集/撤权 |扩展同系统DAG、多来源、停用切断、两级缓存和多JVM即时失效。
+|旧认证/越权/账号保护 |继续保留凭据失败、状态/tokenVersion/持久注销、授权上界及最后管理员，不以重构为由移除。
+|旧独立事务成功审计 |升级为业务/SUCCESS同事务；拒绝仍独立，新增requestId幂等/跨主体异体拒绝和故障回滚。
+|===
 
-未取得评分原件/教师部署权限不应阻断本地安全重构，但正式验收对应项必须标注无法核验。
+== 最终门槛
+
+历史M0/M1/M2用于记录基线、删除旧演示和启动布局；不能作为当前RBAC1完成证明。
+M3及后续本地验证结果已由link:test-plan.adoc[真实测试与验收]及共享/课程/浏览器记录补证；不能将本地通过外推为尚未执行的外部部署、生产容量或整实例灾难恢复。
+新开发基线不用于旧生产库；不能为赶验收放宽断言、跳过失败、用Mock冒充课程业务或隐藏环境失败。

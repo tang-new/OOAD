@@ -1,0 +1,41 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+title Final LOCAL dual Swarm — archived runtime evidence (not a renderer live probe)
+actor Browser
+node "Swarm private overlay (attachable)" {
+ node "application services (one active central backend)" {
+  component "rbac-web\nTLS :443 / published default 8443" as web
+  component "course-web\nTLS :443 / published default 9443" as cw
+  component "rbac-backend\nMODULE=structured|ddd; default :8081\nno published port" as center
+  component "rbac-gateway :8090 default\nno published port" as gateway
+  component "course-backend :8080 default\nno published port" as course
+ }
+ node "MySQL constrained to manager; Redis on overlay" {
+  database "MySQL 8 / mysql-data\nrbac_center + rbac_course separate schemas" as mysql
+  database "Redis 7\nnamespace + version cache" as redis
+ }
+}
+Browser --> web : HTTPS default 8443
+Browser --> cw : HTTPS default 9443
+web --> center : /api | /auth | /.well-known
+cw --> center : /auth | /.well-known
+cw --> gateway : /api/ (no direct course proxy)
+gateway --> center : IdentityClient.check /auth/api-permissions/{operationId}
+gateway --> course : ProxyClient.forward after allowed
+course --> center : synchronous audit POST / GET + trusted internal identity
+center --> mysql : business + SUCCESS audit_log same local TX
+course --> mysql : separate course TX; NOT distributed atomicity
+center --> redis : versioned cache
+note bottom of center
+Both nginx boundaries deny /integration and /identity externally.
+Secrets/configtree and RSA files are configured; no values rendered.
+deployment-evidence.json: local-final-dual-runtime-passed
+recorded 2026-11-14T18:31:44Z; immutable tag local-final-20261115-022901.
+structured -> DDD: each 7/7 services, 11/11 probes, exact recorded image IDs.
+Same frontend images + MySQL/Redis persistent resources; final active = rbac-ddd.
+localFinalDeploymentAccepted=true; round finalAcceptance=false is runtime-only scope.
+m18 shared HTTP 51 PASS matches canonical JARs; m17 verify + 188 JUnit PASS.
+Current canonical course 12/12; frontend 38 unit + 4 browser E2E PASS (separate reports).
+Archived LOCAL acceptance only: no new live probe, external server or CI claim.
+end note
+@enduml

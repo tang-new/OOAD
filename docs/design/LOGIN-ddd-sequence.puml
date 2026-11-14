@@ -1,0 +1,82 @@
+@startuml
+hide footbox
+skinparam defaultFontName Microsoft YaHei
+skinparam defaultFontSize 14
+skinparam ParticipantPadding 24
+skinparam BoxPadding 12
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 100
+title LOGIN-ddd-sequence — source snapshot (not a runtime trace)
+participant "obj: 调用者" as obj
+participant "identity: IdentityApplicationService" as identity
+participant "attempts: LoginAttemptApplicationService" as attempts
+participant "repo: AuthorizationRepository" as repo
+participant "policy: LoginAttemptPolicy" as policy
+participant "encoder: CredentialEncoder" as encoder
+participant "tokens: TokenProvider" as tokens
+participant "audit: AuditApplicationService" as audit
+activate obj
+obj -> identity: 1. login(username, password, system)
+activate identity
+identity -> attempts: 2. attempt(username, password, system)
+activate attempts
+group attempt @Transactional: locked persistent login state
+attempts -> repo: 3. lockLogin(username)
+activate repo
+deactivate repo
+alt no account
+note over attempts
+return null; no token
+end note
+else account exists
+attempts -> policy: 4. locked(lockedUntil, now)
+activate policy
+deactivate policy
+opt ACTIVE and not locked
+attempts -> encoder: 5. matches(password, storedHash)
+activate encoder
+deactivate encoder
+end
+attempts -> policy: 6. evaluate(failedCount, lockedUntil, active, matches, now)
+activate policy
+deactivate policy
+attempts -> repo: 7. saveLoginState(user.id(), result.failedCount(), result.lockedUntil())
+activate repo
+deactivate repo
+alt rejected
+attempts -> audit: 8. local(user, system, LOGIN_DENIED, target, DENIED, INVALID_CREDENTIALS)
+activate audit
+deactivate audit
+note over policy
+fifth wrong credential locks for 900s;
+locked attempt preserves count/until; expiry restarts count;
+accepted credentials reset count to zero.
+end note
+else accepted
+attempts -> repo: 9. systemEnabled(system)
+activate repo
+deactivate repo
+attempts -> tokens: 10. issue(subject, system, tokenVersion)
+activate tokens
+deactivate tokens
+attempts -> audit: 11. local(user, system, LOGIN, target, SUCCESS, null)
+activate audit
+deactivate audit
+end
+end
+end
+note over attempts,identity
+attempt transaction COMMIT before returning null/token.
+Disabled system or persistence exception still rolls this transaction back.
+end note
+deactivate attempts
+alt null result
+identity --> obj: DomainException 401 INVALID_CREDENTIALS
+else token
+note over identity
+return token; HTTP layer owns response
+end note
+end
+deactivate identity
+deactivate obj
+@enduml
