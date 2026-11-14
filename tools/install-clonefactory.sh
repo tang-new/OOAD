@@ -16,7 +16,19 @@ if [[ -n ${CLONEFACTORY_SOURCE:-} ]]; then
 else
   SOURCE="$CACHE/reference"
   if [[ ! -d "$SOURCE/.git" ]]; then
-    git clone --no-checkout "$URL" "$SOURCE"
+    git init -q "$SOURCE"
+    git -C "$SOURCE" remote add origin "$URL"
+  fi
+  if ! git -C "$SOURCE" cat-file -e "$COMMIT^{commit}" 2>/dev/null; then
+    fetched=false
+    for attempt in 1 2 3; do
+      if git -c http.version=HTTP/1.1 -C "$SOURCE" fetch --depth=1 origin "$COMMIT"; then fetched=true; break; fi
+      echo "Pinned CloneFactory fetch transport attempt $attempt/3 failed" >&2
+      [[ $attempt == 3 ]] || sleep "$attempt"
+    done
+    [[ $fetched == true ]] || { echo 'Pinned CloneFactory source unavailable after bounded transport retries' >&2; exit 128; }
+  fi
+  if ! git -C "$SOURCE" rev-parse --verify HEAD >/dev/null 2>&1; then
     git -C "$SOURCE" checkout --detach "$COMMIT"
   fi
 fi
