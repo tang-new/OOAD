@@ -1,0 +1,174 @@
+[
+  {
+    "path": "README.md",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "deploy/build.sh",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "deploy/env.example",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "deploy/stack.sh",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "docker-compose.yml",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "docs/13-deployment.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/B.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/E.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/api-cards/B.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/api-cards/E.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/findings.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/problems/C/problems.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "human-review/test-matrix.md",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/config/WebConfig.java",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/CatalogController.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/PermissionInterceptor.java",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/RoleController.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/AssignmentRow.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Decision.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/StatsDtos.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/GrantCacheMapper.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/GrantVersionMapper.java",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+    "decision": "retain tested RBAC1 replacement"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthzQueryService.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/CatalogService.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/RoleManagementService.java",
+    "decision": "retain deliberate retirement; old version remains in second-parent history"
+  },
+  {
+    "path": "deploy/acceptance.py",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "deploy/env-build.sh",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/17-deployment-handoff.md",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/README.adoc",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/database-design.adoc",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/detailed-design.adoc",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/images/README.adoc",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/images/er-v4.png",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/images/er-v4.svg",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "docs/phase-acceptance/period1/ooad-explanation.adoc",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "human-review/E-code-explained.html",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "human-review/E-defense-deep-QA.md",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "human-review/build-e-guide.py",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "human-review/problems/B/B-review-20261021.md",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "human-review/problems/E/E-review-20261026.md",
+    "decision": "retire newly introduced legacy RBAC0 review/deployment; retain history and current full-* replacement"
+  },
+  {
+    "path": "rbac-web/Dockerfile",
+    "decision": "retain actually built immutable frontend recipe; current CI independently enforces all frontend tests"
+  }
+]

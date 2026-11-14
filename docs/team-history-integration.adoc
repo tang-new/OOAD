@@ -4,7 +4,7 @@
 == 范围与原则
 
 本地与团队远端共同祖先为 `363939ad1cc8cc0a8b5f669eff03ecd99bfad856`，本次核验远端为 `31dd55b`，包含29条后续提交。
-最终必须正常双亲merge，保留团队历史；本记录不表示merge/push已完成。
+已经按普通三方merge逐路径解决冲突，保留全部29提交和两个父提交；不是-s ours、squash或强推。push/CI仍按GitHub实际状态单独核对。
 历史保留不等于恢复已按final退休的human-review、mock、多公司/scope及旧文档入口。
 
 使用只读 `git log --reverse`、`git diff --name-status` 和按路径的diff检查；没有读取本地服务器秘密文件。
@@ -44,4 +44,16 @@
 * 启用/继承/指派同样检查授权上界；调动只清理该用户不再准入的指派，不改共享角色权限。
 * 本次仍保留真实反例与故障注入，不用“方法存在”或“源码净差异仅注释”替代运行验收。
 
-合并完成后还要检查无冲突自动带入的新文件，避免旧目录/旧迁移/旧入口复活。最终验收及远端SHA另据实际执行记录填写。
+== 实际合并决议
+
+父提交为本地 `dd34d61` 与团队 `31dd55b`；普通 `git merge --no-ff --no-commit origin/main` 实际产生冲突，逐项审阅后解决43个路径。
+无冲突自动带入文件也已逐一检查，不以“没有冲突”当兼容证明。
+
+* README、build/env/stack/compose：保留真实通过的RBAC1双实现、可信课程与private/secrets配置，旧部署语义由full-*实现接替。
+* 14个远端Java净变化只有注释/空白；仍存在的类保留已通过188JUnit/51HTTP的RBAC1实现，已删除类不复活。仍有效安全解释已转述到上节与现行设计，不恢复多公司/scope。
+* human-review全部，包括远端新建解释HTML/问题/生成器，按明确退休目标移出当前树；历史仍可从第二父提交读取。
+* 新带入的一期phase-acceptance、13/17旧部署文档、acceptance.py/env-build.sh不成为当前入口；一期材料继续保存在Git历史，不堆回主工程。
+* 自动合并的前端Dockerfile曾带入不同构建配方；保留实际immutable镜像对应配方，完整前端测试由现行CI和已执行单测/E2E独立保障，避免未验证新配方冒充运行态。
+
+决议后生产Java、前端业务、合同/迁移及当前部署配方相对于merge第一父提交完全不变；仅新增整合记账，不伪称团队本次新增了RBAC1算法。
+全部29提交经祖先包含检查保留，工作树无human-review/mock/intro及旧RBAC0类；新旧历史都可以git log/git show追溯。最终remote SHA与CI以真正push后的结果为准。
