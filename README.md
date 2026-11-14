@@ -36,7 +36,8 @@ diagrams/         一期图源/工具；不应冒充二阶段当前代码图
 tools/            工程布局回归检查
 ```
 
-一期非RBAC导论实验已提取独立历史到同级 `intro-spec-coding-export/`，1176个受跟踪文件的Git tree一致。新远程仓库地址未提供，按需求先保留源目录，尚不宣称迁移完成。
+非RBAC导论实验已完整迁入独立私有仓库 [vintcessun/intro-spec-coding](https://github.com/vintcessun/intro-spec-coding)。原四条历史和1176个受跟踪文件的初始Git tree `29c24ee631060a8d208350ad65ac2b294b25ce95` 已与远端核对；独立仓库后续提交 `381e498` 补充迁移说明和凭据忽略规则。
+主仓库已移除该目录；被忽略的本地私有资产保全在仓库外，不提交。源历史仍可从本仓库旧提交及仓库外bundle恢复。
 
 ## 本地验证
 
