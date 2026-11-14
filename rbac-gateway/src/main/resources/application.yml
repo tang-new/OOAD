@@ -1,0 +1,22 @@
+server:
+  port: 8090
+  max-http-request-header-size: 16KB
+spring:
+  servlet:
+    multipart:
+      enabled: false
+management:
+  endpoints:
+    web:
+      base-path: /api/v1/actuator
+      exposure:
+        include: health,info
+gateway:
+  identity-base-url: ${IDENTITY_BASE_URL:http://localhost:8080}
+  course-base-url: ${COURSE_BASE_URL:http://localhost:8081}
+  issuer: ${GATEWAY_ISSUER:rbac-center}
+  jwk-set-uri: ${GATEWAY_JWK_SET_URI:http://localhost:8080/.well-known/jwks.json}
+  allow-http: ${GATEWAY_ALLOW_HTTP:false}
+  timeout-ms: 2000
+  max-request-bytes: 10485760
+  max-response-bytes: 10485760

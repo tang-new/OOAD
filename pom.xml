@@ -23,6 +23,7 @@
         <module>rbac-contract</module>
         <module>rbac-structured</module>
         <module>rbac-ddd</module>
+        <module>rbac-gateway</module>
     </modules>
 
     <properties>
@@ -95,6 +96,27 @@
                         <execution>
                             <id>report</id>
                             <phase>test</phase>
+                            <goals><goal>report</goal></goals>
+                        </execution>
+                        <!-- Real out-of-process shared HTTP tests append separate exec files.
+                             Merge before the unchanged coverage gate; no excluded business code. -->
+                        <execution>
+                            <id>merge-http-acceptance</id>
+                            <phase>verify</phase>
+                            <goals><goal>merge</goal></goals>
+                            <configuration>
+                                <fileSets>
+                                    <fileSet>
+                                        <directory>${project.build.directory}</directory>
+                                        <includes><include>jacoco.exec</include><include>jacoco-acceptance/*.exec</include></includes>
+                                    </fileSet>
+                                </fileSets>
+                                <destFile>${project.build.directory}/jacoco.exec</destFile>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>report-with-http-acceptance</id>
+                            <phase>verify</phase>
                             <goals><goal>report</goal></goals>
                         </execution>
                         <execution>
