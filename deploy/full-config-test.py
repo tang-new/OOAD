@@ -66,6 +66,9 @@ class Deployment(unittest.TestCase):
   script=(ROOT/'.github/workflows/ci.yml').read_text(encoding='utf8')
   for service in ['mysql','redis']:
    self.assertIn("docker rename '${{ job.services."+service+".id }}' rbac-phase2-test-"+service,script)
+  services=yaml.safe_load(script)['jobs']['verify']['services']
+  self.assertEqual(services['mysql']['ports'],['127.0.0.1:13306:3306'])
+  self.assertEqual(services['redis']['ports'],['127.0.0.1:16379:6379'])
  def test_windows_secrets_use_effective_per_file_acl(self):
   script=(ROOT/'deploy/full-secrets.sh').read_text(encoding='utf8')
   self.assertIn('"${USERNAME}:F"',script)

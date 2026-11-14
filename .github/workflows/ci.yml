@@ -12,13 +12,13 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: ci-isolated-only
-        ports: ['13306:3306']
+        ports: ['127.0.0.1:13306:3306']
         options: >-
           --health-cmd="mysqladmin ping -h localhost --silent"
           --health-interval=5s --health-timeout=3s --health-retries=60
       redis:
         image: redis:7-alpine
-        ports: ['16379:6379']
+        ports: ['127.0.0.1:16379:6379']
         options: >-
           --health-cmd="redis-cli ping" --health-interval=5s --health-retries=30
     env:
