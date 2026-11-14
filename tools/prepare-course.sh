@@ -7,8 +7,19 @@ CACHE=${COURSE_CACHE:-$ROOT/.cache/course-source}
 mkdir -p "$CACHE"
 if [[ -n ${COURSE_SOURCE:-} ]]; then SOURCE=$COURSE_SOURCE; else
  SOURCE="$CACHE/reference"
- if [[ ! -d "$SOURCE/.git" ]]; then git clone --no-checkout https://gitee.com/mingqcn/course-project-mgt.git "$SOURCE"; fi
- git -C "$SOURCE" fetch origin "$HASH"
+ # Fetch only the pinned tree, not every branch/history asset. Retry transport only;
+ # successful retrieval still must pass the exact commit check below.
+ if [[ ! -d "$SOURCE/.git" ]]; then
+  git init -q "$SOURCE"
+  git -C "$SOURCE" remote add origin https://gitee.com/mingqcn/course-project-mgt.git
+ fi
+ fetched=false
+ for attempt in 1 2 3; do
+  if git -c http.version=HTTP/1.1 -C "$SOURCE" fetch --depth=1 origin "$HASH"; then fetched=true; break; fi
+  echo "Pinned course fetch transport attempt $attempt/3 failed" >&2
+  [[ $attempt == 3 ]] || sleep "$attempt"
+ done
+ [[ $fetched == true ]] || { echo 'Pinned course source unavailable after bounded transport retries' >&2; exit 128; }
 fi
 SOURCE=$(cd "$SOURCE" && pwd)
 CACHE=$(cd "$CACHE" && pwd)
