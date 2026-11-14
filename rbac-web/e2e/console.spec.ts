@@ -1,238 +1,122 @@
-import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-/**
- * 控制台端到端流程：超级管理员首次登录改口令 → 导入三份 Excel（虚构数据）→ 按部门批量授权
- * → 用户详情看到「角色 @ 适用部门」→ 回收 → 权限解释显示拒绝 → 角色授权 → 审计日志
- * → 普通员工只看到个人中心，直接访问管理页落到 403。
- * 各步骤依赖前一步的数据，按顺序执行。
- */
-test.describe.configure({ mode: 'serial' })
-
-const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures')
-const ROOT_PASSWORD = 'Root@E2e2026'
-let page: Page
-
-test.beforeAll(async ({ browser }) => {
-  page = await browser.newPage()
-})
-
-test.afterAll(async () => {
-  await page.close()
-})
-
-async function login(username: string, password: string) {
-  await page.goto('/login')
-  await page.getByTestId('username').fill(username)
-  await page.getByTestId('password').fill(password)
-  await page.getByTestId('login').click()
+import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import { environment } from './environment'
+import type { SystemVO, DepartmentVO, RoleVO, PermissionVO, UserVO, ApiOperationVO, Page as ResultPage, EffectiveVO, AssignmentVO, AuditVO, UiResourceVO } from '../src/api/types'
+const env = environment()
+async function login(request: APIRequestContext, username: string, password: string, system = 'rbac-center') {
+  const result = await request.post(`${env.api}/auth/login`, { data: { username, password, systems: [system] } })
+  expect(result.status()).toBe(200)
+  const body = await result.json(); expect(body.code).toBeUndefined(); expect(body.tokenType).toBe('Bearer'); return body.accessToken as string
 }
-
-async function changePassword(oldPassword: string, newPassword: string) {
-  await expect(page).toHaveURL(/\/password/)
-  await page.getByTestId('old-password').fill(oldPassword)
-  await page.getByTestId('new-password').fill(newPassword)
-  await page.getByTestId('confirm-password').fill(newPassword)
-  await page.getByTestId('change-password').click()
-  await expect(page).toHaveURL(/\/login/)
-}
-
-/** 打开 Element Plus 下拉并选中可见的选项 */
-async function choose(trigger: ReturnType<Page['getByTestId']>, option: string) {
-  await trigger.click()
-  await page.locator('.el-select-dropdown__item:visible', { hasText: option }).first().click()
-}
-
-test('超级管理员首次登录必须先改口令，之后进入 Dashboard', async () => {
-  await login('root', 'wrong-password')
-  await expect(page.getByTestId('login-error')).toContainText('用户名或口令错误')
-
-  await login('root', 'Admin@123')
-  await changePassword('Admin@123', ROOT_PASSWORD)
-  await login('root', ROOT_PASSWORD)
-  await expect(page).toHaveURL(/\/dashboard/)
-  for (const key of ['userCount', 'roleCount', 'permissionCount', 'todayAuthzCount', 'successRate', 'failureRate',
-    'p95LatencyMs', 'p99LatencyMs', 'qps', 'cacheHitRate', 'abnormalCount']) {
-    await expect(page.getByTestId('metric-' + key)).toBeVisible()
+function api(request: APIRequestContext, token: string) {
+  async function call<T>(method: string, path: string, data?: unknown): Promise<T> {
+    const result = await request.fetch(`${env.api}/api/v1${path}`, { method, headers: { Authorization: `Bearer ${token}` }, ...(data === undefined ? {} : { data }) })
+    expect(result.ok(), `${method} ${path}: HTTP ${result.status()}`).toBe(true)
+    if (result.status() === 204) return undefined as T
+    const body = await result.json(); expect(body.code).toBe('OK'); return body.data as T
   }
-  await expect(page.getByTestId('side-menu')).toContainText('用户管理')
-  await expect(page.getByTestId('side-menu')).toContainText('权限使用热力图')
-})
-
-async function shot(name: string) {
-  await page.screenshot({ path: `test-results/screens/${name}.png`, fullPage: true })
+  return { get: <T>(path: string) => call<T>('GET', path), post: <T>(path: string, data?: unknown) => call<T>('POST', path, data), patch: <T>(path: string, data: unknown) => call<T>('PATCH', path, data), put: <T>(path: string, data: unknown) => call<T>('PUT', path, data), del: (path: string) => call<void>('DELETE', path) }
+}
+async function browserLogin(page: Page, username: string, password: string) {
+  await page.goto('/login'); await page.getByLabel('账号', { exact: true }).fill(username); await page.getByLabel('密码', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '登录', exact: true }).click(); await expect(page.getByRole('heading', { name: '本人资料' })).toBeVisible()
 }
 
-async function menu(name: string) {
-  await page.getByTestId('side-menu').getByText(name, { exact: true }).click()
-}
-
-/** 在当前可见的弹出层里点选一个节点或选项 */
-async function pickInPopper(text: string) {
-  await page.locator('.el-popper:visible').getByText(text, { exact: true }).first().click()
-}
-
-test('导入功能权限清单与组织、员工（虚构数据），导入不分配角色', async () => {
-  await shot('01-dashboard')
-  await menu('组织管理')
-  await page.getByTestId('open-import-perm').click()
-  await page.getByTestId('import-perm-file').setInputFiles(path.join(FIXTURES, 'permissions.xlsx'))
-  await page.getByTestId('import-perm-submit').click()
-  const permDialog = page.getByTestId('import-perm-dialog')
-  await expect(permDialog.getByTestId('count-permissions')).toHaveText('20')
-  await expect(permDialog.getByTestId('count-rolePermissions')).toHaveText('45')
-  await shot('02-import-permissions')
-  await permDialog.locator('.el-dialog__footer').getByRole('button', { name: '关闭' }).click()
-
-  await page.getByTestId('open-import-org').click()
-  await page.getByTestId('import-dept-file').setInputFiles(path.join(FIXTURES, 'departments.xlsx'))
-  await page.getByTestId('import-emp-file').setInputFiles(path.join(FIXTURES, 'employees.xlsx'))
-  await page.getByTestId('import-org-submit').click()
-  const orgDialog = page.getByTestId('import-org-dialog')
-  await expect(orgDialog.getByTestId('count-departmentsCreated')).toHaveText('11')
-  await expect(orgDialog.getByTestId('count-usersCreated')).toHaveText('28')
-  await expect(orgDialog).toContainText('导入不分配任何角色')
-  await shot('03-import-org')
-  await orgDialog.locator('.el-dialog__footer').getByRole('button', { name: '关闭' }).click()
-  await expect(page.getByTestId('org-tree')).toContainText('道路工程分公司')
-})
-
-test('按部门批量授权：道路工程分公司及下级 13 人获得普通员工角色', async () => {
-  await page.getByTestId('org-tree').getByText('道路工程分公司', { exact: true }).click()
-  await page.getByTestId('org-batch').click()
-  const dialog = page.getByTestId('batch-dialog')
-  await choose(dialog.getByTestId('batch-role'), '普通员工')
-  await dialog.getByTestId('batch-reason').fill('端到端测试')
-  await dialog.getByTestId('batch-submit').click()
-  await expect(dialog.getByTestId('batch-summary')).toContainText('成功 13')
-  await shot('04-batch-assign')
-  await dialog.locator('.el-dialog__footer').getByRole('button', { name: '关闭' }).click()
-})
-
-let userId = ''
-
-test('用户列表脱敏电话；用户详情显示角色与适用部门、有效权限；回收后立即生效', async () => {
-  await menu('用户管理')
-  await page.getByTestId('user-keyword').fill('道路财务员1')
-  await page.getByTestId('user-search').click()
-  const table = page.getByTestId('user-table')
-  await expect(table).not.toContainText('E2E0001')
-  await expect(table.locator('.el-link')).toHaveCount(1)
-  await expect(table).toContainText('道路工程分公司-财务部')
-  await expect(table).toContainText('139****')
-  await shot('05-user-list')
-  await table.locator('.el-link').first().click()
-  await expect(page).toHaveURL(/\/users\/\d+/)
-  userId = page.url().split('/').pop()!
-  const roles = page.getByTestId('role-table')
-  await expect(roles).toContainText('普通员工')
-  await expect(roles).toContainText('道路工程分公司-财务部')
-  await shot('06-user-detail')
-  await page.getByRole('tab', { name: /有效权限/ }).click()
-  await expect(page.getByTestId('perm-table')).toContainText('oa')
-  await page.getByRole('tab', { name: /角色/ }).click()
-
-  await roles.getByTestId('revoke').first().click()
-  await page.locator('.el-message-box').getByRole('button', { name: /确定|OK/ }).click()
-  await expect(roles).not.toContainText('普通员工')
-})
-
-test('权限解释：回收后再问拟稿权限，判定为拒绝并给出逐步依据', async () => {
-  await page.goto(`/explain?userId=${userId}`)
-  await page.getByTestId('explain-permission').fill('oa:m01:f02:create')
-  await page.getByTestId('explain-submit').click()
-  await expect(page.getByTestId('explain-subject')).toHaveText('E2E0009')
-  await expect(page.getByTestId('explain-verdict')).toContainText('DENY')
-  await expect(page.getByTestId('explain-trace')).toContainText('没有任何启用中的角色')
-  await shot('07-explain')
-})
-
-test('新增临时用户：没有工号与电话，也没有到期时间', async () => {
-  await menu('用户管理')
-  await page.getByTestId('user-create').click()
-  const form = page.getByTestId('user-form')
-  await form.getByTestId('form-username').fill('tmp01')
-  await form.getByTestId('form-realname').fill('临时人员一')
-  await form.getByTestId('dept-select').click()
-  await pickInPopper('道路工程分公司-第一项目经理部')
-  await form.getByText('临时用户', { exact: true }).click()
-  await expect(form.getByTestId('form-employee-no')).toHaveCount(0)
-  await expect(form.getByTestId('form-expires')).toHaveCount(0)
-  await form.getByTestId('form-submit').click()
-  await expect(form).toBeHidden()
-  await page.getByTestId('user-keyword').fill('tmp01')
-  await page.getByTestId('user-search').click()
-  await expect(page.getByTestId('user-table')).toContainText('临时用户')
-})
-
-test('角色管理：新建公司内角色并授予权限', async () => {
-  await menu('角色管理')
-  await expect(page.getByTestId('role-list')).toContainText('SUPER_ADMIN')
-  await shot('08-role-list')
-  await page.getByTestId('role-create').click()
-  const form = page.getByTestId('role-form')
-  await form.getByTestId('role-code').fill('E2E_APPROVER')
-  await form.getByTestId('role-name').fill('端到端审批员')
-  await choose(form.getByTestId('role-company'), '市政公司')
-  await form.getByTestId('role-save').click()
-  await page.getByTestId('role-list').getByText('端到端审批员').click()
-  await expect(page).toHaveURL(/\/roles\/\d+/)
-  await page.getByTestId('open-grant').click()
-  const dialog = page.getByTestId('grant-dialog')
-  await dialog.getByTestId('grant-keyword').fill('oa:m01:f02')
-  await dialog.getByTestId('grant-search').click()
-  await expect(dialog.getByTestId('grant-table')).toContainText('approve')
-  await dialog.getByTestId('grant-table').locator('thead .el-checkbox').click()
-  await dialog.getByTestId('grant-submit').click()
-  await expect(page.getByTestId('role-perms')).toContainText('approve')
-  await shot('09-role-detail')
-})
-
-test('审计日志记录了回收；权限、菜单、热力图页面显示真实数据', async () => {
-  await menu('审计日志')
-  await choose(page.getByTestId('audit-event'), 'ROLE_REVOKE')
-  await page.getByTestId('audit-search').click()
-  await expect(page.getByTestId('audit-table')).toContainText('ROLE_REVOKE')
-  await expect(page.getByTestId('audit-table')).toContainText('root')
-  await shot('10-audit')
-
-  await menu('权限管理')
-  await expect(page.getByTestId('resource-table')).toContainText('rbac')
-  await shot('11-permissions')
-  await menu('菜单管理')
-  await expect(page.getByTestId('menu-table')).toContainText('Dashboard')
-  await shot('12-menus')
-  await menu('权限使用热力图')
-  await expect(page.getByTestId('heatmap-chart').locator('canvas')).toBeVisible()
-  await expect(page.getByTestId('heatmap-total')).not.toContainText('共 0 次')
-  await shot('13-heatmap')
-  await menu('Dashboard')
-  await expect(page.getByTestId('metric-todayAuthzCount')).not.toContainText('—')
-  // 异常访问：点进去看到的就是计入指标的记录（第一个用例里 root 输错过一次口令）
-  await expect(page.getByTestId('metric-abnormalCount')).not.toContainText('—')
-  await page.getByTestId('metric-abnormalCount').click()
-  await expect(page).toHaveURL(/abnormal=1/)
-  await expect(page.getByTestId('audit-abnormal').locator('input')).toBeChecked()
-  await expect(page.getByTestId('audit-table')).toContainText('LOGIN')
-  await expect(page.getByTestId('audit-table')).not.toContainText('OUT_OF_DATA_SCOPE')
-  await expect(page.getByTestId('audit-table')).not.toContainText('MISSING_PERMISSION')
-  await shot('13b-abnormal')
-})
-
-test('普通员工：首次登录改口令，没有管理菜单，直接访问管理页落到 403', async () => {
-  await page.getByTestId('user-menu').click()
-  await page.locator('.el-dropdown-menu:visible').getByText('退出登录').click()
-  await expect(page).toHaveURL(/\/login/)
-  await login('E2E0001', 'Init@2026')
-  await changePassword('Init@2026', 'Emp@E2e2026')
-  await login('E2E0001', 'Emp@E2e2026')
-  await expect(page).toHaveURL(/\/me/)
-  await expect(page.getByTestId('user-detail')).toContainText('E2E0001')
-  // 普通员工没有「权限解释」菜单，个人中心不显示解释入口
-  await expect(page.getByTestId('explain-link')).toHaveCount(0)
-  await shot('14-me')
-  await page.goto('/audit-logs')
-  await expect(page.getByTestId('forbidden')).toBeVisible()
-  await shot('15-forbidden')
+test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、即时撤权和审计', async ({ page, request }, info) => {
+  const suffix = `${info.project.name}_${Date.now()}`
+  const password = `Fictional!${suffix}Z9`
+  const adminToken = await login(request, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
+  const admin = api(request, adminToken)
+  const systems = await admin.get<SystemVO[]>('/systems'); expect(systems.map(s => s.code)).toEqual(expect.arrayContaining(['rbac-center', 'course-project-management']))
+  const departmentTree = await admin.get<DepartmentVO[]>('/departments/tree')
+  const rootDepartment = departmentTree.find(d => d.parentId === null)!; expect(rootDepartment).toBeTruthy()
+  const x = await admin.post<DepartmentVO>('/departments', { code: `X_${suffix}`, name: `准入部门_${suffix}`, parentId: rootDepartment.id })
+  const y = await admin.post<DepartmentVO>('/departments', { code: `Y_${suffix}`, name: `迁入部门_${suffix}`, parentId: rootDepartment.id })
+  const makeRole = (code: string) => admin.post<RoleVO>('/roles', { systemCode: 'rbac-center', code: `${code}_${suffix}`, name: `${code}_${suffix}` })
+  const a = await makeRole('A'), b = await makeRole('B'), c = await makeRole('C')
+  const uiPermission = await admin.post<PermissionVO>('/permissions', { systemCode: 'rbac-center', code: `e2e:ui:${suffix}`, name: `E2E首页_${suffix}`, kind: 'UI' })
+  const all = await admin.get<ResultPage<PermissionVO>>('/permissions?systemCode=rbac-center&kind=API&keyword=rbac:user:view&page=1&pageSize=100')
+  const dashboardPermission = all.items.find(p => p.code === 'rbac:user:view')!; expect(dashboardPermission).toBeTruthy()
+  await admin.put(`/roles/${b.id}/permissions`, { permissionIds: [uiPermission.id, dashboardPermission.id] })
+  await admin.post(`/roles/${a.id}/inherits/${b.id}`); await admin.post(`/roles/${c.id}/inherits/${b.id}`)
+  const cycle = await request.post(`${env.api}/api/v1/roles/${b.id}/inherits/${a.id}`, { headers: { Authorization: `Bearer ${adminToken}` } }); expect(cycle.status()).toBe(409); expect((await cycle.json()).code).toBe('ROLE_CYCLE')
+  const course = await admin.get<ResultPage<RoleVO>>('/roles?systemCode=course-project-management&page=1&pageSize=20')
+  const cross = await request.post(`${env.api}/api/v1/roles/${a.id}/inherits/${course.items[0].id}`, { headers: { Authorization: `Bearer ${adminToken}` } }); expect([400, 403, 409]).toContain(cross.status())
+  const resource = await admin.post<UiResourceVO>('/systems/rbac-center/ui-resources', { type: 'MENU', code: `e2e_menu_${suffix}`, name: `E2E继承菜单_${suffix}`, route: '/dashboard', component: 'Dashboard', sortOrder: 1000, permissionCode: uiPermission.code, status: 'ENABLED' })
+  const operations = await admin.get<ResultPage<ApiOperationVO>>('/systems/rbac-center/api-operations?keyword=dashboard&page=1&pageSize=100')
+  const operation = operations.items.find(op => op.pathTemplate === '/api/v1/dashboard' || op.pathTemplate === '/dashboard')!; expect(operation).toBeTruthy()
+  await admin.patch(`/api-operations/${operation.id}`, { operationId: operation.operationId, method: operation.method, pathTemplate: operation.pathTemplate, permissionCode: operation.permissionCode, requiredRole: operation.requiredRole, accessPolicy: operation.accessPolicy, enabled: true })
+  const mappingReport = await admin.get<{ mappings: { uiResourceId: number; apiOperationId: number }[] }>('/systems/rbac-center/ui-api-mappings')
+  await admin.put('/systems/rbac-center/ui-api-mappings', { mappings: [...mappingReport.mappings, { uiResourceId: resource.id, apiOperationId: operation.id }] })
+  await admin.put(`/departments/${x.id}/assignable-roles`, { roleIds: [a.id] })
+  const user = await admin.post<UserVO>('/users', { username: `u_${suffix}`, name: `虚构用户_${suffix}`, departmentId: x.id, password })
+  const unapproved = await admin.post<UserVO>('/users', { username: `v_${suffix}`, name: `不准入_${suffix}`, departmentId: y.id, password })
+  const deniedAssignment = await request.post(`${env.api}/api/v1/users/${unapproved.id}/role-assignments`, { headers: { Authorization: `Bearer ${adminToken}` }, data: { roleId: a.id } }); expect([403, 409]).toContain(deniedAssignment.status())
+  await admin.post(`/users/${user.id}/role-assignments`, { roleId: a.id })
+  const effective = await admin.get<EffectiveVO>(`/users/${user.id}/systems/rbac-center/permissions`)
+  expect(effective.sources).toEqual(expect.arrayContaining([expect.objectContaining({ permissionCode: uiPermission.code, inherited: true })]))
+  // 普通编辑不夹带状态。独立停用切断继承，原 token 下一请求拒绝。
+  const userToken = await login(request, user.username, password)
+  const userApi = api(request, userToken)
+  await userApi.get('/dashboard')
+  await admin.patch(`/roles/${b.id}`, { name: `B编辑_${suffix}`, version: b.version })
+  expect((await admin.get<RoleVO>(`/roles/${b.id}`)).status).toBe('ENABLED')
+  await admin.put(`/roles/${b.id}/status`, { status: 'DISABLED' })
+  let denied = await request.get(`${env.api}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(denied.status()).toBe(403)
+  await admin.put(`/roles/${b.id}/status`, { status: 'ENABLED' }); await userApi.get('/dashboard')
+  await browserLogin(page, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
+  await page.goto('/hierarchy'); await expect(page.getByRole('img', { name: /角色继承有向无环图/ })).toBeVisible(); await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-dag.png`), fullPage: true })
+  // 浏览器真实创建/普通编辑/独立状态入口都会发 HTTP，非静态原型。
+  await page.goto('/users')
+  await page.getByRole('button', { name: '创建用户', exact: true }).click()
+  const createDialog = page.getByRole('dialog')
+  await createDialog.getByLabel('账号', { exact: true }).fill(`browser_${suffix}`)
+  await createDialog.getByLabel('姓名', { exact: true }).fill(`浏览器虚构_${suffix}`)
+  await createDialog.getByLabel('所属部门', { exact: true }).selectOption(String(x.id))
+  await createDialog.getByLabel('初始密码', { exact: true }).fill(password)
+  const createdResponse = page.waitForResponse(r => r.url().endsWith('/api/v1/users') && r.request().method() === 'POST')
+  await createDialog.getByRole('button', { name: '保存', exact: true }).click()
+  expect((await createdResponse).ok()).toBe(true)
+  await expect(createDialog).not.toBeVisible()
+  await page.getByLabel('姓名 / 账号').fill(user.username); await page.getByRole('button', { name: '检索', exact: true }).click(); await expect(page.getByRole('cell', { name: user.username, exact: true })).toBeVisible()
+  await page.getByRole('row').filter({ has: page.getByRole('cell', { name: user.username, exact: true }) }).getByRole('button', { name: '编辑', exact: true }).click()
+  const editDialog = page.getByRole('dialog')
+  await editDialog.getByLabel('姓名', { exact: true }).fill(`编辑姓名_${suffix}`)
+  const patchRequest = page.waitForRequest(r => r.url().endsWith(`/api/v1/users/${user.id}`) && r.method() === 'PATCH')
+  await editDialog.getByRole('button', { name: '保存', exact: true }).click()
+  const edited = (await patchRequest).postDataJSON(); expect(edited.status).toBeUndefined(); expect(edited.departmentId).toBeUndefined()
+  await expect(editDialog).not.toBeVisible()
+  await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-users.png`), fullPage: true })
+  await page.getByLabel('姓名 / 账号').fill(unapproved.username); await page.getByRole('button', { name: '检索', exact: true }).click()
+  await page.getByRole('row').filter({ has: page.getByRole('cell', { name: unapproved.username, exact: true }) }).getByRole('button', { name: '状态', exact: true }).click()
+  const statusDialog = page.getByRole('dialog')
+  await statusDialog.getByLabel('状态', { exact: true }).selectOption('DISABLED')
+  const statusRequest = page.waitForRequest(r => r.url().endsWith(`/api/v1/users/${unapproved.id}/status`) && r.method() === 'PUT')
+  await statusDialog.getByRole('button', { name: '保存', exact: true }).click()
+  expect((await statusRequest).postDataJSON()).toEqual({ status: 'DISABLED' })
+  await expect(statusDialog).not.toBeVisible()
+  await page.getByRole('button', { name: '退出登录' }).click()
+  await browserLogin(page, user.username, password)
+  await expect(page.getByRole('navigation').getByRole('link', { name: '首页', exact: true })).toBeVisible()
+  await page.getByRole('navigation').getByRole('link', { name: '首页', exact: true }).click(); await expect(page.getByRole('heading', { name: '用户', exact: true })).toBeVisible()
+  await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-inherited-ui.png`), fullPage: true })
+  // 迁部门回收不合资格指派，不改变 B 的共享权限。
+  const current = await admin.get<UserVO>(`/users/${user.id}`)
+  await admin.put(`/users/${user.id}/department`, { departmentId: y.id, version: current.version })
+  expect(await admin.get<AssignmentVO[]>(`/users/${user.id}/role-assignments?systemCode=rbac-center`)).toEqual([])
+  expect((await admin.get<PermissionVO[]>(`/roles/${b.id}/permissions`)).map(p => p.id)).toContain(uiPermission.id)
+  denied = await request.get(`${env.api}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(denied.status()).toBe(403)
+  await page.reload(); await expect(page.getByRole('heading', { name: /403/ })).toBeVisible()
+  // 再准入并指派后显式回收，下次请求立即拒绝。
+  await admin.put(`/departments/${y.id}/assignable-roles`, { roleIds: [a.id] })
+  const link = await admin.post<AssignmentVO>(`/users/${user.id}/role-assignments`, { roleId: a.id }); await userApi.get('/dashboard')
+  await admin.del(`/users/${user.id}/role-assignments/${link.id}`)
+  denied = await request.get(`${env.api}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(denied.status()).toBe(403)
+  const courseToken = await login(request, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!, 'course-project-management')
+  const crossManagement = await request.get(`${env.api}/api/v1/users`, { headers: { Authorization: `Bearer ${courseToken}` } }); expect([401, 403]).toContain(crossManagement.status())
+  const noPermission = await request.get(`${env.api}/auth/permissions/not-existing`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(noPermission.status()).toBe(200); expect(await noPermission.json()).toEqual({ allowed: false })
+  const logs = await admin.get<ResultPage<AuditVO>>(`/audit-logs?systemCode=rbac-center&target=${encodeURIComponent(String(user.id))}&page=1&pageSize=20`)
+  expect(logs.page).toBe(1); expect(logs.total).toBeGreaterThan(0)
+  await page.getByRole('button', { name: '退出登录' }).click(); await browserLogin(page, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
+  await page.goto('/audit'); await expect(page.getByRole('button', { name: '查询审计' })).toBeVisible(); await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-audit.png`), fullPage: true })
+  await page.goto('/does-not-exist'); await expect(page.getByRole('heading', { name: /404/ })).toBeVisible()
 })

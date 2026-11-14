@@ -1,90 +1,43 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-
-vi.mock('element-plus', () => ({ ElMessage: { error: vi.fn() } }))
-
-import { ElMessage } from 'element-plus'
-import { ApiError, classifyError, handleError, http, request, setAuthHooks } from '@/api/http'
-
-function axiosError(status: number, body: unknown): AxiosError {
-  const config = { headers: {} } as InternalAxiosRequestConfig
-  return new AxiosError('x', 'ERR', config, null, { status, data: body, headers: {}, config, statusText: '' } as AxiosResponse)
-}
-
-const hooks = {
-  getToken: vi.fn(() => 'tok'),
-  onUnauthenticated: vi.fn(),
-  onPasswordRequired: vi.fn(),
-  onForbidden: vi.fn(),
-}
-
-beforeEach(() => {
-  vi.clearAllMocks()
-  setAuthHooks(hooks)
-})
-
-describe('统一错误处理（docs/requirements.adoc）', () => {
-  it('决策表', () => {
-    expect(classifyError(401, 40101)).toBe('login')
-    expect(classifyError(403, 40304)).toBe('password')
-    expect(classifyError(403, 40301)).toBe('forbidden')
-    expect(classifyError(403, 40302)).toBe('message')
-    expect(classifyError(409, 40901)).toBe('message')
-    expect(classifyError(0, 0)).toBe('message')
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
+import { management, identity, request, raw, get, post, patch, put, del, setAuthHooks, handleError, ApiError } from '@/api/http'
+const hooks = { getToken: vi.fn((): string | null => 'test-token'), onUnauthenticated: vi.fn(), onForbidden: vi.fn() }
+function adapter(data: unknown, status = 200) { return vi.fn(async (config: InternalAxiosRequestConfig) => ({ data, status, statusText: 'OK', headers: {}, config })) }
+beforeEach(() => { vi.clearAllMocks(); setAuthHooks(hooks); hooks.getToken.mockReturnValue('test-token') })
+describe('双协议客户端与安全错误', () => {
+  it('management 仅解包 OK，两个 client 共用 bearer，根 identity 保持裸响应', async () => {
+    management.defaults.adapter = adapter({ code: 'OK', data: { page: 1, pageSize: 20, total: 0, items: [] } })
+    identity.defaults.adapter = adapter({ allowed: false })
+    expect(await get('/users', { page: 1 })).toEqual({ page: 1, pageSize: 20, total: 0, items: [] })
+    expect(await raw({ url: '/auth/permissions/no' })).toEqual({ allowed: false })
+    expect(management.defaults.adapter).toHaveBeenCalledWith(expect.objectContaining({ baseURL: '/api/v1', headers: expect.objectContaining({ Authorization: 'Bearer test-token' }) }))
+    expect(identity.defaults.adapter).toHaveBeenCalledWith(expect.objectContaining({ baseURL: '/' }))
+    expect(hooks.onForbidden).not.toHaveBeenCalled()
   })
-
-  it('401 清令牌回登录页，不弹提示', () => {
-    const e = handleError(axiosError(401, { code: 40101, message: '未登录' }), false)
-    expect(e).toBeInstanceOf(ApiError)
-    expect(e.code).toBe(40101)
-    expect(hooks.onUnauthenticated).toHaveBeenCalled()
-    expect(ElMessage.error).not.toHaveBeenCalled()
+  it('无 token 不造 Authorization，204 与各种 mutation body 保持精确', async () => {
+    hooks.getToken.mockReturnValue(null)
+    const call = adapter(undefined, 204); management.defaults.adapter = call
+    expect(await post('/x', { a: 1 })).toBeUndefined()
+    await patch('/x', { name: 'n' }); await put('/x/status', { status: 'DISABLED' }); await del('/x')
+    expect(call.mock.calls.map(([c]) => c.method)).toEqual(['post', 'patch', 'put', 'delete'])
+    expect(call.mock.calls[0][0].headers.Authorization).toBeUndefined()
   })
-
-  it('40304 跳改口令页', () => {
-    handleError(axiosError(403, { code: 40304, message: '先改口令' }), false)
-    expect(hooks.onPasswordRequired).toHaveBeenCalled()
+  it('不接受旧数字成功码或非 OK 包装，不二次包装 ApiError', async () => {
+    management.defaults.adapter = adapter({ code: 'NO', message: '业务拒绝' })
+    await expect(request({ url: '/x' })).rejects.toMatchObject({ code: 'NO', message: '业务拒绝', status: 200 })
   })
-
-  it('40301 刷新本地权限并提示后端的说明', () => {
-    handleError(axiosError(403, { code: 40301, message: '缺少权限 rbac:user:view' }), false)
-    expect(hooks.onForbidden).toHaveBeenCalled()
-    expect(ElMessage.error).toHaveBeenCalledWith('缺少权限 rbac:user:view')
+  it.each([401, 403, 404, 409, 503])('真实 HTTP %i 分类且保留中文说明', async status => {
+    const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig
+    const err = new AxiosError('unused', 'ERR', config, null, { data: { code: 'DENIED', message: '真实拒绝' }, status, statusText: '', headers: {}, config })
+    management.defaults.adapter = async () => { throw err }
+    identity.defaults.adapter = async () => { throw err }
+    await expect(get('/x')).rejects.toMatchObject({ status, code: 'DENIED', message: '真实拒绝' })
+    await expect(raw({ url: '/auth/me' })).rejects.toBeInstanceOf(ApiError)
+    expect(hooks.onUnauthenticated).toHaveBeenCalledTimes(status === 401 ? 2 : 0)
+    expect(hooks.onForbidden).toHaveBeenCalledTimes(status === 403 ? 2 : 0)
   })
-
-  it('40302 / 409 只提示；silent 时不提示', () => {
-    handleError(axiosError(403, { code: 40302, message: '超出管理范围' }), false)
-    expect(ElMessage.error).toHaveBeenCalledWith('超出管理范围')
-    vi.clearAllMocks()
-    handleError(axiosError(409, { code: 40901, message: '重复' }), true)
-    expect(ElMessage.error).not.toHaveBeenCalled()
-  })
-
-  it('连不上服务器时给出可读的说明', () => {
-    const e = handleError(new AxiosError('net'), false)
-    expect(e.status).toBe(0)
-    expect(e.message).toBe('无法连接权限中心')
-    const e2 = handleError(axiosError(502, '<html>'), false)
-    expect(e2.message).toBe('请求失败（HTTP 502）')
-  })
-})
-
-describe('请求', () => {
-  it('带上令牌并解包 ApiResponse.data；鉴权结论为拒绝时是正常结果', async () => {
-    let auth: unknown
-    http.defaults.adapter = async (config) => {
-      auth = config.headers.get('Authorization')
-      return { status: 200, data: { code: 0, message: 'success', data: { allowed: false } }, headers: {}, config, statusText: 'OK' }
-    }
-    const data = await request<{ allowed: boolean }>({ url: '/authz/check', method: 'POST' })
-    expect(data.allowed).toBe(false)
-    expect(auth).toBe('Bearer tok')
-  })
-
-  it('失败时抛出 ApiError', async () => {
-    http.defaults.adapter = async () => {
-      throw axiosError(404, { code: 40401, message: '用户不存在' })
-    }
-    await expect(request({ url: '/users/9' })).rejects.toMatchObject({ status: 404, code: 40401, message: '用户不存在' })
+  it('缺失错误 body 与断网明确区分，默认 hooks 安全', () => {
+    expect(handleError({}).message).toBe('无法连接权限中心')
+    expect(handleError({ response: { status: 403 } })).toMatchObject({ code: 'NETWORK_ERROR', message: '请求失败（HTTP 403）' })
   })
 })

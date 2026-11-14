@@ -1,80 +1,34 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { ALL_MENUS, me, menu } from './fixtures'
-
-const api = vi.hoisted(() => ({
-  authApi: { login: vi.fn(), me: vi.fn(), logout: vi.fn() },
-  menuApi: { mine: vi.fn() },
-  statsApi: { dashboard: vi.fn(() => new Promise(() => {})) },
-}))
-vi.mock('@/api', () => api)
-
-import { buildRoutes, homePath } from '@/router/routes'
 import { createAppRouter } from '@/router'
 import { useAuthStore } from '@/stores/auth'
-
-describe('路由只来自后端下发的菜单（docs/requirements.adoc）', () => {
-  it('按菜单注册页面，列表页带出详情页', () => {
-    const names = buildRoutes(ALL_MENUS).map((r) => r.path)
-    expect(names).toEqual(['/dashboard', '/users', '/users/:id', '/roles', '/roles/:id', '/permissions', '/menus',
-      '/audit-logs', '/org', '/explain', '/heatmap'])
-  })
-
-  it('没有菜单的页面不注册；认不出的组件跳过', () => {
-    const auditor = [menu(1, 'Dashboard', '/dashboard', 'Dashboard'),
-      menu(2, '系统管理', null, null, [menu(7, '审计日志', '/audit-logs', 'AuditLog'), menu(11, '新页面', '/new', 'Unknown')])]
-    expect(buildRoutes(auditor).map((r) => r.path)).toEqual(['/dashboard', '/audit-logs'])
-  })
-
-  it('落地页：第一个可见菜单；一个菜单都没有时进个人中心', () => {
-    expect(homePath(ALL_MENUS)).toBe('/dashboard')
-    expect(homePath([menu(2, '系统管理', null, null, [menu(7, '审计日志', '/audit-logs', 'AuditLog')])])).toBe('/audit-logs')
-    expect(homePath([])).toBe('/me')
-  })
+import { flattenMenus, visibleMenus, homePath } from '@/router/routes'
+import type { UiResourceVO } from '@/api/types'
+const menu = (id: number, route: string | null, type: 'MENU' | 'BUTTON' = 'MENU', children: UiResourceVO[] = []): UiResourceVO => ({ id, systemCode: 'rbac-center', parentId: null, type, code: `m${id}`, name: '菜单', route, component: 'Users', sortOrder: 0, status: 'ENABLED', permissionCode: `p${id}`, children })
+beforeEach(() => { setActivePinia(createPinia()) })
+it('任意深度菜单精确权限；父可见不赋子按钮，home 空集到本人', () => {
+  const tree = [menu(1, null, 'MENU', [menu(2, '/users'), menu(3, '/x', 'BUTTON')]), { ...menu(4, '/off'), status: 'DISABLED' as const }, menu(5, '/no')]
+  expect(flattenMenus(tree)).toHaveLength(5)
+  expect(visibleMenus(tree, code => ['p2', 'p3', 'p4'].includes(code)).map(m => m.id)).toEqual([2])
+  expect(homePath(tree)).toBe('/users'); expect(homePath([])).toBe('/me')
+  expect(flattenMenus([{ ...menu(6, '/unknown'), children: undefined } as unknown as UiResourceVO])).toHaveLength(1)
 })
-
-describe('路由守卫', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    localStorage.clear()
-    vi.clearAllMocks()
-  })
-
-  it('没有令牌时一律去登录页，并记下原地址', async () => {
-    const router = createAppRouter()
-    await router.push('/users')
-    expect(router.currentRoute.value.path).toBe('/login')
-    expect(router.currentRoute.value.query.redirect).toBe('/users')
-  })
-
-  it('刷新页面后先取权限、注册路由，再进入原地址；没有菜单的地址落到 403', async () => {
-    api.authApi.me.mockResolvedValue(me(['rbac:dashboard:view']))
-    api.menuApi.mine.mockResolvedValue([menu(1, 'Dashboard', '/dashboard', 'Dashboard')])
-    useAuthStore().setToken('t')
-    const router = createAppRouter()
-    await router.push('/dashboard')
-    expect(router.currentRoute.value.name).toBe('Dashboard')
-    await router.push('/audit-logs')
-    expect(router.currentRoute.value.path).toBe('/403')
-    await router.push('/')
-    expect(router.currentRoute.value.path).toBe('/dashboard')
-  })
-
-  it('须改口令时只能进改口令页', async () => {
-    api.authApi.me.mockResolvedValue(me([], { mustChangePwd: true }))
-    useAuthStore().setToken('t')
-    const router = createAppRouter()
-    await router.push('/me')
-    expect(router.currentRoute.value.path).toBe('/password')
-  })
-
-  it('令牌已失效（取不到本人信息）时清掉令牌回登录页', async () => {
-    api.authApi.me.mockRejectedValue(new Error('401'))
-    const auth = useAuthStore()
-    auth.setToken('stale')
-    const router = createAppRouter()
-    await router.push('/dashboard')
-    expect(router.currentRoute.value.path).toBe('/login')
-    expect(auth.token).toBeNull()
-  })
+it('未登录深链返回登录，登录本身公开', async () => {
+  const router = createAppRouter(); await router.push('/users'); expect(router.currentRoute.value.path).toBe('/login'); expect(router.currentRoute.value.query.redirect).toBe('/users')
+  await router.push('/login'); expect(router.currentRoute.value.path).toBe('/login')
+})
+it('加载身份后精确守卫，404 不误作 403，有权才进入管理页', async () => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  const refresh = vi.spyOn(auth, 'refresh').mockImplementation(async () => { auth.identity = { subject: 'x', name: 'x', no: '', roles: ['admin'], permissions: ['p2'] }; auth.menus = [menu(2, '/users')]; auth.loadedAt = Date.now() })
+  const router = createAppRouter(); await router.push('/users'); expect(router.currentRoute.value.path).toBe('/users'); expect(refresh).toHaveBeenCalledTimes(1)
+  await router.push('/roles'); expect(router.currentRoute.value.path).toBe('/403')
+  await router.push('/not-exist'); expect(router.currentRoute.value.path).toBe('/not-exist')
+  await router.push('/login'); expect(router.currentRoute.value.path).toBe('/me')
+  await router.push('/not-exist'); auth.loadedAt = 0; await router.push('/me'); expect(refresh).toHaveBeenCalledTimes(2)
+  await router.push('/'); expect(router.currentRoute.value.path).toBe('/me')
+})
+it('刷新失败不放行受保护页，也不形成登录重定向循环', async () => {
+  const auth = useAuthStore(); auth.setToken('dummy'); vi.spyOn(auth, 'refresh').mockRejectedValue(new Error('503'))
+  const router = createAppRouter(); await router.push('/users'); expect(router.currentRoute.value.path).toBe('/login')
+  await router.push('/login'); expect(router.currentRoute.value.path).toBe('/login')
 })
