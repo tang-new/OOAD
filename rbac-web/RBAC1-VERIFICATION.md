@@ -60,3 +60,70 @@ E2E 使用真实 MySQL `127.0.0.1:13306`，新建 `rbac1_e2e_<module>_<timestamp
 - 实测上述失败 teardown 后 `SHOW DATABASES LIKE 'rbac1_e2e_%'` 返回0个，未遗留本次测试库。
 - 以上 RED 不代表完整业务旅程已完成；PC/手机成功业务截图待最终两个后端 jar 可用后重跑，不把失败空白截图当可用验收。
 - 未提交 Git。未改后端、部署代理文件。主代理需在后端完成后重新跑两模块完整E2E并关闭真实失败。
+
+## P1 资源隔离修复与最终交接（本节覆盖上文旧 jar 结果）
+
+- `e2e/sandbox.ts` 白名单继承基础系统变量，不继承 Spring/DB/Redis/JVM/Node 注入变量；显式验证 JAVA_HOME 为 Java21，拒绝 JAVA_BIN。
+- 后端仅接收自建 SPRING_APPLICATION_JSON，钉死 datasource 与 Flyway 的同一自有新库及凭据、Redis 127.0.0.1:16379、独立 cache namespace、JWT 临时密钥开关与 dev profile、bootstrap/audit 秘密。CLI 只有 jar 路径和 `--spring.config.location=classpath:/`，无密码。
+- E2E API 使用原生 fetch `redirect:error`；健康探测也拒绝重定向，端口通过 TCP 绑定探测。除 health 之外等待 readiness，避免 ApplicationRunner 完成前登录 UNINITIALIZED 种子。
+- 自有 ChildProcess 句柄跟踪 exit/error，不再用 taskkill/PID；等待退出后才 DROP 本次 guarded 新库。
+- 最后补充：先复制 target jar 到本次 mkdtemp 私有目录，再执行副本，退出后删除副本；禁止直接运行 target。复制时检查源 size/mtime 未变，防止发布途中读取。
+- 修复 RecordForm 稳定 aria-label、部门选项未到达就打开快照表单的问题。E2E 正常导航使用真实菜单；登出等待204/登录页面，并验证原 bearer 下次401，不再抢在登出完成前硬跳转。
+- 测试未跳过，安全断言与 lines85/branches80 门槛保留。
+
+真实执行结果：
+
+1. DDD 最终完整 desktop/mobile **2/2 GREEN**，0跳过，4.4分钟。日志 `Downloads/rbac1-context-extracted/m8-web-p1-e2e-ddd-final.log`；报告 `playwright-report/rbac-ddd/index.html`；PC/手机 DAG、用户、继承UI、审计截图位于 `test-results/rbac-ddd/`。
+2. structured 最新完整重跑 **1通过/1失败**：mobile全链路通过；desktop在 HTTP 200 的 `/api/v1/users/{id}/systems/rbac-center/permissions` 中返回上一次测试库的有效权限来源，触发正确的精确断言失败。当前用例权限码后缀 `desktop_1794671602200`，错误响应含前次 `desktop_1794671380147` 的角色/权限。日志 `m8-web-p1-e2e-structured-rerun.log`，报告 `playwright-report/rbac-structured/index.html`，未绕过缓存安全断言。更前一次 desktop通过/mobile20秒无响应超时见 `m8-web-p1-e2e-structured-final-green.log`（文件名不表示整个测试GREEN，实际为1/2）。必须由 main 对最终47项jar重新验证；本轮不声称 structured 2/2 GREEN。
+3. 其它真实 RED 日志保留：早期 structured thin jar 无 Main-Class，后续发布后已能启动；部分早期本机接口延迟超过20秒，日志显示 structured login22455ms、DDD授权22180ms；没有因此改后端或放宽权限断言。
+4. 最后 Java 临时副本改动后：typecheck通过、Vitest **38/38通过，lines100%、branches100%**，日志 `m8-web-p1-typecheck-handoff.log`、`m8-web-p1-vitest-handoff.log`。此前 build已通过（`m8-web-p1-build-final.log`）。临时副本改动后没有继续测旧jar。
+5. 交接检查：`Get-CimInstance Win32_Process -Filter 'ProcessId = 73772'` 无结果，PID73772已不存在，未对其它进程发送信号。专用端口18081/18082/5174均无监听；`rbac1_e2e_%`库剩余0，见 `m8-web-p1-cleanup-handoff.log`。不清Redis，不杀其它进程。
+
+main 后续：发布 `D:/m3-structured-final47.jar` 至约定target，再运行同一配置 `E2E_MODULE=rbac-structured npm run e2e`。启动器将运行私有副本，不再锁target。无需继续扩展UI。本轮仅修改前端非nginx/Dockerfile文件，未提交；工作区已有的这两个部署文件改动属于主代理，未触碰。
+
+## 最终 canonical 完整重跑（2026-11-15，本节为最新结论）
+
+已等待所有测试与 teardown 完成，不存在后台待执行任务；本轮未修改测试安全断言或后端。
+
+| 后端 canonical SHA256 | 桌面 / 手机 | 日志 |
+|---|---|---|
+| structured `59f773f0e3348feeaa7049c3e12dd31f314dad679452ba907226c17696f2c548`（00:22发布） | **2/2通过，0跳过**；59.6s / 33.5s，总2.5分钟 | `Downloads/rbac1-context-extracted/m8-web-final-canonical-structured.log` |
+| DDD `1b410d6b5a31e211d37aec7306a00a41424b49d3fc7899bfb960c6a8cb42a650` | **最终重跑2/2通过，0跳过**；约1.0m / 2.0m，总3.9分钟 | `m8-web-final-canonical-ddd-rerun.log` |
+
+DDD此次第一次运行1通过/1失败（desktop等待本人资料15秒超时），真实RED保留于 `m8-web-final-canonical-ddd.log`；不修改源码/断言，重新完整运行后2/2通过。不能据此声称本机延迟完全稳定。structured本次安全配置下未再出现跨测试库有效权限来源污染。
+
+同一测试覆盖继承多父/环拒绝、跨系统拒绝、菜单/API配置映射、准入指派、普通编辑不夹带状态/部门、角色与用户独立状态、浏览器普通用户继承菜单、真实API、迁部门回收、显式撤权下一请求403、审计、登出撤销401、403/404。
+
+HTML报告：`playwright-report/rbac-structured/index.html`、`playwright-report/rbac-ddd/index.html`。
+截图：`test-results/{rbac-structured,rbac-ddd}/` 下 desktop/mobile 各有 `*-dag.png`、`*-users.png`、`*-inherited-ui.png`、`*-audit.png`，共16张。注意截图按现有用例在页面/导航可见后截取，部分含请求仍在加载的瞬间，并非逐像素加载完成断言；UI/API权限结果以真实HTTP及浏览器测试断言为证据。
+
+本次仍采用私有临时jar副本、安全JSON配置、白名单环境与精确自有进程清理。退出后检查 `rbac1_e2e_%` 剩余0个、18081/18082/5174无监听，见 `m8-web-final-cleanup.log`；SHA证据见 `m8-web-final-canonical-sha256.log`。未清Redis、未触碰其它进程、未提交。
+
+## 最终视觉收尾（2026-11-15 02:03，本节为最新截图证据）
+
+本轮只追加必要移动端 CSS、E2E 数据就绪断言及不覆盖旧证据的 runId 目录/日志；没有修改后端、nginx/Dockerfile、业务权限规则，没有提交。
+
+- 截图前断言 main 中“加载中…”消失、无页面请求错误、字体就绪和整页 scrollWidth 不超过 viewport。
+- DAG：中心系统 option 已加载且选中；A/B/C 三个目标节点可见；实际 API 中 A→B、C→B 两边存在；SVG 节点数/有向边数与真实 graph 一致后才截图，不能把空 SVG 当成功证据。
+- users：姓名更新行已渲染；手机明确断言表容器可横滚，滚到操作列验证编辑按钮在 viewport，再回到首列截图。移动表单元格不逐字换行、最小表宽960px，整页没有横溢，长姓名/账号不会压成极高行。
+- inherited-ui：浏览器实际 GET dashboard 返回200/OK，三计数渲染值与 HTTP data 一致且用户数大于0，然后截图。
+- audit：等待非空初始数据，再用真实撤权目标过滤，HTTP200、ROLE_UNASSIGNED目标行可见后截图。
+- 不使用固定 sleep，不跳过任何安全断言。旧 RED、旧截图和HTML均保留，后续每次运行自动采用唯一 runId。
+
+### 本轮真实结果与选择路径
+
+| 模块 | 完整测试结果 | 唯一 runId | 外部日志 |
+|---|---|---|---|
+| structured | 最终 **desktop/mobile 2/2通过，0跳过**，42.1s/56.9s，总2.3分钟 | `visual-structured-20261115-020039` | `Downloads/rbac1-context-extracted/m8-web-visual-structured-20261115-020039.log` |
+| DDD | **desktop/mobile 2/2通过，0跳过**，约1.1m/1.6m，总3.5分钟 | `visual-ddd-20261115-015638` | `m8-web-visual-ddd-20261115-015638.log` |
+
+structured首次视觉运行 `visual-structured-20261115-015235` 的 desktop通过、mobile在最终再次登录等本人资料15秒超时；真实RED独立保留，未覆盖。未改源码/断言，完整重跑后2/2通过。启动和后端日志亦带runId，不覆盖旧日志。
+
+报告：`playwright-report/{模块}/{runId}/index.html`。
+截图根：`test-results/{模块}/{runId}/`；其 `...-desktop/` 和 `...-mobile/` 各有 `{模块}-{desktop|mobile}-{dag|users|inherited-ui|audit}.png`，两模块共16张完整数据截图。main可从这两个GREEN runId选择4～8张复制到docs/acceptance/screenshots；不应选择旧的空图/加载瞬间截图。
+
+已用 read 实际目视确认：DDD desktop-dag 非空且多父箭头和节点可读、DDD inherited-ui 三计数已到达2/9/2、DDD mobile-audit存在真实过滤行、structured mobile-users姓名不再逐字拉高、structured desktop-audit有ROLE_UNASSIGNED/部门调动行。截图只含合成fixture/内置系统管理员，不含密码/令牌/真实人员。
+
+保留一项原有视觉现状而没有扩展UI：普通用户没有system:view权限，继承首页的header仍会显示真实的系统列表403和空管理目标select；首页计数和继承菜单已真实成功，并未靠CSS隐藏403来美化证据。管理员DAG等截图的系统select已明确断言非空。
+
+验证：typecheck、build成功；Vitest 38/38通过，lines100%、branches100%，原85/80门槛未动。日志 `m8-web-visual-typecheck.log`、`m8-web-visual-unit.log`、`m8-web-visual-build.log`。全部teardown完成；测试库0残留、18081/18082/5174无监听，见 `m8-web-visual-cleanup.log`。

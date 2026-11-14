@@ -1,0 +1,19 @@
+= 真实浏览器验收截图
+
+来自同一Vue3前端连接两套真实Java后端的Playwright端到端测试；只使用新建的合成fixture，不含真实员工、口令、服务密钥或JWT。
+不是静态Mock，也不把这些Vite代理截图冒称Swarm浏览器部署证明。
+
+* structured：`visual-structured-20261115-020039`，desktop/mobile 2/2。
+* DDD：`visual-ddd-20261115-015638`，desktop/mobile 2/2。
+* 截图前等待真实用户行、DAG节点/边、继承UI和审计行；已废弃的“加载中”截图不用于此处证明。
+* 手机表格在自身容器内横向滚动，不让整页横溢，E2E实际操作可达。
+* 普通用户继承UI但没有管理API的403是保留的权限边界反例，不隐藏错误来美化截图。
+
+[cols="1,1,1,1,1"]
+|===
+|实现/视口 |用户管理 |DAG |继承UI |审计
+|structured PC |link:rbac-structured-desktop-users.png[PNG] |link:rbac-structured-desktop-dag.png[PNG] |link:rbac-structured-desktop-inherited-ui.png[PNG] |link:rbac-structured-desktop-audit.png[PNG]
+|structured 手机 |link:rbac-structured-mobile-users.png[PNG] |link:rbac-structured-mobile-dag.png[PNG] |link:rbac-structured-mobile-inherited-ui.png[PNG] |link:rbac-structured-mobile-audit.png[PNG]
+|DDD PC |link:rbac-ddd-desktop-users.png[PNG] |link:rbac-ddd-desktop-dag.png[PNG] |link:rbac-ddd-desktop-inherited-ui.png[PNG] |link:rbac-ddd-desktop-audit.png[PNG]
+|DDD 手机 |link:rbac-ddd-mobile-users.png[PNG] |link:rbac-ddd-mobile-dag.png[PNG] |link:rbac-ddd-mobile-inherited-ui.png[PNG] |link:rbac-ddd-mobile-audit.png[PNG]
+|===

@@ -1,27 +1,53 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+import { strictHttp, type StrictHttp } from './http'
 import { environment } from './environment'
-import type { SystemVO, DepartmentVO, RoleVO, PermissionVO, UserVO, ApiOperationVO, Page as ResultPage, EffectiveVO, AssignmentVO, AuditVO, UiResourceVO } from '../src/api/types'
+import type { SystemVO, DepartmentVO, RoleVO, PermissionVO, UserVO, ApiOperationVO, Page as ResultPage, EffectiveVO, AssignmentVO, AuditVO, UiResourceVO, HierarchyVO } from '../src/api/types'
 const env = environment()
-async function login(request: APIRequestContext, username: string, password: string, system = 'rbac-center') {
+async function login(request: StrictHttp, username: string, password: string, system = 'rbac-center') {
   const result = await request.post(`${env.api}/auth/login`, { data: { username, password, systems: [system] } })
-  expect(result.status()).toBe(200)
-  const body = await result.json(); expect(body.code).toBeUndefined(); expect(body.tokenType).toBe('Bearer'); return body.accessToken as string
+  const body = await result.json()
+  expect(result.status(), `POST /auth/login HTTP ${result.status()} code=${String(body.code ?? 'none')}`).toBe(200)
+  expect(body.code).toBeUndefined(); expect(body.tokenType).toBe('Bearer'); return body.accessToken as string
 }
-function api(request: APIRequestContext, token: string) {
+function api(request: StrictHttp, token: string) {
   async function call<T>(method: string, path: string, data?: unknown): Promise<T> {
     const result = await request.fetch(`${env.api}/api/v1${path}`, { method, headers: { Authorization: `Bearer ${token}` }, ...(data === undefined ? {} : { data }) })
-    expect(result.ok(), `${method} ${path}: HTTP ${result.status()}`).toBe(true)
     if (result.status() === 204) return undefined as T
-    const body = await result.json(); expect(body.code).toBe('OK'); return body.data as T
+    const body = await result.json()
+    expect(result.ok(), `${method} ${path}: HTTP ${result.status()} code=${String(body.code ?? 'none')}`).toBe(true)
+    expect(body.code).toBe('OK'); return body.data as T
   }
   return { get: <T>(path: string) => call<T>('GET', path), post: <T>(path: string, data?: unknown) => call<T>('POST', path, data), patch: <T>(path: string, data: unknown) => call<T>('PATCH', path, data), put: <T>(path: string, data: unknown) => call<T>('PUT', path, data), del: (path: string) => call<void>('DELETE', path) }
 }
 async function browserLogin(page: Page, username: string, password: string) {
-  await page.goto('/login'); await page.getByLabel('账号', { exact: true }).fill(username); await page.getByLabel('密码', { exact: true }).fill(password)
+  if (new URL(page.url()).pathname !== '/login') await page.goto('/login')
+  await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible({ timeout: 30000 })
+  await page.getByLabel('账号', { exact: true }).fill(username); await page.getByLabel('密码', { exact: true }).fill(password)
   await page.getByRole('button', { name: '登录', exact: true }).click(); await expect(page.getByRole('heading', { name: '本人资料' })).toBeVisible()
 }
 
-test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、即时撤权和审计', async ({ page, request }, info) => {
+/** 截图只在真实数据与字体就绪后生成；断言容器滚动而非整页横溢，不用固定 sleep。 */
+async function captureLoaded(page: Page, path: string) {
+  await expect(page.locator('main').getByText('加载中…', { exact: true })).toHaveCount(0)
+  await expect(page.locator('main [role="alert"]')).toHaveCount(0)
+  await page.evaluate(async () => { await document.fonts.ready })
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), { message: '页面不可整体横向溢出' }).toBe(true)
+  await page.screenshot({ path, fullPage: true, animations: 'disabled', caret: 'hide' })
+}
+
+async function browserLogout(page: Page) {
+  const sent = page.waitForRequest(r => r.url().endsWith('/auth/logout') && r.method() === 'POST')
+  const result = page.waitForResponse(r => r.url().endsWith('/auth/logout') && r.request().method() === 'POST')
+  await page.getByRole('button', { name: '退出登录' }).click()
+  const authorization = (await sent).headers().authorization
+  expect((await result).status()).toBe(204)
+  await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible({ timeout: 30000 })
+  const revoked = await strictHttp().get(`${env.api}/auth/me`, { headers: { Authorization: authorization } })
+  expect(revoked.status()).toBe(401)
+}
+
+test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、即时撤权和审计', async ({ page }, info) => {
+  const request = strictHttp()
   const suffix = `${info.project.name}_${Date.now()}`
   const password = `Fictional!${suffix}Z9`
   const adminToken = await login(request, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
@@ -64,9 +90,23 @@ test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、�
   let denied = await request.get(`${env.api}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(denied.status()).toBe(403)
   await admin.put(`/roles/${b.id}/status`, { status: 'ENABLED' }); await userApi.get('/dashboard')
   await browserLogin(page, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
-  await page.goto('/hierarchy'); await expect(page.getByRole('img', { name: /角色继承有向无环图/ })).toBeVisible(); await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-dag.png`), fullPage: true })
+  const systemSelector = page.getByLabel('管理目标系统', { exact: true })
+  await expect(systemSelector.locator('option[value="rbac-center"]')).toContainText(systems.find(system => system.code === 'rbac-center')!.name)
+  await expect(systemSelector).toHaveValue('rbac-center')
+  await page.getByRole('navigation').getByRole('link', { name: '角色继承 DAG', exact: true }).click()
+  const svg = page.getByRole('img', { name: /角色继承有向无环图/ })
+  const graph = await admin.get<HierarchyVO>('/systems/rbac-center/role-hierarchy')
+  expect(graph.edges).toEqual(expect.arrayContaining([{ seniorRoleId: a.id, juniorRoleId: b.id }, { seniorRoleId: c.id, juniorRoleId: b.id }]))
+  await expect(svg.getByText(a.name, { exact: true })).toBeVisible()
+  await expect(svg.getByText(`B编辑_${suffix}`, { exact: true })).toBeVisible()
+  await expect(svg.getByText(c.name, { exact: true })).toBeVisible()
+  await expect(svg.locator('rect')).toHaveCount(graph.roles.length)
+  await expect(svg.locator('line[marker-end="url(#arrow)"]')).toHaveCount(graph.edges.length)
+  await svg.scrollIntoViewIfNeeded()
+  await captureLoaded(page, info.outputPath(`${env.module}-${info.project.name}-dag.png`))
   // 浏览器真实创建/普通编辑/独立状态入口都会发 HTTP，非静态原型。
-  await page.goto('/users')
+  await page.getByRole('navigation').getByRole('link', { name: '用户管理', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '用户管理', exact: true })).toBeVisible({ timeout: 30000 })
   await page.getByRole('button', { name: '创建用户', exact: true }).click()
   const createDialog = page.getByRole('dialog')
   await createDialog.getByLabel('账号', { exact: true }).fill(`browser_${suffix}`)
@@ -76,16 +116,28 @@ test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、�
   const createdResponse = page.waitForResponse(r => r.url().endsWith('/api/v1/users') && r.request().method() === 'POST')
   await createDialog.getByRole('button', { name: '保存', exact: true }).click()
   expect((await createdResponse).ok()).toBe(true)
-  await expect(createDialog).not.toBeVisible()
+  await expect(createDialog).not.toBeVisible({ timeout: 60000 })
   await page.getByLabel('姓名 / 账号').fill(user.username); await page.getByRole('button', { name: '检索', exact: true }).click(); await expect(page.getByRole('cell', { name: user.username, exact: true })).toBeVisible()
   await page.getByRole('row').filter({ has: page.getByRole('cell', { name: user.username, exact: true }) }).getByRole('button', { name: '编辑', exact: true }).click()
   const editDialog = page.getByRole('dialog')
   await editDialog.getByLabel('姓名', { exact: true }).fill(`编辑姓名_${suffix}`)
   const patchRequest = page.waitForRequest(r => r.url().endsWith(`/api/v1/users/${user.id}`) && r.method() === 'PATCH')
+  const patchResponse = page.waitForResponse(r => r.url().endsWith(`/api/v1/users/${user.id}`) && r.request().method() === 'PATCH')
   await editDialog.getByRole('button', { name: '保存', exact: true }).click()
   const edited = (await patchRequest).postDataJSON(); expect(edited.status).toBeUndefined(); expect(edited.departmentId).toBeUndefined()
-  await expect(editDialog).not.toBeVisible()
-  await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-users.png`), fullPage: true })
+  const patchedResponse = await patchResponse; expect(patchedResponse.ok(), `PATCH user HTTP ${patchedResponse.status()}`).toBe(true)
+  await expect(editDialog).not.toBeVisible({ timeout: 60000 })
+  await expect(page.getByRole('cell', { name: `编辑姓名_${suffix}`, exact: true })).toBeVisible()
+  const userRow = page.getByRole('row').filter({ has: page.getByRole('cell', { name: user.username, exact: true }) })
+  if (info.project.name === 'mobile') {
+    const container = page.locator('main .table-scroll').first()
+    await expect.poll(() => container.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
+    await container.evaluate(element => { element.scrollLeft = element.scrollWidth })
+    await userRow.getByRole('button', { name: '编辑', exact: true }).scrollIntoViewIfNeeded()
+    await expect(userRow.getByRole('button', { name: '编辑', exact: true })).toBeInViewport()
+    await container.evaluate(element => { element.scrollLeft = 0 })
+  }
+  await captureLoaded(page, info.outputPath(`${env.module}-${info.project.name}-users.png`))
   await page.getByLabel('姓名 / 账号').fill(unapproved.username); await page.getByRole('button', { name: '检索', exact: true }).click()
   await page.getByRole('row').filter({ has: page.getByRole('cell', { name: unapproved.username, exact: true }) }).getByRole('button', { name: '状态', exact: true }).click()
   const statusDialog = page.getByRole('dialog')
@@ -93,12 +145,18 @@ test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、�
   const statusRequest = page.waitForRequest(r => r.url().endsWith(`/api/v1/users/${unapproved.id}/status`) && r.method() === 'PUT')
   await statusDialog.getByRole('button', { name: '保存', exact: true }).click()
   expect((await statusRequest).postDataJSON()).toEqual({ status: 'DISABLED' })
-  await expect(statusDialog).not.toBeVisible()
-  await page.getByRole('button', { name: '退出登录' }).click()
+  await expect(statusDialog).not.toBeVisible({ timeout: 60000 })
+  await browserLogout(page)
   await browserLogin(page, user.username, password)
   await expect(page.getByRole('navigation').getByRole('link', { name: '首页', exact: true })).toBeVisible()
-  await page.getByRole('navigation').getByRole('link', { name: '首页', exact: true }).click(); await expect(page.getByRole('heading', { name: '用户', exact: true })).toBeVisible()
-  await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-inherited-ui.png`), fullPage: true })
+  const dashboardResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/dashboard' && response.request().method() === 'GET')
+  await page.getByRole('navigation').getByRole('link', { name: '首页', exact: true }).click()
+  const dashboard = await dashboardResponse
+  expect(dashboard.status()).toBe(200)
+  const dashboardBody = await dashboard.json(); expect(dashboardBody.code).toBe('OK')
+  expect(dashboardBody.data.users).toBeGreaterThan(0)
+  for (const [index, key] of ['users', 'roles', 'systems'].entries()) await expect(page.locator('main .counts strong').nth(index)).toHaveText(String(dashboardBody.data[key]))
+  await captureLoaded(page, info.outputPath(`${env.module}-${info.project.name}-inherited-ui.png`))
   // 迁部门回收不合资格指派，不改变 B 的共享权限。
   const current = await admin.get<UserVO>(`/users/${user.id}`)
   await admin.put(`/users/${user.id}/department`, { departmentId: y.id, version: current.version })
@@ -114,9 +172,23 @@ test('J01/J02 RBAC1 真 HTTP + 浏览器：继承、UI/API、准入、指派、�
   const courseToken = await login(request, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!, 'course-project-management')
   const crossManagement = await request.get(`${env.api}/api/v1/users`, { headers: { Authorization: `Bearer ${courseToken}` } }); expect([401, 403]).toContain(crossManagement.status())
   const noPermission = await request.get(`${env.api}/auth/permissions/not-existing`, { headers: { Authorization: `Bearer ${userToken}` } }); expect(noPermission.status()).toBe(200); expect(await noPermission.json()).toEqual({ allowed: false })
-  const logs = await admin.get<ResultPage<AuditVO>>(`/audit-logs?systemCode=rbac-center&target=${encodeURIComponent(String(user.id))}&page=1&pageSize=20`)
+  const logs = await admin.get<ResultPage<AuditVO>>('/audit-logs?systemCode=rbac-center&actorId=1&page=1&pageSize=100')
   expect(logs.page).toBe(1); expect(logs.total).toBeGreaterThan(0)
-  await page.getByRole('button', { name: '退出登录' }).click(); await browserLogin(page, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
-  await page.goto('/audit'); await expect(page.getByRole('button', { name: '查询审计' })).toBeVisible(); await page.screenshot({ path: info.outputPath(`${env.module}-${info.project.name}-audit.png`), fullPage: true })
+  // target 是可读审计目标，不是冻结的内部主键格式；两实现可用稳定 subject 或用户 id。
+  const revokeLog = logs.items.find(audit => audit.type === 'ROLE_UNASSIGNED' && [String(user.id), user.subject].includes(audit.target))
+  expect(revokeLog, '目标用户的显式撤权必须存在真实审计').toBeTruthy()
+  const filtered = await admin.get<ResultPage<AuditVO>>(`/audit-logs?systemCode=rbac-center&target=${encodeURIComponent(revokeLog!.target)}&page=1&pageSize=20`)
+  expect(filtered.items.map(audit => audit.id)).toContain(revokeLog!.id)
+  await browserLogout(page); await browserLogin(page, 'root', process.env.E2E_BOOTSTRAP_PASSWORD!)
+  await page.getByRole('navigation').getByRole('link', { name: '操作审计', exact: true }).click()
+  await expect(page.locator('main tbody tr').first()).toBeVisible()
+  await expect(page.locator('main').getByText('加载中…', { exact: true })).toHaveCount(0)
+  await page.getByLabel('目标', { exact: true }).fill(revokeLog!.target)
+  const auditResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/audit-logs' && new URL(response.url()).searchParams.get('target') === revokeLog!.target)
+  await page.getByRole('button', { name: '查询审计', exact: true }).click()
+  expect((await auditResponse).status()).toBe(200)
+  const auditRow = page.getByRole('row').filter({ has: page.getByRole('cell', { name: revokeLog!.target, exact: true }) }).filter({ has: page.getByRole('cell', { name: 'ROLE_UNASSIGNED', exact: true }) })
+  await expect(auditRow).toBeVisible()
+  await captureLoaded(page, info.outputPath(`${env.module}-${info.project.name}-audit.png`))
   await page.goto('/does-not-exist'); await expect(page.getByRole('heading', { name: /404/ })).toBeVisible()
 })
