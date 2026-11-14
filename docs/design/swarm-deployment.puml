@@ -1,6 +1,6 @@
 @startuml
 skinparam defaultFontName Microsoft YaHei
-title Final LOCAL dual Swarm — archived runtime evidence (not a renderer live probe)
+title Verified LOCAL archive with matching current JARs — mode current (no renderer live probe)
 actor Browser
 node "Swarm private overlay (attachable)" {
  node "application services (one active central backend)" {
@@ -30,12 +30,14 @@ note bottom of center
 Both nginx boundaries deny /integration and /identity externally.
 Secrets/configtree and RSA files are configured; no values rendered.
 deployment-evidence.json: local-final-dual-runtime-passed
-recorded 2026-11-14T18:31:44Z; immutable tag local-final-20261115-022901.
+recorded 2026-11-14T20:01:59Z; immutable tag local-final-20261115-035858.
 structured -> DDD: each 7/7 services, 11/11 probes, exact recorded image IDs.
 Same frontend images + MySQL/Redis persistent resources; final active = rbac-ddd.
-localFinalDeploymentAccepted=true; round finalAcceptance=false is runtime-only scope.
-m18 shared HTTP 51 PASS matches canonical JARs; m17 verify + 188 JUnit PASS.
-Current canonical course 12/12; frontend 38 unit + 4 browser E2E PASS (separate reports).
-Archived LOCAL acceptance only: no new live probe, external server or CI claim.
+Evidence mode: current; historical LOCAL archive only.
+currentRuntimeVerified=false; artifactsMatchCurrentBuild=true.
+Recorded LOCAL deployment accepted; current JARs byte-match this dated archive.
+Historical shared/course/frontend reports bind archived canonical SHA only.
+Current source/class signatures and method order are checked separately.
+No new live probe, current business/final acceptance, external server or CI runtime claim.
 end note
 @enduml

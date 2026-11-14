@@ -120,4 +120,18 @@ link:evidence/m2/desktop.png[桌面]、link:evidence/m2/mobile.png[手机]。
 本地Swarm `local-final-20261115-022901`：structured→DDD两轮各7/7服务、11/11探针，TLS1.3、私网/密钥/实际镜像校验，相同前端及持久卷，最终DDD；外部部署未执行。
 35源码对应图、160类、25方法体顺序检查与7绘图器回归，文本LF规范化/二进制精确hash；最终运行证据更新后再渲染，不把绘图器当新live probe。
 
-完整当前结果见link:final-acceptance.adoc[最终本地验收]；新版评分/PPT及外部服务器仍未提供，不能编造其状态。团队29提交按正常merge保留历史，退休文件不恢复；push/CI以最后实际操作为准。
+完整当前结果见link:final-acceptance.adoc[最终本地验收]；新版评分/PPT及外部服务器仍未提供，不能编造其状态。
+
+== 团队合并、真实CI修正与依赖安全复验
+
+`a34adf6` 已按普通三方merge建立双亲dd34d61/31dd55b，保留29团队提交；逐路径43决议不复活退休材料。之后正常push，无force/squash。
+真实GitHubCI先后发现并修复：Redis job容器未按重启guard命名、job端口默认0.0.0.0不满足迁移loopback guard、mysql2必需types peer未锁、fresh Linux jar不应被要求等于旧本地归档zip SHA。
+没有为通过而去掉guard：job容器/绑定改正确，显式Node22 peer完整锁，CI用archived证据模式明确当前运行验收false；默认current仍拒绝不匹配，19回归含12个正反例。
+
+首次实时Dependabot API78open，其中3critical均testchain；安全升级/移除未用ElementPlus与POI后，实测GitHub只剩1个development medium minimatch。npm完整audit传播计5个dev-only moderate且暂无兼容父范围修复；未用跨major盲override、卸载组件测试或改门槛清零。细节见link:dependency-security.adoc[安全核验]。
+
+新 `m20-reactor-package.log` 正常188JUnit零fail/error/skip；新m21共享51PASS和全reactor覆盖gate绿，canonical与运行快照一致。DDD最新行91.0060%/分支71.3996%/application86.8201%；其余门槛与业务源码未动。
+新版浏览器m21先3/4：登录POST200后初始化仍pending，未确证并行I/O因果。强化精确四HTTP响应200/裸协议及页面断言，保留RED、无sleep/重试；m22完整4/4、38单测和typecheck/build真绿。
+课程m21最新canonical12/12真实落库/审计/清理；新immutable `local-final-20261115-035858` 两轮各7服务/11探针最终DDD，复用相同前端及持久卷。
+后续CI已通过核心package/51HTTP/coverage/19UML/前端单测和两实现浏览器，但首次Gitee完整clone因TLS earlyEOF阻断。改为仅fetch精确固定commit及最多3次传输重试，保留TLS与commit验证；3工具正反例通过，独立新cache真实固定树导出成功。未把传输重试当业务断言重试，原失败日志保留。
+外部服务器与整机灾备仍未执行，CI结论必须按最后实际run核对，不从本地绿外推。

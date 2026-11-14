@@ -1,13 +1,13 @@
 {
-  "reviewedAt": "2026-11-14T19:04:11.640555+00:00",
-  "previousReviewedAt": "2026-11-14T18:18:26.863992+00:00",
-  "snapshotGeneratedAt": "2026-11-14T19:02:36.315892+00:00",
-  "method": "Changed deployment PNG actually opened with read; 34 unchanged raw binary PNG hashes retain previous real visual reviews",
+  "reviewedAt": "2026-11-14T20:09:01.171027+00:00",
+  "previousReviewedAt": "2026-11-14T19:04:11.640555+00:00",
+  "snapshotGeneratedAt": "2026-11-14T20:06:34.141275+00:00",
+  "method": "New-tag default current deployment PNG actually opened with read; other 34 raw binary PNG hashes match previous real visual review",
   "readThisRound": [
     "swarm-deployment.png"
   ],
   "unchangedDigestRetained": 34,
-  "pngHashRule": "SHA-256 raw bytes; never text-normalized",
+  "pngHashRule": "Raw binary SHA-256; no normalization",
   "files": {
     "ddd-packages.png": "d528b3d736d9292348baa9319ea5dd9a7050e3aab920c2c4dde642505dc12773",
     "LOGIN-ddd-class.png": "12d6a420cede01730d51168d5ee58114d032cd9e951d0a8163cfb1ebf61a2e07",
@@ -43,6 +43,6 @@
     "SIM-ddd-class.png": "bd2f4aa1b7be3692f640070365c62fa9e1825c278d0b68d68b9cf08ce957fc10",
     "SIM-ddd-sequence.png": "5fd091959e7707fc601cd37c06ec27d46845f6aea039d22aa0077a128cbff803",
     "structured-packages.png": "b8f0242022a68fdc690a281bb5d13375eba621187774160777b5f0adbb8e8919",
-    "swarm-deployment.png": "6079528dd1d6f6621ea291e487b0eaecc565e6403060cf315b9331104cafb9f2"
+    "swarm-deployment.png": "350fc9c445a617adc5e264d8cacc618084abf09e59d21f48c694aa705b343d53"
   }
 }

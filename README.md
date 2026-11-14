@@ -92,3 +92,4 @@ shared HTTP 使用本次唯一新库、私有临时 jar 快照和自有 Redis na
 - 旧版文档、审查运行目录和演示代码由Git历史保存，不恢复多公司或业务scope模型。
 - 用户提供的37页PDF是一期RBAC0资料；未收到的新版评分原件/课堂PPT以及外部服务器条件不冒称已验收。
 - 部署工具不自动删除旧服务或数据卷；本地Swarm证据不能冒充外部生产部署。
+- [依赖安全核验](docs/dependency-security.adoc)：GitHub实际告警78→1个开发依赖medium，high/critical为0；npm仍计5个dev-only moderate，无兼容修复，明确保留而非假清零。

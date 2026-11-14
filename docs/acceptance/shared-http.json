@@ -1,14 +1,14 @@
 {
   "format": "rbac1-http-acceptance-v1",
-  "startedAt": "2026-11-14T18:11:08.770Z",
-  "finishedAt": "2026-11-14T18:18:54.944Z",
+  "startedAt": "2026-11-14T19:37:40.753Z",
+  "finishedAt": "2026-11-14T19:48:48.324Z",
   "command": "node tools/acceptance/run.mjs --module=both",
   "rows": [
     {
       "module": "structured",
       "scenario": "SETUP | root password change and isolated fixture through HTTP",
       "status": "pass",
-      "durationMs": 12807,
+      "durationMs": 48816,
       "observations": [
         {
           "method": "POST",
@@ -171,7 +171,7 @@
       "module": "structured",
       "scenario": "EXT-01 JWT RS256 / JWKS exact claims and bare me",
       "status": "pass",
-      "durationMs": 898,
+      "durationMs": 1493,
       "observations": [
         {
           "method": "GET",
@@ -218,7 +218,7 @@
       "module": "structured",
       "scenario": "EXT-01 login input boundaries and invalid credentials",
       "status": "pass",
-      "durationMs": 202,
+      "durationMs": 307,
       "observations": [
         {
           "method": "POST",
@@ -276,7 +276,7 @@
       "module": "structured",
       "scenario": "AUTHZ simulation UI API explanation and inactive target never invalidates caller",
       "status": "pass",
-      "durationMs": 2381,
+      "durationMs": 9723,
       "observations": [
         {
           "method": "POST",
@@ -355,7 +355,7 @@
       "module": "structured",
       "scenario": "NFR-02 reject signed wrong aud iss kid future iat expired exp and forged signature",
       "status": "pass",
-      "durationMs": 487,
+      "durationMs": 754,
       "observations": [
         {
           "method": "GET",
@@ -462,7 +462,7 @@
       "module": "structured",
       "scenario": "ID-06 root course aud never grants center / system isolation and disable",
       "status": "pass",
-      "durationMs": 2485,
+      "durationMs": 3584,
       "observations": [
         {
           "method": "POST",
@@ -541,7 +541,7 @@
       "module": "structured",
       "scenario": "ROLE-02/03 DAG single multiple transitive diamond dedup source paths",
       "status": "pass",
-      "durationMs": 8162,
+      "durationMs": 16187,
       "observations": [
         {
           "method": "POST",
@@ -763,7 +763,7 @@
       "module": "structured",
       "scenario": "ROLE-03 concurrent reverse edges serialized with DB invariant",
       "status": "pass",
-      "durationMs": 1212,
+      "durationMs": 11353,
       "observations": [
         {
           "method": "POST",
@@ -802,7 +802,7 @@
       "module": "structured",
       "scenario": "ROLE-05 eligibility even root / PATCH cannot smuggle status department",
       "status": "pass",
-      "durationMs": 779,
+      "durationMs": 1798,
       "observations": [
         {
           "method": "POST",
@@ -853,7 +853,7 @@
       "module": "structured",
       "scenario": "ID-05 department move revokes only moved user not shared role",
       "status": "pass",
-      "durationMs": 3024,
+      "durationMs": 6691,
       "observations": [
         {
           "method": "POST",
@@ -960,7 +960,7 @@
       "module": "structured",
       "scenario": "RES-03 UI-only no API / mapping kind same-system / unknown deny",
       "status": "pass",
-      "durationMs": 5400,
+      "durationMs": 14388,
       "observations": [
         {
           "method": "POST",
@@ -1144,7 +1144,7 @@
       "module": "structured",
       "scenario": "EXT-03 frozen real course operation metadata six classes / copyCourse teacher not CC",
       "status": "pass",
-      "durationMs": 4859,
+      "durationMs": 19904,
       "observations": [
         {
           "method": "GET",
@@ -1300,7 +1300,7 @@
       "module": "structured",
       "scenario": "EXT private service projection never confuses teacher entry with CC and forbids public identity leaks",
       "status": "pass",
-      "durationMs": 2246,
+      "durationMs": 5145,
       "observations": [
         {
           "method": "GET",
@@ -1407,7 +1407,7 @@
       "module": "structured",
       "scenario": "ROLE-06 nonroot department admin no shared writes or sibling management",
       "status": "pass",
-      "durationMs": 3187,
+      "durationMs": 31025,
       "observations": [
         {
           "method": "GET",
@@ -1507,7 +1507,7 @@
       "module": "structured",
       "scenario": "ROLE upper bound / enable and inheritance cannot elevate root-department non-super admin",
       "status": "pass",
-      "durationMs": 5065,
+      "durationMs": 15834,
       "observations": [
         {
           "method": "GET",
@@ -1656,7 +1656,7 @@
       "module": "structured",
       "scenario": "NFR-03 two JVM L1/L2 warmed revoke next access both false",
       "status": "pass",
-      "durationMs": 2841,
+      "durationMs": 13053,
       "observations": [
         {
           "method": "GET",
@@ -1812,7 +1812,7 @@
       "module": "structured",
       "scenario": "AUD-01 trusted key both methods / input enum UUID prefix target / actor spoof",
       "status": "pass",
-      "durationMs": 845,
+      "durationMs": 1234,
       "observations": [
         {
           "method": "POST",
@@ -1947,7 +1947,7 @@
       "module": "structured",
       "scenario": "AUD-01 same key same body same ID / conflict / 20 concurrent one DB row",
       "status": "pass",
-      "durationMs": 1972,
+      "durationMs": 4363,
       "observations": [
         {
           "method": "POST",
@@ -2168,7 +2168,7 @@
       "module": "structured",
       "scenario": "AUD-02 system isolation paging actor target time inclusive boundaries",
       "status": "pass",
-      "durationMs": 3838,
+      "durationMs": 5828,
       "observations": [
         {
           "method": "POST",
@@ -2352,7 +2352,7 @@
       "module": "structured",
       "scenario": "AUD-05 trigger failure role mutation rollback no false SUCCESS",
       "status": "pass",
-      "durationMs": 575,
+      "durationMs": 509,
       "observations": [
         {
           "method": "POST",
@@ -2375,7 +2375,7 @@
       "module": "structured",
       "scenario": "ID-04 10000 synthetic SQL users keyword department DB pagination max100",
       "status": "pass",
-      "durationMs": 3725,
+      "durationMs": 8550,
       "observations": [
         {
           "method": "GET",
@@ -2450,7 +2450,7 @@
       "module": "structured",
       "scenario": "ID-03 disable enable never resurrects previous token",
       "status": "pass",
-      "durationMs": 1571,
+      "durationMs": 2325,
       "observations": [
         {
           "method": "POST",
@@ -2515,7 +2515,7 @@
       "module": "structured",
       "scenario": "ID-03 logout204 durable DB jti across owned process restart",
       "status": "pass",
-      "durationMs": 45783,
+      "durationMs": 45281,
       "observations": [
         {
           "method": "POST",
@@ -2568,7 +2568,7 @@
       "module": "structured",
       "scenario": "NFR-06 external JVM logs never contain fixture secrets or JWT",
       "status": "pass",
-      "durationMs": 800,
+      "durationMs": 669,
       "observations": [],
       "result": null
     },
@@ -2591,7 +2591,7 @@
       "module": "ddd",
       "scenario": "SETUP | root password change and isolated fixture through HTTP",
       "status": "pass",
-      "durationMs": 13313,
+      "durationMs": 13670,
       "observations": [
         {
           "method": "POST",
@@ -2754,7 +2754,7 @@
       "module": "ddd",
       "scenario": "EXT-01 JWT RS256 / JWKS exact claims and bare me",
       "status": "pass",
-      "durationMs": 641,
+      "durationMs": 701,
       "observations": [
         {
           "method": "GET",
@@ -2801,7 +2801,7 @@
       "module": "ddd",
       "scenario": "EXT-01 login input boundaries and invalid credentials",
       "status": "pass",
-      "durationMs": 517,
+      "durationMs": 805,
       "observations": [
         {
           "method": "POST",
@@ -2859,7 +2859,7 @@
       "module": "ddd",
       "scenario": "AUTHZ simulation UI API explanation and inactive target never invalidates caller",
       "status": "pass",
-      "durationMs": 3705,
+      "durationMs": 4669,
       "observations": [
         {
           "method": "POST",
@@ -2938,7 +2938,7 @@
       "module": "ddd",
       "scenario": "NFR-02 reject signed wrong aud iss kid future iat expired exp and forged signature",
       "status": "pass",
-      "durationMs": 766,
+      "durationMs": 673,
       "observations": [
         {
           "method": "GET",
@@ -3045,7 +3045,7 @@
       "module": "ddd",
       "scenario": "ID-06 root course aud never grants center / system isolation and disable",
       "status": "pass",
-      "durationMs": 2506,
+      "durationMs": 2322,
       "observations": [
         {
           "method": "POST",
@@ -3124,7 +3124,7 @@
       "module": "ddd",
       "scenario": "ROLE-02/03 DAG single multiple transitive diamond dedup source paths",
       "status": "pass",
-      "durationMs": 14381,
+      "durationMs": 16669,
       "observations": [
         {
           "method": "POST",
@@ -3346,7 +3346,7 @@
       "module": "ddd",
       "scenario": "ROLE-03 concurrent reverse edges serialized with DB invariant",
       "status": "pass",
-      "durationMs": 2034,
+      "durationMs": 2048,
       "observations": [
         {
           "method": "POST",
@@ -3364,14 +3364,14 @@
         },
         {
           "method": "POST",
-          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22",
           "status": 200,
           "code": "OK",
           "responseDigest": "abef556a856af92c6a8fc09eec93af044dca72ebe1f60587818da25ec1325cb5"
         },
         {
           "method": "POST",
-          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22",
+          "path": "/api/v1/roles/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_B%5C%22%5D%22/inherits/%22%40role%3A%5B%5C%22course-project-management%5C%22%2C%5C%22RACE_A%5C%22%5D%22",
           "status": 409,
           "code": "ROLE_CYCLE",
           "responseDigest": "dfc55b42ccaa36f7fe0ad0c4887ebd4976df8f43babd7e7ff3d9f47104fcb1c7"
@@ -3385,7 +3385,7 @@
       "module": "ddd",
       "scenario": "ROLE-05 eligibility even root / PATCH cannot smuggle status department",
       "status": "pass",
-      "durationMs": 1495,
+      "durationMs": 5538,
       "observations": [
         {
           "method": "POST",
@@ -3436,7 +3436,7 @@
       "module": "ddd",
       "scenario": "ID-05 department move revokes only moved user not shared role",
       "status": "pass",
-      "durationMs": 5685,
+      "durationMs": 6399,
       "observations": [
         {
           "method": "POST",
@@ -3543,7 +3543,7 @@
       "module": "ddd",
       "scenario": "RES-03 UI-only no API / mapping kind same-system / unknown deny",
       "status": "pass",
-      "durationMs": 11343,
+      "durationMs": 12902,
       "observations": [
         {
           "method": "POST",
@@ -3727,7 +3727,7 @@
       "module": "ddd",
       "scenario": "EXT-03 frozen real course operation metadata six classes / copyCourse teacher not CC",
       "status": "pass",
-      "durationMs": 15276,
+      "durationMs": 8607,
       "observations": [
         {
           "method": "GET",
@@ -3883,7 +3883,7 @@
       "module": "ddd",
       "scenario": "EXT private service projection never confuses teacher entry with CC and forbids public identity leaks",
       "status": "pass",
-      "durationMs": 7715,
+      "durationMs": 5318,
       "observations": [
         {
           "method": "GET",
@@ -3990,7 +3990,7 @@
       "module": "ddd",
       "scenario": "ROLE-06 nonroot department admin no shared writes or sibling management",
       "status": "pass",
-      "durationMs": 5218,
+      "durationMs": 5831,
       "observations": [
         {
           "method": "GET",
@@ -4090,7 +4090,7 @@
       "module": "ddd",
       "scenario": "ROLE upper bound / enable and inheritance cannot elevate root-department non-super admin",
       "status": "pass",
-      "durationMs": 10800,
+      "durationMs": 14830,
       "observations": [
         {
           "method": "GET",
@@ -4239,7 +4239,7 @@
       "module": "ddd",
       "scenario": "NFR-03 two JVM L1/L2 warmed revoke next access both false",
       "status": "pass",
-      "durationMs": 5719,
+      "durationMs": 6595,
       "observations": [
         {
           "method": "GET",
@@ -4395,7 +4395,7 @@
       "module": "ddd",
       "scenario": "AUD-01 trusted key both methods / input enum UUID prefix target / actor spoof",
       "status": "pass",
-      "durationMs": 2440,
+      "durationMs": 6463,
       "observations": [
         {
           "method": "POST",
@@ -4530,7 +4530,7 @@
       "module": "ddd",
       "scenario": "AUD-01 same key same body same ID / conflict / 20 concurrent one DB row",
       "status": "pass",
-      "durationMs": 4851,
+      "durationMs": 5658,
       "observations": [
         {
           "method": "POST",
@@ -4751,7 +4751,7 @@
       "module": "ddd",
       "scenario": "AUD-02 system isolation paging actor target time inclusive boundaries",
       "status": "pass",
-      "durationMs": 7271,
+      "durationMs": 7827,
       "observations": [
         {
           "method": "POST",
@@ -4935,7 +4935,7 @@
       "module": "ddd",
       "scenario": "AUD-05 trigger failure role mutation rollback no false SUCCESS",
       "status": "pass",
-      "durationMs": 814,
+      "durationMs": 1313,
       "observations": [
         {
           "method": "POST",
@@ -4958,7 +4958,7 @@
       "module": "ddd",
       "scenario": "ID-04 10000 synthetic SQL users keyword department DB pagination max100",
       "status": "pass",
-      "durationMs": 3061,
+      "durationMs": 3323,
       "observations": [
         {
           "method": "GET",
@@ -5033,7 +5033,7 @@
       "module": "ddd",
       "scenario": "ID-03 disable enable never resurrects previous token",
       "status": "pass",
-      "durationMs": 2621,
+      "durationMs": 2225,
       "observations": [
         {
           "method": "POST",
@@ -5098,7 +5098,7 @@
       "module": "ddd",
       "scenario": "ID-03 logout204 durable DB jti across owned process restart",
       "status": "pass",
-      "durationMs": 42826,
+      "durationMs": 42605,
       "observations": [
         {
           "method": "POST",
@@ -5151,7 +5151,7 @@
       "module": "ddd",
       "scenario": "NFR-06 external JVM logs never contain fixture secrets or JWT",
       "status": "pass",
-      "durationMs": 258,
+      "durationMs": 255,
       "observations": [],
       "result": null
     },
@@ -5159,7 +5159,7 @@
       "module": "ddd",
       "scenario": "NFR-04 final database postconditions and no orphan/cross-system facts",
       "status": "pass",
-      "durationMs": 31,
+      "durationMs": 18,
       "observations": [],
       "result": {
         "badIdentity": 0,
@@ -5183,7 +5183,7 @@
   },
   "modules": {
     "structured": {
-      "jarSha256": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
+      "jarSha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
       "logDirectory": "retained outside repository",
       "database": "unique disposable fixture, cleaned",
       "ports": [
@@ -5192,7 +5192,7 @@
       ]
     },
     "ddd": {
-      "jarSha256": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
+      "jarSha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
       "logDirectory": "retained outside repository",
       "database": "unique disposable fixture, cleaned",
       "ports": [

@@ -1,21 +1,22 @@
 {
   "format": "rbac1-local-final-dual-swarm-v1",
-  "timestamp": "2026-11-14T18:31:44Z",
+  "timestamp": "2026-11-14T20:01:59Z",
   "status": "local-final-dual-runtime-passed",
   "localFinalDeploymentAccepted": true,
   "finalProjectAcceptance": "Main must combine with remaining project/browser acceptance; this evidence does not assert those ran",
   "externalDeployment": {
     "performed": false,
-    "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted"
+    "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted",
+    "ciStatus": "Not asserted. The 7bb4a22 remote workflow was reported started; this local deployment did not verify remote CI success."
   },
   "stack": "rbac1-acceptance",
-  "tag": "local-final-20261115-022901",
+  "tag": "local-final-20261115-035858",
   "activeModule": "rbac-ddd",
   "prerequisites": {
     "status": "prerequisites-passed",
     "sharedReport": {
       "file": "report.json",
-      "sha256": "ebb098e2c1d856a25a524836f7eece46c73a6846057f427780d25b112ab048ab",
+      "sha256": "e264c54be6438268ffa9eb2a009ecd77c3d57853f185048c66c1b6b3bc4291ed",
       "counts": {
         "structured": 25,
         "ddd": 25
@@ -24,8 +25,8 @@
       "exitCode": 0
     },
     "reactorVerify": {
-      "file": "m17-final-verify.log",
-      "sha256": "4f5fd55c39c7ce90d62f478a55bfb28e35357b9c69a7c2f140e67f8095b4ce5b",
+      "file": "m21-final-verify.log",
+      "sha256": "ffae7889e5169eb33f9d02e61103a0f86d28812798d31cffd0442bcf0f20770d",
       "status": "BUILD SUCCESS",
       "modules": [
         "rbac-contract",
@@ -37,18 +38,18 @@
     "canonicalArtifacts": {
       "rbac-structured": {
         "path": "rbac-structured/target/rbac-structured.jar",
-        "sha256": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
-        "bytes": 85036578
+        "sha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+        "bytes": 66109515
       },
       "rbac-ddd": {
         "path": "rbac-ddd/target/rbac-ddd.jar",
-        "sha256": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
-        "bytes": 70393043
+        "sha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+        "bytes": 70393073
       },
       "rbac-gateway": {
         "path": "rbac-gateway/target/rbac-gateway.jar",
-        "sha256": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
-        "bytes": 28749757
+        "sha256": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
+        "bytes": 28749762
       },
       "course-backend": {
         "path": ".cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar",
@@ -93,62 +94,62 @@
     "rbac-structured": {
       "stack": "rbac1-acceptance",
       "nextModule": "rbac-structured",
-      "nextTag": "local-final-20261115-022901",
+      "nextTag": "local-final-20261115-035858",
       "before": {
-        "at": "2026-11-14T18:29:51.608574+00:00",
+        "at": "2026-11-14T19:59:54.047695+00:00",
         "services": {
           "rbac-web": {
             "service": "rbac1-acceptance_rbac-web",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-web:candidate-20261114-230011",
+            "configuredImage": "rbac-web:local-final-20261115-022901",
             "containers": [
               {
-                "containerId": "b9a74b81e26b17b20f3484f3b32fe8871bfc58140d3ed7534734217edeb06f8c",
-                "imageId": "sha256:9a7c2382b6dcb06cc1eea49261ebfdb43f8533b57e9de0f2f5e4eabd8e8dcab8"
+                "containerId": "3cbbb2f5808917fb1039e96859e70653ee911a1bf96c92a22beadbc3450cb5e1",
+                "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b"
               }
             ]
           },
           "course-web": {
             "service": "rbac1-acceptance_course-web",
             "desiredReplicas": 1,
-            "configuredImage": "course-web:candidate-20261114-230011",
+            "configuredImage": "course-web:local-final-20261115-022901",
             "containers": [
               {
-                "containerId": "def094558ca3530090a82d336ce7e111581ff3708627c0bd9c3597a44d6bac1e",
-                "imageId": "sha256:dcc49d713f699b2101a797202670b4d02e15b51a5705272a6d68441a7865c461"
+                "containerId": "4ffe990626707e7fd7c5817d4f542f36178f3b00fb035169a384dfe89be0f592",
+                "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129"
               }
             ]
           },
           "rbac-gateway": {
             "service": "rbac1-acceptance_rbac-gateway",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-gateway:candidate-20261114-230011",
+            "configuredImage": "rbac-gateway:local-final-20261115-022901",
             "containers": [
               {
-                "containerId": "e5701cb6355fef878a99d5635ec077b7ec42c2c192ab7e785ccd9f4d4ded1098",
-                "imageId": "sha256:e0b0a80535f04789355ddf39b14a4e5d722cbe4c5e5db803814b438c33c8f7d7"
+                "containerId": "97988e2bbbe814280e0c987d6c852459b94952c222074f857461ca0b1d5940f4",
+                "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053"
               }
             ]
           },
           "course-backend": {
             "service": "rbac1-acceptance_course-backend",
             "desiredReplicas": 1,
-            "configuredImage": "course-backend:candidate-20261114-230011",
+            "configuredImage": "course-backend:local-final-20261115-022901",
             "containers": [
               {
-                "containerId": "2ad104d6abcf2ae972f3f6d892262b46f5f443d99864ee6aa7419b4de8499627",
-                "imageId": "sha256:3d09f92c5bc966f3f7b41472235421a09f53e19929ee797a6a07820fd72d50a1"
+                "containerId": "5fb166a15165e3204fecb1080b9f5e89ad9e39211c4aa898cca1640366a66bc7",
+                "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0"
               }
             ]
           },
           "rbac-backend": {
             "service": "rbac1-acceptance_rbac-backend",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-ddd:candidate-20261114-230011",
+            "configuredImage": "rbac-ddd:local-final-20261115-022901",
             "containers": [
               {
-                "containerId": "96cd14059ea6fc0da0dbe87610ab4378bacad72772dd600b0a5bb9aec247f3e3",
-                "imageId": "sha256:78211497c644fb862dfd5ebf293223eccedc30d7036cdc6e95a67535adb765dd"
+                "containerId": "f032d4eea1d4a197a0c2411b74908e2a201b397162ad0a7dac97428b0b93d9c1",
+                "imageId": "sha256:66eac4f97dd8c8b2d248c7ace5dea9d02e323b5191ba973a0bf342c199e4d377"
               }
             ]
           },
@@ -177,36 +178,36 @@
         }
       },
       "stopped": {
-        "at": "2026-11-14T18:30:22.669583+00:00",
+        "at": "2026-11-14T20:00:25.676384+00:00",
         "services": {
           "rbac-web": {
             "service": "rbac1-acceptance_rbac-web",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-web:candidate-20261114-230011",
+            "configuredImage": "rbac-web:local-final-20261115-022901",
             "containers": []
           },
           "course-web": {
             "service": "rbac1-acceptance_course-web",
             "desiredReplicas": 0,
-            "configuredImage": "course-web:candidate-20261114-230011",
+            "configuredImage": "course-web:local-final-20261115-022901",
             "containers": []
           },
           "rbac-gateway": {
             "service": "rbac1-acceptance_rbac-gateway",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-gateway:candidate-20261114-230011",
+            "configuredImage": "rbac-gateway:local-final-20261115-022901",
             "containers": []
           },
           "course-backend": {
             "service": "rbac1-acceptance_course-backend",
             "desiredReplicas": 0,
-            "configuredImage": "course-backend:candidate-20261114-230011",
+            "configuredImage": "course-backend:local-final-20261115-022901",
             "containers": []
           },
           "rbac-backend": {
             "service": "rbac1-acceptance_rbac-backend",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-ddd:candidate-20261114-230011",
+            "configuredImage": "rbac-ddd:local-final-20261115-022901",
             "containers": []
           },
           "mysql": {
@@ -239,28 +240,28 @@
     "rbac-ddd": {
       "stack": "rbac1-acceptance",
       "nextModule": "rbac-ddd",
-      "nextTag": "local-final-20261115-022901",
+      "nextTag": "local-final-20261115-035858",
       "before": {
-        "at": "2026-11-14T18:30:51.420479+00:00",
+        "at": "2026-11-14T20:00:59.068894+00:00",
         "services": {
           "rbac-web": {
             "service": "rbac1-acceptance_rbac-web",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-web:local-final-20261115-022901",
+            "configuredImage": "rbac-web:local-final-20261115-035858",
             "containers": [
               {
-                "containerId": "580435342d0d79bc301ea8226cc69d510462d4aa99acaaa22449641a6a38fca5",
-                "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b"
+                "containerId": "2f7625bd92593df1adf3231d7e40a493e845ceb406151df92d5377e78e327728",
+                "imageId": "sha256:df987bf69bde17061c1182c00a0e114779f39961cd3a0a5d9975333616c0da93"
               }
             ]
           },
           "course-web": {
             "service": "rbac1-acceptance_course-web",
             "desiredReplicas": 1,
-            "configuredImage": "course-web:local-final-20261115-022901",
+            "configuredImage": "course-web:local-final-20261115-035858",
             "containers": [
               {
-                "containerId": "21a5fd94f6a60d57b82ec0eec7ac4312a7ada0489a324cdb6b8954f91bbb1eee",
+                "containerId": "3d32e34afc24a781f1fe2f50003d6452a65ba5407536bbfee902f9e1a91cea67",
                 "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129"
               }
             ]
@@ -268,21 +269,21 @@
           "rbac-gateway": {
             "service": "rbac1-acceptance_rbac-gateway",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-gateway:local-final-20261115-022901",
+            "configuredImage": "rbac-gateway:local-final-20261115-035858",
             "containers": [
               {
-                "containerId": "6106015a5b31791a317fae934023f9f05b1b6543fc9cec18d11396709e3ba54e",
-                "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053"
+                "containerId": "cdf33f975ac1d8c1bc948fb6e469454c9b74ff81b23c4fad6a29c37c4aaf5cda",
+                "imageId": "sha256:892bb9bf68a613baabb3bbe7cf1ba1ea8847d07796bb9dc718d063a4f03ee561"
               }
             ]
           },
           "course-backend": {
             "service": "rbac1-acceptance_course-backend",
             "desiredReplicas": 1,
-            "configuredImage": "course-backend:local-final-20261115-022901",
+            "configuredImage": "course-backend:local-final-20261115-035858",
             "containers": [
               {
-                "containerId": "7edf8040492a79103613b2fb5b32a125f073635eb96a6bc94b55351f00ccae25",
+                "containerId": "2d9ede50d62db95bf39f4f5fb4ac5648b8a2af9915598a5924c1063ff40bb537",
                 "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0"
               }
             ]
@@ -290,11 +291,11 @@
           "rbac-backend": {
             "service": "rbac1-acceptance_rbac-backend",
             "desiredReplicas": 1,
-            "configuredImage": "rbac-structured:local-final-20261115-022901",
+            "configuredImage": "rbac-structured:local-final-20261115-035858",
             "containers": [
               {
-                "containerId": "385cda0df70164f17c4fe5d0cf27889bce7af1187b215a9f86ffb68c90c21997",
-                "imageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3"
+                "containerId": "02f86e7ef8e1ae22a411e88d9ac1f41100cc11de05e948147d4b0cf3e322aa82",
+                "imageId": "sha256:dc2998fdea1c556d6fbe1e3fcc6686a2d98bc665eb46de1d5023bdc785f2e2c1"
               }
             ]
           },
@@ -323,36 +324,36 @@
         }
       },
       "stopped": {
-        "at": "2026-11-14T18:31:22.236109+00:00",
+        "at": "2026-11-14T20:01:33.534824+00:00",
         "services": {
           "rbac-web": {
             "service": "rbac1-acceptance_rbac-web",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-web:local-final-20261115-022901",
+            "configuredImage": "rbac-web:local-final-20261115-035858",
             "containers": []
           },
           "course-web": {
             "service": "rbac1-acceptance_course-web",
             "desiredReplicas": 0,
-            "configuredImage": "course-web:local-final-20261115-022901",
+            "configuredImage": "course-web:local-final-20261115-035858",
             "containers": []
           },
           "rbac-gateway": {
             "service": "rbac1-acceptance_rbac-gateway",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-gateway:local-final-20261115-022901",
+            "configuredImage": "rbac-gateway:local-final-20261115-035858",
             "containers": []
           },
           "course-backend": {
             "service": "rbac1-acceptance_course-backend",
             "desiredReplicas": 0,
-            "configuredImage": "course-backend:local-final-20261115-022901",
+            "configuredImage": "course-backend:local-final-20261115-035858",
             "containers": []
           },
           "rbac-backend": {
             "service": "rbac1-acceptance_rbac-backend",
             "desiredReplicas": 0,
-            "configuredImage": "rbac-structured:local-final-20261115-022901",
+            "configuredImage": "rbac-structured:local-final-20261115-035858",
             "containers": []
           },
           "mysql": {
@@ -389,7 +390,7 @@
       "format": "rbac1-local-swarm-v1",
       "module": "rbac-structured",
       "stack": "rbac1-acceptance",
-      "timestamp": "2026-11-14T18:30:23Z",
+      "timestamp": "2026-11-14T20:00:26Z",
       "tls": "self-signed local acceptance only; NOT public trust",
       "stage": "local-final",
       "finalAcceptance": false,
@@ -408,7 +409,7 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 3 hours ago",
+              "CurrentState": "Running 5 hours ago",
               "DesiredState": "Running",
               "Error": "",
               "ID": "124xp0v6ni0j54kiuz48kxx86",
@@ -438,7 +439,7 @@
           "secretTargets": [],
           "tasks": [
             {
-              "CurrentState": "Running 3 hours ago",
+              "CurrentState": "Running 5 hours ago",
               "DesiredState": "Running",
               "Error": "",
               "ID": "xw68ibqw9v46zxm1l4w2ewru1",
@@ -456,60 +457,60 @@
         },
         {
           "name": "rbac1-acceptance_rbac-backend",
-          "image": "rbac-structured:local-final-20261115-022901",
+          "image": "rbac-structured:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [
             "rbac.audit-service-key",
-            "RBAC_BOOTSTRAP_PASSWORD",
             "rbac.bootstrap-password",
+            "RBAC_BOOTSTRAP_PASSWORD",
             "spring.datasource.password",
             "jwt-private.pem",
             "jwt-public.pem"
           ],
           "tasks": [
             {
-              "CurrentState": "Running 3 seconds ago",
+              "CurrentState": "Running 12 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "zm4bmtg76kn8m9lpr9qlvr2tj",
-              "Image": "rbac-structured:local-final-20261115-022901",
+              "ID": "awcs7arfeamppmm5i7yovdpff",
+              "Image": "rbac-structured:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-backend.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "385cda0df70164f17c4fe5d0cf27889bce7af1187b215a9f86ffb68c90c21997",
-          "imageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3",
-          "expectedLocalImageId": "sha256:b3559073f71766efca6e59f9a7a97d2937b5b052eef73a842ec4edcdafa5f0a3",
+          "containerId": "02f86e7ef8e1ae22a411e88d9ac1f41100cc11de05e948147d4b0cf3e322aa82",
+          "imageId": "sha256:dc2998fdea1c556d6fbe1e3fcc6686a2d98bc665eb46de1d5023bdc785f2e2c1",
+          "expectedLocalImageId": "sha256:dc2998fdea1c556d6fbe1e3fcc6686a2d98bc665eb46de1d5023bdc785f2e2c1",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_rbac-gateway",
-          "image": "rbac-gateway:local-final-20261115-022901",
+          "image": "rbac-gateway:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [],
           "tasks": [
             {
-              "CurrentState": "Running 4 seconds ago",
+              "CurrentState": "Running 11 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "q9nqlfoa2bm6ul0r9pqfna162",
-              "Image": "rbac-gateway:local-final-20261115-022901",
+              "ID": "kboogr40z1llmtbqh1t5rnww7",
+              "Image": "rbac-gateway:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-gateway.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "6106015a5b31791a317fae934023f9f05b1b6543fc9cec18d11396709e3ba54e",
-          "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
-          "expectedLocalImageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "containerId": "cdf33f975ac1d8c1bc948fb6e469454c9b74ff81b23c4fad6a29c37c4aaf5cda",
+          "imageId": "sha256:892bb9bf68a613baabb3bbe7cf1ba1ea8847d07796bb9dc718d063a4f03ee561",
+          "expectedLocalImageId": "sha256:892bb9bf68a613baabb3bbe7cf1ba1ea8847d07796bb9dc718d063a4f03ee561",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_rbac-web",
-          "image": "rbac-web:local-final-20261115-022901",
+          "image": "rbac-web:local-final-20261115-035858",
           "replicas": 1,
           "ports": [
             {
@@ -528,21 +529,21 @@
               "CurrentState": "Running 5 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "gintdfhsks3jqm7cbw4plfea1",
-              "Image": "rbac-web:local-final-20261115-022901",
+              "ID": "7l7uo7mxh6klyberqg7r3gp38",
+              "Image": "rbac-web:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-web.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "580435342d0d79bc301ea8226cc69d510462d4aa99acaaa22449641a6a38fca5",
-          "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
-          "expectedLocalImageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "containerId": "2f7625bd92593df1adf3231d7e40a493e845ceb406151df92d5377e78e327728",
+          "imageId": "sha256:df987bf69bde17061c1182c00a0e114779f39961cd3a0a5d9975333616c0da93",
+          "expectedLocalImageId": "sha256:df987bf69bde17061c1182c00a0e114779f39961cd3a0a5d9975333616c0da93",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_course-backend",
-          "image": "course-backend:local-final-20261115-022901",
+          "image": "course-backend:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [
@@ -552,24 +553,24 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 5 seconds ago",
+              "CurrentState": "Running 15 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "0kvphd5ma3r8t0cs3cw2yqiwf",
-              "Image": "course-backend:local-final-20261115-022901",
+              "ID": "j6l7ljtk0ctl4fppzs4hfh6af",
+              "Image": "course-backend:local-final-20261115-035858",
               "Name": "rbac1-acceptance_course-backend.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "7edf8040492a79103613b2fb5b32a125f073635eb96a6bc94b55351f00ccae25",
+          "containerId": "2d9ede50d62db95bf39f4f5fb4ac5648b8a2af9915598a5924c1063ff40bb537",
           "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
           "expectedLocalImageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_course-web",
-          "image": "course-web:local-final-20261115-022901",
+          "image": "course-web:local-final-20261115-035858",
           "replicas": 1,
           "ports": [
             {
@@ -585,17 +586,17 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 6 seconds ago",
+              "CurrentState": "Running 13 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "m07amtbj3exikj0b7f394gs2l",
-              "Image": "course-web:local-final-20261115-022901",
+              "ID": "zfloiyysyvfi9isupy9ub9yne",
+              "Image": "course-web:local-final-20261115-035858",
               "Name": "rbac1-acceptance_course-web.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "21a5fd94f6a60d57b82ec0eec7ac4312a7ada0489a324cdb6b8954f91bbb1eee",
+          "containerId": "3d32e34afc24a781f1fe2f50003d6452a65ba5407536bbfee902f9e1a91cea67",
           "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
           "expectedLocalImageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
           "imageMatchesLocalBuild": true
@@ -752,7 +753,7 @@
       "format": "rbac1-local-swarm-v1",
       "module": "rbac-ddd",
       "stack": "rbac1-acceptance",
-      "timestamp": "2026-11-14T18:31:23Z",
+      "timestamp": "2026-11-14T20:01:34Z",
       "tls": "self-signed local acceptance only; NOT public trust",
       "stage": "local-final",
       "finalAcceptance": false,
@@ -771,7 +772,7 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 3 hours ago",
+              "CurrentState": "Running 5 hours ago",
               "DesiredState": "Running",
               "Error": "",
               "ID": "124xp0v6ni0j54kiuz48kxx86",
@@ -801,7 +802,7 @@
           "secretTargets": [],
           "tasks": [
             {
-              "CurrentState": "Running 3 hours ago",
+              "CurrentState": "Running 5 hours ago",
               "DesiredState": "Running",
               "Error": "",
               "ID": "xw68ibqw9v46zxm1l4w2ewru1",
@@ -819,7 +820,7 @@
         },
         {
           "name": "rbac1-acceptance_rbac-backend",
-          "image": "rbac-ddd:local-final-20261115-022901",
+          "image": "rbac-ddd:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [
@@ -832,47 +833,47 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 4 seconds ago",
+              "CurrentState": "Running 3 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "dkq6ixcxr4m75c1uf8rubrz1b",
-              "Image": "rbac-ddd:local-final-20261115-022901",
+              "ID": "0ifryc7f9flu714x3ku2kvsa1",
+              "Image": "rbac-ddd:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-backend.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "f032d4eea1d4a197a0c2411b74908e2a201b397162ad0a7dac97428b0b93d9c1",
-          "imageId": "sha256:66eac4f97dd8c8b2d248c7ace5dea9d02e323b5191ba973a0bf342c199e4d377",
-          "expectedLocalImageId": "sha256:66eac4f97dd8c8b2d248c7ace5dea9d02e323b5191ba973a0bf342c199e4d377",
+          "containerId": "0296c4c8c1e6e4b9dced6cde54dc794e1e400f34c43e88fa8c474de132b36ac7",
+          "imageId": "sha256:849445e6bd697405360b221175eacd66fabb37ca56c9c9bd67d758ec72f7bd07",
+          "expectedLocalImageId": "sha256:849445e6bd697405360b221175eacd66fabb37ca56c9c9bd67d758ec72f7bd07",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_rbac-gateway",
-          "image": "rbac-gateway:local-final-20261115-022901",
+          "image": "rbac-gateway:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [],
           "tasks": [
             {
-              "CurrentState": "Running 4 seconds ago",
+              "CurrentState": "Running 5 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "hapvf7yfgca1vvog0rafsxpmc",
-              "Image": "rbac-gateway:local-final-20261115-022901",
+              "ID": "o79fccm576tvq03j4dxvyh4sd",
+              "Image": "rbac-gateway:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-gateway.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "97988e2bbbe814280e0c987d6c852459b94952c222074f857461ca0b1d5940f4",
-          "imageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
-          "expectedLocalImageId": "sha256:eae9ea620661126b6d7a62d7f724e47752993bc5afbeb6a9944c57085b81e053",
+          "containerId": "24de21a1bc8948a783dc56e70818b0b04052daecebf506c3ea057613616266b9",
+          "imageId": "sha256:892bb9bf68a613baabb3bbe7cf1ba1ea8847d07796bb9dc718d063a4f03ee561",
+          "expectedLocalImageId": "sha256:892bb9bf68a613baabb3bbe7cf1ba1ea8847d07796bb9dc718d063a4f03ee561",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_rbac-web",
-          "image": "rbac-web:local-final-20261115-022901",
+          "image": "rbac-web:local-final-20261115-035858",
           "replicas": 1,
           "ports": [
             {
@@ -888,24 +889,24 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 5 seconds ago",
+              "CurrentState": "Running 3 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "intdv2k69ezp3hvrvnyvhpv71",
-              "Image": "rbac-web:local-final-20261115-022901",
+              "ID": "pe3afwkdy4mn8kymdnqmvqfc9",
+              "Image": "rbac-web:local-final-20261115-035858",
               "Name": "rbac1-acceptance_rbac-web.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "3cbbb2f5808917fb1039e96859e70653ee911a1bf96c92a22beadbc3450cb5e1",
-          "imageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
-          "expectedLocalImageId": "sha256:a7f50044e2aae9a7fc6342dbeb1542ea824d32611c8dbb5bb7cb9a0a845cf08b",
+          "containerId": "966d22163e1875d31008bb455abec09cd99eaa3c97db247db2908b11a9e673ad",
+          "imageId": "sha256:df987bf69bde17061c1182c00a0e114779f39961cd3a0a5d9975333616c0da93",
+          "expectedLocalImageId": "sha256:df987bf69bde17061c1182c00a0e114779f39961cd3a0a5d9975333616c0da93",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_course-backend",
-          "image": "course-backend:local-final-20261115-022901",
+          "image": "course-backend:local-final-20261115-035858",
           "replicas": 1,
           "ports": [],
           "secretTargets": [
@@ -918,21 +919,21 @@
               "CurrentState": "Running 5 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "bc9v1tmb7hb79lup1pq4kogdy",
-              "Image": "course-backend:local-final-20261115-022901",
+              "ID": "tstg4s4gpw8z6dec00nuv2mc4",
+              "Image": "course-backend:local-final-20261115-035858",
               "Name": "rbac1-acceptance_course-backend.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "5fb166a15165e3204fecb1080b9f5e89ad9e39211c4aa898cca1640366a66bc7",
+          "containerId": "6106900b34b852b7ce81d9a403056c98428138a1e45c35a5353231124edc1a7c",
           "imageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
           "expectedLocalImageId": "sha256:e5b7575be5de397a29f22769e574dab4a96be97fa59fbe65a87f0c080bd21de0",
           "imageMatchesLocalBuild": true
         },
         {
           "name": "rbac1-acceptance_course-web",
-          "image": "course-web:local-final-20261115-022901",
+          "image": "course-web:local-final-20261115-035858",
           "replicas": 1,
           "ports": [
             {
@@ -948,17 +949,17 @@
           ],
           "tasks": [
             {
-              "CurrentState": "Running 5 seconds ago",
+              "CurrentState": "Running 6 seconds ago",
               "DesiredState": "Running",
               "Error": "",
-              "ID": "zp2jtmiy6h39ynpqtpa6v09oy",
-              "Image": "course-web:local-final-20261115-022901",
+              "ID": "v3hzf3cqp60syd30181arsjdp",
+              "Image": "course-web:local-final-20261115-035858",
               "Name": "rbac1-acceptance_course-web.1",
               "Node": "docker-desktop",
               "Ports": ""
             }
           ],
-          "containerId": "4ffe990626707e7fd7c5817d4f542f36178f3b00fb035169a384dfe89be0f592",
+          "containerId": "a2b560e97caaec6f03327b55ebf4ec3503542d56ed8b639fc54a05010f7490c7",
           "imageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
           "expectedLocalImageId": "sha256:f41d1b1436b114649a9089b056c834165fc115b413445f14fba00c2fddbba129",
           "imageMatchesLocalBuild": true
@@ -1112,11 +1113,29 @@
       ]
     }
   },
-  "externalLogDirectory": "C:\\Users\\vintces\\Downloads\\rbac1-context-extracted\\m9-local-final-20261115-022901",
+  "externalLogDirectory": "C:\\Users\\vintces\\Downloads\\rbac1-context-extracted\\m9-local-final-20261115-035858",
+  "sourceRevision": "7bb4a22bc0da860f4746fd0a8ccc0ceb2277fad2",
   "automationChecks": {
-    "deploymentSafetyTests": 10,
+    "deploymentSafetyTests": 11,
     "legacyCompatibilityTests": 5,
     "shellSyntax": "passed",
-    "diffWhitespace": "passed"
+    "diffWhitespace": "passed",
+    "canonicalJarsUnchangedAfterDeployment": true
+  },
+  "buildInputs": {
+    "rbac-web/package.json": "ce5f7e6ee9becee9b2023d2343c4120787b16899d2dab716b0e8fa50863fe82b",
+    "rbac-web/package-lock.json": "62e38346aff82b81e2f56f2f5a006699c144afa27e6861fa78e66e4823aafed1",
+    "course-integration/frontend/package.json": "57c86b947b3e19d02772ef26f5524480885520f9454780dff65ecda22362836a",
+    "course-integration/frontend/package-lock.json": "70815bc94baeb7f89c04442e5d66a40e47c7cd0e88ad27f0910c0f75e72068fe",
+    "Dockerfile": "3a23c569da609b7f3d815c444d1878ec159962adda9594068029e291a4ffa249",
+    "rbac-web/Dockerfile": "2aab3e2eb9d31e4c9175045155cace983fdf8ef8510675de20add6b57889b092",
+    "deploy/full-course-backend.Dockerfile": "47c37dabe8c20f195d27c1b61a1e01739d7879c79f714c3186921f234f27de1c",
+    "deploy/full-course-web.Dockerfile": "621d27b27ac453e61b28f1d2ae2ea68e3d3883f2bbd102a593649d2cc59f8b61"
+  },
+  "frontendBuildVersions": {
+    "center": "8.3.8",
+    "course": "6.4.6",
+    "nodeBuilder": "node:22-alpine",
+    "note": "Both image builds ran under a new immutable tag. Unchanged compiled static output can legitimately produce the same final nginx image content ID."
   }
 }

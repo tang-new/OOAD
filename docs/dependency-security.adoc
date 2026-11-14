@@ -28,4 +28,4 @@
 * 实际执行兼容范围的npm update js-beautify glob minimatch，up to date，仍5moderate；没有未经兼容验证强制覆盖跨主版本。
 
 这些不进入Nginx静态生产依赖；并不意味着开发环境零风险。应继续跟踪上游兼容发布，避免把格式化/CLI工具用于不可信输入或公开开发服务器。
-不据本次npm/GitHub检查宣称容器OS、所有Java传递依赖、供应链或完整渗透测试“零漏洞”。GitHub异步重扫的open数要在实际push后核验，不能用本地audit0冒称远端已经关闭。
+不据本次npm/GitHub检查宣称容器OS、所有Java传递依赖、供应链或完整渗透测试“零漏洞”。实际push `b4beb6c` 后已再次分页核验GitHub：78→1 open，仅development的minimatch medium（GHSA-g3hv-75wg-m249），0 high/critical；这是实际API结果，不是从本地audit推定。npm仍按依赖包传播计5个dev-only moderate，两个扫描口径不混同。

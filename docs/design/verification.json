@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-11-14T19:04:11.640555+00:00",
-  "snapshotGeneratedAt": "2026-11-14T19:02:36.315892+00:00",
+  "recordedAt": "2026-11-14T20:09:01.171027+00:00",
+  "snapshotGeneratedAt": "2026-11-14T20:06:34.141275+00:00",
   "status": "STRICT_COMPILED_CHECKED",
   "strictCompiled": true,
   "hashRules": {
@@ -40,32 +40,37 @@
   "figures": 35,
   "rendererTests": {
     "command": "python tools/render-rbac1-design.test.py",
-    "tests": 7,
+    "tests": 19,
     "failures": 0,
-    "originalGuardTestsPreserved": 5,
-    "newHashRegressions": 2,
+    "originalGuardAndHashTestsPreserved": 7,
+    "newEvidenceModeRegressions": 12,
     "result": "OK",
     "log": "renderer-tests.log"
   },
   "strictRender": {
     "command": "python tools/render-rbac1-design.py --strict-compiled",
-    "result": "STRICT_COMPILED_CHECKED"
+    "result": "STRICT_COMPILED_CHECKED",
+    "runtimeEvidenceMode": "current (default)"
   },
   "check": {
     "command": "python tools/render-rbac1-design.py --check",
     "exitCode": 0,
-    "output": "Source hashes match saved diagram snapshot. Not a test/deployment assertion."
+    "output": "Source hashes and explicit current evidence policy match saved diagram snapshot. Not a test/deployment assertion."
   },
   "businessAcceptance": {
-    "stage": "m18-shared / m17-final-verify",
-    "source": "Final portable actually executed archive; this design worker only read it, not rerunning business HTTP or deployment",
+    "stage": "m21-shared / m21-final-verify; course m21; frontend m22",
+    "source": "Actual main archive read back; not re-executed by renderer",
     "structured": "25/25 PASS",
     "ddd": "25/25 PASS",
     "T21": "PASS",
     "totalPass": 51,
-    "canonicalJarIdentity": "Both shared HTTP jarSha256 values match final canonical; current four JARs byte-for-byte checked",
-    "verify": "m17 BUILD SUCCESS; all gates green",
-    "comparisonToolRegressions": "21 PASS reported by main; narrow race legal-set comparison and persisted SQL direction, not broad ordering/association normalization"
+    "verify": {
+      "log": "m21-final-verify.log",
+      "sha256": "ffae7889e5169eb33f9d02e61103a0f86d28812798d31cffd0442bcf0f20770d",
+      "status": "BUILD SUCCESS",
+      "phase": "verify after prior normal JUnit and HTTP; no repeated JUnit in this phase"
+    },
+    "canonicalJarIdentity": "4 current JAR raw SHA match new dated deployment prerequisites; both shared HTTP centers match canonical hashes"
   },
   "junitReportsReadBack": {
     "tests": 188,
@@ -76,49 +81,56 @@
   "coverageReadBack": {
     "rbac-structured": {
       "path": "rbac-structured/target/site/jacoco/jacoco.xml",
-      "sha256": "895a3381c6b9ea921a4ad67dc7e53260124a0ed87edf26e9666a36cd468e1b98",
+      "sha256": "1c15060e945f7ef22e5872d42c5d7003820cfbabb115bbda229e7b050429bf97",
       "LINE": {
         "covered": 1497,
         "missed": 121,
-        "percent": 92.52
+        "percent": 92.5216,
+        "displayPercent": "92.5216%"
       },
       "BRANCH": {
         "covered": 668,
         "missed": 264,
-        "percent": 71.67
+        "percent": 71.6738,
+        "displayPercent": "71.6738%"
       }
     },
     "rbac-ddd": {
       "path": "rbac-ddd/target/site/jacoco/jacoco.xml",
-      "sha256": "4fedb4cee9d7004b696cdd908d7a840d3560478b9320a17b0f93c710de44705b",
+      "sha256": "bab7e90d729d72d960773e51207c6ab927395cf2a46e7af5fe775425fee7018f",
       "LINE": {
-        "covered": 2497,
-        "missed": 316,
-        "percent": 88.77
+        "covered": 2560,
+        "missed": 253,
+        "percent": 91.006,
+        "displayPercent": "91.0060%"
       },
       "BRANCH": {
-        "covered": 705,
-        "missed": 281,
-        "percent": 71.5
+        "covered": 704,
+        "missed": 282,
+        "percent": 71.3996,
+        "displayPercent": "71.3996%"
       },
       "applicationLINE": {
         "covered": 830,
         "missed": 126,
-        "percent": 86.82
+        "percent": 86.8201,
+        "displayPercent": "86.8201%"
       }
     },
     "rbac-gateway": {
       "path": "rbac-gateway/target/site/jacoco/jacoco.xml",
-      "sha256": "361300583754b25125417b14c13c523f35954ee1989bb6971af5480bf3773050",
+      "sha256": "f0e72aad780e4890ce82e8c9159d895cc87f89c70cb33b39ca309d8fa9743ec0",
       "LINE": {
         "covered": 178,
         "missed": 13,
-        "percent": 93.19
+        "percent": 93.1937,
+        "displayPercent": "93.1937%"
       },
       "BRANCH": {
         "covered": 125,
         "missed": 15,
-        "percent": 89.29
+        "percent": 89.2857,
+        "displayPercent": "89.2857%"
       }
     }
   },
@@ -137,16 +149,20 @@
   },
   "businessEvidence": "business-evidence.json",
   "swarm": {
+    "runtimeEvidenceMode": "current",
     "status": "local-final-dual-runtime-passed",
-    "tag": "local-final-20261115-022901",
-    "localFinalDeploymentAccepted": true,
+    "tag": "local-final-20261115-035858",
+    "archivedLocalFinalDeploymentAccepted": true,
     "activeModule": "rbac-ddd",
     "sameFrontendImageIds": true,
     "samePersistentVolumes": true,
     "sameDataServiceContainers": true,
+    "currentRuntimeVerified": false,
+    "artifactsMatchCurrentBuild": true,
     "externalDeployment": {
       "performed": false,
-      "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted"
+      "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted",
+      "ciStatus": "Not asserted. The 7bb4a22 remote workflow was reported started; this local deployment did not verify remote CI success."
     }
   },
   "course12of12": "Final current canonical 12/12 PASS, archived portable report",
@@ -196,5 +212,42 @@
       ]
     }
   },
-  "frontend": "38 unit + 4 loaded-state desktop/mobile visual E2E PASS from separate archived execution"
+  "frontend": "m22 new dependencies: 38 unit + 4 loaded-state desktop/mobile visual E2E PASS from separate archive",
+  "runtimeEvidenceMode": "current (default; no archived flag)",
+  "currentRuntimeVerified": false,
+  "artifactsMatchCurrentBuild": true,
+  "currentCanonicalJars": {
+    "rbac-structured/target/rbac-structured.jar": {
+      "sha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+      "exists": true,
+      "recordedCanonicalSha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    "rbac-ddd/target/rbac-ddd.jar": {
+      "sha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+      "exists": true,
+      "recordedCanonicalSha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    "rbac-gateway/target/rbac-gateway.jar": {
+      "sha256": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
+      "exists": true,
+      "recordedCanonicalSha256": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    ".cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar": {
+      "sha256": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a",
+      "exists": true,
+      "recordedCanonicalSha256": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    }
+  }
 }

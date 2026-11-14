@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-11-14T19:02:36.797538+00:00",
+  "recordedAt": "2026-11-14T20:09:01.171027+00:00",
   "hashRules": {
     "algorithm": "SHA-256",
     "textNormalization": "CRLF bytes (0D 0A) -> LF (0A) ONLY; no stripping, decoding, BOM removal, standalone CR or whitespace normalization",
@@ -32,8 +32,8 @@
     "methodAndOrderGuards": "Unchanged declaration/javap and ordered callsite checks; this only canonicalizes text line endings"
   },
   "origin": {
-    "archive": "docs/acceptance/local-results.json, docs/acceptance/shared-http.json, deploy/deployment-evidence.json; existing actually executed final local acceptance, not re-executed by design worker",
-    "junitAndCoverage": "Current local Surefire / JaCoCo XML read back and checked against portable archive"
+    "archive": "m21 normal JUnit/shared HTTP/final verify/course plus frontend m22 and new local-final-20261115-035858 archive. Design worker read proofs, did not rerun business or live probes.",
+    "junitAndCoverage": "Current Surefire and JaCoCo XML read back, counters checked against portable archive"
   },
   "junitTotals": {
     "tests": 188,
@@ -52,7 +52,7 @@
       "reports": [
         {
           "path": "rbac-contract/target/surefire-reports/TEST-com.xmu.rbac.contract.ApiErrorsTest.xml",
-          "sha256": "6e5c1fa1c9cdf8447f05cde314262dd52a88ac5a8b4505e75488b137c8ca33a0",
+          "sha256": "520ea4841bf8219b47c1ba4f841865c8441992758a90c900a30dd87e03a2e23e",
           "suite": "com.xmu.rbac.contract.ApiErrorsTest",
           "tests": 2,
           "failures": 0,
@@ -71,7 +71,7 @@
       "reports": [
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.ArchitectureTest.xml",
-          "sha256": "bab28627fe1d29a014ca38db047de6fff99f7b94c250c2d5ce36505760044f32",
+          "sha256": "0fe957420cd0906911db914f4b3c427725bec11b9023d4598915cbe70c2596f0",
           "suite": "com.xmu.rbac.structured.ArchitectureTest",
           "tests": 6,
           "failures": 0,
@@ -80,7 +80,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.AuthorizationNamespaceTest.xml",
-          "sha256": "c0cc895ad23a71c44c12af2fbeaeb12255c5a2fa8d223487894a074310fe7dbd",
+          "sha256": "54c36f6a76429f37290663b32a752d8849bd9271897defc4b37d284f44201134",
           "suite": "com.xmu.rbac.structured.AuthorizationNamespaceTest",
           "tests": 2,
           "failures": 0,
@@ -89,7 +89,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.integration.Rbac1IntegrationTest.xml",
-          "sha256": "f197ccda62f3ad7c25f61708e18f062726a642a75ffb78ddfcf832c1c88060f1",
+          "sha256": "19969b9966f236922ae0c1fc0aecff4f05807cf53c7e8abb4d656cf7aabd8c22",
           "suite": "com.xmu.rbac.structured.integration.Rbac1IntegrationTest",
           "tests": 36,
           "failures": 0,
@@ -98,7 +98,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.JsonBoundaryTest.xml",
-          "sha256": "d7f4827e09148f0f9d3cad04fc73b237acdeebcc57c8b1ac0b7aa9ff6b61651c",
+          "sha256": "bbe71c20feecc476b43fd61f36bd2efd6a5e653f708504d4a07704a60caaae60",
           "suite": "com.xmu.rbac.structured.JsonBoundaryTest",
           "tests": 1,
           "failures": 0,
@@ -107,7 +107,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.MappingSafetyTest.xml",
-          "sha256": "2a6546e17ea1cae336585537d41d92ad067b0df5ce8f448558acc8d3e2b9d3a4",
+          "sha256": "724374b2accbb5e143f9d69806010543b044045e46a385d7a9fb2828f6aa1990",
           "suite": "com.xmu.rbac.structured.MappingSafetyTest",
           "tests": 1,
           "failures": 0,
@@ -116,7 +116,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.PasswordBoundaryTest.xml",
-          "sha256": "336e04750c9afdc28b32159f4d19a428a45cc5543aa50fa4d270228fc3ac65b1",
+          "sha256": "d55ee3981c2ff11b68221311845db647a3fb0bc15c9f73681e18aff2adecbf8f",
           "suite": "com.xmu.rbac.structured.PasswordBoundaryTest",
           "tests": 2,
           "failures": 0,
@@ -125,7 +125,7 @@
         },
         {
           "path": "rbac-structured/target/surefire-reports/TEST-com.xmu.rbac.structured.Rbac1ProtocolRedTest.xml",
-          "sha256": "58ff69e8c6d1b4d7ef1547f86144f6418680d7b30281408ae4459110a79a6e02",
+          "sha256": "96252d8bb01e84d2865040c2fc049ee4f2d592a12a82e9e15683a433405f39c5",
           "suite": "com.xmu.rbac.structured.Rbac1ProtocolRedTest",
           "tests": 1,
           "failures": 0,
@@ -135,16 +135,18 @@
       ],
       "coverage": {
         "path": "rbac-structured/target/site/jacoco/jacoco.xml",
-        "sha256": "895a3381c6b9ea921a4ad67dc7e53260124a0ed87edf26e9666a36cd468e1b98",
+        "sha256": "1c15060e945f7ef22e5872d42c5d7003820cfbabb115bbda229e7b050429bf97",
         "LINE": {
           "covered": 1497,
           "missed": 121,
-          "percent": 92.52
+          "percent": 92.5216,
+          "displayPercent": "92.5216%"
         },
         "BRANCH": {
           "covered": 668,
           "missed": 264,
-          "percent": 71.67
+          "percent": 71.6738,
+          "displayPercent": "71.6738%"
         }
       }
     },
@@ -158,7 +160,7 @@
       "reports": [
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.application.AuditRoleSnapshotTest.xml",
-          "sha256": "7e3d4bc24133f3086489fee448a76db10f0fbdabf88ee8f74941eee473b532f3",
+          "sha256": "6b9ff124ad975b3e2292a1fd3bd54b8529bc2ff769209f1522c45480bbfaa7d5",
           "suite": "com.xmu.rbac.ddd.application.AuditRoleSnapshotTest",
           "tests": 2,
           "failures": 0,
@@ -167,7 +169,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.application.AuthorizationSecurityRegressionTest.xml",
-          "sha256": "c43a5232d8172fe2f8ac17a36b713f4199817d945ab15cbc715f3b8a55ebe15a",
+          "sha256": "110b0acf2707fe56d9d58c3ed67bb76010e813934ac20e80501b2d1ca27853d1",
           "suite": "com.xmu.rbac.ddd.application.AuthorizationSecurityRegressionTest",
           "tests": 8,
           "failures": 0,
@@ -176,7 +178,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.application.AuthorizationTokenAudienceTest.xml",
-          "sha256": "a99bae977d66b824e3e9d71ac1a35ad99b80a663019188b228f2997ff9b629d8",
+          "sha256": "558e0b6e792b4abfc715dc820528f70409fe6443c8b2732ff8e6b70b4641f877",
           "suite": "com.xmu.rbac.ddd.application.AuthorizationTokenAudienceTest",
           "tests": 5,
           "failures": 0,
@@ -185,7 +187,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.application.IntegrationIdentityApplicationServiceTest.xml",
-          "sha256": "7409aad72d458c97fde65295dc27537393dc333b667b0d61485aac04571a0c06",
+          "sha256": "b8ccfcffd9721e6243e5ec6d1186df811f85f7602a68087d1dab93cd35c24c0e",
           "suite": "com.xmu.rbac.ddd.application.IntegrationIdentityApplicationServiceTest",
           "tests": 6,
           "failures": 0,
@@ -194,7 +196,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.architecture.BackendIsolationTest.xml",
-          "sha256": "54cbecf968f96a3ccb693fbbc963c2cd3f7e4f0abc8c25449d0ca50c44fd8263",
+          "sha256": "2a6dbf235c30db7c99bc63540a393e88fe94568aa73e4d00f1700a86525221e2",
           "suite": "com.xmu.rbac.ddd.architecture.BackendIsolationTest",
           "tests": 2,
           "failures": 0,
@@ -203,7 +205,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.architecture.DomainArchitectureTest.xml",
-          "sha256": "5222bdcf61a66965cacfec0e4aa5870fd65af22db3746199756da9cfb2803510",
+          "sha256": "dd3cfe3f9de9f5fff8cb23c53a933973c6617610da2abf11ac52fa47472438c9",
           "suite": "com.xmu.rbac.ddd.architecture.DomainArchitectureTest",
           "tests": 3,
           "failures": 0,
@@ -212,7 +214,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.CloneBoundaryTest.xml",
-          "sha256": "fedc90e666791f142172b92021e3281cbd8e1810b98a5c2046930f88391092fd",
+          "sha256": "07e98e035f33ee9b71fb5c71d7129b26fa99f0d53d01880c33629c2d93293099",
           "suite": "com.xmu.rbac.ddd.CloneBoundaryTest",
           "tests": 3,
           "failures": 0,
@@ -221,7 +223,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.DddAuditIntegrationTest.xml",
-          "sha256": "16a26f24a1af3a97517493afad7fc23a47ad54e36ff3db257588b7754f4c12d1",
+          "sha256": "f58d1460c03d653aa7c8b2bb8bf6f8cec4a36594a797a232ca25ad202ef57284",
           "suite": "com.xmu.rbac.ddd.DddAuditIntegrationTest",
           "tests": 3,
           "failures": 0,
@@ -230,7 +232,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.DddPersistenceIntegrationTest.xml",
-          "sha256": "e111ad3c2d1c407238e29c24b020e810fe4acc8fb6a525320dbbeb51cd031227",
+          "sha256": "53a8ee652c3c4b70ef72a029b90fc0cfd2bac76102e1e519548332d3acfea42e",
           "suite": "com.xmu.rbac.ddd.DddPersistenceIntegrationTest",
           "tests": 5,
           "failures": 0,
@@ -239,7 +241,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.DddSecurityIntegrationTest.xml",
-          "sha256": "672f6c4a8a5b9c88ce4c1bbe4c04ae0f57c795600483ad3b163fe7c2458c2f7e",
+          "sha256": "73ee640c7092cf37fa12d9f6a07b0fbfdb5788bbf278e6fbc6cb3c6e63580b9a",
           "suite": "com.xmu.rbac.ddd.DddSecurityIntegrationTest",
           "tests": 4,
           "failures": 0,
@@ -248,7 +250,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.domain.AuditTimestampPrecisionTest.xml",
-          "sha256": "2b3b86400673e7099f57162819a3a69c26e71dfc116f3f8351f31a9a37beb170",
+          "sha256": "53a40ddf63da6fb78c611f3a1d4f1e8e5cc17f48ca8e701a7e9b78184023be63",
           "suite": "com.xmu.rbac.ddd.domain.AuditTimestampPrecisionTest",
           "tests": 1,
           "failures": 0,
@@ -257,7 +259,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.domain.DomainRulesTest.xml",
-          "sha256": "34ab64128ea34b11fd7a5cc55be900ad69da0974e4505dde63f21cb0fa371b34",
+          "sha256": "80178e35076d178f054367de32c1c5ceb9e392bcaa82a90df5f55b02cc06b20c",
           "suite": "com.xmu.rbac.ddd.domain.DomainRulesTest",
           "tests": 17,
           "failures": 0,
@@ -266,7 +268,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.domain.LoginAttemptPolicyTest.xml",
-          "sha256": "f80311f6ce5d611e38eb987b0fd736294c6bd09c40b71b294f29da3b3495d167",
+          "sha256": "132cb1f37902283a4dd05084566ab2d1433fc98dc07ecde80700dbf1aed60da8",
           "suite": "com.xmu.rbac.ddd.domain.LoginAttemptPolicyTest",
           "tests": 5,
           "failures": 0,
@@ -275,7 +277,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.domain.ResourcePolicyTest.xml",
-          "sha256": "a97031c4c922293683494f3cb10694a56526de3719277abcdce09b5ec28f46fe",
+          "sha256": "c8c285958de283f377631e5cf6b39e827a9edbe50f10b30ce884a4561c6f2d2e",
           "suite": "com.xmu.rbac.ddd.domain.ResourcePolicyTest",
           "tests": 11,
           "failures": 0,
@@ -284,7 +286,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.domain.RoleHierarchyTest.xml",
-          "sha256": "a85c0b80c43b167bd472777d1c619e7a0a79822ab19255ea4ac965502adae4db",
+          "sha256": "940ab2cc093df2e4a64179ae489fb7122e5eb7f8fda2e67ed91d30c2f5dae4c0",
           "suite": "com.xmu.rbac.ddd.domain.RoleHierarchyTest",
           "tests": 18,
           "failures": 0,
@@ -293,7 +295,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.ImplementationHealthIndicatorTest.xml",
-          "sha256": "c8753d2a07a125763afd7f23378bc6dc305a5ae6da4420161c011b83620fc194",
+          "sha256": "c7e23dc47fef65eb258ca1b661294fa2d099415580528b358e2a61d875338b9d",
           "suite": "com.xmu.rbac.ddd.ImplementationHealthIndicatorTest",
           "tests": 2,
           "failures": 0,
@@ -302,7 +304,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.infrastructure.RsaTokenProviderTest.xml",
-          "sha256": "7d3ed640a2848c00aaca33268b3c78d96d260863c8554ccbcf29223f1d2260cb",
+          "sha256": "6370c44dd53e481b22f29ee511a45ce3608181a0497f9705bf06b898101a4c8b",
           "suite": "com.xmu.rbac.ddd.infrastructure.RsaTokenProviderTest",
           "tests": 7,
           "failures": 0,
@@ -311,7 +313,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.SkeletonHttpTest.xml",
-          "sha256": "9933a856b3068e699941f7edb303c3691880acb787a4b3d1658a682370dabab0",
+          "sha256": "3d252b92fd3960be2767f407d0919e685b97df0e9baaca6cdfee8aa844abd4f4",
           "suite": "com.xmu.rbac.ddd.SkeletonHttpTest",
           "tests": 5,
           "failures": 0,
@@ -320,7 +322,7 @@
         },
         {
           "path": "rbac-ddd/target/surefire-reports/TEST-com.xmu.rbac.ddd.UiPatchBoundaryTest.xml",
-          "sha256": "e964b45b3594dff42ddf216c28cf9fd6bbe276c04788cb25d28c73fb30371077",
+          "sha256": "01504ec33ce68807a3bb8294204da65bdda8202894d2b1e3389f0bf7908a1f66",
           "suite": "com.xmu.rbac.ddd.UiPatchBoundaryTest",
           "tests": 5,
           "failures": 0,
@@ -330,21 +332,24 @@
       ],
       "coverage": {
         "path": "rbac-ddd/target/site/jacoco/jacoco.xml",
-        "sha256": "4fedb4cee9d7004b696cdd908d7a840d3560478b9320a17b0f93c710de44705b",
+        "sha256": "bab7e90d729d72d960773e51207c6ab927395cf2a46e7af5fe775425fee7018f",
         "LINE": {
-          "covered": 2497,
-          "missed": 316,
-          "percent": 88.77
+          "covered": 2560,
+          "missed": 253,
+          "percent": 91.006,
+          "displayPercent": "91.0060%"
         },
         "BRANCH": {
-          "covered": 705,
-          "missed": 281,
-          "percent": 71.5
+          "covered": 704,
+          "missed": 282,
+          "percent": 71.3996,
+          "displayPercent": "71.3996%"
         },
         "applicationLINE": {
           "covered": 830,
           "missed": 126,
-          "percent": 86.82
+          "percent": 86.8201,
+          "displayPercent": "86.8201%"
         }
       }
     },
@@ -358,7 +363,7 @@
       "reports": [
         {
           "path": "rbac-gateway/target/surefire-reports/TEST-com.xmu.rbac.gateway.ConfigurationTest.xml",
-          "sha256": "8f8c3295d45778bdc5cd056c9d2ca164257d4f76e7aeaf04eb3286608dd094ef",
+          "sha256": "b5f9137bad78fafa1ccf17a6db4584d3a664c5f49f6373ab5feb36ea95668421",
           "suite": "com.xmu.rbac.gateway.ConfigurationTest",
           "tests": 1,
           "failures": 0,
@@ -367,7 +372,7 @@
         },
         {
           "path": "rbac-gateway/target/surefire-reports/TEST-com.xmu.rbac.gateway.GatewayHttpTest.xml",
-          "sha256": "680fb56b794d648892a25076d396dc7e942c901dd9a7d54df10a6bb8e536025f",
+          "sha256": "fe0a4310ec2e12b98d3d9ef7059cac90b27ef86632f193ed5e0dce69e3ba45dc",
           "suite": "com.xmu.rbac.gateway.GatewayHttpTest",
           "tests": 20,
           "failures": 0,
@@ -376,7 +381,7 @@
         },
         {
           "path": "rbac-gateway/target/surefire-reports/TEST-com.xmu.rbac.gateway.RouteRegistryTest.xml",
-          "sha256": "f5eaf32208bd8e8d2e3e4e85dc92fea50c5be194dff8595e5fbf16cd695eb83f",
+          "sha256": "dffe62e16ec22a5785f3c43aefe6ea30c1fc5f09061999bbf685088700979fdf",
           "suite": "com.xmu.rbac.gateway.RouteRegistryTest",
           "tests": 4,
           "failures": 0,
@@ -386,23 +391,25 @@
       ],
       "coverage": {
         "path": "rbac-gateway/target/site/jacoco/jacoco.xml",
-        "sha256": "361300583754b25125417b14c13c523f35954ee1989bb6971af5480bf3773050",
+        "sha256": "f0e72aad780e4890ce82e8c9159d895cc87f89c70cb33b39ca309d8fa9743ec0",
         "LINE": {
           "covered": 178,
           "missed": 13,
-          "percent": 93.19
+          "percent": 93.1937,
+          "displayPercent": "93.1937%"
         },
         "BRANCH": {
           "covered": 125,
           "missed": 15,
-          "percent": 89.29
+          "percent": 89.2857,
+          "displayPercent": "89.2857%"
         }
       }
     }
   },
   "coverageRules": {
     "path": "pom.xml",
-    "sha256": "1463e77dca1c13755ee2ca810301a6f373764c9e9b89f4b0d9f0240a0594b1a8",
+    "sha256": "652a01cb159d279636089766ce70dd86a642d0614dd5323ea16a89a9ba03c5c5",
     "rules": [
       {
         "element": "BUNDLE",
@@ -450,52 +457,38 @@
     "warning": "Rechecks are not added again to the 188 unique JUnit count"
   },
   "finalSwarm": {
+    "runtimeEvidenceMode": "current",
     "status": "local-final-dual-runtime-passed",
-    "tag": "local-final-20261115-022901",
-    "localFinalDeploymentAccepted": true,
+    "tag": "local-final-20261115-035858",
+    "archivedLocalFinalDeploymentAccepted": true,
     "activeModule": "rbac-ddd",
     "sameFrontendImageIds": true,
     "samePersistentVolumes": true,
     "sameDataServiceContainers": true,
+    "currentRuntimeVerified": false,
+    "artifactsMatchCurrentBuild": true,
     "externalDeployment": {
       "performed": false,
-      "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted"
+      "reason": "Only the authorized isolated local Docker Desktop single-manager stack was deployed; no remote server or external CI run asserted",
+      "ciStatus": "Not asserted. The 7bb4a22 remote workflow was reported started; this local deployment did not verify remote CI success."
     }
   },
   "archiveInputs": {
     "docs/acceptance/local-results.json": {
-      "sha256": "f893a1ade964205ff98ed92a0aef546af14c7eaa5d3c877d24c7e044bfc57405"
+      "sha256": "381e18dfa3428d627fc0472e77243d506aac82a1e2b65aac5ca8daf432f9a708"
     },
     "docs/acceptance/shared-http.json": {
-      "sha256": "74518766dac8323771200fd2b0f8cd78dbe3544d1f5dcf9ff52b7f384aaea445"
+      "sha256": "890f02c71e08ccba0cb558affdc86314bb1feadd0db487eadd23f868395bfdcb"
     },
     "docs/final-acceptance.adoc": {
-      "sha256": "3c6bb426c1210e8456378371d721727a367accb28be317074b1145c7b5489526"
+      "sha256": "f28628caaa3b4590b5b4da28026f459be4775f9dec2a106996b954cfc66154ad"
     },
     "deploy/deployment-evidence.json": {
-      "sha256": "447d27be81b549c2e2ce4be4ebc7c288865f3fa1476617184b99302cb4d5af9c"
+      "sha256": "484cb9ab741d38297b906832611ae10e5afc9962f4ebc36be65e2673bc9a75b1"
     }
   },
-  "m18SharedHttp": {
-    "summary": {
-      "pass": 51,
-      "fail": 0
-    },
-    "canonicalJarSha256": {
-      "structured": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
-      "ddd": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38"
-    },
-    "T21": "PASS",
-    "currentCanonicalMatch": true
-  },
-  "m17FinalVerify": {
-    "log": "m17-final-verify.log",
-    "sha256": "4f5fd55c39c7ce90d62f478a55bfb28e35357b9c69a7c2f140e67f8095b4ce5b",
-    "status": "BUILD SUCCESS",
-    "phase": "verify after prior normal JUnit and HTTP; no repeated JUnit in this phase"
-  },
   "courseFinalCurrentCanonical": {
-    "sourceReportSha256": "b4cc72060fc16618a16d5f2d519b3b65b00884a0bc6a58d21a953705d520aa72",
+    "sourceReportSha256": "5acd7526d9e088617a04cc80565263d57f1e7612816c9c2e9f993cc51ae3229c",
     "upstream": "fde08d5dd417abc543145aff33ca8378deb9ca36",
     "modules": {
       "structured": {
@@ -507,8 +500,8 @@
           "secrets": true
         },
         "jars": {
-          "center": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
-          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "center": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+          "gateway": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
           "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
         },
         "persisted": {
@@ -517,7 +510,7 @@
         },
         "audit": {
           "auditId": 52,
-          "auditRequestId": "1a5a4e5e-b72b-4a29-9a7e-7bbe845b74b9",
+          "auditRequestId": "585ecedb-f0c3-4548-ac12-0ed832e08f42",
           "before": 70,
           "after": 88
         }
@@ -531,8 +524,8 @@
           "secrets": true
         },
         "jars": {
-          "center": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
-          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "center": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+          "gateway": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
           "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
         },
         "persisted": {
@@ -541,7 +534,7 @@
         },
         "audit": {
           "auditId": 51,
-          "auditRequestId": "83610155-e9ef-4393-86d7-a8ea551768e4",
+          "auditRequestId": "7f73dba7-0aa9-4ebf-ba23-1a1e14e2e18d",
           "before": 70,
           "after": 88
         }
@@ -550,18 +543,18 @@
   },
   "frontendUnit": {
     "pass": 38,
-    "sourceReportSha256": "a79d5e2be091ad1e868c5b89331a6550ded4f3069de4b80b0b5414de02b16504"
+    "sourceReportSha256": "b22a48cfe81da07341f44d82d7d1fd9204285da29b5a7481aeadf3d8a2e6014d"
   },
   "browserE2E": [
     {
-      "log": "m8-web-visual-structured-20261115-020039.log",
-      "sha256": "ab72b7419297f2386e382fd084f3f203a76245275e9f9933070d2b6eecb40fc2",
+      "log": "m22-browser-rbac-structured.log",
+      "sha256": "90cfcca4081f701ea9e3c67afdf2590b0dd30a2b9fb620aa96e637f3fc3a19bf",
       "pass": 2,
       "scope": "one backend, desktop and mobile, loaded-state screenshots"
     },
     {
-      "log": "m8-web-visual-ddd-20261115-015638.log",
-      "sha256": "a6192bc7a8987c02938f82494087a3aeea4e2bd0a8e1bae62e7e27c2ea6416cf",
+      "log": "m22-browser-rbac-ddd.log",
+      "sha256": "8cbde13e6dad89e248ddaaa375d50fdc74defdb096d029cff9050faba0798b22",
       "pass": 2,
       "scope": "one backend, desktop and mobile, loaded-state screenshots"
     }
@@ -571,5 +564,58 @@
     "result": "PASS reported by main/delegator",
     "scope": "Only whitelisted independent empty-permission reverse races compare legal outcome sets; SQL persisted direction checked; ordinary associations and ordering preserved",
     "historicalM17": "Original 50+1 legal-winner comparison false positive retained, not erased"
+  },
+  "snapshotGeneratedAt": "2026-11-14T20:06:34.141275+00:00",
+  "m21SharedHttp": {
+    "summary": {
+      "pass": 51,
+      "fail": 0
+    },
+    "canonicalJarSha256": {
+      "structured": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+      "ddd": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49"
+    },
+    "T21": "PASS",
+    "currentCanonicalMatch": true
+  },
+  "m21FinalVerify": {
+    "log": "m21-final-verify.log",
+    "sha256": "ffae7889e5169eb33f9d02e61103a0f86d28812798d31cffd0442bcf0f20770d",
+    "status": "BUILD SUCCESS",
+    "phase": "verify after prior normal JUnit and HTTP; no repeated JUnit in this phase"
+  },
+  "currentCanonicalJars": {
+    "rbac-structured/target/rbac-structured.jar": {
+      "sha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+      "exists": true,
+      "recordedCanonicalSha256": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    "rbac-ddd/target/rbac-ddd.jar": {
+      "sha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+      "exists": true,
+      "recordedCanonicalSha256": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    "rbac-gateway/target/rbac-gateway.jar": {
+      "sha256": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
+      "exists": true,
+      "recordedCanonicalSha256": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    },
+    ".cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar": {
+      "sha256": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a",
+      "exists": true,
+      "recordedCanonicalSha256": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a",
+      "comparisonPerformed": true,
+      "matchesRecordedCanonical": true,
+      "claim": "Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance."
+    }
   }
 }

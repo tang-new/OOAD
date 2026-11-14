@@ -1,4 +1,8 @@
-> Final follow-up: the current default canonical structured + DDD targets and current `rbac-gateway.jar` passed all 12 real-course scenarios. See `REAL-CENTERS-VERIFICATION.md` and external `m18-course-real-current.log`. This is not the old final47 run; older image IDs below are historical.
+> Latest dependency-refresh rerun: **2026-11-14T19:45:45.727Z**, current canonical structured6 + DDD6 = **12/12 PASS** through the real gateway and unchanged course jar. Both course DBs persisted score **88** and **1** approved membership; scoped audit GET confirmed synchronous **70→88** events; all owned child/database/Redis/private-file cleanup passed. Report: `C:\Users\vintces\AppData\Local\Temp\m6-course-real-hEBM62\report.json`; console: `C:/Users/vintces/Downloads/m21-course-real-current.log`. Full evidence: `REAL-CENTERS-VERIFICATION.md`. This is not the old final47 run; older image IDs below are historical.
+>
+> Executed private snapshot SHA256 (equal to canonical source SHA256): structured `5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d`; DDD `b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49`; gateway `1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039`; unchanged course `464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a`.
+>
+> Dependency refresh: removed unused RBAC `poi-ooxml` dependency/management; course real-test `mysql2` 3.14.5→**3.23.1**. This task ran only the real two-center helper (no source changes, rebuild/clean, commit or upstream 440-test rerun). The retained MIT/upstream **440** domain-test evidence below is distinct from this latest **12**-scenario acceptance; the cross-database audit-unconfirmed window remains unchanged.
 
 # Verified locally
 

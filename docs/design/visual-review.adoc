@@ -36,7 +36,7 @@
 * S06 类图以 RoleApplicationService 为中心，加入 GrantIntegrityService；顺序图中实际持久化调用处发出异常，未伪造审计方法逐层异常转发。SUCCESS 与业务同事务，DENIED 独立事务，AOP 不等于 commit。
 * 新增登录锁图：attempt 正常返回 null 之后才由外层 login 抛 401，失败计数事务不会因该 HTTP 凭据异常回滚。
 * 新增 SIM 两图实际表达 explain → 私有 check → unavailableReason；停用目标不会继续 effective/api，reason/trace 的已验证对齐清楚可见。没有把模拟查询错误地接到 Role.status / SUCCESS 审计上。Repository 的 identity(long)/identity(String) 重载都保留真实签名。
-* 部署图读取最终本地 rounds 双轮证据：structured→DDD 各 7 服务、11 探针、相同前端和持久资源，最终 DDD；图中明确已归档本地通过，不再误写 PENDING，也不声称 renderer 做了 live probe 或外部部署。
+* 部署图读取最终本地 rounds 双轮证据：新 tag local-final-20261115-035858，structured→DDD 各 7 服务、11 探针、相同前端和持久资源，最终 DDD；图中明确已归档本地通过，不再误写 PENDING，也默认 current 已严格核对四个当前 JAR，图中 artifactsMatchCurrentBuild=true；currentRuntimeVerified=false 只表示 renderer 未发新 probe，不声称外部部署。
 
 类框三段、Service 中心、role 关联标签、Adapter→Repository 实现箭头可读，未见重叠、穿第三方类框或方法文本裁切。循环体短执行条完整位于 loop 内；作为该算法调用者的外层 execution 可覆盖控制片段。回调分支注明 Supplier 间接调用及省略的内部循环，不冒充直接 Java 调用。长序列图应打开原始 PNG/SVG 阅读，不压缩到论文单栏。
 
@@ -44,4 +44,4 @@
 
 自动通过的项目是类/方法及实现关系存在、类框/穿框几何、执行条平衡、PlantUML 语法、25 组指定方法体的调用点词法顺序、源码/class 哈希稳定；不证明全程序调用图、所有异常分支或业务等价性。运行结果见 link:verification.adoc[本轮核验]。
 本轮严格生成状态为 STRICT_COMPILED_CHECKED。之前并发修改源码/重编译曾使门禁真实拒绝混合快照；没有通过改时间戳或关闭检查假造成功。源码最终统一错误码后，主代理仍需最后一次 strict-compiled / check 与变化图的目视校正。
-本地业务通过不是由目视推出：m18 25+25/T21 共 51 PASS 有 canonical SHA 归档，188 JUnit 与原覆盖指标已另回读 XML，见 business-evidence.json。最终本地双 Swarm 已由真实归档验收；每轮 runtime-only 标记不冒充项目完整证明，外部部署不宣称。工具回归现为 7 项；文本 SHA 只归一化 CRLF→LF，PNG 等二进制仍逐字节，因此图稿像素摘要不会被文本归一化抹平。
+本地业务通过不是由目视推出：m21 25+25/T21 共 51 PASS 有 canonical SHA 归档，188 JUnit 与原覆盖指标已另回读 XML，见 business-evidence.json。最终本地双 Swarm 已由真实归档验收；每轮 runtime-only 标记不冒充项目完整证明，外部部署不宣称。工具回归现为 19 项；文本 SHA 只归一化 CRLF→LF，PNG 等二进制仍逐字节，因此图稿像素摘要不会被文本归一化抹平。

@@ -1,6 +1,6 @@
-= 最后同步：图、哈希规则与本地 m18 核验
+= 最后同步：图、哈希规则与本地 m21 核验
 
-当前图生成状态为 STRICT_COMPILED_CHECKED；精确生成时间、源码与 class 摘要、javap 签名、25 组方法体调用顺序与图摘要以 link:source-index.json[源索引] 为准。此状态不代替业务测试；本地 m18 与最终本地 Swarm 已分别有真实归档；外部部署未执行。
+当前图生成状态为 STRICT_COMPILED_CHECKED；精确生成时间、源码与 class 摘要、javap 签名、25 组方法体调用顺序与图摘要以 link:source-index.json[源索引] 为准。此状态不代替业务测试；本地 m21 与最终本地 Swarm 已分别有真实归档；外部部署未执行。
 
 == 本任务实际运行
 
@@ -11,9 +11,9 @@ python tools/render-rbac1-design.py --strict-compiled
 python tools/render-rbac1-design.py --check
 ----
 
-* 工具回归 7 tests / 0 failures：原真实方法、缺类、缺方法、缺 javap 签名、十五表门槛 5 项保留；新增文本 CRLF/LF 同文与二进制 CRLF 字节不可忽略 2 项。文本项还检查独立 CR、空白、BOM 不得消失。见 link:renderer-tests.log[实际输出]。
+* 工具回归 19 tests / 0 failures：原 7 项符号/十五表/文本与二进制检查保留；新增 12 项证据模式正反例。默认 current 及 current check 都拒绝新 JAR 不匹配；archived 不接受缺失/损坏归档，不声称当前运行或业务验收，模式与伪造元数据也检查。见 link:renderer-tests.log[实际输出]。
 * strict-compiled：当前源码对应的本地 class 已存在且不旧于源码，javap/方法/实现/role 检查与 source/class 稳定检查均通过；35 张 SVG/PNG 及图源生成。没有通过改时间戳或删除符号/顺序校验消除问题。
-* check：检查源清单、新增 Java、工具/配置、class 与图摘要；全部匹配当前快照。
+* check：检查源清单、新增 Java、工具/配置、class 与图摘要；全部匹配当前快照。本轮两条生成/check 命令均使用默认 current，没有 archived flag；四个当前 JAR 原始 SHA 与新归档一致。
 * PNG：新增/变动图实际 read，新增 SIM 类图/顺序图表达 check/explain → unavailableReason，而不是伪接到 Role.status 的业务成功审计流程。见 link:visual-review.adoc[目视记录]。
 * 本任务本轮没有重复跑业务 Maven/HTTP 验收，也未部署。link:compile-verification.log[前轮编译日志] 是先前 compile-only 的历史证据，不冒充这次重新执行的 Maven 测试或 package；当前严格图核验记录了主代理最新编译产物的真实字节。
 
@@ -25,7 +25,7 @@ python tools/render-rbac1-design.py --check
 
 == 已通过的本地业务与覆盖率
 
-最新归档 m18-shared 为 51 PASS（structured 25/25、DDD 25/25、T21 PASS），两版 jarSha256 与部署 canonicalArtifacts 精确一致；m17-final-verify 全部 gate 绿；已覆盖新增停用目标模拟 reason=USER_DISABLED、trace 对齐、data:null 与纯 HTTP ApiErrors 词汇统一。该 HTTP 套件是主代理运行，不是设计任务重新执行。
+最新归档 m21-shared 为 51 PASS（structured 25/25、DDD 25/25、T21 PASS），两版 jarSha256 与部署 canonicalArtifacts 精确一致；m21-final-verify 全部 gate 绿；已覆盖新增停用目标模拟 reason=USER_DISABLED、trace 对齐、data:null 与纯 HTTP ApiErrors 词汇统一。该 HTTP 套件是主代理运行，不是设计任务重新执行。
 
 本任务已回读当前 Surefire / JaCoCo XML（只提取计数、覆盖率及摘要，不复制环境属性或秘密），见 link:business-evidence.json[业务证据快照]：
 
@@ -34,19 +34,19 @@ python tools/render-rbac1-design.py --check
 |模块 |JUnit tests |failures/errors/skipped |LINE |BRANCH
 |contract |2 |0/0/0 |— |—
 |structured |49 |0/0/0 |92.52% |71.67%
-|DDD |112 |0/0/0 |88.77% |71.50%
+|DDD |112 |0/0/0 |91.0060% |71.3996%
 |gateway |25 |0/0/0 |93.19% |89.29%
 |合计 |188 |0/0/0 |— |—
 |===
 
-DDD application LINE 为 86.82%。父 POM 当前 BUNDLE LINE≥70%、BRANCH≥60%，PACKAGE service 与 application 均 LINE≥85%；application 新纳入同一原门槛，没有降低 service 门槛。上述指标已与当前 XML 回读核对，不只转述主页数字。
+DDD application LINE 为 86.8201%。父 POM 当前 BUNDLE LINE≥70%、BRANCH≥60%，PACKAGE service 与 application 均 LINE≥85%；application 新纳入同一原门槛，没有降低 service 门槛。上述指标已与当前 XML 回读核对，不只转述主页数字。
 
-健康实现是 ImplementationHealthIndicator、component implementation，stage=M5-RBAC1-verified、businessReady=true；主代理另有 2 health + 5 HTTP 复验通过。这是改名后的复验，不把重复执行再说成 195 个唯一测试。整体健康仍包含独立 MySQL/Redis 探针，businessReady 不等于外部最终部署已经验收。
+健康实现是 ImplementationHealthIndicator、component implementation，stage=M5-RBAC1-verified、businessReady=true；主代理另有 2 health + 5 HTTP 复验通过。这是改名后的复验，不把重复执行再说成 195 个唯一测试。整体健康仍包含独立 MySQL/Redis 探针，businessReady 不等于外部部署已经验收。当前本地部署已有新 tag 真实归档，renderer 的 currentRuntimeVerified=false 仅表示没有发起新 live probe；artifactsMatchCurrentBuild=true 来自本轮四个原始 JAR 的严格相等检查。CI 重建显式 archived 时两标志 false，不用合法跨构建字节差异伪改历史 SHA。
 
 == 最终本地双 Swarm 已通过；外部部署不宣称
 
-* deployment-evidence.json 为 local-final-dual-runtime-passed，tag local-final-20261115-022901。按 rounds 两实现分别读取 7 服务、11/11 探针与 nodes；相同前端镜像及已有持久卷，最终 DDD。快照也核对当前四个 canonical JAR 的原始字节 SHA。
+* deployment-evidence.json 为 local-final-dual-runtime-passed，tag local-final-20261115-035858。按 rounds 两实现分别读取 7 服务、11/11 探针与 nodes；相同前端镜像及已有持久卷，最终 DDD。快照也核对当前四个 canonical JAR 的原始字节 SHA。
 * 顶层 localFinalDeploymentAccepted=true；每轮 finalAcceptance=false 是 runtime-only 的证据边界，不可再据此声称本地部署尚未验收。渲染器没有执行新的 live probe，externalDeployment.performed=false 不变。
 * 当前课程 canonical 12/12、前端 38 单测及 4 视觉 E2E 全绿，详见 link:../final-acceptance.adoc[最终验收] 与 link:../acceptance/local-results.json[归档结果]，不是从截图或类图推断。
-* m17 原始 50+1 是合法反向 race 胜方不同的比较误报；m18 只对白名单独立空权限 race 比较合法结果集，另核对 SQL 真实持久方向。普通关联、顺序/版本不忽略，比较工具 21 回归通过。本设计任务未改该工具或业务代码。
-* strict-compiled/check 与原 7 绘图器回归本轮再次执行；25 方法体门禁及 LF/二进制哈希规则保持。仅部署 PNG 变化时实际 read，其余通过原始 PNG 摘要核对沿用已有目视记录。本任务不提交/push。
+* m17 原始 50+1 是合法反向 race 胜方不同的比较误报；m21 只对白名单独立空权限 race 比较合法结果集，另核对 SQL 真实持久方向。普通关联、顺序/版本不忽略，比较工具 21 回归通过。本设计任务未改该工具或业务代码。
+* strict-compiled/check 与 19 项绘图器回归本轮再次执行；25 方法体门禁及 LF/二进制哈希规则保持。仅部署 PNG 变化时实际 read，其余通过原始 PNG 摘要核对沿用已有目视记录。本任务不提交/push。

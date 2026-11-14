@@ -114,6 +114,6 @@ JVM白名单继承基础系统环境，`SPRING_APPLICATION_JSON` 同时固定 da
 
 历史首轮候选不是GREEN（以下故障现已修复）：structured候选jar无Main-Class，登记ENVIRONMENT_BLOCKED；DDD有20项通过，另有JWT错误aud、审计时间边界等真实待修复以及一次transport阻断。
 RES-03首轮创建BUTTON未提供MENU父节点属于测试fixture错误，已补合法父节点，不放宽后端约束。
-外部 `m10-shared-first/report.json` 保留初轮结果/hash/dump。最终 `m18-shared-both`：structured25、DDD25、T21通过，共51 PASS，0 FAIL、exit0；同轮实际运行快照与canonical SHA相等，两侧各三份非空dump。
+外部 `m10-shared-first/report.json` 保留初轮结果/hash/dump。依赖修复后的最终 `m21-shared-both`：structured25、DDD25、T21通过，共51 PASS，0 FAIL、exit0；同轮实际运行快照与canonical SHA相等，两侧各三份非空dump。
 其前m17的T21拒绝合法相反调度获胜方向，后来只对上述隔离对称角色对做合法结果集判定并增强DB方向校验，未改backend或重建，不删除普通关系/顺序/version差异。
-可移植完整结果见link:acceptance/shared-http.json[实际HTTP观察]；原始失败、仓库外JVM日志与m18原报告保留，不抹历史，也不把早期candidate当最终包。
+可移植完整结果见link:acceptance/shared-http.json[实际HTTP观察]；原始失败、仓库外JVM日志与m18/m21原报告保留，不抹历史，也不把早期candidate当最终包。

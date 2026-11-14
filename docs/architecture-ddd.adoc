@@ -72,4 +72,4 @@ CloneBoundaryTest与架构测试需随实际构建验证，不能仅因处理器
 两后端分别构建/启动、各用隔离库与缓存命名空间，复用同一逻辑黑盒请求/预期，不复用授权算法。
 共享HTTP验收需比较状态码、稳定错误码、规范化成功体、审计与最终数据库事实；同一前端切换验证真实登录、组织/角色DAG/UI/API管理及桌面/手机路径，不再测“登录404”作为成功。
 同源代理、健康UP、M2截图、单个领域单测或历史覆盖率都不能替代这一门槛。
-当前本地实际验证见link:final-acceptance.adoc[最终验收]与link:test-plan.adoc[测试计划]；DDD行88.77%/分支71.50%，application约86.82%并执行原85%业务层门槛。外部部署与未执行容量/灾备不据此推定。另一实现见link:architecture-structured.adoc[结构化架构]。
+当前本地实际验证见link:final-acceptance.adoc[最终验收]与link:test-plan.adoc[测试计划]；DDD行91.01%/分支71.40%，application约86.82%并执行原85%业务层门槛。外部部署与未执行容量/灾备不据此推定。另一实现见link:architecture-structured.adoc[结构化架构]。

@@ -3,9 +3,10 @@
 来自同一Vue3前端连接两套真实Java后端的Playwright端到端测试；只使用新建的合成fixture，不含真实员工、口令、服务密钥或JWT。
 不是静态Mock，也不把这些Vite代理截图冒称Swarm浏览器部署证明。
 
-* structured：`visual-structured-20261115-020039`，desktop/mobile 2/2。
-* DDD：`visual-ddd-20261115-015638`，desktop/mobile 2/2。
+* structured：`m22-visual-structured-20261115-035110`，desktop/mobile 2/2。
+* DDD：`m22-visual-ddd-20261115-035254`，desktop/mobile 2/2。
 * 截图前等待真实用户行、DAG节点/边、继承UI和审计行；已废弃的“加载中”截图不用于此处证明。
+* m21曾3/4，末次登录POST200后身份初始化仍pending，15秒UI断言先到期；保留RED。m22精确等待四响应并断言200/裸协议，再验证相同页面与全部安全性质，未加sleep/自动重试。
 * 手机表格在自身容器内横向滚动，不让整页横溢，E2E实际操作可达。
 * 普通用户继承UI但没有管理API的403是保留的权限边界反例，不隐藏错误来美化截图。
 

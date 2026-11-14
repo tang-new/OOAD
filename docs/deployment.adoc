@@ -3,7 +3,7 @@
 
 == 已执行，不是配置推测
 
-最终本地标签 `local-final-20261115-022901`：分别选择structured、DDD执行两轮七服务验收，每轮7/7服务、11/11探针通过，最终保留DDD。
+安全依赖修复后最终本地标签 `local-final-20261115-035858`：分别选择structured、DDD执行两轮七服务验收，每轮7/7服务、11/11探针通过，最终保留DDD。
 两轮复用相同中心/课程前端镜像；MySQL/Redis容器与数据卷未变。TLS1.3、私有路径403、未认证课程401、内部健康、MySQL healthy、Redis PONG和实际镜像SHA256匹配均有记录。
 完整不可变镜像/容器ID、两轮探针及停写切换证据见link:../deploy/deployment-evidence.json[真实运行证据]。
 
@@ -70,7 +70,7 @@ final gate先校验真实Surefire最少2/49/112/25且无失败/错误/skip、两
 ----
 # 只查看本任务新stack，不扩展到其它项目。
 docker stack services rbac1-acceptance
-MODULE=rbac-ddd TAG=local-final-20261115-022901 DEPLOYMENT_STAGE=local-final \
+MODULE=rbac-ddd TAG=local-final-20261115-035858 DEPLOYMENT_STAGE=local-final \
 EVIDENCE_FILE=.runtime/full/manual-recheck.json bash deploy/full-verify.sh
 ----
 

@@ -1,7 +1,7 @@
 = RBAC1 两范式口试卡
 :toc:
 
-设计入口：link:final-design.adoc[当前设计]；图、路径及哈希：link:design/index.adoc[图索引]、link:design/source-index.json[符号索引]。本卡讨论代码。本轮严格编译图核验为 STRICT_COMPILED_CHECKED，绘图器 7 项回归通过（原 5 项 + 文本/二进制哈希 2 项）；m18 本地两版 25+25 场景及 T21 全绿、188 JUnit 全过，当前覆盖指标已回读核对。本地最终双实现 Swarm 已有真实归档；绘图器不是 live probe，本任务未 push。方法名变化以重生成后的索引为准。
+设计入口：link:final-design.adoc[当前设计]；图、路径及哈希：link:design/index.adoc[图索引]、link:design/source-index.json[符号索引]。本卡讨论代码。本轮严格编译图核验为 STRICT_COMPILED_CHECKED，绘图器 19 项回归通过（原 7 项 + 显式证据模式 12 项）；m21 本地两版 25+25 场景及 T21 全绿、188 JUnit 全过，当前覆盖指标已回读核对。本地最终双实现 Swarm 已有真实归档；绘图器不是 live probe，本任务未 push。方法名变化以重生成后的索引为准。
 
 == 开场：为什么不是两个换包名的 CRUD
 
@@ -35,7 +35,7 @@
 * DDD：effective → fresh/stableEffective。stableEffective 将目标状态、缓存 get、必要的 calculate 和缓存 put 包在权威版本复查中，最多三次，不稳定 503；非 ACTIVE 目标空权限。AuthorizationPolicy.calculate 管集合，RoleHierarchy.paths/visit 管路径。
 * 追问“只重试版本为什么不够”：外层只读事务可能复用旧的一致性快照/持久化上下文。AuthorizationReadTransaction.fresh 是独立 Bean 的 REQUIRES_NEW READ_COMMITTED readOnly 回调；每次尝试 repository.freshenRead → JpaAdapter EntityManager.clear。写事务必须保留未提交事实，不能机械使用这个独立读事务。
 * 结构化 namespace 来自 rbac.cache.namespace；事务内不读写缓存，非事务使用 namespace:authz:system:user:version。独立数据库若共用 namespace，版本数碰巧相同也可能读错库的缓存。
-* 管理端 check/explain 已先调用 unavailableReason；停用模拟目标返回 allowed=false / USER_DISABLED，trace 为 ACTOR_AUTHENTICATED / USER_DISABLED，与结构化一致且已进 m18 新增共享场景和 T21。不要把 stableEffective 的内部空集合实现误说成对外投影仍不一致。见 SIM 图；这不是 UML-S06 业务成功审计流程。
+* 管理端 check/explain 已先调用 unavailableReason；停用模拟目标返回 allowed=false / USER_DISABLED，trace 为 ACTOR_AUTHENTICATED / USER_DISABLED，与结构化一致且已进 m21 新增共享场景和 T21。不要把 stableEffective 的内部空集合实现误说成对外投影仍不一致。见 SIM 图；这不是 UML-S06 业务成功审计流程。
 * 不能把 JWT 的 roles 当权威授权结果。旧 token 仍要检查数据库用户/系统状态、撤销事实和授权版本；事务内绕过缓存，避免校验刚修改的数据时读到旧值。
 * 追问“Redis 宕机就允许吗”：不能。缓存不是权威。具体降级、503 和版本竞态必须展示两版当前源码及真实故障结果；不能笼统声称缓存永远正确。
 * GRASP：领域 Policy 便于纯内存测试，但数据库状态、跨实例撤权仍需要真实 MySQL/Redis 集成测试。
@@ -114,11 +114,12 @@
 == 现场验收请说什么、不说什么
 
 * 可以展示源码方法、生成命令、当前 source-index 哈希、逐张 PNG、精确生成状态。
-* 不能把严格编译/源码顺序校验冒充 m18 业务测试。25 组调用点顺序检查仍需人工复核分支，不能代替运行调用图；本地业务通过有其独立报告/字节边界。
-* 最终本地 Swarm 已通过：tag local-final-20261115-022901，structured→DDD 各 7 服务、11 探针，前端及持久资源保持不变，最终 DDD。证据在 rounds 两层读取；顶层 localFinalDeploymentAccepted=true，每轮 finalAcceptance=false 仅限制 runtime 证据范围，不等于本地部署未验。
-* 最终课程当前 canonical 12/12；m18 的 25+25/T21 共 51 PASS 与 canonical SHA 一致；m17 verify 全 gate 绿、188 JUnit 全绿、前端 38 单测及 4 视觉 E2E 全绿。LINE 为 92.52/88.77/93.19%，BRANCH 为 71.67/71.50/89.29%；DDD application 86.82%，与 service 同守 85% 门槛，无降门槛。
+* 不能把严格编译/源码顺序校验冒充 m21 业务测试。25 组调用点顺序检查仍需人工复核分支，不能代替运行调用图；本地业务通过有其独立报告/字节边界。
+* 最终本地 Swarm 已通过：tag local-final-20261115-035858，structured→DDD 各 7 服务、11 探针，前端及持久资源保持不变，最终 DDD。证据在 rounds 两层读取；顶层 localFinalDeploymentAccepted=true，每轮 finalAcceptance=false 仅限制 runtime 证据范围，不等于本地部署未验。
+* 最终课程当前 canonical 12/12；m21 的 25+25/T21 共 51 PASS 与 canonical SHA 一致；m21 verify 全 gate 绿、188 JUnit 全绿、前端 38 单测及 4 视觉 E2E 全绿。LINE 为 92.52/91.0060/93.19%，BRANCH 为 71.67/71.3996/89.29%；DDD application 86.8201%，与 service 同守 85% 门槛，无降门槛。
 * 健康类现为 ImplementationHealthIndicator / component implementation，stage=M5-RBAC1-verified、businessReady=true；改名后 2 health + 5 HTTP 额外复验通过，不代表外部服务器/CI 已验；最终本地 Swarm 另有真实归档。
+* 本轮默认 current 四个 JAR 的原始 SHA 与新 tag 归档相同；currentRuntimeVerified=false 是 renderer 没有重新 live probe，不代表本地部署未验。CI 重建显式 archived，不能声称当前包匹配或已部署；旧 SHA 不可改写。
 * 文本哈希仅归一化 CRLF→LF，二进制 class/jar/png 逐字节。独立 CR、BOM、空白均保留；不是通过忽略源码或放宽方法顺序门禁消除误报。
 * 源码持续变化时，先编译再 `python tools/render-rbac1-design.py --strict-compiled`，最后 `--check`；图源不是冻结事实，必须随实际方法和分支校正。
 
-* m17 原 50+1 保留为合法 race 胜方不同的比较误报；m18 仅白名单独立空权限 race 比较合法结果集并核对 SQL 最终持久方向。普通关联和顺序仍严格，比较器 21 项回归通过。外部部署未执行，不把归档或 renderer 冒充新 live probe。
+* m17 原 50+1 保留为合法 race 胜方不同的比较误报；m21 仅白名单独立空权限 race 比较合法结果集并核对 SQL 最终持久方向。普通关联和顺序仍严格，比较器 21 项回归通过。外部部署未执行，不把归档或 renderer 冒充新 live probe。

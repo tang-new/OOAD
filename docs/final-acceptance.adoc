@@ -15,14 +15,14 @@
 |===
 |组 |实际结果
 |JUnit |188/188，contract2、structured49、DDD112、gateway25；零failure/error/skip。健康标识更新又重跑2+5，不重复累计。
-|双后端共享 |25+25与T21，共51 PASS，m18最终运行与canonical SHA完全一致；两边各两JVM，真实MySQL/Redis。
+|双后端共享 |25+25与T21，共51 PASS，安全依赖更新后的m21最终运行与canonical SHA完全一致；两边各两JVM，真实MySQL/Redis。
 |前端 |38/38单测，逻辑行/分支100%，typecheck/build通过；PC/手机×两后端4/4真实E2E。
 |课程 |教师原440/440；最终canonical真实中心+gateway+课程六类×两侧12/12，核对入组、成绩88及审计70→88。
-|质量 |原整体70%行/60%分支、service85%未降；DDD application也执行85%。structured92.52/71.67，DDD88.77/71.50，gateway93.19/89.29。
+|质量 |原整体70%行/60%分支、service85%未降；DDD application也执行85%。structured92.52/71.67，DDD91.01/71.40，gateway93.19/89.29。
 |业务层行 |structured service91.86%，DDD application约86.82%。
 |合同/持久化 |64中心操作、80课程操作、15表V1/V2；真实迁移、重复迁移、约束负例及OAS引用检查。
-|设计 |35幅可维护图、160源码类、25方法体调用顺序检查、7绘图器回归；严格编译检查不被冒称业务证明。
-|本地Swarm |immutable local-final-20261115-022901，structured→DDD各7/7服务、11/11探针，最终DDD；相同前端、MySQL/Redis及卷保持不变。
+|设计 |35幅可维护图、160源码类、25方法体调用顺序检查、19绘图器回归；严格编译检查不被冒称业务证明。
+|本地Swarm |immutable local-final-20261115-035858，structured→DDD各7/7服务、11/11探针，最终DDD；相同前端、MySQL/Redis及卷保持不变。
 |===
 
 关键安全补强和实际回归覆盖包括：空SUPER_ADMIN提权、确定交错的旧授权返回、登录锁持久化、目标停用解释、审计时间精度、跨测试库缓存命名空间、实体CHAR/TINYINT、中心非200错误放行、私有服务信任与Windows进程/密钥边界。
@@ -35,6 +35,7 @@
 * link:../course-integration/REAL-CENTERS-VERIFICATION.md[最新课程12例完整hash]；不引用旧final47包冒充新canonical。
 * link:team-history-integration.adoc[团队29提交整合账本]；正常双亲merge保留历史，退休目录不恢复。
 * link:deployment.adoc[运行地址、首次账号、停写切换、秘密和回滚边界]。
+* link:dependency-security.adoc[依赖安全核验]：实际GitHub从78 open降至1个development medium，高/critical为0；npm按传播包计仍5个dev-only moderate，明确保留并跟踪上游，不夸称零漏洞。
 
 == 安全与限制
 

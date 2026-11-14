@@ -208,5 +208,30 @@
     "element-plus",
     "@element-plus/icons-vue",
     "org.apache.poi:poi-ooxml"
-  ]
+  ],
+  "githubAfter": {
+    "commit": "b4beb6c",
+    "open": 1,
+    "high": 0,
+    "critical": 0,
+    "remaining": {
+      "package": "minimatch",
+      "scope": "development",
+      "severity": "medium",
+      "advisory": "GHSA-g3hv-75wg-m249",
+      "manifest": "rbac-web/package-lock.json",
+      "fix": ">=11.0.1"
+    }
+  },
+  "peerLockRepair": {
+    "projects": [
+      "tools/acceptance",
+      "course-integration/tests"
+    ],
+    "mysql2": "3.23.1 unchanged",
+    "requiredPeer": "@types/node >=8",
+    "lockedNodeTypes": "22.20.5",
+    "lockedUndiciTypes": "6.21.0",
+    "validation": "npm ci with empty external configs and legacy-peer-deps=false; 21+2 tests and audit0"
+  }
 }

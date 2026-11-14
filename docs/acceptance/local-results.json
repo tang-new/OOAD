@@ -57,14 +57,14 @@
     "rbac-ddd": {
       "all": {
         "LINE": {
-          "covered": 2497,
-          "missed": 316,
-          "percent": 88.7664
+          "covered": 2560,
+          "missed": 253,
+          "percent": 91.006
         },
         "BRANCH": {
-          "covered": 705,
-          "missed": 281,
-          "percent": 71.501
+          "covered": 704,
+          "missed": 282,
+          "percent": 71.3996
         }
       },
       "serviceOrApplication": {
@@ -98,16 +98,16 @@
   "sharedHttp": {
     "pass": 51,
     "fail": 0,
-    "sourceReportSha256": "ebb098e2c1d856a25a524836f7eece46c73a6846057f427780d25b112ab048ab"
+    "sourceReportSha256": "e264c54be6438268ffa9eb2a009ecd77c3d57853f185048c66c1b6b3bc4291ed"
   },
   "verify": {
-    "log": "m17-final-verify.log",
-    "sha256": "4f5fd55c39c7ce90d62f478a55bfb28e35357b9c69a7c2f140e67f8095b4ce5b",
+    "log": "m21-final-verify.log",
+    "sha256": "ffae7889e5169eb33f9d02e61103a0f86d28812798d31cffd0442bcf0f20770d",
     "status": "BUILD SUCCESS",
     "phase": "verify after prior normal JUnit and HTTP; no repeated JUnit in this phase"
   },
   "course": {
-    "sourceReportSha256": "b4cc72060fc16618a16d5f2d519b3b65b00884a0bc6a58d21a953705d520aa72",
+    "sourceReportSha256": "5acd7526d9e088617a04cc80565263d57f1e7612816c9c2e9f993cc51ae3229c",
     "upstream": "fde08d5dd417abc543145aff33ca8378deb9ca36",
     "modules": {
       "structured": {
@@ -119,8 +119,8 @@
           "secrets": true
         },
         "jars": {
-          "center": "9ad38452757e500c6534f75b57c25e708c8fd6dec3443994ef1b780aa10b0a05",
-          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "center": "5ee6f47dbb0c7fa49be870f2c63e192a69321e1fd225f7790f47f7c6820f299d",
+          "gateway": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
           "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
         },
         "persisted": {
@@ -129,7 +129,7 @@
         },
         "audit": {
           "auditId": 52,
-          "auditRequestId": "1a5a4e5e-b72b-4a29-9a7e-7bbe845b74b9",
+          "auditRequestId": "585ecedb-f0c3-4548-ac12-0ed832e08f42",
           "before": 70,
           "after": 88
         }
@@ -143,8 +143,8 @@
           "secrets": true
         },
         "jars": {
-          "center": "f5f64bac7f4676c2378103104811b3974e9ac1b80458ca5ba10bd50361745b38",
-          "gateway": "8d41dd15deb529de64fb654b874ea3f91b634ebf3609d97cd7cda1628ee6125c",
+          "center": "b5e48780b750ccca7631b05bcd4cab2c3e97a661b9a342b8dde8e5290824da49",
+          "gateway": "1e2a7af05e76e9bed6e90a57381ccdeca727fac1d683ccac3afa4b2f0f2f8039",
           "course": "464348b8f79ad4fc56ae3f201151ae4bdff65e4301ab05b43dacd8f283bf1f1a"
         },
         "persisted": {
@@ -153,7 +153,7 @@
         },
         "audit": {
           "auditId": 51,
-          "auditRequestId": "83610155-e9ef-4393-86d7-a8ea551768e4",
+          "auditRequestId": "7f73dba7-0aa9-4ebf-ba23-1a1e14e2e18d",
           "before": 70,
           "after": 88
         }
@@ -162,18 +162,18 @@
   },
   "frontendUnit": {
     "pass": 38,
-    "sourceReportSha256": "a79d5e2be091ad1e868c5b89331a6550ded4f3069de4b80b0b5414de02b16504"
+    "sourceReportSha256": "b22a48cfe81da07341f44d82d7d1fd9204285da29b5a7481aeadf3d8a2e6014d"
   },
   "browser": [
     {
-      "log": "m8-web-visual-structured-20261115-020039.log",
-      "sha256": "ab72b7419297f2386e382fd084f3f203a76245275e9f9933070d2b6eecb40fc2",
+      "log": "m22-browser-rbac-structured.log",
+      "sha256": "90cfcca4081f701ea9e3c67afdf2590b0dd30a2b9fb620aa96e637f3fc3a19bf",
       "pass": 2,
       "scope": "one backend, desktop and mobile, loaded-state screenshots"
     },
     {
-      "log": "m8-web-visual-ddd-20261115-015638.log",
-      "sha256": "a6192bc7a8987c02938f82494087a3aeea4e2bd0a8e1bae62e7e27c2ea6416cf",
+      "log": "m22-browser-rbac-ddd.log",
+      "sha256": "8cbde13e6dad89e248ddaaa375d50fdc74defdb096d029cff9050faba0798b22",
       "pass": 2,
       "scope": "one backend, desktop and mobile, loaded-state screenshots"
     }

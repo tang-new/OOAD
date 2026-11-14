@@ -1,4 +1,7 @@
 {
+  "runtimeEvidenceMode": "current",
+  "currentRuntimeVerified": false,
+  "artifactsMatchCurrentBuild": true,
   "hashRules": {
     "algorithm": "SHA-256",
     "textNormalization": "CRLF bytes (0D 0A) -> LF (0A) ONLY; no stripping, decoding, BOM removal, standalone CR or whitespace normalization",
@@ -30,7 +33,7 @@
     "binaryRule": "All other files, especially .class/.jar/.png, hashed byte-for-byte; never normalize binary CRLF",
     "methodAndOrderGuards": "Unchanged declaration/javap and ordered callsite checks; this only canonicalizes text line endings"
   },
-  "generatorSha256": "8567082f7d0fe2f1dfcf44a3e353dc3b00a5a5e7735a6745272b411275714696",
+  "generatorSha256": "599c22aae344a82a4c6453dde21dcf7de02aa63e88543d600997a925ca957745",
   "artifacts": {
     "LOGIN-ddd-class.svg": "1f80842a229a35106b8d319567110330814eeec86ea1b6340c8d5799b86be125",
     "LOGIN-ddd-class.png": "12d6a420cede01730d51168d5ee58114d032cd9e951d0a8163cfb1ebf61a2e07",
@@ -100,10 +103,10 @@
     "schema-15-er.png": "59f5b901e86f7955e1120e39e733260d59cfc63f38e6d743fe78a303fcde3445",
     "structured-packages.svg": "483d9a7038514e9a6936289270f7f5bdf9ad74bd09f031d545838d952a244b89",
     "structured-packages.png": "b8f0242022a68fdc690a281bb5d13375eba621187774160777b5f0adbb8e8919",
-    "swarm-deployment.svg": "b1648d39ca66f5d464751704db8a72349a3eba5a3ae050187c0c912b3beac421",
-    "swarm-deployment.png": "6079528dd1d6f6621ea291e487b0eaecc565e6403060cf315b9331104cafb9f2"
+    "swarm-deployment.svg": "0b9f51b9c9e2b67add54d64a57a15c6430cee0001c252320a17d3fa613c49271",
+    "swarm-deployment.png": "350fc9c445a617adc5e264d8cacc618084abf09e59d21f48c694aa705b343d53"
   },
-  "generatedAt": "2026-11-14T19:02:36.315892+00:00",
+  "generatedAt": "2026-11-14T20:06:34.141275+00:00",
   "strictCompiled": true,
   "status": "STRICT_COMPILED_CHECKED",
   "warnings": [],
@@ -3695,22 +3698,22 @@
       ]
     },
     "docs/final-acceptance.adoc": {
-      "sha256": "3c6bb426c1210e8456378371d721727a367accb28be317074b1145c7b5489526"
+      "sha256": "f28628caaa3b4590b5b4da28026f459be4775f9dec2a106996b954cfc66154ad"
     },
     "docs/acceptance/local-results.json": {
-      "sha256": "f893a1ade964205ff98ed92a0aef546af14c7eaa5d3c877d24c7e044bfc57405"
+      "sha256": "381e18dfa3428d627fc0472e77243d506aac82a1e2b65aac5ca8daf432f9a708"
     },
     "docs/acceptance/shared-http.json": {
-      "sha256": "74518766dac8323771200fd2b0f8cd78dbe3544d1f5dcf9ff52b7f384aaea445"
+      "sha256": "890f02c71e08ccba0cb558affdc86314bb1feadd0db487eadd23f868395bfdcb"
     },
     "tools/render-rbac1-design.test.py": {
-      "sha256": "a42e563ff8b8b2dfb435d75304f00322d7910c39f01c641cf54007f33b26d1f5"
+      "sha256": "4ce9213ae3d71f3dd1e505aa32bd2084f86ff09597909137676b73371fc50b94"
     },
     "rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java": {
       "sha256": "2dd8da2f5f23b4ba8458291cf7a0381d42fe31243f96cf78ec1dd96f49c7650a"
     },
     "pom.xml": {
-      "sha256": "1463e77dca1c13755ee2ca810301a6f373764c9e9b89f4b0d9f0240a0594b1a8"
+      "sha256": "652a01cb159d279636089766ce70dd86a642d0614dd5323ea16a89a9ba03c5c5"
     },
     ".gitattributes": {
       "sha256": "a971e623d39c4c9d1713d164add78f875b713cb0b44300d3f060c0cfdc785a9d"
@@ -3734,10 +3737,10 @@
       "sha256": "d91aa9a09f33707a230d1da97fd5fa935a5b66cc30f5daa5aefcfd647adbbdc6"
     },
     "deploy/deployment-evidence.json": {
-      "sha256": "447d27be81b549c2e2ce4be4ebc7c288865f3fa1476617184b99302cb4d5af9c"
+      "sha256": "484cb9ab741d38297b906832611ae10e5afc9962f4ebc36be65e2673bc9a75b1"
     },
     "course-integration/REAL-CENTERS-VERIFICATION.md": {
-      "sha256": "2384e774e8c5efe0043d8daade6174d20a16c12e8b33a58886e9d08a8cdb07db"
+      "sha256": "e8d4817a5fe36a5d60633c9c4ee608e1d040498a2daa4e165c962d7a5b65b60e"
     }
   },
   "references": [

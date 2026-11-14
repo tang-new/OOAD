@@ -369,7 +369,7 @@ def runtime_evidence_note(snapshot):
     return chr(10).join([
         'Evidence mode: '+snapshot['runtimeEvidenceMode']+'; historical LOCAL archive only.',
         'currentRuntimeVerified=false; artifactsMatchCurrentBuild='+str(snapshot['artifactsMatchCurrentBuild']).lower()+'.',
-        'Historical localFinalDeploymentAccepted=true; not current CI/build acceptance.',
+        ('Historical localFinalDeploymentAccepted=true; not current CI/build acceptance.' if snapshot['runtimeEvidenceMode']=='archived' else 'Recorded LOCAL deployment accepted; current JARs byte-match this dated archive.'),
         'Historical shared/course/frontend reports bind archived canonical SHA only.',
         'Current source/class signatures and method order are checked separately.',
         'No new live probe, current business/final acceptance, external server or CI runtime claim.'])
@@ -412,7 +412,7 @@ end note
     timestamp=str(evidence.get('timestamp','unknown'))
     write('swarm-deployment','puml',r'''@startuml
 skinparam defaultFontName Microsoft YaHei
-title Historical LOCAL dual Swarm — evidence mode EVIDENCE_MODE (not a renderer live probe)
+title EVIDENCE_TITLE — mode EVIDENCE_MODE (no renderer live probe)
 actor Browser
 node "Swarm private overlay (attachable)" {
  node "application services (one active central backend)" {
@@ -447,7 +447,7 @@ structured -> DDD: each 7/7 services, 11/11 probes, exact recorded image IDs.
 Same frontend images + MySQL/Redis persistent resources; final active = rbac-ddd.
 RUNTIME_EVIDENCE_NOTE
 end note
-@enduml'''.replace('TIMESTAMP',timestamp).replace('EVIDENCE_STATUS',str(evidence.get('status','UNVERIFIED'))).replace('EVIDENCE_TAG',str(evidence.get('tag','UNVERIFIED'))).replace('RUNTIME_EVIDENCE_NOTE',runtime_evidence_note(snapshot)).replace('EVIDENCE_MODE',runtime_evidence))
+@enduml'''.replace('TIMESTAMP',timestamp).replace('EVIDENCE_STATUS',str(evidence.get('status','UNVERIFIED'))).replace('EVIDENCE_TAG',str(evidence.get('tag','UNVERIFIED'))).replace('RUNTIME_EVIDENCE_NOTE',runtime_evidence_note(snapshot)).replace('EVIDENCE_MODE',runtime_evidence).replace('EVIDENCE_TITLE','Historical LOCAL dual Swarm' if runtime_evidence=='archived' else 'Verified LOCAL archive with matching current JARs'))
 
 def plantuml():
     jar=Path(tempfile.gettempdir())/f'rbac1-plantuml-{VERSION}.jar'
