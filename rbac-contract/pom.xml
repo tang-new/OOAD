@@ -13,7 +13,7 @@
     <!--
       公共契约：Flyway 建表脚本（db/migration）与 OpenAPI 规范（openapi/rbac-api.yaml）。
       打成 jar 后被各实现模块依赖：
-        - Flyway 从 classpath:db/migration 执行 V1–V3，两种实现共用同一份表结构；
+        - Flyway 从 classpath:db/migration 执行新空开发库 V1–V2（RBAC1，禁止用于旧生产库），两种实现共用同一份表结构；
         - 权限拦截器从 classpath:openapi/rbac-api.yaml 读取每个接口声明的权限。
     -->
     <artifactId>rbac-contract</artifactId>

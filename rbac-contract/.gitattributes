@@ -1,0 +1,2 @@
+# Preserve the exact pinned Git blob; its SHA-256 is part of the provenance.
+src/main/resources/catalog/course-openapi.source.yaml -text

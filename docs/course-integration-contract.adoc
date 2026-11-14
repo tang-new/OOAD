@@ -1,0 +1,15 @@
+= 真实课程端集成补充合同
+
+教师七个/auth接口保持原状，不增加角色/权限JWT claim，也不将API权限混进/auth/me.permissions。
+实际教师Service的AuthorityCodes（尤其非组长CC）不能从“copyCourse允许进入”推导。
+为受控后端补充以下私有提供方接口；它们不是课程业务代理，公开前端Nginx拒绝/integration和/identity根前缀。
+
+* GET /integration/authorities：有效用户Bearer + X-Audit-Service-Key；不接受subject/system参数，取已验证aud；返回裸 `{authorities:string[]}`，只包含当前系统有效API权限码及受控identityRole对应的ROLE_student/ROLE_teacher/ROLE_admin。未知/停用身份、系统、注销令牌拒绝；服务密钥错误403。只有课程后端持有服务密钥，前端不获得完整API清单。
+* GET /identity/users/{userId}：教师既有UnifiedIdentityClient实际调用的统一身份查询；userId是稳定subject字符串。须有效Bearer、服务密钥、当前系统有效TEC API权限及admin身份；返回裸 `{userId:subject,name,no}`。不存在或已删除404 IDENTITY_USER_NOT_FOUND，不返回密码、电话、授权或内部数据库实体。
+
+课程资源服务器先本地RS256/issuer/aud验证，再中心operationId全局准入检查，然后通过authorities端点装载真实AuthorityCodes和ROLE_身份至SecurityContext；继续执行原Course/Group/Class Service对象规则。
+这样课程组长无CC仍能经过teacher全局准入后由Service判定，非组长没有真实CC不能凭全局teacher资格越权。
+服务密钥与用户身份缺一不可；客户端伪造X-Forwarded/X-Rbac/operationId头不得成为身份源。
+
+固定教师来源fde08d5dd417abc543145aff33ca8378deb9ca36，MIT许可与补丁保留，不将真实选课名单带入源码/镜像。
+跨课程DB与中心审计DB的同步HTTP不是分布式原子事务；有限同requestId重试及未确认错误必须如实表现，不引入Outbox/MQ/异步伪装原子性。

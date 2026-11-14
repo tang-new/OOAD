@@ -1,0 +1,38 @@
+= RBAC1 开发数据库合同
+
+仅新空开发/测试库使用；旧生产Flyway历史不执行此基线。所有表InnoDB/utf8mb4，UTC TIMESTAMP(3)。
+以下列名为两个独立后端必须一致的物理约定；Java实体/领域模型可不同。所有非明确可空字段NOT NULL。
+通用id为BIGINT AUTO_INCREMENT；可变根实体version BIGINT默认0用于JPA乐观锁。
+
+[cols="1,4"]
+|===
+|表 |精确列
+|sys_system |id,code VARCHAR(64) UNIQUE,name VARCHAR(128),status VARCHAR(16),version BIGINT
+|sys_department |id,parent_id BIGINT NULL FK自身,code VARCHAR(64) UNIQUE,name VARCHAR(128),path VARCHAR(1024),status VARCHAR(16),version BIGINT
+|sys_user |id,subject VARCHAR(128) UNIQUE,username VARCHAR(128) UNIQUE,password_hash VARCHAR(100),name VARCHAR(128),no VARCHAR(64) NULL,phone VARCHAR(32) NULL,department_id BIGINT FK,status VARCHAR(16),token_version BIGINT DEFAULT0,must_change_password BOOLEAN DEFAULT true,failed_login_count INT DEFAULT0,locked_until TIMESTAMP(3) NULL,version BIGINT DEFAULT0,created_at TIMESTAMP(3)
+|sys_role |id,system_id BIGINT FK,code VARCHAR(64),name VARCHAR(128),description VARCHAR(500) NULL,status VARCHAR(16),builtin BOOLEAN DEFAULT false,identity_role VARCHAR(16) NULL,version BIGINT；UNIQUE(system_id,code)
+|sys_permission |id,system_id BIGINT FK,code VARCHAR(128),name VARCHAR(128),kind VARCHAR(8),status VARCHAR(16),version BIGINT；UNIQUE(system_id,kind,code)
+|sys_role_permission |id,role_id BIGINT FK,permission_id BIGINT FK；UNIQUE(role_id,permission_id)
+|sys_user_role |id,user_id BIGINT FK,role_id BIGINT FK,assigned_by BIGINT NULL,assigned_at TIMESTAMP(3)；UNIQUE(user_id,role_id)
+|sys_department_allowed_role |id,department_id BIGINT FK,role_id BIGINT FK；UNIQUE(department_id,role_id)
+|sys_role_hierarchy |id,senior_role_id BIGINT FK,junior_role_id BIGINT FK；UNIQUE(senior_role_id,junior_role_id)，CHECK(senior_role_id<>junior_role_id)
+|sys_ui_resource |id,system_id BIGINT FK,parent_id BIGINT NULL FK自身,type VARCHAR(16),code VARCHAR(128),name VARCHAR(128),route VARCHAR(255) NULL,component VARCHAR(64) NULL,sort_order INT DEFAULT0,status VARCHAR(16),permission_id BIGINT NULL FK,version BIGINT；UNIQUE(system_id,code)
+|sys_api_operation |id,system_id BIGINT FK,operation_id VARCHAR(128),method VARCHAR(16),path_template VARCHAR(500),permission_id BIGINT NULL FK,required_role VARCHAR(64) NULL,access_policy VARCHAR(32),enabled BOOLEAN DEFAULT true,version BIGINT；UNIQUE(system_id,operation_id)，UNIQUE(system_id,method,path_template)
+|sys_ui_api_mapping |id,ui_resource_id BIGINT FK,api_operation_id BIGINT FK；UNIQUE(ui_resource_id,api_operation_id)
+|sys_token_revocation |jti VARCHAR(128) PK,subject VARCHAR(128),expires_at TIMESTAMP(3),created_at TIMESTAMP(3)
+|sys_grant_version |id TINYINT PK固定1,version BIGINT；全局授权锁/版本，不是JWT版本
+|sys_audit_log |id,request_id CHAR(36) UNIQUE,source_system_code VARCHAR(64),origin VARCHAR(16),actor_id BIGINT NULL,actor_subject VARCHAR(128) NULL,actor_name VARCHAR(128) NULL,actor_roles_json JSON,event_type VARCHAR(64),object_type VARCHAR(64) NULL,object_id VARCHAR(128) NULL,target VARCHAR(500),before_json JSON NULL,after_json JSON NULL,result VARCHAR(16),reason VARCHAR(255) NULL,trace_id VARCHAR(64),payload_hash VARCHAR(64),occurred_at TIMESTAMP(3)
+|===
+
+跨表同系统、UI/API kind、DAG与树无环由写事务持锁校验；FK/联合唯一/CHECK兜底可表达的不变量。
+User主键自增从10000，root显式id=1，subject=rbac-u1。所有其它对接按code查找，不依赖示例ID。
+root password_hash初始为UNINITIALIZED，Boot受控引导只在该值存在时从RBAC_BOOTSTRAP_PASSWORD哈希，不重置既有口令。
+种子含总部path=/1/，Finance/Engineering两个虚构部门；中心和课程两个系统；中心SUPER_ADMIN/RBAC_ADMIN/AUDITOR、课程teacher/student/admin。
+所有种子角色的直接准入明确插入对应部门，root的SUPER_ADMIN准入必须存在。不得自动给所有用户分配角色。
+
+角色/系统/权限启停、图/映射/指派/准入/用户状态/部门调动等改变授权事实的写事务首先锁sys_grant_version的id=1，最后version+1与SUCCESS审计同提交。
+根实体version用于HTTP可选version字段冲突检测，不替代全局授权版本或图互斥。
+
+审计不建业务FK，不随角色用户删除；查询索引(source_system_code,occurred_at,id)、(source_system_code,actor_id,occurred_at,id)、(source_system_code,object_type,object_id,occurred_at,id)。
+外部origin=COURSE；中心本地事件origin=INTERNAL。外部actor_roles_json仅受控identityRole枚举投影。
+受控本地SUCCESS审计requestId为新UUID；外部保留调用方UUID。JSON以String/JsonNode装配皆可，但不可直接向客户端输出JSON字符串而非对象。

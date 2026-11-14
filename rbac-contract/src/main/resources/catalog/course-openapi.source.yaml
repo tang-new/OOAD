@@ -1,0 +1,5586 @@
+openapi: 3.1.0
+info:
+  title: 课程项目管理系统 API
+  version: 0.1.0
+  description: |
+    高校「学生在课程里分组完成项目」全流程接口：组队 → 里程碑提交与检查 → 教师评分。
+    角色：学生 / 组长（学生子角色）/ 任课教师 / 教学组长（课程组长）/ 管理员。同一自然人可同时拥有教师和管理员角色，登录后使用合并的教师界面。
+    所有 `/auth/*` 接口均由学校统一身份认证系统提供，课程管理系统不实现、不代理这些接口；本系统只提供 `GET /me` 等课程业务接口。
+
+    ## 通用约定
+    - 所有时间用 ISO 8601（`2026-11-18T14:00:00+08:00`）；原型里的「今天」是 2026-11-16。
+    - **返回列表的接口默认分页**：查询参数 `page`（从 1 开始）+ `pageSize`（默认 20，最大 100），响应统一带 `page` / `pageSize` / `total`（见 `Page` 模型）。
+      例外（**数据量固定且很少，一次返回全部，不分页**）：`GET /terms`（学期）、`GET /me/courses`（我的课程）、教学班列表、课程里的分组、本班分组、课程里程碑、口试时段、小组检查状态。
+      例外：详情类接口（如某个组在某个里程碑上的提交记录）里的内嵌数组属于这条记录的完整内容，不分页；成绩表 `GET /classes/{classId}/grades` 分页返回学生行。
+    - 错误统一返回 `Error`：`code` 是机器可读的业务码（字符串，见 `components.schemas.Error` 的码表与各接口 4xx 说明），`message` 是可以直接给学生/老师看的中文提示；HTTP 状态码与 `code` 是两套，前端按 `code` 决定文案与动作。
+    - 「已完成的里程碑」（`done: true`）只能改权重、成绩构成与计分制；其余字段与删除都会被拒。
+    - 重量不变量：同一课程的里程碑权重之和必须等于 100；允许保存中间态（合计不等于 100 时返回 `weightSum` 并在列表上标红），但发起检查前必须是 100。
+    - 当前学期：新建时 `current` 恒为 false；修改不能改 `current`；**当前学期不能编辑或删除，需先取消当前学期**；用 `PUT /current-term` 替换当前学期、`DELETE /current-term` 取消。**同一时刻最多一个当前学期，允许没有当前学期**。
+    - 主键约定：**所有实体 id（含学期）都是整数**，由数据库序列/自增生成。
+    - 权限：接口按角色校验；越权返回 403 `FORBIDDEN`。管理员端业务写操作都有细粒度权限；`GET /terms` 与 `GET /courses/{courseId}` 为公用接口，不要管理员权限。学期权限为 `term.create/edit/delete/current.manage`，课程 `course.view/review/reset/edit/delete/team.manage`，教师 `teacher.view/create/edit/delete`，日志 `audit.view`，用户查询 `user.lookup`。共享接口只对管理员调用时追加管理员权限校验。新建与拷贝课程均由教师发起，提交者成为首位课程组长；管理员不代建、不代拷贝。教学组长进课程内任何教学班；任课教师只能进自己被指派的教学班；学生只能看开放课程、自己的课程与自己的小组。
+servers:
+  - url: https://api.example.edu/v1
+    description: 生产
+security:
+  - bearerAuth: []
+tags:
+  - name: 统一身份鉴权
+    description: 统一身份认证系统提供的外部 API。所有 `/auth/*` 接口均由统一身份认证系统实现，课程管理系统无需实现或代理；JWT 只用于身份认证，不包含权限。
+  - name: 当前用户
+    description: 本系统根据 JWT 的 sub 返回本地教师/学生业务身份、业务子角色、已校验权限与当前学期上下文。
+  - name: 教师
+    description: 管理员：教师列表、添加 / 修改、禁用 / 恢复、删除
+  - name: 学期
+    description: 管理员：创建 / 修改 / 删除学期，指定当前学期
+  - name: 课程
+    description: 教师新建 / 拷贝课程；管理员独立审核；学期课程与「我的课程」列表
+  - name: 教学班
+    description: 教学组长建班、指派任课教师
+  - name: 学生名单
+    description: 任课教师导入选课名单 Excel、手工增删学生
+  - name: 分组规则
+    description: 课程级默认值 + 教学班级覆盖
+  - name: 小组
+    description: 学生建组 / 加入 / 退出；教师编辑 / 解散 / 新建
+  - name: 里程碑
+    description: 教学组长定义课程级里程碑（所有教学班共用）
+  - name: 提交与检查
+    description: 学生提交材料；教师批改（通过 / 驳回 + 评语 + 小组分）
+  - name: 口试与预约
+    description: 本班任课教师发布时段；本班学生预约 / 改约 / 取消；教师记录口试结果
+  - name: 成绩
+    description: 教师成绩汇总与导出；学生的「我的成绩」
+  - name: 文件与审计
+    description: 附件下载、关键操作审计
+  - name: 统一身份审计
+    description: 学校统一身份认证系统提供的审计日志和操作人查询接口；本系统只读调用，不持久化日志副本。
+paths:
+  /auth/login:
+    post:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 登录
+      description: |
+        由学校统一身份认证提供，本系统不代理、不持久化密码。
+        `systems` 必须列出本次登录目标系统，系统标识与 JWT `aud` 一致；登录本系统时必须包含 `course-project-management`。
+
+        ## accessToken 格式
+
+        返回的 `accessToken` 是 JWT 紧凑格式：
+
+        ```text
+        <base64url(header)>.<base64url(payload)>.<signature>
+        ```
+
+        payload 示例（具体字段以统一身份认证实际签发为准）：
+
+        ```json
+        {
+          "sub": "sso-u1001",
+          "aud": ["course-project-management"],
+          "iss": "https://identity.example.edu",
+          "iat": 1799992800,
+          "exp": 1799999999,
+          "jti": "01J00000000000000000000000"
+        }
+        ```
+
+        字段用途：
+
+        - `sub`：统一身份用户标识；本系统用它关联教师或学生业务身份。
+        - `aud`：令牌目标系统；统一身份认证据此确定权限查询的目标系统，调用本系统时必须包含 `course-project-management`。
+        - `iss`、`iat`、`exp`、`jti`：签发方、签发时间、过期时间和令牌唯一标识，由 Spring Security 按统一身份认证的 JWK 校验。
+        - JWT 不包含 `identity`、`roles` 或 `permissions`。登录身份由本系统按 `sub` 查询；角色和前端权限由统一身份认证权限接口返回。
+
+        调用本系统接口时使用 `Authorization: Bearer <accessToken>`，前端不得解析或信任 JWT 中的权限信息。
+      operationId: login
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginVO'
+              example:
+                accessToken: eyJhbGciOiJSUzI1NiIsImtpZCI6InNzby0yMDI2In0.payload.signature
+                tokenType: Bearer
+                expiresIn: 7200
+        '401':
+          description: 账号或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 账号或密码错误。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /auth/logout:
+    post:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 退出登录
+      description: 由学校统一身份认证提供；调用后使当前访问令牌失效，本系统不保存令牌状态。
+      operationId: logout
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: 已退出
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/me:
+    get:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 当前用户、角色与权限
+      description: |
+        由学校统一身份认证提供。从 JWT 的 `aud` 解析目标系统，返回当前用户、角色和前端菜单/按钮权限。
+        JWT 本身不包含权限，角色和权限由统一身份认证返回。
+        `permissions` 仅用于前端控制菜单和按钮，后端仍必须在 Service 中做强权限校验。
+      operationId: getIdentityCurrentUser
+      security:
+        - bearerAuth: []
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      responses:
+        '200':
+          description: 当前用户、角色与前端权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityCurrentUserVO'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /auth/audit-logs:
+    get:
+      tags:
+        - 统一身份审计
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 查询统一身份审计日志
+      description: |-
+        由学校统一身份认证系统提供，只支持按时间、操作对象和操作人查询。
+        课程、教学班、操作类型和教师可见范围过滤由课程项目管理系统在 Service 层完成；本系统不建立审计日志表，也不保存日志副本。
+      operationId: queryIdentityAuditLogs
+      x-apifox-folder: 统一身份审计
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: actor
+          in: query
+          schema:
+            type: string
+          description: 操作人姓名或工号模糊查询
+        - name: actorId
+          in: query
+          schema:
+            type: integer
+          description: 操作人稳定 id 精确查询；允许筛选已删除用户的历史操作
+        - name: target
+          in: query
+          schema:
+            type: string
+          description: 操作对象模糊查询
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 起始时间（含）
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 结束时间（含）
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 统一身份审计日志分页结果
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required:
+                      - items
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IdentityAuditLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 无权查询统一身份审计日志或跨越给定可见范围
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 没有查询这些课程日志的权限。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+    post:
+      tags:
+        - 统一身份审计
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 写入统一身份审计日志
+      description: |-
+        由学校统一身份认证系统提供。课程项目管理系统在关键业务事务成功后调用本接口写入审计日志。
+        `requestId` 是业务操作生成的幂等键，同一 `requestId` 重试时统一身份系统返回同一条日志，不产生重复记录。
+        本系统不建立审计日志表，也不保存日志副本。
+      operationId: writeIdentityAuditLog
+      x-apifox-folder: 统一身份审计
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityAuditWriteInput'
+      responses:
+        '201':
+          description: 审计日志已写入；同一幂等键重试时返回原日志
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityAuditLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 当前系统或用户无权写入审计日志
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 没有写入审计日志的权限。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /auth/permissions/{permission}:
+    parameters:
+      - name: permission
+        in: path
+        required: true
+        description: 统一身份认证定义的前端菜单/按钮权限码
+        schema:
+          $ref: '#/components/schemas/UiPermission'
+    get:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 校验当前用户是否具备指定前端权限
+      description: 由学校统一身份认证提供；从 JWT 的 `aud` 解析目标系统，校验路径中的前端菜单/按钮权限码。响应只返回 `allowed`，不返回权限码或权限集合。该权限码由统一身份认证定义，不使用 AuthorityCodes。
+      operationId: checkIdentityPermission
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 单个权限校验结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionCheckVO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/api-permissions/{operationId}:
+    parameters:
+      - name: operationId
+        in: path
+        required: true
+        description: OpenAPI 中目标接口的 operationId
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+    get:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 判断当前用户能否调用指定 API 接口
+      description: |
+        由学校统一身份认证提供。根据 JWT 的 `aud` 确定目标系统，按 `operationId` 判断当前用户是否具备调用目标 API
+        所需的全局 `AuthorityCodes` 权限。响应只返回判断结果，不返回权限码。JWT 不包含权限。
+        本接口只处理全局 API 权限；课程组长、任课教师、组员、本人等对象级权限仍由目标接口的 Service 判断。
+      operationId: getApiAuthority
+      x-apifox-folder: 统一身份鉴权
+      security:
+        - bearerAuth: []
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      responses:
+        '200':
+          description: 当前用户调用目标 API 的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiAuthorityCheckVO'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: operationId 不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: API_OPERATION_NOT_FOUND
+                message: 没有找到对应的 API 操作。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /me:
+    get:
+      tags:
+        - 当前用户
+      summary: 获取本系统当前用户
+      description: |
+        本系统接口。根据 Bearer JWT 的 `sub` 查找当前教师或学生业务身份，
+        返回本地教师/学生 id、工号或学号、统一身份角色和前端权限。
+        本接口会携带 Bearer Token 调用统一身份认证的 `GET /auth/me` 获取角色与权限；
+        统一身份认证从 JWT `aud` 解析目标系统。JWT 本身不包含权限。
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 本系统当前用户上下文
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserVO'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 统一身份已认证，但尚未关联本系统教师或学生业务身份
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 当前账号尚未关联本系统用户。
+  /terms:
+    get:
+      tags:
+        - 学期
+      summary: 学期列表
+      description: 管理员用于学期管理，教师「我的课程」也用它取可切换的学期。当前学期排第一，其余按开学时间从新到旧；卡片上显示课程数、学生数与「当前学期」标记。
+      operationId: listTerms
+      responses:
+        '200':
+          description: 学期列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Term'
+    post:
+      tags:
+        - 学期
+      summary: 新建学期
+      operationId: createTerm
+      x-required-role: admin
+      x-required-permission: TC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermInput'
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Term'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前管理员没有新建学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有新建学期的权限。
+        '409':
+          description: 学期名称已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NAME_EXISTS
+                message: 学期名称已存在。
+      description: 新建的学期 `current` 恒为 **false**；学期名称全局唯一。要设为当前学期，请调用 `PUT /current-term`。
+  /terms/{termId}:
+    parameters:
+      - $ref: '#/components/parameters/TermId'
+    patch:
+      tags:
+        - 学期
+      summary: 修改非当前学期（名称、起止日期）
+      operationId: updateTerm
+      x-required-role: admin
+      x-required-permission: TE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TermInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Term'
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
+        '403':
+          description: 当前管理员没有修改学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有修改学期的权限。
+        '409':
+          description: 当前学期不能编辑，或修改后的学期名称与其他学期重复
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                nameExists:
+                  value:
+                    code: TERM_NAME_EXISTS
+                    message: 学期名称已存在。
+                isCurrent:
+                  value:
+                    code: TERM_IS_CURRENT
+                    message: 这是当前学期，不能编辑；请先取消当前学期。
+      description: 只能修改非当前学期的名称与起止日期；学期名称全局唯一；**不能修改当前学期标记**；**当前学期需先取消后才能编辑**。
+    delete:
+      tags:
+        - 学期
+      summary: 删除学期
+      description: 有课程的学期不能删除；当前学期不在界面显示删除入口，需先取消当前学期。
+      operationId: deleteTerm
+      x-required-role: admin
+      x-required-permission: TD
+      responses:
+        '204':
+          description: 已删除
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
+        '403':
+          description: 当前管理员没有删除学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有删除学期的权限。
+        '409':
+          description: 删不掉
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                hasCourses:
+                  value:
+                    code: TERM_HAS_COURSES
+                    message: 这个学期里还有 5 门课程，不能删除。
+                isCurrent:
+                  value:
+                    code: TERM_IS_CURRENT
+                    message: 这是当前学期，不能删除；请先把其他学期设为当前学期。
+  /terms/{termId}/courses:
+    parameters:
+      - $ref: '#/components/parameters/TermId'
+    post:
+      tags:
+        - 课程
+      summary: 教师提交新建课程
+      operationId: createCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateInput'
+      responses:
+        '201':
+          description: 已提交，等待管理员审核
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前用户不是教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有教师可以提交新建课程。
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
+        '409':
+          description: 课程代码已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_CODE_EXISTS
+                message: 课程代码已存在。
+      description: 教师提交新课程后，提交者自动成为本课程首位教学组长，课程状态为 application（申请）；管理员审核通过后才转为 open（开放）。必须指定课程运行方式 `workMode`。课程代码全局唯一，跨学期也不能重复。
+      x-required-role: teacher
+  /courses/{courseId}/submit-review:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    post:
+      tags:
+        - 课程
+      summary: 提交课程审核（教学组长）
+      description: 只有本课程教学组长可以提交。课程必须处于 application 状态，提交后转为 pending；管理员驳回时退回 application。
+      operationId: submitCourseReview
+      x-required-course-role: course_leader
+      responses:
+        '200':
+          description: 已提交课程审核
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '403':
+          description: 当前教师不是本课程教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以提交课程审核。
+        '404':
+          description: 课程不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_FOUND
+                message: 课程不存在。
+        '409':
+          description: 课程不是申请状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_STATE_INVALID
+                message: 只有申请状态的课程可以提交审核。
+  /courses/{courseId}/reset-to-application:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    post:
+      tags:
+        - 课程
+      summary: 将开放课程改回申请状态（管理员）
+      description: 管理员只能在课程处于 open 状态时调用。改回 application 后学生立即不可见，课程数据、教学班、提交和成绩均保留，统一身份系统中的历史日志不受影响。
+      operationId: resetCourseToApplication
+      x-required-role: admin
+      x-required-permission: CRS
+      responses:
+        '200':
+          description: 已改回申请状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '403':
+          description: 当前管理员没有改回申请状态的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有把课程改回申请状态的权限。
+        '409':
+          description: 课程不是开放状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_STATE_INVALID
+                message: 只有开放状态的课程可以改回申请状态。
+  /courses/{courseId}/review:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    post:
+      tags:
+        - 课程
+      summary: 审核待审核课程（管理员）
+      description: 管理员审核处于 pending 的课程。通过后转为 open，学生才能看到；驳回时退回 application，并填写原因。
+      operationId: reviewCourse
+      x-required-permission: CR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseReviewInput'
+      responses:
+        '200':
+          description: 审核完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '400':
+          description: 审核参数不合法，例如驳回时未填写审核意见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: BAD_REQUEST
+                message: 驳回时必须填写审核意见。
+        '403':
+          description: 当前管理员没有课程审核权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有审核课程的权限。
+        '404':
+          description: 课程不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_FOUND
+                message: 课程不存在。
+        '409':
+          description: 课程不是待审核状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_PENDING_REVIEW
+                message: 这门课程不在待审核状态，不能重复审核。
+  /courses/{courseId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 课程
+      summary: 课程详情
+      operationId: getCourse
+      responses:
+        '200':
+          description: 课程
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '404':
+          description: 课程不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_FOUND
+                message: 课程不存在。
+    patch:
+      tags:
+        - 课程
+      summary: 修改课程（名称、代码、描述）
+      operationId: updateCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前用户既不是本课程教学组长，也没有 course.edit 权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长或具备课程修改权限的管理员可以修改课程信息。
+        '404':
+          description: 课程不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_FOUND
+                message: 课程不存在。
+        '409':
+          description: 新课程代码已被其他课程占用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_CODE_EXISTS
+                message: 课程代码已存在。
+      description: 本课程教学组长可以直接修改；管理员需要 course.edit 权限。只允许修改名称、代码和描述，不接受 workMode。
+      x-required-permission: CE
+    delete:
+      tags:
+        - 课程
+      summary: 删除课程
+      description: 课程组长可以删除自己创建的 application 状态课程；管理员具备 course.delete 权限时可以删除 application 状态课程。pending 和 open 状态课程不能通过此接口删除。
+      operationId: deleteCourse
+      responses:
+        '204':
+          description: 已删除
+        '403':
+          description: 当前用户既不是本课程教学组长，也没有 course.delete 权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长或具备课程删除权限的管理员可以删除课程。
+        '404':
+          description: 课程不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_NOT_FOUND
+                message: 课程不存在。
+        '409':
+          description: 课程不是申请状态或课程里还有学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                stateInvalid:
+                  value:
+                    code: COURSE_STATE_INVALID
+                    message: 只有申请状态的课程可以删除。
+                hasStudents:
+                  value:
+                    code: COURSE_HAS_STUDENTS
+                    message: 课程里还有学生，不能删除。
+      x-required-permission: CD
+  /courses/{courseId}/description:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    patch:
+      tags:
+        - 课程
+      summary: 修改课程描述（教学组长）
+      description: 只有本课程的教学组长可以修改课程描述；管理员不维护课程描述。描述可以为空。
+      operationId: updateCourseDescription
+      x-required-course-role: course_leader
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseDescriptionInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CourseBase'
+                  - type: object
+                    properties:
+                      description:
+                        type: string
+        '403':
+          description: 当前教师不是本课程教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以修改课程描述。
+  /courses/{courseId}/leaders:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    put:
+      tags:
+        - 课程
+      summary: 指定 / 更换课程组长（教学组长）
+      description: 本课程教学组长可以把本课程的其他任课教师指定为课程组长；管理员具备 course.team.manage 权限时也可以维护。课程组长可以有多名，随时可换，不受里程碑记录限制。
+      operationId: setCourseLeaders
+      x-allowed-actors:
+        - course_leader
+        - admin.course.team.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseLeadersInput'
+      responses:
+        '200':
+          description: 已更新
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '403':
+          description: 当前管理员没有维护课程团队的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有维护课程团队的权限。
+      x-admin-required-permission: CTM
+  /courses/copy:
+    post:
+      tags:
+        - 课程
+      summary: 课程组长或具备课程拷贝权限的用户拷贝一门课程
+      description: 仅教师可调用。当前教师是本课程教学组长时直接允许；不是课程组长时必须具备 `CC` 课程拷贝权限，否则返回 403。每次只拷贝一门课程，复制课程信息、课程运行方式、课程组长、课程级分组规则和全部里程碑。**不复制教学班、学生名单、分组、提交与评分数据**；教学班需在新课程中重新建立。拷贝结果一律为 `application`，发起教师成为新课程首位教学组长，等待管理员审核开放。
+      operationId: copyCourse
+      x-required-role: teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyCourseRequest'
+      responses:
+        '201':
+          description: 拷贝完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCourse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前用户不是教师，且既不是源课程教学组长，也不具备课程拷贝权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长或具备课程拷贝权限的用户可以拷贝课程。
+        '404':
+          description: 源课程或目标学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                sourceCourseMissing:
+                  value:
+                    code: COURSE_NOT_FOUND
+                    message: 课程不存在。
+                targetTermMissing:
+                  value:
+                    code: TERM_NOT_FOUND
+                    message: 学期不存在。
+        '409':
+          description: 新课程代码已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: COURSE_CODE_EXISTS
+                message: 课程代码已存在。
+  /me/courses:
+    get:
+      tags:
+        - 课程
+      summary: 学生的我的课程
+      description: 返回当前学生在所选学期实际选过且处于 open 状态的课程；不传 `termId` 时默认当前学期。学期下拉复用 `GET /terms`，当前学期排第一。返回课程运行方式、本课程任课教师和下一里程碑；分组制额外返回组队状态和我的小组，个人制返回 `groupState = not_applicable` 且 `myGroup = null`。任课教师只返回姓名和标识，不返回联系方式。
+      operationId: listStudentCourses
+      parameters:
+        - name: termId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 学期 id；不传时默认当前学期
+      responses:
+        '200':
+          description: 课程列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  term:
+                    oneOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 2026-2027 学年第一学期
+                      - type: 'null'
+                    description: 本次查询的学期；未传 termId 且没有设置当前学期时为 null。
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StudentCourse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/courses:
+    get:
+      tags:
+        - 课程
+      summary: 管理员所有课程列表
+      description: 管理员「课程 → 所有课程」的数据源，跨学期分页返回；支持按学期、课程名称、任课教师和课程状态组合筛选。
+      operationId: listAdminCourses
+      x-required-role: admin
+      x-required-permission: CV
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: termId
+          in: query
+          schema:
+            type: integer
+          description: 学期 id；不传表示全部学期
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: 按课程名称模糊查询
+        - name: teacherId
+          in: query
+          schema:
+            type: integer
+          description: 按任课教师筛选；该教师任教任一教学班即命中
+        - name: courseStatus
+          in: query
+          schema:
+            $ref: '#/components/schemas/CourseStatus'
+          description: 按课程状态筛选
+      responses:
+        '200':
+          description: 课程列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required:
+                      - items
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdminCourse'
+        '403':
+          description: 当前管理员没有查看课程的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查看全部课程的权限。
+  /courses/{courseId}/classes:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 教学班
+      summary: 教学班列表
+      description: 仅本课程的教学组长与任课教师可查看具体教学班列表；学生和其他教师返回 403。教学班数量 `classCount` 仍作为课程摘要字段返回。
+      operationId: listClasses
+      responses:
+        '200':
+          description: 教学班列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  weightRuleHint:
+                    type: string
+                    description: 课程级的提示语
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeachingClass'
+        '403':
+          description: 当前用户不是本课程教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长和任课教师可以查看教学班。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+    post:
+      tags:
+        - 教学班
+      summary: 批量建立教学班（教学组长）
+      description: 仅本课程的教学组长可一次提交多个教学班；任课教师只能查看课程内全部教学班，不能新建。整批在同一事务中创建，班序号按提交顺序从现有最大值连续分配；任一教学班校验或落库失败时整批回滚。
+      operationId: createClasses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeachingClassesInput'
+      responses:
+        '201':
+          description: 整批已建立
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeachingClass'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以建立教学班。
+        '409':
+          description: 并发创建导致教学班编号冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: CLASS_NO_CONFLICT
+                message: 同一课程内的教学班编号发生冲突。
+      x-required-course-role: course_leader
+  /classes/{classId}:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    patch:
+      tags:
+        - 教学班
+      summary: 修改教学班（改名）
+      operationId: updateClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeachingClassUpdateInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeachingClass'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 无权修改该教学班
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有课程教学组长或本班任课教师可以修改这个教学班。
+        '404':
+          description: 教学班不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: CLASS_NOT_FOUND
+                message: 教学班不存在。
+      description: 仅修改教学班名称，班序号不可修改。本课程教学组长可修改任意教学班；本班任课教师只能修改自己任教的班；其他教师返回 403。
+      x-allowed-course-roles:
+        - course_leader
+        - class_teacher
+    delete:
+      tags:
+        - 教学班
+      summary: 删除教学班
+      description: 仅本课程的教学组长可删除教学班；本班任课教师与其他教师都不能删除。该教学班产生小组后也不能删除。
+      operationId: deleteClass
+      responses:
+        '204':
+          description: 已删除
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以删除教学班。
+        '409':
+          description: 已经产生小组
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: CLASS_HAS_GROUPS
+                message: 这个班已经有 12 个小组，不能删除。
+      x-required-course-role: course_leader
+  /classes/{classId}/teachers:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    put:
+      tags:
+        - 教学班
+      summary: 指派 / 更换任课教师
+      description: 课程组长可按角色管理任课教师；管理员调用时需 course.team.manage 权限。有里程碑记录后只能增加，不能移除。
+      operationId: setClassTeachers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassTeachersInput'
+      responses:
+        '200':
+          description: 已更新
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeachingClass'
+        '403':
+          description: 无权维护课程团队或不是该课程组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有维护课程团队的权限。
+        '409':
+          description: 已有里程碑记录，不能移除任课教师（仍可增加）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MILESTONE_RECORDED
+                message: 这门课已经有 2 个里程碑完成检查，不能再移除任课教师；可以继续增加。
+      x-admin-required-permission: CTM
+  /classes/{classId}/students:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    get:
+      tags:
+        - 学生名单
+      summary: 本班学生名单
+      description: 分页返回本班学生，学生项包含小组编号、小组名称与是否组长。班级名单状态与组队汇总由 TeachingClass 返回。
+      operationId: listClassStudents
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: 按学号或姓名搜索
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 名单
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Student'
+    post:
+      tags:
+        - 学生名单
+      summary: 手工添加学生
+      description: 按学号匹配已有学生记录并加入本班；如果没有学生记录，可用学号和姓名新建一条尚无统一身份用户的学生记录。本系统不创建本地账号或密码，之后统一认证按学号关联。
+      operationId: addStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentInput'
+      responses:
+        '201':
+          description: 已添加学生记录并加入本班
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '409':
+          description: 该学号已经在本班名单中
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: ALREADY_IN_CLASS
+                message: 这个学号已经在本班名单里了。
+  /classes/{classId}/student-candidates:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    get:
+      tags:
+        - 学生名单
+      summary: 按学号或姓名查询学生
+      description: 手工添加学生前使用；按学号或姓名模糊查询已有学生记录，姓名可能匹配多人，前端必须展示学号让教师确认。没有匹配结果时仍可手工新建学生记录。
+      operationId: searchStudentCandidates
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: 学号或姓名
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 查询结果
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/StudentCandidate'
+        '403':
+          description: 当前教师不是本班任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以查询并添加学生。
+      x-required-class-role: class_teacher
+  /classes/{classId}/students/{studentId}:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      tags:
+        - 学生名单
+      summary: 从本班名单移除学生
+      operationId: removeStudent
+      responses:
+        '204':
+          description: 已移除
+  /classes/{classId}/roster/import:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    post:
+      tags:
+        - 学生名单
+      summary: 导入选课名单（Excel）
+      description: 从学校选课系统导出的 Excel 导入本班名单。按学号匹配已有学生记录；找不到记录时也建立学生记录并加入本班。本系统只保存学号和姓名，账号由统一身份认证系统管理。可重复导入，学号已存在时不重复添加。
+      operationId: importRoster
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: .xlsx / .xls
+      responses:
+        '200':
+          description: 导入结果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                    description: 本次写入的条数
+                    example: 43
+                  created:
+                    type: integer
+                    description: 新建学生记录数；不代表创建了登录账号
+                    example: 41
+                  updated:
+                    type: integer
+                    description: 匹配已有学生记录并补充课程/教学班关系的条数
+                    example: 2
+                  groupedCount:
+                    type: integer
+                    example: 39
+                  ungroupedCount:
+                    type: integer
+                    example: 2
+                  skipped:
+                    type: integer
+                    description: 学号重复等被跳过的行
+                    example: 0
+        '400':
+          description: 文件格式不对或缺少必填列（学号 / 姓名）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: BAD_REQUEST
+                message: 缺少必填列：学号、姓名
+  /courses/{courseId}/group-rule:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 分组规则
+      summary: 课程级分组规则（默认值）
+      operationId: getCourseGroupRule
+      responses:
+        '200':
+          description: 课程默认规则
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupRule'
+        '403':
+          description: 当前用户不是本课程的师生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和该课程学生可以查看。
+        '404':
+          description: 教学班不存在，或课程默认分组规则尚未设置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                classMissing:
+                  value:
+                    code: CLASS_NOT_FOUND
+                    message: 教学班不存在。
+                ruleMissing:
+                  value:
+                    code: GROUP_RULE_NOT_FOUND
+                    message: 课程分组规则尚未设置。
+        '409':
+          $ref: '#/components/responses/CourseNotGroupBased'
+      description: 仅分组制课程的本课程师生可查看；个人制课程返回 409 COURSE_NOT_GROUP_BASED。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+    patch:
+      tags:
+        - 分组规则
+      summary: 修改课程级分组规则
+      description: 仅分组制课程可用；个人制返回 409 COURSE_NOT_GROUP_BASED。改完只影响**仍然跟随课程默认**的教学班；已经自定义过规则的班不动。
+      operationId: updateCourseGroupRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupRuleInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupRule'
+        '400':
+          description: 人数范围、组队时间范围或请求字段不合法
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: BAD_REQUEST
+                message: 请求参数校验失败
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以修改课程分组规则。
+        '409':
+          $ref: '#/components/responses/CourseNotGroupBased'
+  /classes/{classId}/group-rule:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    get:
+      tags:
+        - 分组规则
+      summary: 本班生效的分组规则
+      operationId: getClassGroupRule
+      responses:
+        '200':
+          description: 生效规则（含来源）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectiveGroupRule'
+        '403':
+          description: 当前用户不是本课程的师生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和该课程学生可以查看。
+        '404':
+          description: 教学班不存在，或课程默认分组规则尚未设置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                classMissing:
+                  value:
+                    code: CLASS_NOT_FOUND
+                    message: 教学班不存在。
+                ruleMissing:
+                  value:
+                    code: GROUP_RULE_NOT_FOUND
+                    message: 课程分组规则尚未设置。
+        '409':
+          $ref: '#/components/responses/CourseNotGroupBased'
+      description: 仅分组制课程的本课程师生可查看；个人制课程返回 409 COURSE_NOT_GROUP_BASED。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+    post:
+      tags:
+        - 分组规则
+      summary: 班级分组规则
+      description: 仅分组制课程可用；个人制返回 409 COURSE_NOT_GROUP_BASED。任课教师或教学组长都可以设置本班规则；设置后不再跟随课程默认。
+      operationId: setClassGroupRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupRuleInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectiveGroupRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前教师不是课程组长且不任教本班
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有课程教学组长或本班任课教师可以修改班级分组规则。
+        '404':
+          description: 教学班不存在，或课程默认分组规则尚未设置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                classMissing:
+                  value:
+                    code: CLASS_NOT_FOUND
+                    message: 教学班不存在。
+                ruleMissing:
+                  value:
+                    code: GROUP_RULE_NOT_FOUND
+                    message: 课程分组规则尚未设置。
+        '409':
+          $ref: '#/components/responses/CourseNotGroupBased'
+    delete:
+      tags:
+        - 分组规则
+      summary: 删除班级分组规则
+      description: 删除本班的自定义分组规则，之后重新跟随课程默认；课程级规则本身的修改仍会影响这个班。
+      operationId: deleteClassGroupRule
+      responses:
+        '200':
+          description: 已恢复
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectiveGroupRule'
+        '403':
+          description: 当前教师不是课程组长且不任教本班
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有课程教学组长或本班任课教师可以修改班级分组规则。
+        '404':
+          description: 教学班不存在，或课程默认分组规则尚未设置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                classMissing:
+                  value:
+                    code: CLASS_NOT_FOUND
+                    message: 教学班不存在。
+                ruleMissing:
+                  value:
+                    code: GROUP_RULE_NOT_FOUND
+                    message: 课程分组规则尚未设置。
+        '409':
+          $ref: '#/components/responses/CourseNotGroupBased'
+  /courses/{courseId}/groups:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 小组
+      summary: 本课程师生查看课程里的所有小组
+      description: 仅分组制课程的本课程教学组长、任课教师和选课学生可用；外课程用户和其他用户返回 403。学生分组页下方的「课程里的分组」用它——包含其他教学班的小组，自己的组用 `mine = true` 标出。
+      operationId: listCourseGroups
+      parameters:
+        - name: includeCrossClass
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 小组列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 16
+                  items:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Group'
+                        - type: object
+                          properties:
+                            mine:
+                              type: boolean
+                              description: 是不是当前学生自己的小组
+                            myJoinRequest:
+                              oneOf:
+                                - $ref: '#/components/schemas/GroupJoinRequest'
+                                - type: 'null'
+                              description: 当前学生对这个小组最近一次加入申请；没有申请时为 null。
+        '403':
+          description: 当前用户不是本课程学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和选课学生可以查看课程里的所有小组。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+    post:
+      tags:
+        - 小组
+      summary: 本课程学生建组（自己成为组长）
+      description: 仅分组制课程的本课程学生可建组；其他用户返回 403。建组时填小组名称，编号由系统分配。个人制返回 409 COURSE_NOT_GROUP_BASED，组队截止后返回 409。
+      operationId: createGroupAsStudent
+      x-required-course-role: student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前用户不是本课程学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的学生可以创建小组。
+        '409':
+          description: 已经属于某个组 / 已过组队截止 / 人数不符合规则
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notGroupBased:
+                  value:
+                    code: COURSE_NOT_GROUP_BASED
+                    message: 这门课程采用个人制，不使用小组
+                alreadyIn:
+                  value:
+                    code: ALREADY_IN_GROUP
+                    message: 你已经在这个课程的「星火队」里了
+                frozen:
+                  value:
+                    code: BAD_REQUEST
+                    message: 组队已经截止，学生侧操作已冻结；如需调整请联系负责老师
+  /classes/{classId}/groups:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    get:
+      tags:
+        - 小组
+      summary: 本班负责的小组（仅本课程教师）
+      description: 仅分组制课程的本课程教学组长和任课教师可查看；学生和其他用户返回 403。个人制课程返回 409 COURSE_NOT_GROUP_BASED。
+      operationId: listClassGroups
+      responses:
+        '200':
+          description: 小组列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ownedCount:
+                    type: integer
+                    description: 本班负责的小组数
+                    example: 12
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前用户不是本课程教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长和任课教师可以查看本班负责的小组。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+    post:
+      tags:
+        - 小组
+      summary: 本班任课教师新建小组
+      description: 仅分组制课程且只有该教学班的任课教师可以新建小组；课程组长若不是本班任课教师也返回 403。教师调整不受人数上下限约束；编号按「班序号-小组序号」自动分配。
+      operationId: createGroupAsTeacher
+      x-required-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前教师不是本班任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以新建小组。
+  /groups/{groupId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - 小组
+      summary: 小组详情（仅本课程师生）
+      description: 仅分组制课程的本课程教学组长、任课教师和选课学生可查看；外课程用户和其他用户返回 403。个人制课程不会产生小组，读取小组资源返回 404。
+      operationId: getGroup
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+      responses:
+        '200':
+          description: 小组
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前用户不是本课程师生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和选课学生可以查看小组详情。
+    patch:
+      tags:
+        - 小组
+      summary: 教师编辑小组（改名 / 直接增删成员）
+      description: 仅分组制课程可用；**当前教师必须是该小组所属教学班的任课教师**。教师直接加入或移除成员，无需组长同意，也不受人数上下限约束。当前组长不能被直接移除；如需更换组长，必须先由组长转交。跨教学班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: updateGroup
+      x-required-group-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前教师不是该小组所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该小组所属教学班的任课教师可以编辑小组。
+    delete:
+      tags:
+        - 小组
+      summary: 解散小组（物理删除，当前组长或本班任课教师）
+      description: 仅分组制课程可用。学生侧只有当前组长可在组队截止前解散，普通组员无权解散；教师侧必须是该小组所属教学班的任课教师，跨班、跨课程或仅担任课程组长但非本班任课教师不得解散。二次确认后物理删除 ProjectGroup 及成员、入组申请和归属快照，组内成员回到未组队状态；历史提交与成绩保留组号、组名快照。
+      operationId: dissolveGroup
+      x-allowed-dissolve-actors:
+        - group_leader
+        - class_teacher
+      x-required-teacher-group-class-role: class_teacher
+      responses:
+        '204':
+          description: 已解散
+        '403':
+          description: 当前用户不是本组组长，也不是小组所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有当前组长或该小组所属教学班的任课教师可以解散小组。
+        '409':
+          description: 学生侧已过组队截止时间
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: GROUPING_DEADLINE_PASSED
+                message: 组队已经截止，学生不能解散小组。
+  /groups/{groupId}/join-requests:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - 小组
+      summary: 加入申请列表（组长）
+      description: 仅当前组长可查看；默认返回待审批申请。申请在组队截止时自动过期。申请状态变化后保留记录，包括 approved。
+      operationId: listGroupJoinRequests
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 1
+              - 2
+              - 3
+              - 4
+              - 5
+            default: 1
+            description: 1 = pending；2 = approved；3 = rejected；4 = cancelled；5 = expired。
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 申请列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GroupJoinRequest'
+        '403':
+          description: 当前学生不是这个小组的组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有当前组长可以审批加入申请。
+    post:
+      tags:
+        - 小组
+      summary: 提交加入申请（学生）
+      description: |
+        组队截止前，学生填写小组编号后提交申请。申请不会直接入组，必须由当前组长同意。
+        当前学生必须属于该小组所属课程；外课程学生不得提交。同一课程中最多一个待审批申请；学生可主动撤回。
+      operationId: createGroupJoinRequest
+      x-required-role: student
+      x-required-group-course-role: student
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupJoinRequestInput'
+      responses:
+        '202':
+          description: 已提交，等待组长审批
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupJoinRequest'
+        '403':
+          description: 当前用户不是该小组所属课程的学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该小组所属课程的学生可以提交加入申请。
+        '409':
+          description: 已经入组 / 已有待审批申请 / 已过截止 / 人数或跨班规则不允许
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                pendingRequest:
+                  value:
+                    code: JOIN_REQUEST_PENDING
+                    message: 你已经有一个待审批的加入申请。
+                deadline:
+                  value:
+                    code: GROUPING_DEADLINE_PASSED
+                    message: 组队已经截止，不能再提交加入申请。
+                full:
+                  value:
+                    code: GROUP_SIZE_OUT_OF_RANGE
+                    message: 这个小组已经满 5 人了。
+                crossClass:
+                  value:
+                    code: CROSS_CLASS_NOT_ALLOWED
+                    message: 本课程不允许跨班分组。
+  /join-requests/{requestId}:
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags:
+        - 小组
+      summary: 审批加入申请（组长）
+      description: 当前组长同意或拒绝。同意时保留申请记录并置为 approved，同时创建 GroupMembership；拒绝时保留记录并置为 rejected。同意时必须再次校验组队截止、人数、跨班规则和申请人状态。**达到组内人数上限后，系统自动否决该组所有剩余待审批申请。**
+      operationId: decideGroupJoinRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupJoinRequestDecisionInput'
+      responses:
+        '200':
+          description: 已处理并保留申请记录
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupJoinRequest'
+        '403':
+          description: 当前学生不是该组组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有当前组长可以审批加入申请。
+        '409':
+          description: 申请已失效 / 已过组队截止 / 同意后人数超限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: JOIN_REQUEST_NOT_PENDING
+                message: 这个申请已经处理或过期了。
+    delete:
+      tags:
+        - 小组
+      summary: 撤回加入申请（学生）
+      description: 只有申请人本人可以撤回尚未处理的申请；撤回后可以重新申请。
+      operationId: cancelGroupJoinRequest
+      responses:
+        '204':
+          description: 已撤回
+        '403':
+          description: 当前学生不是申请人
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只能撤回自己的加入申请。
+        '409':
+          description: 申请已经处理或过期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: JOIN_REQUEST_NOT_PENDING
+                message: 这个申请已经处理或过期了。
+  /groups/{groupId}/members/{studentId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      tags:
+        - 小组
+      summary: 组长移除组员
+      description: |
+        组队截止前，当前组长可以把普通组员移出小组。组长不能移除自己；如需退出，应先把组长转交给其他成员。
+        组队截止后学生侧冻结，只有教师可以直接调整成员。
+      operationId: removeGroupMemberAsLeader
+      responses:
+        '204':
+          description: 已移出小组
+        '403':
+          description: 当前学生不是组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有当前组长可以移除组员。
+        '409':
+          description: 已过组队截止 / 目标是组长 / 目标不在本组
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                deadline:
+                  value:
+                    code: GROUPING_DEADLINE_PASSED
+                    message: 组队已经截止，学生侧不能再移除组员。
+                leader:
+                  value:
+                    code: CANNOT_REMOVE_LEADER
+                    message: 组长不能移除自己，请先转交组长。
+                notMember:
+                  value:
+                    code: STUDENT_NOT_IN_GROUP
+                    message: 这名学生不在当前小组。
+  /groups/{groupId}/leader:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags:
+        - 小组
+      summary: 转交组长（当前组长）
+      description: |
+        当前组长可在任何时间（包括组队截止后）从组内成员中任命新组长。
+        服务端原子地完成新组长任职和原组长卸任；不改变小组归属、提交、成绩或口试预约。
+      operationId: transferGroupLeader
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupLeaderInput'
+      responses:
+        '200':
+          description: 已转交
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '403':
+          description: 当前学生不是组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有当前组长可以转交组长身份。
+        '409':
+          description: 目标学生不是本组成员
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: LEADER_MUST_BE_MEMBER
+                message: 新组长必须是这个小组的现有成员。
+  /groups/{groupId}/leave:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 小组
+      summary: 学生退出小组
+      description: 仅分组制课程可用。普通组员可在组队截止前退出；当前组长不能直接退出，必须先转交组长。组队截止后学生侧不能退出；教师仍可直接调整成员。
+      operationId: leaveGroup
+      responses:
+        '204':
+          description: 已退出
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /courses/{courseId}/milestones:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 里程碑
+      summary: 课程里程碑列表
+      description: 仅本课程的教学组长、任课教师与该课程学生可查看。课程级定义，**本课程所有教学班共用**。分组制按小组检查，个人制按学生个人检查。学生看到的这一份不含分数（分数在「我的成绩」）。
+      operationId: listMilestones
+      responses:
+        '200':
+          description: 里程碑列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  weightSum:
+                    type: integer
+                    example: 100
+                  weightValid:
+                    type: boolean
+                    description: 合计是否等于 100
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Milestone'
+        '403':
+          description: 当前用户不是本课程的师生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和该课程学生可以查看。
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+    post:
+      tags:
+        - 里程碑
+      summary: 新增里程碑
+      description: |
+        仅本课程的教学组长可新建里程碑。教学组长**在课程层**定义。分组制按小组检查，个人制按学生个人检查。允许先建好再调平权重：保存时合计不等于 100% 不会被拒，但会在 `weightSum` 里返回并在列表上标红，
+        发起检查前必须调平。
+      operationId: createMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneInput'
+      responses:
+        '201':
+          description: 已新增
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Milestone'
+                  - type: object
+                    properties:
+                      warning:
+                        type: string
+                        nullable: true
+                        example: 当前权重合计 110%，超出 10%：请调低其他里程碑的权重，使合计等于 100%。
+        '400':
+          description: 单个权重非法（≤ 0 或 > 100）或口试设置不合法
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: BAD_REQUEST
+                message: 口试型的预约次数上限不能小于 2
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以新建、修改或删除里程碑。
+      x-required-course-role: course_leader
+  /milestones/{milestoneId}:
+    parameters:
+      - name: milestoneId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags:
+        - 里程碑
+      summary: 修改里程碑
+      description: |
+        仅本课程的教学组长可修改里程碑。未完成：字段随便改。
+        **已完成（`done = true`）：只有权重、成绩构成、计分制能改**，其他字段与删除都会被拒。
+      operationId: updateMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以新建、修改或删除里程碑。
+        '409':
+          description: 已完成的里程碑只能改权重与成绩构成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MILESTONE_DONE_LOCKED
+                message: 这个里程碑已经完成检查，只能修改权重与成绩构成
+      x-required-course-role: course_leader
+    delete:
+      tags:
+        - 里程碑
+      summary: 删除里程碑
+      operationId: deleteMilestone
+      responses:
+        '204':
+          description: 已删除
+        '403':
+          description: 当前教师不是本课程的教学组长
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长可以新建、修改或删除里程碑。
+        '409':
+          description: 已完成的里程碑不能删除
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MILESTONE_DONE_LOCKED
+                message: 已完成的里程碑不能删除，只能改权重与成绩构成
+      description: 仅本课程的教学组长可删除里程碑；已完成检查的里程碑仍不能删除。
+      x-required-course-role: course_leader
+  /classes/{classId}/milestones/{milestoneId}/submissions:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+      - $ref: '#/components/parameters/MilestoneId'
+    get:
+      tags:
+        - 提交与检查
+      summary: 提交列表（教师检查页）
+      description: |
+        分组制只列**归属本班**的小组；个人制列出本班全部学生。
+        每行给出检查对象、提交时间、状态（待检查 / 已通过 / 已驳回 / 未提交）。
+        **当前教师必须是该教学班的任课教师**；跨班、跨课程或仅担任课程组长但未任教该班返回 403。
+      operationId: listSubmissions
+      x-required-class-role: class_teacher
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: state
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 1
+              - 2
+              - 3
+              - 4
+            description: 1 = none（未提交）；2 = pending（待检查）；3 = passed（已通过）；4 = rejected（已驳回）。
+      responses:
+        '200':
+          description: 提交列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Submission'
+        '403':
+          description: 当前教师不是该教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该教学班的任课教师可以查看提交列表。
+  /groups/{groupId}/milestones/{milestoneId}/submission:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/MilestoneId'
+    get:
+      tags:
+        - 提交与检查
+      summary: 某个组在这个里程碑上的提交与检查记录（仅分组制）
+      description: 仅用于分组制学生查看本组在这个里程碑上的提交与检查记录；当前用户必须是该小组成员。教师检查页请使用提交列表与 GET /submissions/{submissionId}。
+      operationId: getGroupSubmission
+      x-required-role: student
+      x-required-group-role: member
+      responses:
+        '200':
+          description: 提交详情（没提交过时 submission 为 null）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  group:
+                    $ref: '#/components/schemas/Group'
+                  milestone:
+                    $ref: '#/components/schemas/Milestone'
+                  submission:
+                    $ref: '#/components/schemas/SubmissionDetail'
+                  current:
+                    $ref: '#/components/schemas/SubmissionReview'
+        '403':
+          description: 当前用户不是本组学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本组学生可以查看本组提交与检查记录。
+  /groups/{groupId}/milestones/{milestoneId}/submissions:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/MilestoneId'
+    post:
+      tags:
+        - 提交与检查
+      summary: 小组提交 / 重新提交材料（仅分组制）
+      description: |
+        仅分组制使用，**当前用户必须是该小组的组成员**。一个或多个文件 + 一段文字说明。**检查通过后材料锁定**（`MILESTONE_DONE_LOCKED`），
+        检查通过前可以反复提交；再次提交会覆盖当前文件和文字说明，检查历史仍保留。
+        口试型里程碑也要先在这里交材料（例如口试要用的 PPT、演示视频）。
+        老师、其他组学生和非本组学生不得代交或重新提交。
+      operationId: submitMaterials
+      x-required-role: student
+      x-required-group-role: member
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                note:
+                  type: string
+                  description: 文字说明
+      responses:
+        '201':
+          description: 提交成功，当前材料已覆盖
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '403':
+          description: 当前用户不是本组学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本组学生可以提交或重新提交材料。
+        '409':
+          description: 已通过检查，材料已锁定 / 已过截止时间
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: MILESTONE_DONE_LOCKED
+                message: 检查通过后不能再修改；如需改动请联系负责老师
+  /me/courses/{courseId}/milestones/{milestoneId}/submission:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/MilestoneId'
+    get:
+      tags:
+        - 提交与检查
+      summary: 我在这个里程碑上的提交与检查记录（个人制）
+      description: 仅个人制课程的学生本人可调用；返回本人最近一次提交、历史检查和当前结论。分组制请使用小组提交接口。
+      operationId: getMyMilestoneSubmission
+      responses:
+        '200':
+          description: 提交详情（没提交过时 submission 为 null）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student:
+                    $ref: '#/components/schemas/Student'
+                  milestone:
+                    $ref: '#/components/schemas/Milestone'
+                  submission:
+                    oneOf:
+                      - $ref: '#/components/schemas/SubmissionDetail'
+                      - type: 'null'
+                  current:
+                    oneOf:
+                      - $ref: '#/components/schemas/SubmissionReview'
+                      - type: 'null'
+        '409':
+          $ref: '#/components/responses/CourseNotIndividual'
+  /me/courses/{courseId}/milestones/{milestoneId}/submissions:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+      - $ref: '#/components/parameters/MilestoneId'
+    post:
+      tags:
+        - 提交与检查
+      summary: 个人提交 / 重新提交材料（个人制）
+      description: |
+        仅个人制课程的学生本人可调用。一个或多个文件 + 一段文字说明；提交归属于当前学生本人。
+        检查通过后材料锁定，通过前可反复提交；再次提交覆盖当前文件和文字说明，检查历史仍保留。口试型里程碑也先用这里提交检查材料。
+      operationId: submitMyMaterials
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                note:
+                  type: string
+                  description: 文字说明
+      responses:
+        '201':
+          description: 提交成功，当前材料已覆盖
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '409':
+          description: 课程不是个人制 / 已通过检查 / 已过截止时间
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notIndividual:
+                  value:
+                    code: COURSE_NOT_INDIVIDUAL
+                    message: 这门课程采用分组制，请由小组提交材料。
+                locked:
+                  value:
+                    code: MILESTONE_DONE_LOCKED
+                    message: 检查通过后不能再修改；如需改动请联系任课教师
+  /submissions/{submissionId}:
+    parameters:
+      - name: submissionId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - 提交与检查
+      summary: 按提交 id 读取详情
+      description: 教师检查页使用；返回检查对象、提交内容与历史检查记录。当前教师必须是该提交所属教学班的任课教师；跨课程、跨教学班或仅担任课程组长但未任教该班时返回 403。
+      operationId: getSubmissionById
+      x-required-submission-class-role: class_teacher
+      responses:
+        '200':
+          description: 提交详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionDetail'
+        '403':
+          description: 当前教师不是该提交所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该提交所属教学班的任课教师可以查看提交详情。
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /submissions/{submissionId}/review:
+    parameters:
+      - name: submissionId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 提交与检查
+      summary: 批改（通过 / 驳回 + 评语 + 检查对象分数）
+      description: |
+        分组制批改型里程碑只能打小组分（没有个人分）；个人制批改型里程碑打学生个人分。驳回时 `score` 留空。
+        通过后这个里程碑对该组或该学生就算完成；驳回后学生端可以重新提交。
+        **当前教师必须是该提交所属教学班的任课教师**；服务端必须校验提交属于本课程、本教学班且该教师任教该班。
+        跨课程、跨教学班、课程组长但非本班任课教师的调用返回 403。
+      operationId: reviewSubmission
+      x-required-submission-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+      responses:
+        '201':
+          description: 已保存并通知被检查的小组或学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReview'
+        '403':
+          description: 当前教师不是该提交所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该提交所属教学班的任课教师可以批改。
+        '400':
+          description: 通过时没有给分，或分数超出满分
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: BAD_REQUEST
+                message: 通过请填写分数（分组制为小组分，个人制为个人分；满分以里程碑计分制为准）
+  /classes/{classId}/milestones/{milestoneId}/oral-slots:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+      - $ref: '#/components/parameters/MilestoneId'
+    get:
+      tags:
+        - 口试与预约
+      summary: 已发布的口试时段
+      description: |
+        仅本课程的教学组长、任课教师和选课学生可以查看；其他用户返回 403。
+        教师端看全部（含已约检查对象）；学生端看同样的一份，`free` 表示还有空位、`mine` 表示是自己所在组或本人预约的。
+        固定排序：未完成检查的时段（含空闲时段）在前，已完成时段在后；同一组内按开始时间升序。分页按排序后的全局顺序切页。
+      operationId: listOralSlots
+      x-allowed-course-roles:
+        - course_leader
+        - teacher
+        - student
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 分页后的时段列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      cancelBefore:
+                        type: integer
+                        description: 教学组长定的「口试前多少小时不能取消预约」
+                        example: 24
+                      freeCount:
+                        type: integer
+                        description: 全部时段中仍有余位的总数，不受当前页影响
+                        example: 1
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/OralSlot'
+        '403':
+          description: 当前用户不是本课程教师或学生
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本课程的教学组长、任课教师和选课学生可以查看口试时段。
+    post:
+      tags:
+        - 口试与预约
+      summary: 发布口试时段（本班任课教师）
+      description: 只有该教学班的任课教师可以发布；课程组长如果不是本班任课教师也不能发布。
+      operationId: createOralSlot
+      x-required-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OralSlotInput'
+      responses:
+        '201':
+          description: 已发布
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OralSlot'
+        '403':
+          description: 当前教师不是本班任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以发布口试时段。
+  /oral-slots/{slotId}:
+    parameters:
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      tags:
+        - 口试与预约
+      summary: 删除已发布的时段（本班任课教师）
+      description: 只有该时段所属教学班的任课教师可以删除；课程组长如果不是本班任课教师也不能删除。二次确认；如果已经有人预约，对应小组或学生回到「未预约」，**这次的预约次数退还**（不是学生自己取消的）。
+      operationId: deleteOralSlot
+      x-required-class-role: class_teacher
+      responses:
+        '200':
+          description: 已删除
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  releasedSubjects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        subjectType:
+                          type: string
+                          enum:
+                            - group
+                            - student
+                        subjectId:
+                          type: integer
+                    example:
+                      - subjectType: group
+                        subjectId: 701
+        '403':
+          description: 当前教师不是该时段所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以删除口试时段。
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /oral-slots/{slotId}/bookings:
+    parameters:
+      - name: slotId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 口试与预约
+      summary: 预约或改约口试时段（本班学生）
+      description: |
+        只有该教学班的学生可以预约。分组制下，本组组长和普通组员都可以为本组预约；个人制下由学生本人预约。
+        学生端直接点「空闲」时段调用本接口。如果本组已有预约，必须先向用户确认；确认后再次调用同一接口并传 `confirmReschedule = true`，服务端原子地释放原时段并占用新时段。
+        首次预约和改约都消耗 1 次预约次数；取消或改约不退还。进入口试前不可取消时间窗后，不能改约。
+      operationId: bookOralSlot
+      x-required-class-role: student
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OralBookingInput'
+      responses:
+        '200':
+          description: 预约或改约成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OralBooking'
+        '403':
+          description: 当前学生不属于这个教学班
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的学生可以预约口试时段。
+        '409':
+          description: 时段已满 / 预约次数用完 / 已经约过 / 需要确认改约
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notInGroup:
+                  value:
+                    code: NOT_IN_GROUP
+                    message: 分组制下必须先加入一个小组，才能预约口试。
+                needsConfirmation:
+                  value:
+                    code: RESCHEDULE_CONFIRMATION_REQUIRED
+                    message: 本组已经预约了 11-18 14:00，确认改约到这个时段吗？
+                cancelWindow:
+                  value:
+                    code: CANCEL_WINDOW_CLOSED
+                    message: 已进入不可取消预约的时间窗，不能改约。
+                full:
+                  value:
+                    code: SLOT_FULL
+                    message: 这个时段已经满了，换一个吧。
+                limit:
+                  value:
+                    code: BOOKING_LIMIT_REACHED
+                    message: 预约次数已经用完了（3 / 3），请联系负责老师。
+  /bookings/{bookingId}:
+    parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      tags:
+        - 口试与预约
+      summary: 取消预约（本组组员 / 学生本人）
+      description: 分组制只有预约所属小组的组员可以取消，组长和普通组员都包括在内；其他组或未入组的学生不能取消。个人制由学生本人取消。取消后**预约次数不退还**；进入「口试前 X 小时」的时间窗后返回 `CANCEL_WINDOW_CLOSED`。
+      operationId: cancelBooking
+      x-required-booking-actor: group_member_or_self
+      responses:
+        '204':
+          description: 已取消（次数不退还）
+        '403':
+          description: 当前学生不是预约所属小组的组员（或个人制下的本人）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本组组员可以取消这个预约。
+        '409':
+          description: 已进入不可取消的时间窗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: CANCEL_WINDOW_CLOSED
+                message: 口试前 24 小时内不能取消预约（距离口试只剩 12 小时）
+  /classes/{classId}/milestones/{milestoneId}/oral-status:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+      - $ref: '#/components/parameters/MilestoneId'
+    get:
+      tags:
+        - 口试与预约
+      summary: 检查状态（教师口试页下半部分）
+      description: 分组制每个组一行，个人制每名学生一行：已用预约次数和状态（已预约 / 已完成 / 未预约）。口试只有一次，完成后不再重新预约。当前教师必须是该教学班的任课教师，跨班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: listOralStatus
+      x-required-class-role: class_teacher
+      responses:
+        '200':
+          description: 检查对象状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookingLimit:
+                    type: integer
+                    example: 3
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OralStatus'
+        '403':
+          description: 当前教师不是该教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该教学班的任课教师可以查看口试检查状态。
+  /milestones/{milestoneId}/groups/{groupId}/oral-records:
+    parameters:
+      - $ref: '#/components/parameters/MilestoneId'
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 口试与预约
+      summary: 记录小组口试检查结果
+      description: |
+        路径明确指定小组和里程碑。只有本班任课教师可以记录；结论为通过 / 驳回，可填写口试备忘录和小组分，并逐位录入组内学生个人分。
+        每个检查对象每个口试里程碑只记录一次；完成后只能修改检查结果。
+      operationId: createGroupOralRecord
+      x-required-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OralRecordInput'
+      responses:
+        '201':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OralStatus'
+        '403':
+          description: 当前教师不是本班任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以记录口试结果。
+        '409':
+          description: 口试检查已经完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: ORAL_ALREADY_FINISHED
+                message: 这个小组的口试检查已经完成；如需修改，请使用口试记录修改接口。
+  /milestones/{milestoneId}/students/{studentId}/oral-records:
+    parameters:
+      - $ref: '#/components/parameters/MilestoneId'
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 口试与预约
+      summary: 记录个人口试检查结果
+      description: 路径明确指定学生和里程碑。只有本班任课教师可以记录个人口试的结论、备忘录和个人分。
+      operationId: createStudentOralRecord
+      x-required-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OralRecordInput'
+      responses:
+        '201':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OralStatus'
+        '403':
+          description: 当前教师不是本班任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有本教学班的任课教师可以记录口试结果。
+  /oral-records/{oralRecordId}:
+    parameters:
+      - name: oralRecordId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags:
+        - 口试与预约
+      summary: 修改已完成的口试检查结果
+      description: 「检查状态」里点「修改」用它，可以改分数与记录；分组制可修改组内每位学生的个人分。当前教师必须是该口试记录所属教学班的任课教师，跨班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: updateOralRecord
+      x-required-oral-record-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OralRecordInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OralStatus'
+        '403':
+          description: 当前教师不是该口试记录所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该口试记录所属教学班的任课教师可以修改检查结果。
+  /oral-records/{oralRecordId}/memo-summary:
+    parameters:
+      - name: oralRecordId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - 口试与预约
+      summary: 录音转文字摘要（口试备忘录）
+      description: 上传口试录音，服务端做语音转文字 + 摘要，返回的文本教师可以再改。当前教师必须是该口试记录所属教学班的任课教师；跨班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: summarizeOralMemo
+      x-required-oral-record-class-role: class_teacher
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audio
+              properties:
+                audio:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 摘要
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoSummaryResult'
+        '403':
+          description: 当前教师不是该口试记录所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该口试记录所属教学班的任课教师可以生成口试备忘录。
+  /classes/{classId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    get:
+      tags:
+        - 成绩
+      summary: 成绩汇总（教师：学生 × 里程碑）
+      description: |
+        一行一个学生，每个里程碑一格：格子主值是**该里程碑的原始得分**。分组制附带小组分与个人分；个人制只附带个人分。
+        最右边一列是最终成绩 = Σ(得分 ÷ 满分 × 100 × 权重)，还有里程碑没评完的标 `pending = true`。
+        **当前教师必须是该教学班的任课教师**；跨班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: getClassGrades
+      x-required-class-role: class_teacher
+      responses:
+        '200':
+          description: 成绩表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gradebook'
+        '403':
+          description: 当前教师不是该教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该教学班的任课教师可以查看成绩。
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+  /classes/{classId}/grades/export:
+    parameters:
+      - $ref: '#/components/parameters/ClassId'
+    post:
+      tags:
+        - 成绩
+      summary: 导出成绩表（Excel）
+      description: 分组制至少包含学号、姓名、小组、各里程碑的小组分与个人分、小组得分、个人得分、最终成绩；个人制至少包含学号、姓名、各里程碑个人分、个人得分、最终成绩。当前教师必须是该教学班的任课教师；跨班、跨课程或课程组长但非本班任课教师返回 403。
+      operationId: exportClassGrades
+      x-required-class-role: class_teacher
+      responses:
+        '200':
+          description: Excel 文件
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: 当前教师不是该教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该教学班的任课教师可以导出成绩。
+  /me/courses/{courseId}/grades:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags:
+        - 成绩
+      summary: 学生的「我的成绩」（一行一个里程碑）
+      description: |
+        学生视角不是学生×里程碑的大表，而是**一行一个里程碑**：得分（原始分，重点）、个人分；分组制额外返回小组分。
+        最后一列是**该里程碑的最终成绩**（= 得分 ÷ 满分 × 100 × 权重）；这一列相加就是顶部的「当前总成绩」。
+      operationId: getMyGrades
+      responses:
+        '200':
+          description: 我的成绩
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentGrades'
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+  /files/{fileId}:
+    parameters:
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - 文件与审计
+      summary: 下载提交材料
+      description: 只有本课程的教师、以及提交它的组内学生能下载。
+      operationId: downloadFile
+      responses:
+        '200':
+          description: 文件流
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /audit-logs:
+    get:
+      tags:
+        - 文件与审计
+      summary: 日志查询
+      description: 日志由统一身份系统持久化；本接口只做权限校验、可见范围过滤与只读代理查询，本系统不建立审计日志表。教师与管理员可查，学生不可见。教师调用时，服务端只返回本人担任课程组长的课程全部日志，以及本人任教教学班的日志；同课程其他教学班、未任教且未担任组长的课程日志不得返回。管理员可查看全部日志。即使传入 `courseId` / `classId`，也必须在该可见范围内再次过滤。
+      operationId: listAuditLogs
+      x-admin-required-permission: AV
+      parameters:
+        - name: termId
+          in: query
+          schema:
+            type: integer
+          description: 按学期筛选
+        - $ref: '#/components/parameters/CourseIdQuery'
+        - name: classId
+          in: query
+          schema:
+            type: integer
+          description: 按教学班筛选；教师只能查询自己任教的教学班
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum:
+              - score_changed
+              - group_changed
+              - milestone_changed
+              - roster_changed
+        - name: actor
+          in: query
+          schema:
+            type: string
+          description: 按操作人姓名或工号模糊查询
+        - name: actorId
+          in: query
+          schema:
+            type: integer
+          description: 选中用户后按稳定用户 id 精确筛选；允许筛选已删除用户的历史操作
+        - name: target
+          in: query
+          schema:
+            type: string
+          description: 按操作对象模糊查询，例如小组名、学生、名单或里程碑
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 起始时间（含）
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 结束时间（含）
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 日志
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+        '403':
+          description: 当前用户无权查看审计日志
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查看这些课程日志的权限。
+  /identity/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 学校统一身份认证系统中的用户标识
+    get:
+      tags:
+        - 教师
+      summary: 查询统一身份用户
+      description: 添加教师时调用学校统一身份认证系统，按外部用户标识获取姓名与工号；姓名和工号不在本系统手工录入。
+      operationId: lookupIdentityUser
+      x-required-role: admin
+      x-required-permission: TEC
+      responses:
+        '200':
+          description: 统一身份用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+        '403':
+          description: 当前管理员没有添加教师的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有添加教师的权限。
+        '404':
+          description: 统一身份系统中不存在该用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_USER_NOT_FOUND
+                message: 统一身份认证系统中没有找到该用户。
+  /teachers:
+    get:
+      tags:
+        - 教师
+      summary: 教师列表（管理员）
+      description: 管理员查询教师列表需 teacher.view 权限；带「任课总数」「本学期任教」与「是否可删除」；`deletable = false` 的教师不显示删除入口。
+      operationId: listTeachers
+      x-admin-required-permission: TV
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: 按姓名 / 工号 / 院系搜索
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 教师列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Teacher'
+        '403':
+          description: 当前管理员没有查看教师列表的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查看教师列表的权限。
+    post:
+      tags:
+        - 教师
+      summary: 添加教师
+      description: 按 userId 调用学校统一身份认证系统获取姓名与工号后创建教师；不接收手工姓名和工号。
+      operationId: createTeacher
+      x-required-role: admin
+      x-required-permission: TEC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherCreateInput'
+      responses:
+        '201':
+          description: 已添加
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+        '403':
+          description: 当前管理员没有添加教师的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有添加教师的权限。
+  /teachers/{teacherId}:
+    parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      tags:
+        - 教师
+      summary: 修改教师信息
+      description: 改姓名时，课程里的引用（课程组长 / 任课教师）会一起改。
+      operationId: updateTeacher
+      x-required-role: admin
+      x-required-permission: TEE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherUpdateInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+        '403':
+          description: 当前管理员没有修改教师信息的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有修改教师信息的权限。
+    delete:
+      tags:
+        - 教师
+      summary: 删除教师
+      description: |
+        前提：**任何学期**的任何课程里都不担任课程组长、也不担任任课教师。
+        不满足时列表上的删除是灰的，接口返回 `TEACHER_IN_USE`。
+      operationId: deleteTeacher
+      x-required-role: admin
+      x-required-permission: TED
+      responses:
+        '204':
+          description: 已删除
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
+        '403':
+          description: 当前管理员没有删除学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有删除学期的权限。
+        '409':
+          description: 还在担任课程组长或任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TEACHER_IN_USE
+                message: 李建国 在 5 门课程中担任课程组长、在 5 门课程中担任任课教师，不能删除；请先在对应课程里换掉他。
+  /current-term:
+    put:
+      tags:
+        - 学期
+      summary: 替换当前学期
+      description: 需管理员权限 term.current.manage。把系统的当前学期指针替换为指定学期；原来的当前学期会自动变为非当前。重复提交同一 termId 结果一致。
+      operationId: replaceCurrentTerm
+      x-required-role: admin
+      x-required-permission: TCM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrentTermInput'
+      responses:
+        '204':
+          description: 已替换当前学期
+        '403':
+          description: 当前管理员没有管理当前学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有管理当前学期的权限。
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
+    delete:
+      tags:
+        - 学期
+      summary: 取消当前学期
+      description: 需管理员权限 term.current.manage。删除系统的当前学期指针。本操作幂等：当前没有学期时重复调用仍返回 204。
+      operationId: clearCurrentTerm
+      x-required-role: admin
+      x-required-permission: TCM
+      responses:
+        '204':
+          description: 已取消；本来就没有当前学期时也返回 204
+        '403':
+          description: 当前管理员没有管理当前学期的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有管理当前学期的权限。
+  /teacher/courses:
+    get:
+      tags:
+        - 课程
+      summary: 教师的我的课程
+      description: 教学组长看自己当组长的课，任课教师看自己被指派的课；可以用 termId 切换学期，不传默认当前学期。可切换的学期清单复用 GET /terms。
+      operationId: listTeacherCourses
+      parameters:
+        - name: termId
+          in: query
+          required: false
+          description: 要查看哪个学期；不传默认当前学期。
+          schema:
+            type: integer
+          example: 202601
+      responses:
+        '200':
+          description: 教师课程列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  term:
+                    oneOf:
+                      - type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 2026-2027 学年第一学期
+                      - type: 'null'
+                    description: 当前选择的学期；没有当前学期且未传 termId 时为 null。
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeacherCourse'
+                  isCurrentTerm:
+                    type: boolean
+                    description: 当前查看的是不是当前学期
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        学校统一身份认证系统签发的 JWT。业务 API 只接受该令牌，令牌校验、角色与权限查询均以统一身份认证系统为准。
+        JWT 不包含权限；Service 通过统一身份认证权限接口和业务对象关系完成权限判断。
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    TermId:
+      name: termId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 202601
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 101
+    CourseIdQuery:
+      name: courseId
+      in: query
+      schema:
+        type: integer
+      example: 101
+    ClassId:
+      name: classId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1001
+    MilestoneId:
+      name: milestoneId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 5001
+  responses:
+    BadRequest:
+      description: 参数不合法
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: BAD_REQUEST
+            message: 请填写里程碑名称
+    Unauthorized:
+      description: 未登录或登录已失效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: 请先登录
+    Forbidden:
+      description: 没有权限（例如任课教师动了别人教学班、学生动了教师功能）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: 你不是这个教学班的任课教师
+    NotFound:
+      description: 对象不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: 找不到这个对象
+    CourseNotGroupBased:
+      description: 课程不是分组制，没有小组或分组规则
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: COURSE_NOT_GROUP_BASED
+            message: 这门课程采用个人制，不使用小组和分组规则。
+    CourseNotIndividual:
+      description: 课程不是个人制，提交应归属于小组
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: COURSE_NOT_INDIVIDUAL
+            message: 这门课程采用分组制，请由小组提交材料。
+    Conflict:
+      description: 业务规则不允许（code 见各接口说明）
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: MILESTONE_RECORDED
+            message: 这门课已经有里程碑记录，不能再移除任课教师
+  schemas:
+    Error:
+      type: object
+      description: 统一错误结构：`code` 是业务错误码（字符串），`message` 是可以直接展示的中文提示，可选带 `details` 补充信息
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: |
+            业务错误码（机器可读，字符串）。HTTP 状态码与 `code` 是两套：同一个 HTTP 409 可能对应不同 `code`，
+            前端按 `code` 决定文案与后续动作。常用码：
+            - `BAD_REQUEST`（参数/校验不通过）、`UNAUTHORIZED`（未登录/密码错）、`FORBIDDEN`（无权限/账号被禁用）、`NOT_FOUND`（对象不存在）
+            - `TERM_NAME_EXISTS`（学期名称全局重复）
+            - COURSE_NOT_FOUND（课程不存在）
+            - `GROUP_RULE_NOT_FOUND`（分组制课程尚未设置课程级默认规则）
+            - `TERM_HAS_COURSES`（学期里还有课程，不能删）
+            - `TERM_IS_CURRENT`（当前学期不能编辑或删除）
+            - `COURSE_HAS_STUDENTS`（课程里还有学生，不能删）
+            - `CLASS_HAS_GROUPS`（教学班已产生小组，不能删）
+            - `CLASS_NO_CONFLICT`（同一课程内教学班编号重复）
+            - `MILESTONE_RECORDED`（已有里程碑记录，不能移除任课教师；课程组长仍可更换）
+            - `MILESTONE_DONE_LOCKED`（已完成的里程碑被锁：只能改权重/成绩构成/计分制；提交材料也已锁定）
+            - `WEIGHT_SUM_NOT_100`（权重合计不等于 100%）
+            - `GROUP_SIZE_OUT_OF_RANGE`（人数不在上下限内）
+            - `CROSS_CLASS_NOT_ALLOWED`（本课程不允许跨班分组）
+            - `ALREADY_IN_GROUP`（同一课程同时只能属于一个组）
+            - `BOOKING_LIMIT_REACHED`（预约次数用完）
+            - `SLOT_FULL`（时段已满）
+            - `CANCEL_WINDOW_CLOSED`（进入「口试前 X 小时不能取消预约」的时间窗）
+            - `ORAL_LIMIT_REACHED`（口试次数用完）
+            - `TEACHER_IN_USE`（教师还在担任课程组长或任课教师，不能删除）
+          examples:
+            - MILESTONE_RECORDED
+            - CANCEL_WINDOW_CLOSED
+        message:
+          type: string
+          description: 给用户看的中文说明（可直接挂在表单或 toast 上）
+          example: 这门课已经有里程碑记录，不能再移除任课教师
+        details:
+          type: object
+          additionalProperties: true
+          description: '补充信息，例如 { "weightSum": 110, "need": -10 }'
+    Page:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 43
+    Role:
+      type: string
+      description: 同一 User 可以同时拥有多个角色，例如 `teacher` 和 `admin`。组长是学生的子角色（`isLeader`），课程组长是教师的子角色（`isCourseLeader`）。
+      enum:
+        - student
+        - teacher
+        - admin
+    UiPermission:
+      type: string
+      minLength: 1
+      description: 统一身份认证定义的前端菜单/按钮权限码；不使用 AuthorityCodes，具体编码由统一身份认证维护
+      example: course.view
+    UserLookupItem:
+      type: object
+      required:
+        - id
+        - number
+        - name
+        - roles
+        - deleted
+      properties:
+        id:
+          type: integer
+          example: 11
+        number:
+          type: string
+          description: 学号或工号
+          example: T1001
+        name:
+          type: string
+          example: 李建国
+        roles:
+          type: array
+          description: 同一自然人可同时拥有多个角色，例如教师和管理员
+          items:
+            $ref: '#/components/schemas/Role'
+          example:
+            - teacher
+            - admin
+        deleted:
+          type: boolean
+          description: 用户资料是否已删除；统一身份系统中的历史日志仍保留该操作人
+    LoginInput:
+      type: object
+      required:
+        - username
+        - password
+        - systems
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: 学校统一身份认证账号
+          example: 20220101
+        password:
+          type: string
+          format: password
+          minLength: 1
+          maxLength: 256
+          description: 密码只转发给统一身份认证，不落库、不记录日志
+          writeOnly: true
+        systems:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: 本次登录目标系统列表；系统标识必须与 JWT `aud` 一致，登录本系统时至少包含 `course-project-management`
+          items:
+            type: string
+            minLength: 1
+          example:
+            - course-project-management
+    LoginVO:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: 统一身份认证签发的 JWT 访问令牌；格式为 header.payload.signature，只用于身份认证，不包含 identity、roles 或 permissions
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          minimum: 1
+          description: 令牌有效期，单位秒
+          example: 7200
+    PermissionCheckVO:
+      type: object
+      required:
+        - allowed
+      properties:
+        allowed:
+          type: boolean
+          description: 当前用户是否具备路径中指定的前端菜单/按钮权限
+          example: true
+    IdentityCurrentUserVO:
+      type: object
+      description: 统一身份认证系统返回的当前用户身份、角色与前端权限
+      required:
+        - subject
+        - roles
+        - permissions
+      properties:
+        subject:
+          type: string
+          description: 统一身份用户标识，对应 JWT `sub`
+          example: sso-u1001
+        roles:
+          type: array
+          description: 统一身份系统中的角色；同一自然人可以同时拥有教师和管理员角色
+          items:
+            $ref: '#/components/schemas/Role'
+          example:
+            - teacher
+            - admin
+        permissions:
+          type: array
+          description: 统一身份认证定义的前端菜单/按钮权限码，不使用 AuthorityCodes；后端仍由 Service 做强权限校验
+          items:
+            $ref: '#/components/schemas/UiPermission'
+          example:
+            - CV
+            - CR
+            - CE
+        name:
+          type: string
+          example: 张小雨
+        'no':
+          type: string
+          description: 学号或工号
+          example: '20220101'
+    ApiAuthorityCheckVO:
+      type: object
+      required:
+        - operationId
+        - allowed
+      properties:
+        operationId:
+          type: string
+          example: listAdminCourses
+        allowed:
+          type: boolean
+          description: 当前用户是否具备调用目标 API 所需的全局 AuthorityCodes 权限；不返回权限码
+          example: true
+    CurrentUserVO:
+      type: object
+      required:
+        - userId
+        - number
+        - name
+        - roles
+        - permissions
+      properties:
+        userId:
+          type: string
+          description: 统一身份用户标识，对应 JWT `sub`
+          example: sso-u1001
+        teacherId:
+          type: integer
+          description: 本系统教师 id；当前用户没有教师身份时不返回
+          example: 11
+        studentId:
+          type: integer
+          description: 本系统学生 id；当前用户没有学生身份时不返回
+          example: 20220101
+        number:
+          type: string
+          description: 工号或学号，来自统一身份认证
+          example: '20220101'
+        name:
+          type: string
+          description: 姓名，来自统一身份认证
+          example: 张小雨
+        roles:
+          type: array
+          description: 统一身份系统中的角色
+          items:
+            $ref: '#/components/schemas/Role'
+          example:
+            - teacher
+            - admin
+        permissions:
+          type: array
+          description: 统一身份认证定义的前端菜单/按钮权限码，不使用 AuthorityCodes；不来自 JWT，后端仍由 Service 做强权限校验
+          items:
+            $ref: '#/components/schemas/UiPermission'
+          example:
+            - CV
+            - CR
+            - CE
+
+    Term:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 学期 id（整数，由数据库序列/自增生成）
+          example: 202601
+        name:
+          type: string
+          description: 学期名称，全局唯一
+          example: 2026-2027 学年第一学期
+        startDate:
+          type: string
+          format: date
+          example: '2026-09-01'
+        endDate:
+          type: string
+          format: date
+          example: '2027-01-15'
+        current:
+          type: boolean
+          description: 只读。同一时刻最多一个当前学期；可以没有当前学期。通过 `PUT /current-term` 替换，`DELETE /current-term` 取消。
+          readOnly: true
+        courseCount:
+          type: integer
+          example: 5
+        studentCount:
+          type: integer
+          example: 163
+    TermInput:
+      type: object
+      required:
+        - name
+        - startDate
+        - endDate
+      properties:
+        name:
+          type: string
+          description: 学期名称，全局唯一
+          example: 2026-2027 学年第二学期
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      description: 新建 / 修改学期只能设置名称与起止日期；当前学期要调用单独的 `PUT /current-term` 替换。
+    Teacher:
+      type: object
+      required:
+        - id
+        - userId
+        - 'no'
+        - name
+        - title
+        - dept
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1001
+        'no':
+          type: string
+          description: 工号，来自统一身份认证系统
+          example: T1001
+        name:
+          type: string
+          description: 姓名，来自统一身份认证系统
+          example: 李建国
+        title:
+          type: string
+          example: 教授
+        dept:
+          type: string
+          example: 软件工程系
+        totalCourseCount:
+          type: integer
+          description: 「任课总数」= 任何学期里担任课程组长或任课教师的课程数
+          example: 5
+        currentTermCourseCount:
+          type: integer
+          description: 「本学期任教」
+          example: 3
+        deletable:
+          type: boolean
+          description: 当前是否可删除；false 表示仍在任何课程中担任课程组长或任课教师，界面不显示删除入口。
+    IdentityUser:
+      type: object
+      required:
+        - userId
+        - 'no'
+        - name
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1008
+        'no':
+          type: string
+          description: 工号
+          example: T1008
+        name:
+          type: string
+          description: 姓名
+          example: 孙晨
+    TeacherCreateInput:
+      type: object
+      required:
+        - userId
+        - title
+        - dept
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识；服务端据此获取姓名与工号
+          example: sso-t1008
+        title:
+          type: string
+          example: 讲师
+        dept:
+          type: string
+          example: 软件工程系
+    TeacherUpdateInput:
+      type: object
+      required:
+        - title
+        - dept
+      properties:
+        title:
+          type: string
+          example: 副教授
+        dept:
+          type: string
+          example: 软件工程系
+    CourseInput:
+      type: object
+      description: 管理员修改课程名称、代码与描述；不接受 workMode。
+      required:
+        - name
+        - code
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+          description: 课程描述，可为空
+    CourseCreateInput:
+      type: object
+      description: 新建课程；workMode 在创建后不可修改。
+      required:
+        - name
+        - code
+        - workMode
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        workMode:
+          $ref: '#/components/schemas/CourseWorkMode'
+        description:
+          type: string
+          description: 课程描述，可为空；缺省时保存为空字符串
+    CourseDescriptionInput:
+      type: object
+      properties:
+        description:
+          type: string
+          description: 课程描述，可为空
+    CourseStatus:
+      type: integer
+      description: 课程状态整数编码。1 = application（申请）；2 = pending（待审核）；3 = open（开放）。
+      enum:
+        - 1
+        - 2
+        - 3
+    CourseReviewInput:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - approved
+            - rejected
+        comment:
+          type: string
+          description: 审核意见；驳回时必填
+    CourseWorkMode:
+      type: string
+      description: 课程运行方式。group = 分组制；individual = 个人制。
+      enum:
+        - group
+        - individual
+    CourseLeadersInput:
+      type: object
+      required:
+        - teacherIds
+      properties:
+        teacherIds:
+          type: array
+          description: 课程组长（教学组长）可以多名，随时可换，不受里程碑记录限制
+          items:
+            type: integer
+          example:
+            - 11
+            - 12
+    CopyCourseRequest:
+      type: object
+      required:
+        - targetTermId
+        - sourceCourseId
+        - code
+      properties:
+        targetTermId:
+          type: integer
+          description: 目标学期 id
+          example: 202602
+        sourceCourseId:
+          type: integer
+          description: 唯一要拷贝的源课程 id；当前教师必须是该课程的任课教师或课程组长
+          example: 101
+        code:
+          type: string
+          maxLength: 64
+          description: 新课程代码；必须全局唯一
+          example: SE-2027-COPY
+    TeachingClass:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 101
+        'no':
+          type: integer
+          description: 班序号，系统自动分配（小组编号前缀）
+          example: 1
+        name:
+          type: string
+          example: 软工 2201 班
+        teachers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: 李建国
+        studentCount:
+          type: integer
+          example: 41
+        groupCount:
+          type: integer
+          description: 归属本班的小组数
+          example: 12
+        rosterImported:
+          type: boolean
+          description: 是否通过 Excel 成功导入过本班选课名单。true 表示至少导入过一次，false 表示尚未导入；手工添加学生不一定会改变该值。
+        rosterUpdatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 本班名单最近一次发生变更的时间，包括 Excel 导入、手工添加或删除学生；从未建立或维护名单时为 null。
+        groupRuleSource:
+          type: string
+          enum:
+            - course
+            - class
+          description: 本班分组规则是跟随课程默认还是已自定义
+        groupedCount:
+          type: integer
+          description: 本班已组队的学生总数。
+          example: 39
+        ungroupedCount:
+          type: integer
+          description: 本班尚未组队的学生总数。
+          example: 2
+    TeachingClassInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 软工 2203 班
+      description: 批量新建中的一个教学班，只提供名称；班级编号由系统自动分配。
+    TeachingClassesInput:
+      type: object
+      required:
+        - classes
+      properties:
+        classes:
+          type: array
+          minItems: 1
+          description: 一次建立的教学班，按数组顺序连续分配班序号
+          items:
+            $ref: '#/components/schemas/TeachingClassInput'
+    ClassTeachersInput:
+      type: object
+      required:
+        - teacherIds
+      properties:
+        teacherIds:
+          type: array
+          description: 指派/更换本班任课教师（可多位）
+          items:
+            type: integer
+          example:
+            - 11
+            - 12
+    Student:
+      type: object
+      required:
+        - id
+        - 'no'
+        - name
+      properties:
+        id:
+          type: integer
+          example: 1
+        'no':
+          type: string
+          description: 学号；全局唯一
+          example: '20220101'
+        name:
+          type: string
+          description: 学生姓名
+          example: 张小雨
+        groupNo:
+          type: string
+          nullable: true
+          example: 1-01
+        groupName:
+          type: string
+          nullable: true
+          example: 星火队
+        isLeader:
+          type: boolean
+        grouped:
+          type: boolean
+        identityLinked:
+          type: boolean
+          readOnly: true
+          description: 是否已关联统一身份用户；由名单接口实时查询统一身份认证系统得出，不在本系统数据库存储
+        warning:
+          type: string
+          nullable: true
+          description: 手工添加时，若学号已存在但输入姓名与系统姓名不同，返回提示；系统不会修改已有姓名
+    StudentInput:
+      type: object
+      required:
+        - 'no'
+        - name
+      properties:
+        'no':
+          type: string
+          description: 学号；全局唯一。优先按学号匹配已有学生记录。
+        name:
+          type: string
+          description: 姓名；用于展示和同名区分，不单独作为全局唯一键。
+    StudentCandidate:
+      type: object
+      properties:
+        studentId:
+          type: integer
+          example: 1
+        'no':
+          type: string
+          example: '20220101'
+        name:
+          type: string
+          example: 张小雨
+        className:
+          type: string
+          nullable: true
+          description: 当前已知的教学班名称；没有时可为 null
+          example: 软工 2201 班
+        alreadyInClass:
+          type: boolean
+          description: 是否已经在本教学班名单中
+        identityLinked:
+          type: boolean
+          readOnly: true
+          description: 是否已关联统一身份用户；实时查询，不落库
+    GroupRule:
+      type: object
+      properties:
+        minSize:
+          type: integer
+          example: 3
+        maxSize:
+          type: integer
+          example: 5
+        allowCrossClass:
+          type: boolean
+          example: false
+        startAt:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+          example: '2026-09-28T23:59:00+08:00'
+        deadlinePassed:
+          type: boolean
+          description: 截止后学生侧冻结
+    GroupRuleInput:
+      type: object
+      required:
+        - minSize
+        - maxSize
+        - allowCrossClass
+        - startAt
+        - deadline
+      properties:
+        minSize:
+          type: integer
+          minimum: 1
+        maxSize:
+          type: integer
+          minimum: 1
+        allowCrossClass:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+    EffectiveGroupRule:
+      allOf:
+        - $ref: '#/components/schemas/GroupRule'
+        - type: object
+          properties:
+            source:
+              type: string
+              description: course = 跟随课程默认（课程改了会跟着变）；class = 本班已自定义
+              enum:
+                - course
+                - class
+            courseDefaults:
+              $ref: '#/components/schemas/GroupRule'
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 101
+        'no':
+          type: string
+          description: 编号规则「班序号-小组序号」
+          example: 1-03
+        name:
+          type: string
+          description: 学生建组时自行填写
+          example: 麒麟队
+        leader:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: 李明
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              'no':
+                type: string
+              name:
+                type: string
+              classId:
+                type: integer
+                example: 1001
+              className:
+                type: string
+                example: 软工 2201 班
+              isLeader:
+                type: boolean
+        memberCount:
+          type: integer
+          example: 3
+        ownerClass:
+          type: object
+          description: 归属教学班 —— 归哪个班就由那个班的任课老师负责检查与评分
+          properties:
+            id:
+              type: integer
+              example: 1
+            'no':
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: 软工 2201 班
+        ownerReason:
+          type: string
+          description: 判定依据（人数多的班 / 负责小组数少 / 组长所在班 / 平局按成立时间）
+          example: '人数相同（2 : 2），计科 2202 班当前负责小组数较少'
+        createdAt:
+          type: string
+          format: date-time
+    GroupInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: 星火队
+        memberIds:
+          type: array
+          description: 教师新建/编辑时指定的成员；学生建组时留空（自己进组当组长）
+          items:
+            type: integer
+          example:
+            - 20220101
+            - 20220107
+    GroupJoinRequestInput:
+      type: object
+      properties:
+        note:
+          type: string
+          description: 给组长的简短自我介绍，可选
+          example: 我负责前端，想加入这个小组。
+    GroupJoinRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 9001
+        groupId:
+          type: integer
+          example: 701
+        groupNo:
+          type: string
+          example: 1-03
+        groupName:
+          type: string
+          example: 麒麟队
+        applicant:
+          $ref: '#/components/schemas/Student'
+        note:
+          type: string
+          nullable: true
+        state:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          description: 1 = pending；2 = approved；3 = rejected；4 = cancelled；5 = expired。
+        decidedBy:
+          type: string
+          nullable: true
+          description: 处理人姓名；组长审批时为组长姓名
+    GroupJoinRequestDecisionInput:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - approved
+            - rejected
+    GroupLeaderInput:
+      type: object
+      required:
+        - studentId
+      properties:
+        studentId:
+          type: integer
+          description: 新组长；必须是该小组现有成员
+          example: 20220107
+    Milestone:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: 中期答辩
+        description:
+          type: string
+          description: 里程碑描述
+          example: 现场演示 8 分钟，并说明成员分工和关键取舍
+        due:
+          type: string
+          format: date-time
+        mode:
+          type: string
+          enum:
+            - grading
+            - oral
+          description: grading = 批改型；oral = 口试型
+        weight:
+          type: integer
+          description: 百分比权重
+          example: 25
+        scale:
+          type: integer
+          description: 计分制：100 = 百分制，5 = 5 分制
+          enum:
+            - 100
+            - 5
+          default: 100
+        groupRatio:
+          type: integer
+          description: 小组成绩占比（%）；个人占比 = 100 - groupRatio。分组制批改型固定 100；个人制固定 0（个人占比 100%）
+          example: 70
+        bookLimit:
+          type: integer
+          description: 口试型：每个检查对象最多预约次数，≥ 2。分组制按组计数，个人制按学生计数。
+          example: 3
+        cancelBefore:
+          type: integer
+          description: 口试型：口试前多少小时内不能取消预约（0 = 不限制）
+          example: 24
+        done:
+          type: boolean
+          description: 已经完成检查：不能删除，只能改权重 / 成绩构成 / 计分制
+        weightSum:
+          type: integer
+          description: 同一课程所有里程碑权重之和（应为 100）
+          example: 100
+    MilestoneInput:
+      type: object
+      required:
+        - name
+        - description
+        - due
+        - mode
+        - weight
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        due:
+          type: string
+          format: date-time
+        mode:
+          type: string
+          enum:
+            - grading
+            - oral
+        weight:
+          type: integer
+        scale:
+          type: integer
+          enum:
+            - 100
+            - 5
+          default: 100
+        groupRatio:
+          type: integer
+          description: 仅分组制使用。分组制批改型固定 100；分组制口试型为 0~100；个人制忽略并固定为 0。
+          default: 100
+        bookLimit:
+          type: integer
+          default: 3
+          minimum: 2
+        cancelBefore:
+          type: integer
+          default: 24
+          minimum: 0
+    FileRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 开题报告-v2.pdf
+        size:
+          type: integer
+          example: 1887437
+        url:
+          type: string
+          description: 下载地址（带签名，短期有效）
+    Submission:
+      type: object
+      required:
+        - subjectType
+        - milestoneId
+        - state
+      properties:
+        id:
+          type: integer
+          nullable: true
+          description: 尚未提交的检查对象在列表中 id 为 null
+          example: 1
+        subjectType:
+          type: string
+          enum:
+            - group
+            - student
+          description: 检查对象类型；由课程 workMode 决定
+        groupId:
+          type: integer
+          nullable: true
+          description: 分组制检查对象 id；个人制为 null
+          example: 701
+        groupNo:
+          type: string
+          nullable: true
+          example: 1-01
+        groupName:
+          type: string
+          nullable: true
+          example: 星火队
+        studentId:
+          type: integer
+          nullable: true
+          description: 个人制检查对象 id；分组制为 null
+          example: 20220101
+        studentNo:
+          type: string
+          nullable: true
+          example: '20220101'
+        studentName:
+          type: string
+          nullable: true
+          example: 张小雨
+        milestoneId:
+          type: integer
+          example: 5001
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileRef'
+        note:
+          type: string
+          description: 文字说明
+        state:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+          description: 1 = none（未提交）；2 = pending（待检查）；3 = passed（已通过）；4 = rejected（已驳回）。
+    SubmissionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Submission'
+        - type: object
+          properties:
+            members:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                  isLeader:
+                    type: boolean
+            history:
+              type: array
+              items:
+                $ref: '#/components/schemas/SubmissionReview'
+    SubmissionReview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        verdict:
+          type: string
+          enum:
+            - passed
+            - rejected
+        score:
+          type: number
+          nullable: true
+          description: 检查对象分数：分组制批改/口试的 groupScore，或个人制的个人分；驳回时为空
+          example: 82
+        comment:
+          type: string
+          description: 评语（学生可见）
+        reviewerName:
+          type: string
+          example: 李建国
+        reviewedAt:
+          type: string
+          format: date-time
+    ReviewInput:
+      type: object
+      required:
+        - verdict
+        - comment
+      properties:
+        verdict:
+          type: string
+          enum:
+            - passed
+            - rejected
+        score:
+          type: number
+          nullable: true
+          description: 通过时必填，取值范围 0 ~ 该里程碑满分
+        comment:
+          type: string
+        notifySubject:
+          type: boolean
+          description: 是否通知被检查的小组或学生
+          default: true
+    OralSlot:
+      type: object
+      description: 口试时段。容量按检查对象计数：分组制是组，个人制是学生。
+      properties:
+        id:
+          type: integer
+          example: 1
+        milestoneId:
+          type: integer
+          example: 5001
+        startAt:
+          type: string
+          format: date-time
+          example: '2026-11-18T14:00:00+08:00'
+        durationMinutes:
+          type: integer
+          example: 30
+        place:
+          type: string
+          example: 实验楼 B301
+        note:
+          type: string
+          nullable: true
+          description: 时段备注，例如要带的材料、集合位置或注意事项
+          example: 请提前 10 分钟到场，并准备可运行的演示版本。
+        capacity:
+          type: integer
+          description: 可容纳的检查对象数，默认 1
+          example: 1
+        bookedSubjects:
+          type: array
+          description: 已预约这个时段的小组或学生
+          items:
+            type: object
+            properties:
+              subjectType:
+                type: string
+                enum:
+                  - group
+                  - student
+              subjectId:
+                type: integer
+                example: 701
+              subjectNo:
+                type: string
+                nullable: true
+                description: 分组制为组号，个人制为学号
+                example: 1-01
+              subjectName:
+                type: string
+                description: 分组制为组名，个人制为学生姓名
+                example: 星火队
+        completed:
+          type: boolean
+          description: 该时段的所有已预约检查对象都已完成口试检查；空闲时段为 false
+        free:
+          type: boolean
+          description: 还有空位
+        mine:
+          type: boolean
+          description: 学生视角：是自己所在组或本人预约的时段
+    OralSlotInput:
+      type: object
+      required:
+        - startAt
+        - place
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+          default: 30
+        place:
+          type: string
+        note:
+          type: string
+          description: 可选备注，例如要带的材料、集合位置或注意事项
+          example: 请提前 10 分钟到场，并准备可运行的演示版本。
+        capacity:
+          type: integer
+          description: 可容纳的检查对象数；分组制按组，个人制按学生
+          default: 1
+    OralBooking:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        slotId:
+          type: integer
+          example: 3001
+        subjectType:
+          type: string
+          enum:
+            - group
+            - student
+        subjectId:
+          type: integer
+          description: 分组 id 或学生 id
+          example: 701
+        subjectNo:
+          type: string
+          nullable: true
+          description: 分组制为组号，个人制为学号
+        subjectName:
+          type: string
+          description: 分组制为组名，个人制为学生姓名
+        startAt:
+          type: string
+          format: date-time
+        place:
+          type: string
+        state:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+          description: 1 = booked；2 = completed；3 = cancelled。
+        canChange:
+          type: boolean
+          description: 现在还能不能取消/改约（口试前 cancelBefore 小时以内为 false）
+        cancelWindowReason:
+          type: string
+          nullable: true
+          example: 口试前 24 小时内不能取消预约
+        rescheduled:
+          type: boolean
+          description: 本次是否覆盖了原有预约
+        releasedSlotId:
+          type: integer
+          nullable: true
+          description: 改约时释放的原时段 id；首次预约为 null
+    OralBookingInput:
+      type: object
+      properties:
+        confirmReschedule:
+          type: boolean
+          default: false
+          description: 已有预约时必须传 true，表示确认改约并释放原时段
+    OralStatus:
+      type: object
+      description: 一个检查对象在一个口试型里程碑上的状态。
+      properties:
+        subjectType:
+          type: string
+          enum:
+            - group
+            - student
+        subjectId:
+          type: integer
+          example: 701
+        subjectNo:
+          type: string
+          nullable: true
+          description: 分组制为组号，个人制为学号
+          example: 1-01
+        subjectName:
+          type: string
+          description: 分组制为组名，个人制为学生姓名
+          example: 星火队
+        usedBooking:
+          type: integer
+          description: 已用预约次数
+          example: 1
+        bookingLimit:
+          type: integer
+          example: 3
+        state:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+          description: 1 = not_booked；2 = booked；3 = completed。completed 后不再次口试，可修改检查结果。
+        verdict:
+          type: string
+          nullable: true
+          enum:
+            - passed
+            - rejected
+    OralRecordInput:
+      type: object
+      required:
+        - verdict
+      properties:
+        verdict:
+          type: string
+          enum:
+            - passed
+            - rejected
+        memo:
+          type: string
+          description: 口试备忘录（仅教师可见）
+
+        groupScore:
+          type: number
+          description: 分组制口试必填；个人制不传。
+        personalScores:
+          type: array
+          description: 分组制口试逐位学生打分；个人制只包含当前学生一人
+          items:
+            type: object
+            properties:
+              studentId:
+                type: integer
+                example: 20220101
+              score:
+                type: number
+    MemoSummaryResult:
+      type: object
+      properties:
+        memo:
+          type: string
+          description: 生成的口试备忘录摘要
+        provider:
+          type: string
+          example: asr+llm
+    MilestoneScore:
+      type: object
+      description: 一个学生在某一个里程碑上的成绩
+      properties:
+        milestoneId:
+          type: integer
+          example: 5001
+        mode:
+          type: string
+          enum:
+            - grading
+            - oral
+        weight:
+          type: integer
+          example: 20
+        scale:
+          type: integer
+          enum:
+            - 100
+            - 5
+        score:
+          type: number
+          nullable: true
+          description: 这个里程碑的原始得分（不做折算）；未评为 null
+        groupScore:
+          type: number
+          nullable: true
+          description: 分组制的小组分；个人制为 null
+        personalScore:
+          type: number
+          nullable: true
+          description: 分组制只有口试型有；个人制的所有里程碑都有
+        finalScore:
+          type: number
+          nullable: true
+          description: 该里程碑的最终成绩 = 得分 ÷ 满分 × 100 × 权重；未评为 null
+          example: 16.4
+    StudentGrades:
+      type: object
+      description: 学生的「我的成绩」：一行一个里程碑（不是教师端的学生×里程碑大表）
+      properties:
+        scope:
+          type: object
+          properties:
+            courseId:
+              type: integer
+              example: 101
+            courseName:
+              type: string
+              example: 软件工程
+            workMode:
+              $ref: '#/components/schemas/CourseWorkMode'
+            classId:
+              type: integer
+              example: 1001
+            className:
+              type: string
+              example: 软工 2201 班
+            groupNo:
+              type: string
+              nullable: true
+              description: 分组制为组号；个人制为 null
+              example: 1-01
+            groupName:
+              type: string
+              nullable: true
+              description: 分组制为组名；个人制为 null
+              example: 星火队
+        summary:
+          type: object
+          properties:
+            milestoneDone:
+              type: integer
+              example: 2
+            milestoneTotal:
+              type: integer
+              example: 5
+            groupScore:
+              type: number
+              nullable: true
+              description: 分组制为已评里程碑的小组加权分；个人制为 null
+              example: 83.5
+            personalScore:
+              type: number
+              nullable: true
+              description: 个人制为已评里程碑的个人加权分；分组制来自口试
+              example: null
+            currentFinalScore:
+              type: number
+              description: 当前总成绩 = 各里程碑最终成绩之和（未评按 0 计）
+              example: 33.4
+            pending:
+              type: boolean
+              description: 还有里程碑没评完
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MilestoneScore'
+        total:
+          type: integer
+          description: 行总数
+          example: 41
+    GradebookRow:
+      type: object
+      description: 教师成绩表的一行（一个学生）
+      properties:
+        studentId:
+          type: integer
+          example: 20220101
+        'no':
+          type: string
+        name:
+          type: string
+        groupNo:
+          type: string
+          nullable: true
+        groupName:
+          type: string
+          nullable: true
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/MilestoneScore'
+        finalScore:
+          type: number
+          nullable: true
+          example: 83.6
+        pending:
+          type: boolean
+    Gradebook:
+      type: object
+      properties:
+        workMode:
+          $ref: '#/components/schemas/CourseWorkMode'
+        classId:
+          type: integer
+          example: 1001
+        className:
+          type: string
+        weightSum:
+          type: integer
+          example: 100
+        milestones:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              name:
+                type: string
+              weight:
+                type: integer
+              scale:
+                type: integer
+                enum:
+                  - 100
+                  - 5
+              mode:
+                type: string
+                enum:
+                  - grading
+                  - oral
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradebookRow'
+        total:
+          type: integer
+          description: 行总数
+          example: 41
+    AuditLog:
+      type: object
+      description: 统一身份系统审计日志的只读代理返回；本系统不持久化日志、不建立审计日志表。
+      properties:
+        id:
+          type: integer
+          example: 1
+        at:
+          type: string
+          format: date-time
+        actor:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/Role'
+            deleted:
+              type: boolean
+              description: 操作人资料当前是否已删除；历史日志仍保留
+        type:
+          type: string
+          enum:
+            - score_changed
+            - group_changed
+            - milestone_changed
+            - roster_changed
+        target:
+          type: string
+          example: 1-01 星火队 · 选题与开题报告
+        before:
+          type: object
+          additionalProperties: true
+        after:
+          type: object
+          additionalProperties: true
+    IdentityAuditLog:
+      allOf:
+        - $ref: '#/components/schemas/AuditLog'
+    IdentityAuditWriteInput:
+      type: object
+      required:
+        - requestId
+        - type
+        - objectType
+        - objectId
+        - target
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: 业务操作生成的幂等键；重试必须复用同一个值
+        type:
+          type: string
+          enum:
+            - score_changed
+            - group_changed
+            - milestone_changed
+            - roster_changed
+        objectType:
+          type: string
+          enum:
+            - term
+            - course
+            - class
+            - group
+            - milestone
+            - student
+            - teacher
+            - submission
+            - oral_record
+          description: 被操作业务对象的类型
+        objectId:
+          type: string
+          pattern: '^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$'
+          description: 带系统和业务类型前缀的对象标识，例如 cpm-course-123；数据库主键仍是整数
+
+        target:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 操作对象摘要，例如小组名、学生或里程碑
+        before:
+          type: object
+          additionalProperties: true
+        after:
+          type: object
+          additionalProperties: true
+    CurrentTermInput:
+      type: object
+      required:
+        - termId
+      properties:
+        termId:
+          type: integer
+          description: 要替换为当前学期的学期 id。
+          example: 202601
+    CourseLeader:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 李建国
+    CourseTeacher:
+      type: object
+      description: 课程任课教师摘要，仅用于展示姓名和标识，不包含联系方式。
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 11
+        name:
+          type: string
+          example: 周莹
+    NextMilestoneSummary:
+      type: object
+      required:
+        - id
+        - name
+        - due
+        - mode
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 中期答辩
+        due:
+          type: string
+          format: date-time
+        daysLeft:
+          type: integer
+          example: 6
+        mode:
+          type: string
+          enum:
+            - grading
+            - oral
+    MyGroupSummary:
+      type: object
+      required:
+        - id
+        - 'no'
+        - name
+        - isLeader
+      properties:
+        id:
+          type: integer
+          example: 1
+        'no':
+          type: string
+          example: 1-01
+        name:
+          type: string
+          example: 星火队
+        isLeader:
+          type: boolean
+    CourseBase:
+      type: object
+      description: 课程的公共字段，不包含任何用户视角专属数据。
+      required:
+        - id
+        - termId
+        - code
+        - name
+        - termName
+        - leaders
+        - description
+        - studentCount
+        - milestoneTotal
+        - milestoneDone
+        - status
+        - classCount
+        - workMode
+        - courseStatus
+      properties:
+        id:
+          type: integer
+          example: 1
+        termId:
+          type: integer
+          description: 归属学期 id
+          example: 202601
+        code:
+          type: string
+          example: CS3001
+        name:
+          type: string
+          example: 软件工程
+        description:
+          type: string
+          description: 课程描述
+          example: 通过小组项目完成需求分析、设计、实现、测试与答辩。
+        termName:
+          type: string
+          example: 2026-2027 学年第一学期
+        leaders:
+          type: array
+          description: 课程组长（教学组长），可多名
+          items:
+            $ref: '#/components/schemas/CourseLeader'
+        studentCount:
+          type: integer
+          example: 52
+        milestoneTotal:
+          type: integer
+          example: 5
+        milestoneDone:
+          type: integer
+          example: 2
+        status:
+          type: integer
+          description: 里程碑进度整数编码。1 = not_started；2 = in_progress；3 = finished。
+          enum:
+            - 1
+            - 2
+            - 3
+        classCount:
+          type: integer
+          description: 课程下教学班总数；所有能查看课程摘要的用户都可见，但具体教学班列表仍仅限本课程教师。
+          example: 4
+        workMode:
+          $ref: '#/components/schemas/CourseWorkMode'
+        courseStatus:
+          $ref: '#/components/schemas/CourseStatus'
+
+        reviewComment:
+          type: string
+          nullable: true
+          description: 管理员审核意见；驳回时必填。
+        reviewRequestedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 最近一次进入管理员审核队列的时间。
+    AdminCourse:
+      description: 管理员课程视图：包含课程本身、统计信息与任课教师，不返回 nextMilestone、myGroup 等学生专属字段。
+      allOf:
+        - $ref: '#/components/schemas/CourseBase'
+        - type: object
+          required:
+            - teachers
+          properties:
+            teachers:
+              type: array
+              description: 本课程所有教学班的任课教师（去重），用于管理员课程列表和审核时展示；不包含联系方式。
+              items:
+                $ref: '#/components/schemas/CourseTeacher'
+    StudentCourse:
+      description: 学生的「我的课程」视图：包含当前学期的组队状态、下一里程碑与我的小组。
+      allOf:
+        - $ref: '#/components/schemas/CourseBase'
+        - type: object
+          required:
+            - teachers
+            - groupState
+            - nextMilestone
+            - myGroup
+          properties:
+            teachers:
+              type: array
+              description: 本课程所有教学班的任课教师（去重）；不包含电话、邮箱等联系方式。
+              items:
+                $ref: '#/components/schemas/CourseTeacher'
+            groupState:
+              type: string
+              enum:
+                - joined
+                - not_joined
+                - not_applicable
+              description: 分组制为 joined/not_joined；个人制固定为 not_applicable。
+            nextMilestone:
+              oneOf:
+                - $ref: '#/components/schemas/NextMilestoneSummary'
+                - type: 'null'
+              description: 学生视角：下一个里程碑；没有时为 null。
+            myGroup:
+              oneOf:
+                - $ref: '#/components/schemas/MyGroupSummary'
+                - type: 'null'
+              description: 学生视角：当前小组；未组队或课程为个人制时为 null。
+    TeacherCourse:
+      description: 教师的「我的课程」视图：只包含教师在课程中的身份，不返回学生组队与里程碑状态。
+      allOf:
+        - $ref: '#/components/schemas/CourseBase'
+        - type: object
+          required:
+            - myRoleInCourse
+          properties:
+            myRoleInCourse:
+              type: string
+              description: 当前教师在课程里的身份。
+              enum:
+                - course_leader
+                - teacher
+    TeachingClassUpdateInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          description: 新的教学班名称；班序号由系统维护，不可修改。
+          example: 软工 2203 班

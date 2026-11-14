@@ -1,0 +1,117 @@
+{
+  "source": "course-project-mgt-reference/api/openapi.yaml",
+  "commit": "fde08d5dd417abc543145aff33ca8378deb9ca36",
+  "sha256": "4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c",
+  "samples": [
+    {
+      "operationId": "listTerms",
+      "method": "GET",
+      "path": "/terms",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "administration"
+    },
+    {
+      "operationId": "createTerm",
+      "method": "POST",
+      "path": "/terms",
+      "x-required-permission": "TC",
+      "x-required-role": "admin",
+      "permissionCode": "TC",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED",
+      "category": "administration"
+    },
+    {
+      "operationId": "copyCourse",
+      "method": "POST",
+      "path": "/courses/copy",
+      "x-required-permission": null,
+      "x-required-role": "teacher",
+      "permissionCode": "course:access",
+      "requiredRole": "teacher",
+      "accessPolicy": "PROTECTED",
+      "category": "courses"
+    },
+    {
+      "operationId": "importRoster",
+      "method": "POST",
+      "path": "/classes/{classId}/roster/import",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "roster"
+    },
+    {
+      "operationId": "createGroupJoinRequest",
+      "method": "POST",
+      "path": "/groups/{groupId}/join-requests",
+      "x-required-permission": null,
+      "x-required-role": "student",
+      "permissionCode": "course:access",
+      "requiredRole": "student",
+      "accessPolicy": "PROTECTED",
+      "category": "groups"
+    },
+    {
+      "operationId": "submitMaterials",
+      "method": "POST",
+      "path": "/groups/{groupId}/milestones/{milestoneId}/submissions",
+      "x-required-permission": null,
+      "x-required-role": "student",
+      "permissionCode": "course:access",
+      "requiredRole": "student",
+      "accessPolicy": "PROTECTED",
+      "category": "submissions"
+    },
+    {
+      "operationId": "createMilestone",
+      "method": "POST",
+      "path": "/courses/{courseId}/milestones",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "milestones"
+    },
+    {
+      "operationId": "bookOralSlot",
+      "method": "POST",
+      "path": "/oral-slots/{slotId}/bookings",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "oral"
+    },
+    {
+      "operationId": "getMyGrades",
+      "method": "GET",
+      "path": "/me/courses/{courseId}/grades",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "grades"
+    },
+    {
+      "operationId": "downloadFile",
+      "method": "GET",
+      "path": "/files/{fileId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED",
+      "category": "files"
+    }
+  ]
+}

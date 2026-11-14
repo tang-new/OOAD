@@ -1,0 +1,132 @@
+= RBAC1 实施合同（M3起的唯一精确对接约定）
+:toc:
+
+本文件将完整需求细化为并行实现合同；完整需求仍见sources/requirements-final.md。
+重构开发空库，不兼容一期company/scope/selfOnly/统计接口；不操作旧生产库。
+两后端内部算法独立实现，仅共享本合同、OpenAPI、DDL和黑盒夹具。
+
+== 公共协议
+
+内部基址 /api/v1，成功返回 `{code:"OK",message:"成功",data:...,timestamp:ISO时间}`。
+错误返回对应400/401/403/404/409/503及 `{code:稳定字符串,message:中文,details?:...}`，不得暴露堆栈。
+所有列表page从1起、pageSize默认20最大100，返回 `{page,pageSize,total,items}`，排序id稳定。
+DTO禁止未知字段，格式校验在HTTP输入层；输出VO不返回密码/哈希/内部版本缓存或JPA对象。
+状态统一ENABLED/DISABLED；用户ACTIVE/DISABLED/DELETED；日期为UTC ISO8601。
+中心系统码rbac-center，课程系统码course-project-management。
+
+身份HTTP端点不加/api/v1前缀、不加成功包装，严格匹配教师七操作：
+
+* POST /auth/login 输入username:string(1..128),password:string(1..256),systems:string[1]；只签单一aud，200 `{accessToken,tokenType:"Bearer",expiresIn}`，凭据/停用401、不可用503。
+* POST /auth/logout Bearer，无body；成功204，持久撤销jti；401。
+* GET /auth/me：`{subject:string,roles:(student|teacher|admin)[],permissions:string[],name:string,no:string}`，roles是当前aud有效角色的identityRole受控投影，不输出任意内部角色码；permissions仅UI；401/503。
+* GET /auth/permissions/{permission}：200 `{allowed:boolean}`，未知/无权false；400/401。
+* GET /auth/api-permissions/{operationId}：200 `{operationId,allowed}`，已注册无权false，未知404 API_OPERATION_NOT_FOUND；401/503。
+* POST /auth/audit-logs：requestId为UUID；type限score_changed/group_changed/milestone_changed/roster_changed；objectType枚举term/course/class/group/milestone/student/teacher/submission/oral_record，objectId须匹配`^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$`且类型一致；target必填最长500，before/after为可选安全JSON；201返回审计VO。同requestId同sourceSystem/subject/内容返回相同id，同键异体400 AUDIT_DUPLICATE_CONFLICT。actor只从身份确定。
+* GET /auth/audit-logs：actor,actorId,target,from,to,page,pageSize；200分页裸响应，按当前aud隔离，需API权限audit:read；401/403/400/503。
+
+审计VO：`{id:Long,at:Instant,actor:{id:Long,name:string,roles:string[],deleted:boolean},type,target,before,after}`；外部可额外返回objectType/objectId以便课程端对象过滤，不能泄漏内部哈希等。
+PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health,info}。
+无全局servlet context-path，以便/auth和/.well-known直接调用。
+
+== 模型及输出字段
+
+* SystemVO：id,code,name,status。
+* DepartmentVO：id,parentId,code,name,path,status,children（树）；不含company。
+* UserVO：id,subject,username,name,no,phone,departmentId,departmentName,status,version；username不可复用，no可空，phone脱敏列表/详情按权。
+* RoleVO：id,systemCode,code,name,description,status,builtin,identityRole(nullable student/teacher/admin),version。
+* PermissionVO：id,systemCode,code,name,kind(UI/API),status。
+* AssignmentVO：id,userId,roleId,systemCode,roleCode,roleName,assignedAt,assignedBy；无scope部门。
+* EffectiveVO：directRoles:RoleVO[],effectiveRoles:RoleVO[],permissions:PermissionVO[],sources:[{permissionCode,roleCode,inherited:boolean,path:string[]}]；权限集合去重，来源可多条。
+* UiResourceVO：id,systemCode,parentId,type(MENU/BUTTON),code,name,route,component,sortOrder,status,permissionCode,children；父菜单可见不赋子按钮。
+* ApiOperationVO：id,systemCode,operationId,method,pathTemplate,permissionCode(nullable),requiredRole(nullable),accessPolicy(PUBLIC/AUTHENTICATED/PROTECTED),enabled。
+* MappingVO：uiResourceId,apiOperationId；显式多对多，仅追踪，不隐式赋权。
+* HierarchyVO：roles:RoleVO[],edges:[{seniorRoleId,juniorRoleId}]。
+
+== 管理API与输入（都在/api/v1）
+
+除/me、/menus/me外管理API必须aud=rbac-center；JWT有效和系统启用先于任何超级管理员处理。
+每个操作的operationId与x-required-permission由唯一OAS登记并在启动/CI对齐。权限码按下表，API种类。
+
+[cols="2,3,2"]
+|===
+|方法/路径 |输入/响应data |所需权限
+|GET /me |本人UserVO及当前系统EffectiveVO组成 `{user,effective}` |@authenticated
+|POST /auth/password |oldPassword,newPassword；204或包装null，更新tokenVersion |@authenticated
+|GET /systems |SystemVO[]（有限注册系统） |rbac:system:view
+|POST /systems |{code,name}→SystemVO |rbac:system:edit
+|PATCH /systems/{id} |{name}→SystemVO |rbac:system:edit
+|PUT /systems/{id}/status |{status}→SystemVO |rbac:system:edit
+|GET /departments/tree |DepartmentVO[] |rbac:department:view
+|POST /departments |{parentId?,code,name}→DepartmentVO |rbac:department:edit
+|PATCH /departments/{id} |{name}→DepartmentVO |rbac:department:edit
+|DELETE /departments/{id} |有员工/子部门则409；无数据再删 |rbac:department:edit
+|GET /departments/{id}/assignable-roles |?systemCode→RoleVO[] |rbac:department:view
+|PUT /departments/{id}/assignable-roles |{roleIds:Long[]}原子替换，回收不合资格指派 |rbac:department:edit
+|GET /users |?keyword,departmentId,status,page,pageSize→Page<UserVO>，数据库分页 |rbac:user:view
+|POST /users |{username,name,no?,phone?,departmentId,password}→UserVO |rbac:user:edit
+|GET /users/{id} |UserVO |rbac:user:view
+|PATCH /users/{id} |{name?,no?,phone?,version?}，禁止department/status→UserVO |rbac:user:edit
+|PUT /users/{id}/status |{status}→UserVO，停用/删除递增tokenVersion |rbac:user:edit
+|DELETE /users/{id} |逻辑删除，清理指派、版本、审计 |rbac:user:edit
+|PUT /users/{id}/department |{departmentId,version?}→UserVO；单事务回收不准入指派 |rbac:user:edit
+|GET /roles |?systemCode必填,keyword,status,page,pageSize→Page<RoleVO> |rbac:role:view
+|POST /roles |{systemCode,code,name,description?,identityRole?}→RoleVO |rbac:role:edit
+|GET /roles/{id} |RoleVO |rbac:role:view
+|PATCH /roles/{id} |{name?,description?,version?}，禁止status→RoleVO |rbac:role:edit
+|PUT /roles/{id}/status |{status}→RoleVO |rbac:role:edit
+|DELETE /roles/{id} |受控退役/清指派、边、权限、准入，保护最后有效超级管理员 |rbac:role:edit
+|GET /roles/{id}/permissions |PermissionVO[]（直接） |rbac:role:view
+|PUT /roles/{id}/permissions |{permissionIds:Long[]}原子替换，仅同系统 |rbac:role:edit
+|GET /roles/{id}/effective-permissions |EffectiveVO（以该角色为直接角色） |rbac:role:view
+|GET /systems/{code}/role-hierarchy |HierarchyVO |rbac:role:view
+|POST /roles/{seniorId}/inherits/{juniorId} |同系统有向边，重复409，环409 ROLE_CYCLE |rbac:role:edit
+|DELETE /roles/{seniorId}/inherits/{juniorId} |无边404，否则回收并失效 |rbac:role:edit
+|GET /users/{id}/role-assignments |?systemCode→AssignmentVO[] |rbac:user:view
+|POST /users/{id}/role-assignments |{roleId}→AssignmentVO；部门准入必验 |rbac:assignment:edit
+|DELETE /users/{id}/role-assignments/{assignmentId} |按用户核对指派所属再删 |rbac:assignment:edit
+|GET /users/{id}/systems/{code}/permissions |EffectiveVO |rbac:user:view
+|GET /permissions |?systemCode,kind,keyword,page,pageSize→Page<PermissionVO> |rbac:permission:view
+|POST /permissions |{systemCode,code,name,kind}→PermissionVO |rbac:permission:edit
+|PUT /permissions/{id}/status |{status}→PermissionVO |rbac:permission:edit
+|GET /systems/{code}/ui-resources |UiResourceVO[]树 |rbac:resource:view
+|POST /systems/{code}/ui-resources |{parentId?,type,code,name,route?,component?,sortOrder?,permissionCode,status?} |rbac:resource:edit
+|PATCH /ui-resources/{id} |同上可编辑字段，禁止换system |rbac:resource:edit
+|DELETE /ui-resources/{id} |有子节点/映射则409，不静默孤儿 |rbac:resource:edit
+|GET /menus/me |当前aud可见UiResourceVO[]树，含按钮 |@authenticated
+|GET /systems/{code}/api-operations |?keyword,page,pageSize→Page<ApiOperationVO> |rbac:resource:view
+|POST /systems/{code}/api-operations |{operationId,method,pathTemplate,permissionCode?,requiredRole?,accessPolicy,enabled} |rbac:resource:edit
+|PATCH /api-operations/{id} |同上可修改；中心受保护路由不能弱化OAS要求 |rbac:resource:edit
+|GET /systems/{code}/ui-api-mappings |MappingVO[]及覆盖报告 `{mappings,unmappedUi,unmappedApi}` |rbac:resource:view
+|PUT /systems/{code}/ui-api-mappings |{mappings:[{uiResourceId,apiOperationId}]}原子替换 |rbac:resource:edit
+|POST /authorization/check |{systemCode,userId?,kind:UI/API,permission?或operationId?}→{allowed,reason,traceId} |rbac:authz:invoke
+|POST /authorization/explain |同上→决定及trace:string[]、EffectiveVO |rbac:authz:invoke
+|GET /audit-logs |同外部过滤＋systemCode，Page<AuditVO> |rbac:audit:view
+|GET /dashboard |仅基础计数 `{users,roles,systems}`，不做统计/热力图 |rbac:user:view
+|===
+
+== 不变量与安全决策
+
+. 组织管理范围：中心管理权限 + actor当前部门子树；总部根部门覆盖全部。权限计算不再带部门数据scope。
+. 直接指派必须在目标用户当前部门的DepartmentAllowedRole清单内，即使超级管理员也要满足；引导root的SUPER_ADMIN准入在种子中明确建立。
+. 非超级管理员不能赋予或改出自己在目标系统没有的有效权限及identityRole标记，改继承前按完整新闭包检验提升。中心管理入口资格与目标系统授权上界分开读取。系统级共享定义（系统/角色/权限/继承/UI/API）的写操作还要求操作者所属根部门；部门管理员只管理子树人员、准入和指派，不能借共享角色影响范围外人员。
+. RoleHierarchy同系统senior→junior，停用节点切断路径；系统行/授权版本行排他锁串行化所有图写，避免并发成环。版本与授权/状态/映射变更同本地事务提交。
+. 移部门先锁用户，校验原/新管理范围，更新部门并回收不准入指派；不改共享角色权限。保护最后有效SUPER_ADMIN，不能经停用用户/角色/准入/删除间接锁死。
+. 用户/系统/令牌状态先于角色快照。MySQL授权版本每次读；L1短期内存+L2 Redis均以system+user+version命名；读写事务不回填。Redis故障可受限直查DB，不能用不确定旧权限放行。
+. JWT RS256，稳定sub、单一aud、iss、iat、exp、jti、kid和tokenVersion；无角色权限claim。生产必须配置可共享私钥/公钥及kid；测试可独立生成，公钥JWKS可轮换保留旧kid。
+. TokenRevocation在MySQL持久化，Redis只是加速；数据库不可用则503，不因Redis重启让已注销token复活。
+. 敏感管理变更与SUCCESS审计同事务；拒绝安全事实独立事务。外部POST审计在独立插入事务结束后返回201；唯一冲突回滚后重新读取，不在rollback-only事务内继续查。
+. 外部审计requestId全局唯一，哈希绑定sourceSystem+subject+规范化业务载荷；同键跨系统/主体不能取到他人记录。JSON字段白名单/敏感键拒绝，大小受限。外部GET只返回origin=COURSE且当前aud的四类事件；内部日志查询可看授权系统的所有事件。两种外部审计操作都要求可信服务请求头X-Audit-Service-Key（RBAC_AUDIT_SERVICE_KEY配置，恒定时间比较），缺失403；仍必须验证用户bearer及audit:read/audit:write。该服务凭据只给课程后端，浏览器不可获得，禁止日志输出；不把用户bearer本身当成业务已发生的证明。
+. 技术日志统一AOP记录traceId/layer/class/method/duration/result/exceptionType，不打印参数、响应、异常消息或token。AOP不是审计落库入口。
+. 未登记API默认拒绝。中心路由启动双向核验OAS；课程网关从可信method/path解析operationId，固定白名单上游，不收客户端目标URL。
+. 教师OAS copyCourse明确x-required-role=teacher，CC只是课程Service中“非组长”的附加检查；注册全局requiredRole=teacher，不将CC误设为所有调用必需。其他对象范围也留在课程端；无显式全局条件的已核验课程路由至少需要课程course:access API权限。
+. 外部课程注册从教师固定源码OAS提取真实operationId和x-required-permission/x-required-role，不能按中文标题自造。UI权限码单独定义并显式映射。
+
+== 种子与测试
+
+开发基线包括总部/两个子部门、中心与课程两个系统；root稳定subject=rbac-u1，SUPER_ADMIN仅属中心。
+root初始口令仅由RBAC_BOOTSTRAP_PASSWORD注入，未配置时不能以公开固定凭据启动；测试使用专用种子设置。
+中心每项管理操作API权限显式注册，另建UI权限/导航；课程teacher/student角色及course:access，至少六类真实业务操作映射。
+正式人员数据不入种子，不导出真实员工隐私。
+
+真实测试库分别rbac1_structured_test、rbac1_ddd_test，位于本机专用13306实例；Redis独立逻辑前缀且只在该专用16379实例。
+重写一期废弃scope/多公司断言必须列需求映射，不得静默删除仍适用的认证/越权/事务/缓存安全预期。

@@ -1,0 +1,859 @@
+{
+  "source": "course-project-mgt-reference/api/openapi.yaml",
+  "commit": "fde08d5dd417abc543145aff33ca8378deb9ca36",
+  "sha256": "4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c",
+  "snapshot": "course-openapi.source.yaml",
+  "excludedProviderOperations": [
+    {
+      "operationId": "login",
+      "method": "POST",
+      "path": "/auth/login",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "logout",
+      "method": "POST",
+      "path": "/auth/logout",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "getIdentityCurrentUser",
+      "method": "GET",
+      "path": "/auth/me",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "queryIdentityAuditLogs",
+      "method": "GET",
+      "path": "/auth/audit-logs",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "writeIdentityAuditLog",
+      "method": "POST",
+      "path": "/auth/audit-logs",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "checkIdentityPermission",
+      "method": "GET",
+      "path": "/auth/permissions/{permission}",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "getApiAuthority",
+      "method": "GET",
+      "path": "/auth/api-permissions/{operationId}",
+      "x-required-permission": null,
+      "x-required-role": null
+    }
+  ],
+  "operations": [
+    {
+      "operationId": "getCurrentUser",
+      "method": "GET",
+      "path": "/me",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listTerms",
+      "method": "GET",
+      "path": "/terms",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createTerm",
+      "method": "POST",
+      "path": "/terms",
+      "x-required-permission": "TC",
+      "x-required-role": "admin",
+      "permissionCode": "TC",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateTerm",
+      "method": "PATCH",
+      "path": "/terms/{termId}",
+      "x-required-permission": "TE",
+      "x-required-role": "admin",
+      "permissionCode": "TE",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteTerm",
+      "method": "DELETE",
+      "path": "/terms/{termId}",
+      "x-required-permission": "TD",
+      "x-required-role": "admin",
+      "permissionCode": "TD",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createCourse",
+      "method": "POST",
+      "path": "/terms/{termId}/courses",
+      "x-required-permission": null,
+      "x-required-role": "teacher",
+      "permissionCode": "course:access",
+      "requiredRole": "teacher",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "submitCourseReview",
+      "method": "POST",
+      "path": "/courses/{courseId}/submit-review",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "resetCourseToApplication",
+      "method": "POST",
+      "path": "/courses/{courseId}/reset-to-application",
+      "x-required-permission": "CRS",
+      "x-required-role": "admin",
+      "permissionCode": "CRS",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "reviewCourse",
+      "method": "POST",
+      "path": "/courses/{courseId}/review",
+      "x-required-permission": "CR",
+      "x-required-role": null,
+      "permissionCode": "CR",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getCourse",
+      "method": "GET",
+      "path": "/courses/{courseId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateCourse",
+      "method": "PATCH",
+      "path": "/courses/{courseId}",
+      "x-required-permission": "CE",
+      "x-required-role": null,
+      "permissionCode": "CE",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteCourse",
+      "method": "DELETE",
+      "path": "/courses/{courseId}",
+      "x-required-permission": "CD",
+      "x-required-role": null,
+      "permissionCode": "CD",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateCourseDescription",
+      "method": "PATCH",
+      "path": "/courses/{courseId}/description",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "setCourseLeaders",
+      "method": "PUT",
+      "path": "/courses/{courseId}/leaders",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "copyCourse",
+      "method": "POST",
+      "path": "/courses/copy",
+      "x-required-permission": null,
+      "x-required-role": "teacher",
+      "permissionCode": "course:access",
+      "requiredRole": "teacher",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listStudentCourses",
+      "method": "GET",
+      "path": "/me/courses",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listAdminCourses",
+      "method": "GET",
+      "path": "/admin/courses",
+      "x-required-permission": "CV",
+      "x-required-role": "admin",
+      "permissionCode": "CV",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listClasses",
+      "method": "GET",
+      "path": "/courses/{courseId}/classes",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createClasses",
+      "method": "POST",
+      "path": "/courses/{courseId}/classes",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateClass",
+      "method": "PATCH",
+      "path": "/classes/{classId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteClass",
+      "method": "DELETE",
+      "path": "/classes/{classId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "setClassTeachers",
+      "method": "PUT",
+      "path": "/classes/{classId}/teachers",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listClassStudents",
+      "method": "GET",
+      "path": "/classes/{classId}/students",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "addStudent",
+      "method": "POST",
+      "path": "/classes/{classId}/students",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "searchStudentCandidates",
+      "method": "GET",
+      "path": "/classes/{classId}/student-candidates",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "removeStudent",
+      "method": "DELETE",
+      "path": "/classes/{classId}/students/{studentId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "importRoster",
+      "method": "POST",
+      "path": "/classes/{classId}/roster/import",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getCourseGroupRule",
+      "method": "GET",
+      "path": "/courses/{courseId}/group-rule",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateCourseGroupRule",
+      "method": "PATCH",
+      "path": "/courses/{courseId}/group-rule",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getClassGroupRule",
+      "method": "GET",
+      "path": "/classes/{classId}/group-rule",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "setClassGroupRule",
+      "method": "POST",
+      "path": "/classes/{classId}/group-rule",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteClassGroupRule",
+      "method": "DELETE",
+      "path": "/classes/{classId}/group-rule",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listCourseGroups",
+      "method": "GET",
+      "path": "/courses/{courseId}/groups",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createGroupAsStudent",
+      "method": "POST",
+      "path": "/courses/{courseId}/groups",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listClassGroups",
+      "method": "GET",
+      "path": "/classes/{classId}/groups",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createGroupAsTeacher",
+      "method": "POST",
+      "path": "/classes/{classId}/groups",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getGroup",
+      "method": "GET",
+      "path": "/groups/{groupId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateGroup",
+      "method": "PATCH",
+      "path": "/groups/{groupId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "dissolveGroup",
+      "method": "DELETE",
+      "path": "/groups/{groupId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listGroupJoinRequests",
+      "method": "GET",
+      "path": "/groups/{groupId}/join-requests",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createGroupJoinRequest",
+      "method": "POST",
+      "path": "/groups/{groupId}/join-requests",
+      "x-required-permission": null,
+      "x-required-role": "student",
+      "permissionCode": "course:access",
+      "requiredRole": "student",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "decideGroupJoinRequest",
+      "method": "PATCH",
+      "path": "/join-requests/{requestId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "cancelGroupJoinRequest",
+      "method": "DELETE",
+      "path": "/join-requests/{requestId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "removeGroupMemberAsLeader",
+      "method": "DELETE",
+      "path": "/groups/{groupId}/members/{studentId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "transferGroupLeader",
+      "method": "PUT",
+      "path": "/groups/{groupId}/leader",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "leaveGroup",
+      "method": "POST",
+      "path": "/groups/{groupId}/leave",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listMilestones",
+      "method": "GET",
+      "path": "/courses/{courseId}/milestones",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createMilestone",
+      "method": "POST",
+      "path": "/courses/{courseId}/milestones",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateMilestone",
+      "method": "PATCH",
+      "path": "/milestones/{milestoneId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteMilestone",
+      "method": "DELETE",
+      "path": "/milestones/{milestoneId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listSubmissions",
+      "method": "GET",
+      "path": "/classes/{classId}/milestones/{milestoneId}/submissions",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getGroupSubmission",
+      "method": "GET",
+      "path": "/groups/{groupId}/milestones/{milestoneId}/submission",
+      "x-required-permission": null,
+      "x-required-role": "student",
+      "permissionCode": "course:access",
+      "requiredRole": "student",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "submitMaterials",
+      "method": "POST",
+      "path": "/groups/{groupId}/milestones/{milestoneId}/submissions",
+      "x-required-permission": null,
+      "x-required-role": "student",
+      "permissionCode": "course:access",
+      "requiredRole": "student",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getMyMilestoneSubmission",
+      "method": "GET",
+      "path": "/me/courses/{courseId}/milestones/{milestoneId}/submission",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "submitMyMaterials",
+      "method": "POST",
+      "path": "/me/courses/{courseId}/milestones/{milestoneId}/submissions",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getSubmissionById",
+      "method": "GET",
+      "path": "/submissions/{submissionId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "reviewSubmission",
+      "method": "POST",
+      "path": "/submissions/{submissionId}/review",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listOralSlots",
+      "method": "GET",
+      "path": "/classes/{classId}/milestones/{milestoneId}/oral-slots",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createOralSlot",
+      "method": "POST",
+      "path": "/classes/{classId}/milestones/{milestoneId}/oral-slots",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteOralSlot",
+      "method": "DELETE",
+      "path": "/oral-slots/{slotId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "bookOralSlot",
+      "method": "POST",
+      "path": "/oral-slots/{slotId}/bookings",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "cancelBooking",
+      "method": "DELETE",
+      "path": "/bookings/{bookingId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listOralStatus",
+      "method": "GET",
+      "path": "/classes/{classId}/milestones/{milestoneId}/oral-status",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createGroupOralRecord",
+      "method": "POST",
+      "path": "/milestones/{milestoneId}/groups/{groupId}/oral-records",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createStudentOralRecord",
+      "method": "POST",
+      "path": "/milestones/{milestoneId}/students/{studentId}/oral-records",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateOralRecord",
+      "method": "PATCH",
+      "path": "/oral-records/{oralRecordId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "summarizeOralMemo",
+      "method": "POST",
+      "path": "/oral-records/{oralRecordId}/memo-summary",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getClassGrades",
+      "method": "GET",
+      "path": "/classes/{classId}/grades",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "exportClassGrades",
+      "method": "POST",
+      "path": "/classes/{classId}/grades/export",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "getMyGrades",
+      "method": "GET",
+      "path": "/me/courses/{courseId}/grades",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "downloadFile",
+      "method": "GET",
+      "path": "/files/{fileId}",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listAuditLogs",
+      "method": "GET",
+      "path": "/audit-logs",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "lookupIdentityUser",
+      "method": "GET",
+      "path": "/identity/users/{userId}",
+      "x-required-permission": "TEC",
+      "x-required-role": "admin",
+      "permissionCode": "TEC",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listTeachers",
+      "method": "GET",
+      "path": "/teachers",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "createTeacher",
+      "method": "POST",
+      "path": "/teachers",
+      "x-required-permission": "TEC",
+      "x-required-role": "admin",
+      "permissionCode": "TEC",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "updateTeacher",
+      "method": "PATCH",
+      "path": "/teachers/{teacherId}",
+      "x-required-permission": "TEE",
+      "x-required-role": "admin",
+      "permissionCode": "TEE",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "deleteTeacher",
+      "method": "DELETE",
+      "path": "/teachers/{teacherId}",
+      "x-required-permission": "TED",
+      "x-required-role": "admin",
+      "permissionCode": "TED",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "replaceCurrentTerm",
+      "method": "PUT",
+      "path": "/current-term",
+      "x-required-permission": "TCM",
+      "x-required-role": "admin",
+      "permissionCode": "TCM",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "clearCurrentTerm",
+      "method": "DELETE",
+      "path": "/current-term",
+      "x-required-permission": "TCM",
+      "x-required-role": "admin",
+      "permissionCode": "TCM",
+      "requiredRole": "admin",
+      "accessPolicy": "PROTECTED"
+    },
+    {
+      "operationId": "listTeacherCourses",
+      "method": "GET",
+      "path": "/teacher/courses",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": "course:access",
+      "requiredRole": null,
+      "accessPolicy": "PROTECTED"
+    }
+  ]
+}
