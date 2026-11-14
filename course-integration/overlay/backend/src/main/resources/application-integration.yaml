@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  config:
+    import: optional:configtree:/run/secrets/
+  datasource:
+    url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/${DB_NAME:course_integration}?serverTimezone=Asia/Shanghai
+    username: ${DB_USER:course_integration}
+    password: ${DB_PASSWORD:${course-db-password:}}
+app:
+  identity:
+    base-url: ${IDENTITY_BASE_URL:http://center:8081}
+  integration:
+    issuer: ${IDENTITY_ISSUER}
+    jwk-set-uri: ${IDENTITY_JWK_SET_URI}
+    service-key: ${AUDIT_SERVICE_KEY:${audit-service-key:}}
+logging:
+  level:
+    cn.edu.xmu.projectmgt: INFO
+    cn.edu.xmu.projectmgt.api: INFO
+    cn.edu.xmu.projectmgt.service: INFO
+    cn.edu.xmu.projectmgt.infrastructure: INFO
+    org.springframework.web.client: WARN
+    org.springframework.security: WARN
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

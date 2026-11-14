@@ -1,0 +1,36 @@
+# Attach these services to the gateway's private overlay network. No backend ports are published.
+version: '3.8'
+services:
+  course-backend:
+    image: ${COURSE_IMAGE_PREFIX:-ooad}/course-backend:m6
+    environment:
+      SPRING_PROFILES_ACTIVE: integration
+      APP_BACKEND_STRATEGY: ${COURSE_STRATEGY:-structured}
+      DB_HOST: course-mysql
+      DB_NAME: course_integration
+      DB_USER: course_integration
+      IDENTITY_BASE_URL: http://center:8081
+      IDENTITY_ISSUER: ${IDENTITY_ISSUER}
+      IDENTITY_JWK_SET_URI: http://center:8081/.well-known/jwks.json
+    secrets:
+      - audit-service-key
+      - course-db-password
+    networks: [course-private]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  course-frontend:
+    image: ${COURSE_IMAGE_PREFIX:-ooad}/course-frontend:m6
+    networks: [course-private]
+    deploy:
+      replicas: 1
+networks:
+  course-private:
+    external: true
+    name: ${COURSE_NETWORK:-rbac-integration}
+secrets:
+  audit-service-key:
+    external: true
+  course-db-password:
+    external: true

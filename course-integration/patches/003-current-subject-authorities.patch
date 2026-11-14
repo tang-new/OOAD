@@ -1,0 +1,18 @@
+diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
+index 2fbf3e7..66ef568 100644
+--- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
++++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
+@@ -36,6 +36,13 @@ public class HttpExchangeUnifiedIdentityGateway implements UnifiedIdentityGatewa
+ 
+     @Override
+     public CurrentIdentity currentIdentity() {
++        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
++        if (authentication instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwt) {
++            var authorities = jwt.getAuthorities().stream().map(item -> item.getAuthority()).toList();
++            return new CurrentIdentity(jwt.getToken().getSubject(),
++                    authorities.stream().filter(item -> item.startsWith("ROLE_")).map(item -> item.substring(5)).toList(),
++                    authorities.stream().filter(item -> !item.startsWith("ROLE_")).toList());
++        }
+         try {
+             IdentityCurrentUserResponse response = unifiedIdentityClient.currentUser(currentAuthorization());
+             if (Objects.isNull(response) || Objects.isNull(response.subject()) || response.subject().isBlank()) {

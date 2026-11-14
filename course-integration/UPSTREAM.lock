@@ -1,0 +1,5 @@
+url=https://gitee.com/mingqcn/course-project-mgt.git
+commit=fde08d5dd417abc543145aff33ca8378deb9ca36
+license=MIT
+export=backend,api,prototype,LICENSE
+exclude=root roster,all xlsx,local env,node_modules,screenshots,build outputs

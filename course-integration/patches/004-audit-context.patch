@@ -1,0 +1,27 @@
+diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
+index 2394093..ff64b4c 100644
+--- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
++++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
+@@ -87,12 +87,19 @@ public class HttpExchangeAuditGateway implements AuditLogGateway {
+                 response.target(),
+                 response.before(),
+                 response.after(),
+-                response.termId(),
+-                response.courseId(),
+-                response.classId()
++                contextId(response.termId(), response, "termId"),
++                contextId(response.courseId(), response, "courseId"),
++                contextId(response.classId(), response, "classId")
+         );
+     }
+ 
++    private String contextId(String direct, IdentityAuditLogResponse response, String key) {
++        if (direct != null) return direct;
++        Object value = response.after() == null ? null : response.after().get(key);
++        if (value == null && response.before() != null) value = response.before().get(key);
++        return value instanceof String text ? text : null;
++    }
++
+     /**
+      * 把统一身份日志操作人响应转换为应用层结果。
+      */

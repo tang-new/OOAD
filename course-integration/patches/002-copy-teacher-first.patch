@@ -1,0 +1,56 @@
+diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/service/ddd/application/course/DddCourseService.java b/backend/src/main/java/cn/edu/xmu/projectmgt/service/ddd/application/course/DddCourseService.java
+index d84500c..c638b3b 100644
+--- a/backend/src/main/java/cn/edu/xmu/projectmgt/service/ddd/application/course/DddCourseService.java
++++ b/backend/src/main/java/cn/edu/xmu/projectmgt/service/ddd/application/course/DddCourseService.java
+@@ -153,19 +153,18 @@ public class DddCourseService implements CourseUseCase {
+      */
+     @Override
+     public CourseResult copyCourse(CopyCourseCommand command) {
++        CurrentTeacherResult teacher = currentTeacherProvider.findCurrentTeacher()
++                .orElseThrow(() -> new ForbiddenException("只有教师可以执行此操作。"));
+         Term targetTerm = termRepository.findById(command.getTargetTermId())
+                 .orElseThrow(() -> new NotFoundException("TERM_NOT_FOUND", "学期不存在。"));
+         Course source = courseRepository.findById(command.getSourceCourseId())
+                 .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND", "课程不存在。"));
+-        Optional<CurrentTeacherResult> currentTeacher = currentTeacherProvider.findCurrentTeacher();
+         coursePermissionGuard.requireLeaderOrPermission(
+                 source.getLeaders().stream().map(CourseLeader::getId).toList(),
+-                currentTeacher.map(CurrentTeacherResult::getId).orElse(null),
++                teacher.getId(),
+                 courseAuthorization::canCopy,
+                 "只有本课程的教学组长或具备课程拷贝权限的用户可以拷贝课程。"
+         );
+-        CurrentTeacherResult teacher = currentTeacher
+-                .orElseThrow(() -> new ForbiddenException("只有教师可以执行此操作。"));
+         if (courseRepository.existsByCode(command.getCode())) {
+             throw new ConflictException("COURSE_CODE_EXISTS", "课程代码已存在。");
+         }
+diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/service/structured/course/StructuredCourseService.java b/backend/src/main/java/cn/edu/xmu/projectmgt/service/structured/course/StructuredCourseService.java
+index 2b58ebd..a6fd7bf 100644
+--- a/backend/src/main/java/cn/edu/xmu/projectmgt/service/structured/course/StructuredCourseService.java
++++ b/backend/src/main/java/cn/edu/xmu/projectmgt/service/structured/course/StructuredCourseService.java
+@@ -205,21 +205,20 @@ public class StructuredCourseService implements CourseUseCase {
+      */
+     @Override
+     public CourseResult copyCourse(CopyCourseCommand command) {
++        CurrentTeacherResult teacher = currentTeacherProvider.findCurrentTeacher()
++                .orElseThrow(() -> new ForbiddenException("只有教师可以执行此操作。"));
+         TermEntity targetTerm = termRepository.findById(command.getTargetTermId())
+                 .orElseThrow(() -> new NotFoundException("TERM_NOT_FOUND", "学期不存在。"));
+         CourseEntity source = courseRepository.findById(command.getSourceCourseId())
+                 .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND", "课程不存在。"));
+-        Optional<CurrentTeacherResult> currentTeacher = currentTeacherProvider.findCurrentTeacher();
+         coursePermissionGuard.requireLeaderOrPermission(
+                 leaderRepository.findByCourseId(source.getId()).stream()
+                         .map(CourseLeaderAssignmentEntity::getTeacherId)
+                         .toList(),
+-                currentTeacher.map(CurrentTeacherResult::getId).orElse(null),
++                teacher.getId(),
+                 courseAuthorization::canCopy,
+                 "只有本课程的教学组长或具备课程拷贝权限的用户可以拷贝课程。"
+         );
+-        CurrentTeacherResult teacher = currentTeacher
+-                .orElseThrow(() -> new ForbiddenException("只有教师可以执行此操作。"));
+         if (courseRepository.existsByCode(command.getCode())) {
+             throw new ConflictException("COURSE_CODE_EXISTS", "课程代码已存在。");
+         }
