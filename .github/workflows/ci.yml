@@ -127,7 +127,7 @@ jobs:
             **/target/surefire-reports/
             rbac-web/coverage/
             rbac-web/playwright-report/
-            rbac-web/test-results/
+            rbac-web/test-results/**/*.png
             docs/design/
             /tmp/m6-course-real-*/report.json
             ~/Downloads/rbac1-context-extracted/*e2e*

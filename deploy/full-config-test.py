@@ -69,6 +69,8 @@ class Deployment(unittest.TestCase):
   services=yaml.safe_load(script)['jobs']['verify']['services']
   self.assertEqual(services['mysql']['ports'],['127.0.0.1:13306:3306'])
   self.assertEqual(services['redis']['ports'],['127.0.0.1:16379:6379'])
+  self.assertIn('rbac-web/test-results/**/*.png',script)
+  self.assertNotIn('rbac-web/test-results/\n',script)  # raw traces/DOM contexts may contain temporary credentials
  def test_windows_secrets_use_effective_per_file_acl(self):
   script=(ROOT/'deploy/full-secrets.sh').read_text(encoding='utf8')
   self.assertIn('"${USERNAME}:F"',script)
