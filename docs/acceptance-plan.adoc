@@ -1,0 +1,113 @@
+= 独立共享 HTTP 黑盒验收
+:toc:
+
+== 权威与范围
+
+`tools/acceptance/` 只通过真实 HTTP 调用两个独立可执行 jar；不导入 Java Service、领域算法或 Spring 测试源码。
+精确输入输出优先 `implementation-contract.adoc`、`schema-contract.adoc`；完整需求来源 `sources/requirements-final.md`（含 §15/18/20/24）。
+本测试不兼容一期 company/scope/selfOnly 接口，也不以旧 jar 的行为修改冻结合同。
+共享的是测试，不共享后端核心实现。没有业务代码变更，也不执行 Git 提交。
+
+本套证明权限中心的 HTTP/数据库行为；不能代替真实课程 Service 对象级权限、网关上游路由、浏览器 UI、Swarm、JaCoCo 或 UML 核验。
+旧版认证、越权、事务、缓存安全要求保留并映射到下表，不因重构删除。
+
+== 安全运行
+
+先在父工程构建两个真实可执行 jar；并行实现期间不要重建或运行其他代理正在使用的服务。
+以下构建命令应由主代理在两个实现完成后执行（不是本次已执行证据）：
+
+[source,powershell]
+----
+$env:JAVA_HOME = 'C:\path\to\jdk-21'
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+.\mvnw.cmd -pl rbac-structured,rbac-ddd -am package -DskipTests
+cd tools/acceptance
+npm ci --ignore-scripts --no-audit --no-fund
+npm test
+# 使用本机专用 MySQL 的凭据；不要使用生产连接串。
+$env:ACCEPTANCE_DB_USER = 'root'
+$env:ACCEPTANCE_DB_PASSWORD = '<本机专用实例的环境凭据>'
+npm run acceptance -- --module=both
+----
+
+也可分别执行 `node run.mjs --module=structured` 或 `--module=ddd`。
+`--report=C:\Temp\rbac-contract-report` 指定报告目录；缺省报告、JVM 日志、临时密钥目录均位于系统临时目录、仓库之外。
+终端仅输出模块/场景/pass/fail 和报告位置，不输出 HTTP 请求、响应、JWT、密码或服务密钥。
+报告中的响应摘要为去随机字段后的 SHA256，不持久化原始敏感响应。
+
+* JDK 严格检查 JAVA_HOME/release 为 21，不使用 PATH 上的 Java8；Node >=22。
+* 固定数据库连接只允许 literal `127.0.0.1:13306`。主机/端口覆盖参数仅用于验证防护；localhost、IPv6、远端和 3306 均拒绝。
+* 新库为 `rbac1_contract_<structured|ddd>_<13位timestamp>_<8位hex>`；仅 CREATE 成功后登记所有权，DROP 前再次验证目标，仅删本次创建的库。
+* MySQL 权限需要 CREATE/DROP DATABASE、表读写及 TRIGGER。触发器只建在自有新库；故障场景 finally 删除，不暂停共享 MySQL。
+* Redis 仅访问专用 `127.0.0.1:16379`，先 PING；namespace 等于新库名加冒号。结束用 SCAN MATCH 自有前缀，再逐项检查前缀后 DEL，不执行全实例清理/重启。
+* structured 两实例端口 19081/19181，DDD 19082/19182。预检端口若被占用立即环境失败，绝不杀已有进程。只终止自身 spawn 并持有 ChildProcess 对象的 JVM。
+* 每模块两实例共享同一新库、临时 RSA PKCS8/SPKI、issuer、kid、namespace；L1 为两个独立 JVM。模块之间数据库、namespace、密钥分离。
+* 注入 DB_URL/USER/PASSWORD、REDIS_HOST/PORT、RBAC_CACHE_NAMESPACE、RBAC_JWT_PRIVATE_KEY_FILE/PUBLIC_KEY_FILE、RBAC_JWT_KID/ISSUER、RBAC_BOOTSTRAP_PASSWORD、RBAC_AUDIT_SERVICE_KEY、SPRING_PROFILES_ACTIVE=test。
+* 每个新账号/root 都先登录、调用 POST /api/v1/auth/password、断言旧 token 失效，再重新登录。密码、用户、课程对象均为虚构 fixture。
+* cleanup 停自有进程、清自有 Redis namespace、删自有新库、移除私钥/公钥；日志保留仓库外以便诊断。SIGINT/TERM 请求在受控清理后退出，强制关闭宿主 Node/机器断电不能保证 finally；出现残留时只能依据报告中的完整所有权名称人工确认清理。
+
+== 可执行追踪矩阵
+
+每行对应 `suite.mjs` 中具名场景，均产生 JSON pass/fail；不使用 skip，不因端点缺失降门槛。
+状态相关测试按模块共享一次启动序列，最后注销场景仅重启自有一个 JVM。
+
+[cols="2,5"]
+|===
+|需求/旧安全回归 |真实验收内容
+|SETUP、ID-02/03 |root 首次改密，内部包装，部门/角色/UI/API/用户全经 HTTP 建夹具，用户首次改密
+|EXT-01、API-C01～03、NFR-02 |裸 login/me 精确字段，UI-only permissions，identityRole 枚举，JWKS 验 RS256，aud/iss/iat/exp/jti/tokenVersion/kid，无 roles/permissions claim
+|ID-07、API-C02/13 |错误凭据、输入长度/未知字段、多 systems；合法测试密钥重签错误 aud/iss/iat/exp/缺 claim/未知 kid、伪造 signature 拒绝
+|ID-01/06、SELF-03 |课程用户和 root 课程 aud 均不能管理中心；停用课程系统拒绝，中心角色/权限不串系统
+|ROLE-02/03/04、DAG-01～11 |空图/单边/传递/多父菱形去重/来源字段；重复、自环、环、跨系统；停用中间切断与备用路径；删边剩余路径/最后路径；两个并发反向边仅一个成功并查 DB
+|ROLE-05、ORG-02 |即使 root 也必须满足部门准入；伪造 departmentId 无法绕过；普通 PATCH 禁 status/department，角色 PATCH 禁 status
+|ID-05、ORG-05 |迁部门只回收目标用户指派，旧 token 立即无权；同角色另一用户保留权限，直接 RolePermission 不变
+|ROLE-06、ORG-03/04 |非根部门管理员不能改系统共享角色、不能编辑或迁移兄弟部门用户
+|ROLE-06、H-10 |根部门非超级管理员仍受目标系统授权上界，不能通过直接权限/identityRole/继承/启用角色提升
+|RES-02/03/04、SELF-01 |UI-only 用户没有 API 和审计权限；未知 API 默认拒绝；UI/API kind 不互用，跨系统 permission/mapping 拒绝，显式映射不赋权
+|EXT-03、课程OAS |按教师快照的六类真实operationId/method/path/requiredRole/permissionCode逐项查注册表；copyCourse只要求teacher＋course:access、不误用CC；student即便有course:access仍拒绝
+|NFR-03、DAG-14 |两个 JVM 重复暖 UI/API 权限缓存并确认专属namespace有Redis条目；撤 UI/API 权限后两个实例下一访问均 false；恢复授权立即生效
+|AUD-01、AUD-T09/10 |GET/POST 均验证可信服务 key；无 key/错 key 403，无 bearer401；UUID、四 type、对象前缀与类型、target500/501、敏感 JSON、伪造 actor 拒绝；返回精确 VO/actor/identityRole
+|AUD-01、AUD-T01～03 |同键同体201同ID，异体400 AUDIT_DUPLICATE_CONFLICT，同键异主体拒绝；20并发全部201同ID，DB一行；检查 sourceSystem/origin/actor_roles_json
+|AUD-02、AUD-T11 |审计分页不重叠且 at/id 倒序；actor/actorId/target/from/to 联合筛选，时间相等边界和 +1ms；无效分页/时间400；跨系统同键冲突且查询不可见
+|AUD-05、AUD-T04/08 |自有库 BEFORE INSERT 审计 trigger SIGNAL；角色 PATCH503，角色 name/version、全局授权 version、SUCCESS审计数都未变；finally 删除 trigger
+|ID-04、NFR-04 |批量 SQL 分20批插10000虚构用户，仅复制虚构账号哈希；keyword+department 共5000匹配，页1/2/50/51/10000与 SQL LIMIT/OFFSET 精确一致，最大100，越界/非法分页
+|ID-03、U-04/05 |账号停用401，再启用旧 token 两实例仍401；logout204无body，DB撤销行，清自有namespace并重启自有 JVM 后旧 token 均401
+|NFR-06 |仓库外 JVM 日志不能包含 fixture密码/服务key/完整私钥/有效JWT
+|NFR-04、T21 |最终 DB 批量用户数、跨系统边/角色权限、不准入指派、非法identity为零；两后端全部成功/错误状态与错误码、规范化成功响应摘要及 DB 后置条件比较
+|===
+
+== 判定、报告与限制
+
+`report.json` 为表格化 `rows[]`：module、scenario、status、classification（失败时）、durationMs、HTTP observations、规范化 result。
+总表包含 command、exitCode、summary、模块新库名/端口/仓库外日志目录。
+每次实现运行独立建立类型化引用别名；保留 user/department/role 等关联、subject、version、继承路径内部顺序和分页 items 顺序，只有明确集合字段排序。
+随机 requestId 按请求发起顺序建立别名；仅生成的 trace/审计时间等元数据去噪，未知引用保留而不静默删除。
+反例测试保证错误部门、错误subject、错误继承路径和颠倒分页顺序不能被归一化掩盖。
+JWT/JWKS不比较随机密钥内容，而分别做密码学和字段断言。
+不把两个相同的错误实现当一致通过：对比前要求双方每个场景都 pass。
+
+[cols="1,3"]
+|===
+|退出码 |含义
+|0 |选定模块场景及双实现比较全部通过
+|1 |真实 HTTP/DB 合同断言失败或场景执行错误；新接口404必须 FAIL，不 skip
+|2 |JDK/端口/依赖实例/建库权限/JVM readiness/清理等环境阻断，或中断；不宣称业务 RED
+|===
+
+若 SETUP 新端点缺失，SETUP 真实失败，依赖该状态的后续场景仍登记 fail（不跳过、不伪造独立成功）。
+首次部署启动失败可能是过时 M2 jar、配置、迁移或应用启动错误，需看仓库外日志；仅凭 readiness 失败不能断言业务失败。
+数据库分页通过可观测输出与数据库 LIMIT/OFFSET 校验；是否内部使用 JPA 真正数据库分页还需实现代理的 SQL/源码/性能证据，本黑盒不冒称能观察内部加载方式。
+不关闭共享 Redis/MySQL，因此不能将本套误称为完成整个实例宕机测试；本地同步审计故障通过仅自有 schema 的 trigger 注入。
+
+== 工具护栏和真实候选执行
+
+独立 package-lock 已生成；最新 `npm test`：17项通过、0失败、0跳过，包含类型化引用反例、两个真实本地 stub 的302/307/308不外发、环境污染隔离和数据库护栏。
+JVM白名单继承基础系统环境，`SPRING_APPLICATION_JSON` 同时固定 datasource/Flyway/Redis/namespace/密钥；只加载 classpath 配置，不继承外部 Spring/JVM覆盖，不把密码放CLI。
+运行前将 jar 复制到私有临时目录，避免Windows执行句柄锁住Maven产物。
+
+覆盖率用仅loopback的JaCoCo TCP agent，停机前使用官方dump CLI获取非空exec（Windows终止进程不执行Java shutdown hook，不能只依赖dumponexit）。
+先正常 `clean package` 跑JUnit并打包，运行共享HTTP，再 `verify -DskipTests` 合并exec并执行原覆盖率门槛；中间不得clean。`source deploy/full-jacoco-agent.sh` 可定位agent和官方CLI。
+
+首轮候选真实运行已完成但不是GREEN：structured候选jar无Main-Class，登记ENVIRONMENT_BLOCKED；DDD有20项通过，另有JWT错误aud、审计时间边界等真实待修复以及一次transport阻断。
+RES-03首轮创建BUTTON未提供MENU父节点属于测试fixture错误，已补合法父节点，不放宽后端约束。
+外部 `m10-shared-first/report.json` 保存逐项结果、候选jar hash和非空dump；需修复后最终重跑，不以候选结果宣称交付。
