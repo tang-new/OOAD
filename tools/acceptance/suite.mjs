@@ -75,7 +75,7 @@ export async function runSuite(f, record) {
   const auditBody=()=>({requestId:randomUUID(),type:'score_changed',objectType:'student',objectId:'cpm-student-42',target:'fixture target',before:{status:'DRAFT'},after:{status:'PUBLISHED'}});
   const audit=(body,t=token,headers=auditHeaders)=>request('POST','/auth/audit-logs',body,t,0,headers);
 
-  await scenario('SETUP | root forced password change and isolated fixture through HTTP',async()=>{
+  await scenario('SETUP | root password change and isolated fixture through HTTP',async()=>{
     root=await freshLogin('root',f.bootstrap,B);
     const [[hq]]=await f.db.query('SELECT id FROM sys_department WHERE parent_id IS NULL ORDER BY id LIMIT 1');assert.ok(hq,'Headquarters seed required');normalizer.register('department',hq.id,['seed','headquarters']);
     department=await ok('POST','/departments',{parentId:hq.id,code:'FX_DEPT',name:'Fixture department'});
@@ -96,6 +96,24 @@ export async function runSuite(f, record) {
   await scenario('EXT-01 login input boundaries and invalid credentials',async()=>{
     status(await request('POST','/auth/login',{username:'fixture_user',password:'NotTheFixturePassword!1',systems:[C]},null),401);
     for(const body of [{username:'',password:'fixture',systems:[C]},{username:'x'.repeat(129),password:'fixture',systems:[C]},{username:'fixture_user',password:'x'.repeat(257),systems:[C]},{username:'fixture_user',password:'fixture',systems:[]},{username:'fixture_user',password:'fixture',systems:[C,B]},{username:'fixture_user',password:'fixture',systems:[C],roles:['admin']}]) status(await request('POST','/auth/login',body,null),400);
+  });
+  await scenario('AUTHZ simulation UI API explanation and inactive target never invalidates caller',async()=>{
+    const check={systemCode:C,userId:user.id,kind:'UI',permission:ui.code};
+    const decision=await ok('POST','/authorization/check',check);
+    keys(decision,['allowed','reason','traceId']);assert.equal(decision.allowed,true);assert.equal(decision.reason,'ALLOW');
+    const explanation=await ok('POST','/authorization/explain',check);
+    keys(explanation,['allowed','reason','traceId','trace','effective']);assert.equal(explanation.allowed,true);
+    assert.deepEqual(explanation.trace,['TOKEN_VALID','USER_SYSTEM_ACTIVE','REQUIREMENT_SATISFIED']);
+    assert.ok(explanation.effective.permissions.some(p=>p.code===ui.code));
+    assert.equal((await ok('POST','/authorization/check',{systemCode:C,userId:user.id,kind:'API',operationId:'fixtureOperation'})).allowed,true);
+    const denied=await ok('POST','/authorization/check',{...check,permission:'missing-fixture-ui'});assert.equal(denied.allowed,false);assert.equal(denied.reason,'DENY');
+    status(await request('POST','/api/v1/authorization/check',{...check,operationId:'fixtureOperation'}),400);
+    await ok('PUT',`/users/${user.id}/status`,{status:'DISABLED'});
+    const inactive=await ok('POST','/authorization/explain',check);assert.equal(inactive.allowed,false);assert.equal(inactive.reason,'USER_DISABLED');
+    assert.deepEqual(inactive.trace,['ACTOR_AUTHENTICATED','USER_DISABLED']);assert.deepEqual(inactive.effective.permissions,[]);
+    status(await request('GET','/auth/me',undefined,root),200);
+    await ok('PUT',`/users/${user.id}/status`,{status:'ACTIVE'});
+    token=await login(user.username,fixturePassword+'X',C);
   });
   await scenario('NFR-02 reject signed wrong aud iss kid future iat expired exp and forged signature',async()=>{
     const [h,p]=token.split('.'),header=JSON.parse(Buffer.from(h,'base64url')),payload=JSON.parse(Buffer.from(p,'base64url'));
@@ -138,7 +156,11 @@ export async function runSuite(f, record) {
   await scenario('ROLE-03 concurrent reverse edges serialized with DB invariant',async()=>{
     const a=await makeRole('RACE_A'),b=await makeRole('RACE_B');const r=await Promise.all([edge(a,b),edge(b,a)]);
     assert.equal(r.filter(x=>x.status>=200&&x.status<300).length,1);assert.equal(r.filter(x=>x.status===409&&x.body.code==='ROLE_CYCLE').length,1);
-    const [[row]]=await f.db.query('SELECT COUNT(*) n FROM sys_role_hierarchy WHERE (senior_role_id=? AND junior_role_id=?) OR (senior_role_id=? AND junior_role_id=?)',[a.id,b.id,b.id,a.id]);assert.equal(row.n,1);return {edges:row.n};
+    const [[row]]=await f.db.query('SELECT COUNT(*) n FROM sys_role_hierarchy WHERE (senior_role_id=? AND junior_role_id=?) OR (senior_role_id=? AND junior_role_id=?)',[a.id,b.id,b.id,a.id]);assert.equal(row.n,1);
+    const [stored]=await f.db.query('SELECT senior_role_id,junior_role_id FROM sys_role_hierarchy WHERE (senior_role_id=? AND junior_role_id=?) OR (senior_role_id=? AND junior_role_id=?)',[a.id,b.id,b.id,a.id]);
+    const winner=r.findIndex(x=>x.status===200);assert.ok(winner===0||winner===1);
+    assert.deepEqual(stored.map(row=>({...row})),[{senior_role_id:winner===0?a.id:b.id,junior_role_id:winner===0?b.id:a.id}],'Persisted edge must be exactly the request that succeeded, not merely one arbitrary edge');
+    return {edges:row.n};
   });
   await scenario('ROLE-05 eligibility even root / PATCH cannot smuggle status department',async()=>{
     const r=await makeRole('NOT_ELIGIBLE');const deny=await request('POST',`/api/v1/users/${user.id}/role-assignments`,{roleId:r.id});assert.ok([403,409].includes(deny.status));
@@ -155,14 +177,19 @@ export async function runSuite(f, record) {
     await ok('PUT',`/users/${user.id}/department`,{departmentId:department.id});await assign(user,role);
   });
   await scenario('RES-03 UI-only no API / mapping kind same-system / unknown deny',async()=>{
-    const r=await makeRole('UI_ONLY');await grant(r,[ui]);await eligible(sibling,[r]);const u=await createUser('fixture_ui_only',sibling);await assign(u,r);const t=await freshLogin(u.username,fixturePassword,C);
+    const r=await makeRole('UI_ONLY',C,'teacher');await grant(r,[ui]);await eligible(sibling,[r]);const u=await createUser('fixture_ui_only',sibling);await assign(u,r);const t=await freshLogin(u.username,fixturePassword,C);
     assert.equal(await allowed(t),true);assert.deepEqual(status(await request('GET','/auth/api-permissions/fixtureOperation',undefined,t),200),{operationId:'fixtureOperation',allowed:false});
     status(await audit(auditBody(),t),403);status(await request('GET','/auth/audit-logs',undefined,t,0,auditHeaders),403);
-    const menu=await ok('POST',`/systems/${C}/ui-resources`,{type:'MENU',code:'fx_menu',name:'fixture menu',path:'/fixture',permissionCode:ui.code});
+    const menu=await ok('POST',`/systems/${C}/ui-resources`,{type:'MENU',code:'fx_menu',name:'fixture menu',route:'/fixture',permissionCode:ui.code});
     const resource=await ok('POST',`/systems/${C}/ui-resources`,{type:'BUTTON',parentId:menu.id,code:'fx_button',name:'fixture button',permissionCode:ui.code});
-    const wrong=await request('POST',`/api/v1/systems/${C}/api-operations`,{operationId:'wrongKind',method:'GET',pathTemplate:'/fixture/wrong',permissionCode:ui.code,accessPolicy:'PROTECTED',enabled:true});assert.ok([400,409].includes(wrong.status));
-    const wrongUi=await request('POST',`/api/v1/systems/${C}/ui-resources`,{type:'BUTTON',parentId:menu.id,code:'wrong_ui',name:'fixture',permissionCode:apiPermission.code});assert.ok([400,409].includes(wrongUi.status));
-    const cp=await makePermission('fixture:center:api','API',B);const wrongSystem=await request('POST',`/api/v1/systems/${C}/api-operations`,{operationId:'wrongSystem',method:'GET',pathTemplate:'/fixture/wrong-system',permissionCode:cp.code,accessPolicy:'PROTECTED',enabled:true});assert.ok([400,409].includes(wrongSystem.status));
+    const rejectTypedReference=response=>{assert.ok([400,404,409].includes(response.status));if(response.status===404)assert.equal(response.body.code,'PERMISSION_NOT_FOUND');};
+    // permissionCode resolves within the requested system AND kind. A missing
+    // typed reference is legitimately 404, not an unimplemented-route success.
+    const wrong=await request('POST',`/api/v1/systems/${C}/api-operations`,{operationId:'wrongKind',method:'GET',pathTemplate:'/fixture/wrong',permissionCode:ui.code,accessPolicy:'PROTECTED',enabled:true});rejectTypedReference(wrong);
+    const wrongUi=await request('POST',`/api/v1/systems/${C}/ui-resources`,{type:'BUTTON',parentId:menu.id,code:'wrong_ui',name:'fixture',permissionCode:apiPermission.code});rejectTypedReference(wrongUi);
+    const cp=await makePermission('fixture:center:api','API',B);const wrongSystem=await request('POST',`/api/v1/systems/${C}/api-operations`,{operationId:'wrongSystem',method:'GET',pathTemplate:'/fixture/wrong-system',permissionCode:cp.code,accessPolicy:'PROTECTED',enabled:true});rejectTypedReference(wrongSystem);
+    const [[invalidOps]]=await f.db.query("SELECT COUNT(*) n FROM sys_api_operation WHERE operation_id IN ('wrongKind','wrongSystem')");assert.equal(invalidOps.n,0);
+    const [[invalidUi]]=await f.db.query("SELECT COUNT(*) n FROM sys_ui_resource WHERE code='wrong_ui'");assert.equal(invalidUi.n,0);
     await ok('PUT',`/systems/${C}/ui-api-mappings`,{mappings:[{uiResourceId:resource.id,apiOperationId:operation.id}]});assert.equal(status(await request('GET','/auth/api-permissions/fixtureOperation',undefined,t),200).allowed,false);
     const centerOperations=await ok('GET',`/systems/${B}/api-operations?keyword=listUsers&pageSize=100`),centerOp=centerOperations.items.find(x=>x.operationId==='listUsers');assert.ok(centerOp,'Registered center listUsers operation required');
     assert.ok([400,409].includes((await request('PUT',`/api/v1/systems/${C}/ui-api-mappings`,{mappings:[{uiResourceId:resource.id,apiOperationId:centerOp.id}]})).status));

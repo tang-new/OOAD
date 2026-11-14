@@ -1,5 +1,6 @@
 import { provision } from './fixture.mjs';
 import { runSuite } from './suite.mjs';
+import { comparableObservations } from './equivalence.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -18,9 +19,11 @@ for(const module of selection==='both'?['structured','ddd']:[selection]) {
   if(interrupted) break;
   let f;
   try {
-    f=await provision(module);report.modules[module]={database:f.name,logDirectory:f.dir,ports:f.ports};
+    f=await provision(module);report.modules[module]={database:f.name,logDirectory:f.dir,ports:f.ports,jarSha256:f.jarSha256};
     await runSuite(f,async row=>{report.rows.push({module,...row});console.log(`${module.padEnd(10)} | ${row.status.padEnd(4)} | ${row.scenario}`);});
   } catch(e) {
+    if(e.fixture) report.modules[module]=e.fixture;
+    if(e.cleanupFailed) report.rows.push({module,scenario:'ENVIRONMENT cleanup after failed readiness',status:'fail',classification:'ENVIRONMENT_BLOCKED',error:'Owned cleanup failed; inspect listed database and log directory'});
     // Provisioning errors are never a business RED. JVM startup/schema failures require log diagnosis.
     report.rows.push({module,scenario:'ENVIRONMENT provisioning/readiness',status:'fail',classification:'ENVIRONMENT_BLOCKED',error:'Provisioning failed; verify JAVA_HOME JDK21, built jar, dedicated MySQL/Redis, privileges and JVM logs. No business verdict.'});
     console.error(`${module} | ENVIRONMENT_BLOCKED | ${e.message.includes('password')?'configuration error (redacted)':e.message}`);
@@ -35,7 +38,7 @@ if(selection==='both') {
     assert.ok(s.length>0&&d.length>0,'Both backend runs must complete');assert.equal(s.length,d.length);
     for(let i=0;i<s.length;i++) {
       assert.equal(s[i].scenario,d[i].scenario);assert.equal(s[i].status,'pass',`Structured contract failed: ${s[i].scenario}`);assert.equal(d[i].status,'pass',`DDD contract failed: ${d[i].scenario}`);
-      const canonical=rows=>rows.map(r=>JSON.stringify(r)).sort();assert.deepEqual(canonical(s[i].observations),canonical(d[i].observations),`HTTP status/error code/normalized response mismatch: ${s[i].scenario}`);assert.deepEqual(s[i].result,d[i].result,`Normalized result/DB mismatch: ${s[i].scenario}`);
+      const canonical=rows=>rows.map(r=>JSON.stringify(r)).sort();assert.deepEqual(canonical(comparableObservations(s[i])),canonical(comparableObservations(d[i])),`HTTP status/error code/normalized response mismatch: ${s[i].scenario}`);assert.deepEqual(s[i].result,d[i].result,`Normalized result/DB mismatch: ${s[i].scenario}`);
     }
     report.rows.push({module:'comparison',scenario:'T21 normalized success/error/DB equivalence',status:'pass'});
   } catch {report.rows.push({module:'comparison',scenario:'T21 normalized success/error/DB equivalence',status:'fail',classification:report.rows.some(r=>r.classification==='ENVIRONMENT_BLOCKED')?'ENVIRONMENT_BLOCKED':'CONTRACT_RED',error:'Runs incomplete, contract failed, HTTP outcomes or normalized final DB facts differ; see per-module scenario rows'});}

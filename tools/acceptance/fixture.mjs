@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise';
-import { generateKeyPairSync, randomBytes } from 'node:crypto';
+import { generateKeyPairSync, randomBytes, createHash } from 'node:crypto';
 import { mkdtemp, mkdir, writeFile, rm, access, readFile, copyFile } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,6 +16,15 @@ export async function freePort(port) {
   await new Promise((res, rej) => { const s = net.createServer(); s.once('error', () => rej(new Error(`Port ${port} occupied; never killing foreign processes`))); s.listen(port, '127.0.0.1', () => s.close(res)); });
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function availableLoopbackPort() {
+  return new Promise((resolvePort,reject)=>{
+    const server=net.createServer();server.once('error',reject);
+    server.listen(0,'127.0.0.1',()=>{
+      const port=server.address().port;
+      server.close(error=>error?reject(error):resolvePort(port));
+    });
+  });
+}
 export async function provision(module) {
   if (!['structured','ddd'].includes(module)) throw new Error('Invalid module');
   const javaHome = process.env.JAVA_HOME;
@@ -48,6 +57,7 @@ export async function provision(module) {
   // and would otherwise make a parallel Maven repackage leave a plain jar.
   const runtimeJar=join(dir,'runtime.jar');
   await copyFile(jar,runtimeJar);
+  const jarSha256=createHash('sha256').update(await readFile(runtimeJar)).digest('hex');
   const {privateKey,publicKey} = generateKeyPairSync('rsa', {modulusLength:2048, privateKeyEncoding:{type:'pkcs8',format:'pem'},publicKeyEncoding:{type:'spki',format:'pem'}});
   const privateFile = join(dir,'private.pem'), publicFile = join(dir,'public.pem');
   await writeFile(privateFile, privateKey, {mode:0o600}); await writeFile(publicFile, publicKey);
@@ -57,7 +67,7 @@ export async function provision(module) {
   const namespace = `${name}:`;
   let admin, db, ownedDatabase = false;
   const children = new Map(); const streams = [];
-  const coveragePorts=ports.map(p=>p+400);
+  const coveragePorts=[];
   let dumpSequence=0;
   const applicationConfig={javaHome,url:`jdbc:mysql://${host}:${port}/${name}?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&connectTimeout=10000&socketTimeout=120000`,user,password,namespace,privateFile,publicFile,kid,issuer,bootstrap,serviceKey};
   async function stop(i) {
@@ -87,7 +97,9 @@ export async function provision(module) {
     const log = createWriteStream(join(dir,`${module}-${i}.log`), {flags:'a', mode:0o600}); streams.push(log);
     const coverageArgs=[];
     if (agent) {
-      await freePort(coveragePorts[i]);
+      // Choose a fresh private agent port for every JVM incarnation. Fixed
+      // diagnostic ports can briefly collide with unrelated local test JVMs.
+      coveragePorts[i]=await availableLoopbackPort();
       const coverageDir=resolve(ROOT,`rbac-${module}/target/jacoco-acceptance`);
       await mkdir(coverageDir,{recursive:true});
       coverageArgs.push(`-javaagent:${agent}=output=tcpserver,address=127.0.0.1,port=${coveragePorts[i]},dumponexit=false`);
@@ -118,11 +130,16 @@ export async function provision(module) {
   }
   try {
     // Dedicated Redis must be reachable; only a PING is issued during readiness.
-    await new Promise((res,rej) => {const s=net.connect({host:'127.0.0.1',port:16379}); s.setTimeout(2000);s.once('connect',()=>s.write('*1\r\n$4\r\nPING\r\n'));s.once('data',b=>{s.destroy();b.toString().startsWith('+PONG')?res():rej(new Error('Dedicated Redis PING failed'));});s.once('error',()=>rej(new Error('Dedicated Redis unavailable')));s.once('timeout',()=>{s.destroy();rej(new Error('Dedicated Redis timeout'));});});
+    await new Promise((res,rej) => {const s=net.connect({host:'127.0.0.1',port:16379}); s.setTimeout(10000);s.once('connect',()=>s.write('*1\r\n$4\r\nPING\r\n'));s.once('data',b=>{s.destroy();b.toString().startsWith('+PONG')?res():rej(new Error('Dedicated Redis PING failed'));});s.once('error',()=>rej(new Error('Dedicated Redis unavailable')));s.once('timeout',()=>{s.destroy();rej(new Error('Dedicated Redis timeout'));});});
     admin = await mysql.createConnection({host,port,user,password,timezone:'Z'});
     await admin.query(`CREATE DATABASE ${quoted} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`); ownedDatabase=true;
     await start(0); await start(1);
     db=await mysql.createConnection({host,port,user,password,database:name,timezone:'Z',dateStrings:true});
-    return {module,ports,name,dir,db,namespace,bootstrap,serviceKey,keys:{privateKey,publicKey,kid,issuer},cleanup,restart:async i=>{try {await stop(i);await start(i);} catch {const e=new Error('Owned process restart failed');e.name='FixtureEnvironmentError';throw e;}}};
-  } catch(e) { await cleanup(); throw e; }
+    return {module,ports,name,dir,jarSha256,db,namespace,bootstrap,serviceKey,keys:{privateKey,publicKey,kid,issuer},cleanup,restart:async i=>{try {await stop(i);await start(i);} catch {const e=new Error('Owned process restart failed');e.name='FixtureEnvironmentError';throw e;}}};
+  } catch(e) {
+    // Preserve the exact tested snapshot identity even when readiness fails.
+    e.fixture={database:name,logDirectory:dir,ports,jarSha256};
+    try {await cleanup();} catch {e.cleanupFailed=true;}
+    throw e;
+  }
 }
