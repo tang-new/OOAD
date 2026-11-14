@@ -1,19 +1,47 @@
 server:
   port: ${SERVER_PORT:8082}
-  servlet:
-    context-path: /api/v1
-
 spring:
   application:
     name: rbac-ddd
-
+  datasource:
+    url: ${RBAC_DB_URL:jdbc:mysql://127.0.0.1:13306/rbac1_ddd_test?serverTimezone=UTC&characterEncoding=UTF-8&connectTimeout=5000&socketTimeout=15000}
+    username: ${RBAC_DB_USER:root}
+    password: ${RBAC_DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  data:
+    redis:
+      host: ${RBAC_REDIS_HOST:127.0.0.1}
+      port: ${RBAC_REDIS_PORT:16379}
+      timeout: 500ms
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-ignored-properties: true
 management:
   endpoints:
     web:
+      base-path: /api/v1/actuator
       exposure:
         include: health,info
   endpoint:
     health:
-      # 此骨架只发布非敏感的阶段标识，不包含连接串或环境信息。
       show-details: always
       show-components: always
+rbac:
+  jwt:
+    private-key-file: ${RBAC_JWT_PRIVATE_KEY_FILE:}
+    public-key-file: ${RBAC_JWT_PUBLIC_KEY_FILE:}
+    kid: ${RBAC_JWT_KID:rbac-key-1}
+    issuer: ${RBAC_JWT_ISSUER:rbac-center}
+    allow-ephemeral: false
+    previous-public-keys: ${RBAC_JWT_PREVIOUS_PUBLIC_KEYS:}
+  cache:
+    namespace: ddd
+  audit-service-key: ${RBAC_AUDIT_SERVICE_KEY:}

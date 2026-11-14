@@ -1,0 +1,7 @@
+# 仅供JUnit专用loopback实例；不进入可执行jar，不为生产提供默认口令。
+spring:
+  datasource:
+    password: ${TEST_DB_PASSWORD:root}
+  data:
+    redis:
+      timeout: 5s

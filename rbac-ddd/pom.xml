@@ -10,8 +10,23 @@
     </parent>
     <artifactId>rbac-ddd</artifactId>
     <name>rbac-ddd</name>
-    <description>M2 独立启动骨架，尚未实现领域业务</description>
+    <description>独立领域驱动 RBAC1 实现</description>
+    <properties><rbac.ddd.final-name>rbac-ddd</rbac.ddd.final-name></properties>
     <dependencies>
+<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
+<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
+<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-aop</artifactId></dependency>
+<dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
+<dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency>
+<dependency><groupId>org.flywaydb</groupId><artifactId>flyway-mysql</artifactId></dependency>
+<dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId><scope>runtime</scope></dependency>
+<dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
+<dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-api</artifactId></dependency>
+<dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-impl</artifactId><scope>runtime</scope></dependency>
+<dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-jackson</artifactId><scope>runtime</scope></dependency>
+<dependency><groupId>cn.edu.xmu</groupId><artifactId>clonefactory</artifactId><version>0.0.1-SNAPSHOT</version><scope>provided</scope></dependency>
+
         <dependency>
             <groupId>com.xmu.rbac</groupId>
             <artifactId>rbac-contract</artifactId>
@@ -36,8 +51,9 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>rbac-ddd</finalName>
+        <finalName>${rbac.ddd.final-name}</finalName>
         <plugins>
+<plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration><annotationProcessorPaths><path><groupId>cn.edu.xmu</groupId><artifactId>clonefactory</artifactId><version>0.0.1-SNAPSHOT</version></path></annotationProcessorPaths><annotationProcessors><annotationProcessor>cn.edu.xmu.clonefactory.CopyProcessor</annotationProcessor></annotationProcessors></configuration></plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -1,89 +1,131 @@
 package com.xmu.rbac.ddd;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import java.net.URI;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.*;
+import org.springframework.http.*;
 
-/** 通过随机端口的真实 HTTP 验证无外部服务时的启动契约，不使用 MockMvc。 */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class SkeletonHttpTest {
+import java.util.*;
 
-    @Autowired
-    private TestRestTemplate http;
-
-    @LocalServerPort
-    private int port;
-
-    private URI endpoint(String path) {
-        return URI.create("http://localhost:" + port + path);
-    }
-
+/** M2 的全部业务404断言已被实现合同下的真实 HTTP 认证断言替换。 */
+class SkeletonHttpTest extends DddHttpTestSupport {
     @Test
-    void healthIsUpAndExplicitlyNotBusinessReady() {
-        ResponseEntity<JsonNode> response = http.getForEntity(endpoint("/api/v1/actuator/health"), JsonNode.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode body = response.getBody();
-        assertThat(body).isNotNull();
+    void healthAndInfoReportVerifiedImplementationWithoutDeploymentClaims() {
+        JsonNode body = http.getForObject("/api/v1/actuator/health", JsonNode.class);
         assertThat(body.path("status").asText()).isEqualTo("UP");
-        JsonNode details = body.path("components").path("skeleton").path("details");
-        assertMetadata(details);
-        assertThat(body.path("components").has("db")).isFalse();
-        assertThat(body.path("components").has("redis")).isFalse();
+        assertThat(
+                        body.path("components")
+                                .path("implementation")
+                                .path("details")
+                                .path("businessReady")
+                                .asBoolean())
+                .isTrue();
+        assertThat(
+                        http.getForObject("/api/v1/actuator/info", JsonNode.class)
+                                .path("backend")
+                                .asText())
+                .isEqualTo("ddd");
     }
 
     @Test
-    void infoExposesOnlyNonSensitiveStageMetadata() {
-        ResponseEntity<JsonNode> response = http.getForEntity(endpoint("/api/v1/actuator/info"), JsonNode.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertMetadata(response.getBody());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/users", "/users/1", "/roles", "/permissions", "/auth/login"})
-    void unimplementedBusinessGetReturns404(String path) {
-        assertThat(http.getForEntity(endpoint("/api/v1" + path), String.class).getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+    void loginJwtMeAndPersistentLogout() {
+        ResponseEntity<JsonNode> login =
+                http.postForEntity(
+                        "/auth/login",
+                        Map.of(
+                                "username",
+                                "root",
+                                "password",
+                                "Ddd-Test-Only-Password-2026!",
+                                "systems",
+                                List.of("rbac-center")),
+                        JsonNode.class);
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
+        String token = login.getBody().path("accessToken").asText();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<JsonNode> me =
+                http.exchange(
+                        "/auth/me", HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class);
+        assertThat(me.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(me.getBody().path("subject").asText()).isEqualTo("rbac-u1");
+        assertThat(
+                        http.exchange(
+                                        "/api/v1/roles?systemCode=rbac-center",
+                                        HttpMethod.GET,
+                                        new HttpEntity<>(headers),
+                                        JsonNode.class)
+                                .getBody()
+                                .path("data")
+                                .path("items")
+                                .size())
+                .isGreaterThanOrEqualTo(3);
+        assertThat(
+                        http.exchange(
+                                        "/auth/logout",
+                                        HttpMethod.POST,
+                                        new HttpEntity<>(headers),
+                                        Void.class)
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(
+                        http.exchange(
+                                        "/auth/me",
+                                        HttpMethod.GET,
+                                        new HttpEntity<>(headers),
+                                        JsonNode.class)
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    void unimplementedLoginPostReturns404() {
-        ResponseEntity<String> response = http.exchange(endpoint("/api/v1/auth/login"), HttpMethod.POST,
-                new HttpEntity<>(java.util.Map.of("username", "nobody", "password", "not-a-secret")),
-                String.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"env", "beans", "configprops", "metrics", "mappings", "loggers", "heapdump", "shutdown"})
-    void otherActuatorEndpointsAreNotExposed(String endpoint) {
-        assertThat(http.getForEntity(endpoint("/api/v1/actuator/" + endpoint), String.class).getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+    void managementWithoutTokenIs401NotSkeleton404() {
+        assertThat(http.getForEntity("/api/v1/users", JsonNode.class).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    void healthIsNotExposedOutsideConfiguredContextPath() {
-        assertThat(http.getForEntity(endpoint("/actuator/health"), String.class).getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+    void publicJwksAndInvalidLogin() {
+        assertThat(
+                        http.getForObject("/.well-known/jwks.json", JsonNode.class)
+                                .path("keys")
+                                .get(0)
+                                .path("alg")
+                                .asText())
+                .isEqualTo("RS256");
+        assertThat(
+                        http.postForEntity(
+                                        "/auth/login",
+                                        Map.of(
+                                                "username",
+                                                "missing",
+                                                "password",
+                                                "not-a-secret",
+                                                "systems",
+                                                List.of("rbac-center")),
+                                        JsonNode.class)
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
-    private static void assertMetadata(JsonNode metadata) {
-        assertThat(metadata).isNotNull();
-        assertThat(metadata.path("backend").asText()).isEqualTo("ddd");
-        assertThat(metadata.path("stage").asText()).isEqualTo("M2-skeleton");
-        assertThat(metadata.path("businessReady").isBoolean()).isTrue();
-        assertThat(metadata.path("businessReady").booleanValue()).isFalse();
-        assertThat(metadata.size()).isEqualTo(3);
+    @Test
+    void unknownDtoFieldIsRejected() {
+        assertThat(
+                        http.postForEntity(
+                                        "/auth/login",
+                                        Map.of(
+                                                "username",
+                                                "root",
+                                                "password",
+                                                "x",
+                                                "systems",
+                                                List.of("rbac-center"),
+                                                "actorId",
+                                                1),
+                                        JsonNode.class)
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }

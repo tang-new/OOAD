@@ -1,0 +1,8 @@
+# 仅专用测试 profile 使用较长等待；生产保持有限超时和失败关闭。
+spring:
+  datasource:
+    url: ${RBAC_DB_URL:jdbc:mysql://127.0.0.1:13306/rbac1_ddd_test?serverTimezone=UTC&useSSL=false&useLocalSessionState=true&connectTimeout=5000&socketTimeout=120000}
+  data:
+    redis:
+      timeout: 30s
+      connect-timeout: 30s

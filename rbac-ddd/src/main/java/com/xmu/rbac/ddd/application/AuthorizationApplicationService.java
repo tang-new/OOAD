@@ -1,0 +1,182 @@
+package com.xmu.rbac.ddd.application;
+
+import com.xmu.rbac.ddd.domain.*;
+import com.xmu.rbac.ddd.domain.port.*;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+/** 用例协调器，每次命中缓存前读取权威版本和当前用户/系统状态。 */
+@Service
+public class AuthorizationApplicationService {
+    private final AuthorizationRepository repository;
+    private final EffectiveCache cache;
+    private final AuthorizationReadTransaction reads;
+    private final AuthorizationPolicy policy = new AuthorizationPolicy();
+
+    public AuthorizationApplicationService(
+            AuthorizationRepository repository, EffectiveCache cache) {
+        this(repository, cache, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AuthorizationApplicationService(
+            AuthorizationRepository repository,
+            EffectiveCache cache,
+            AuthorizationReadTransaction reads) {
+        this.repository = repository;
+        this.cache = cache;
+        this.reads = reads;
+    }
+
+    public AuthorizationRepository.Identity validate(TokenProvider.Principal principal) {
+        AuthorizationRepository.Identity user = repository.identity(principal.subject());
+        DomainException.require(
+                user != null
+                        && user.status().equals("ACTIVE")
+                        && user.tokenVersion() == principal.tokenVersion()
+                        && !repository.revoked(principal.jti()),
+                401,
+                "TOKEN_INVALID");
+        boolean systemEnabled;
+        try {
+            systemEnabled = repository.systemEnabled(principal.systemCode());
+        } catch (DomainException error) {
+            // aud 是令牌声明，不是资源查询：未知 aud 必须按无效身份拒绝，不能泄漏为 404。
+            if (error.status() == 404) throw new DomainException(401, "TOKEN_INVALID");
+            throw error;
+        }
+        DomainException.require(systemEnabled, 401, "SYSTEM_DISABLED");
+        return user;
+    }
+
+    /** 管理端模拟的目标状态；停用目标是拒绝结果，不是调用管理员的认证失败。 */
+    public String unavailableReason(long userId, String system) {
+        boolean enabled = repository.systemEnabled(system);
+        AuthorizationRepository.Identity target = repository.identity(userId);
+        DomainException.require(target != null, 404, "USER_NOT_FOUND");
+        if (!"ACTIVE".equals(target.status())) return "USER_DISABLED";
+        return enabled ? null : "SYSTEM_DISABLED";
+    }
+
+    /** 每次计算或缓存命中都被权威版本括住；变更则重试，持续不稳定返回 503。 */
+    public AuthorizationPolicy.Effective effective(long userId, String system) {
+        if (reads != null
+                && TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            return reads.fresh(() -> stableEffective(userId, system));
+        return stableEffective(userId, system);
+    }
+
+    private AuthorizationPolicy.Effective stableEffective(long userId, String system) {
+        boolean transaction = TransactionSynchronizationManager.isActualTransactionActive();
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (transaction && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+                repository.freshenRead();
+            long version = repository.version();
+            DomainException.require(repository.systemEnabled(system), 401, "SYSTEM_DISABLED");
+            AuthorizationRepository.Identity target = repository.identity(userId);
+            DomainException.require(target != null, 404, "USER_NOT_FOUND");
+            boolean active = "ACTIVE".equals(target.status());
+            AuthorizationPolicy.Effective result =
+                    active && !transaction ? cache.get(system, userId, version) : null;
+            if (!active)
+                result =
+                        new AuthorizationPolicy.Effective(
+                                java.util.List.of(),
+                                java.util.List.of(),
+                                java.util.List.of(),
+                                java.util.List.of());
+            if (result == null)
+                result =
+                        policy.calculate(
+                                system,
+                                repository.assignments(userId, system),
+                                repository.hierarchy(system),
+                                repository.permissions(system));
+            if (version != repository.version()) continue;
+            if (active && !transaction) cache.put(system, userId, version, result);
+            if (version == repository.version()) return result;
+        }
+        throw new DomainException(503, "AUTHORIZATION_UNSTABLE");
+    }
+
+    public AuthorizationRepository.Identity require(
+            TokenProvider.Principal principal, String permission, boolean sharedWrite) {
+        AuthorizationRepository.Identity actor = validate(principal);
+        DomainException.require(
+                principal.systemCode().equals("rbac-center"), 403, "AUDIENCE_FORBIDDEN");
+        AuthorizationPolicy.Effective effective = effective(actor.id(), "rbac-center");
+        DomainException.require(
+                effective.superAdministrator() || effective.has(permission, Permission.Kind.API),
+                403,
+                "PERMISSION_DENIED");
+        if (sharedWrite)
+            DomainException.require(
+                    repository.departmentPath(actor.departmentId()).equals("/1/"),
+                    403,
+                    "ROOT_DEPARTMENT_REQUIRED");
+        return actor;
+    }
+
+    /** 操作策略、目标身份和有效权限共同受同一个版本括号保护。 */
+    public boolean api(long user, String system, String operation) {
+        if (reads != null
+                && TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            return reads.fresh(() -> stableApi(user, system, operation));
+        return stableApi(user, system, operation);
+    }
+
+    private boolean stableApi(long user, String system, String operation) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()
+                    && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+                repository.freshenRead();
+            long version = repository.version();
+            ApiOperation registered = repository.operation(system, operation);
+            DomainException.require(registered != null, 404, "API_OPERATION_NOT_FOUND");
+            AuthorizationRepository.Identity target = repository.identity(user);
+            boolean allowed = false;
+            if (target != null && "ACTIVE".equals(target.status())) {
+                AuthorizationPolicy.Effective effective = effective(user, system);
+                target = repository.identity(user);
+                allowed =
+                        target != null
+                                && "ACTIVE".equals(target.status())
+                                && policy.allows(registered, effective);
+            }
+            if (version == repository.version()) return allowed;
+        }
+        throw new DomainException(503, "AUTHORIZATION_UNSTABLE");
+    }
+
+    public void upperBound(
+            AuthorizationRepository.Identity actor,
+            String system,
+            AuthorizationPolicy.Effective proposed) {
+        boolean privileged = effective(actor.id(), "rbac-center").superAdministrator();
+        java.util.Set<Long> direct = new java.util.HashSet<>();
+        for (Role role : proposed.directRoles()) direct.add(role.id());
+        repository.hierarchy(system).requireGrantable(direct, privileged);
+        policy.requireWithin(effective(actor.id(), system), proposed, privileged);
+    }
+
+    /** 已登记业务路由仍受数据库当前启停状态约束，超级管理员不能绕过停用操作。 */
+    public void requireRegisteredOperation(String operationId) {
+        ApiOperation operation = repository.operation("rbac-center", operationId);
+        DomainException.require(operation != null, 403, "API_UNREGISTERED");
+        DomainException.require(operation.enabled(), 403, "API_OPERATION_DISABLED");
+    }
+
+    public void requireRoleManagement(AuthorizationRepository.Identity actor, Role role) {
+        role.requireManageable(effective(actor.id(), "rbac-center").superAdministrator());
+    }
+
+    public void requireGraphGrant(
+            AuthorizationRepository.Identity actor, RoleHierarchy graph, long direct) {
+        graph.requireGrantable(
+                java.util.Set.of(direct),
+                effective(actor.id(), "rbac-center").superAdministrator());
+    }
+}
