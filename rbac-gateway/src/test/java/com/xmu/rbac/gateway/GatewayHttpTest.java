@@ -53,6 +53,9 @@ class GatewayHttpTest {
             assertNotNull(exchange.getRequestHeaders().getFirst("Authorization"));
             assertNull(exchange.getRequestHeaders().getFirst("X-Audit-Service-Key"));
             try { Thread.sleep(delay); } catch (InterruptedException exception) { Thread.currentThread().interrupt(); }
+            if (identityStatus >= 300 && identityStatus < 400) {
+                exchange.getResponseHeaders().set("Location", "http://127.0.0.1:" + course.getAddress().getPort() + "/me");
+            }
             reply(exchange, identityStatus, overrideIdentity != null ? overrideIdentity : "{\"operationId\":\"" + checked + "\",\"allowed\":" + allowed + ",\"padding\":\"" + padding + "\"}");
         });
         course.createContext("/", exchange -> {
@@ -115,6 +118,19 @@ class GatewayHttpTest {
         headers.forEach(builder::header);
         return HttpClient.newHttpClient().send(builder.build(), HttpResponse.BodyHandlers.ofString());
     }
+    /** 非契约状态即使携带允许决定也不能授权，更不能跟随中心重定向。 */
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {201, 202, 206, 300, 302, 307, 308})
+    void nonContractIdentityStatusesNeverAuthorize(int status) throws Exception {
+        identityStatus = status;
+        allowed = true;
+        HttpResponse<String> response = send("/me", "GET", "", valid(), Map.of());
+        assertAll("中心非200响应必须失败关闭：" + status,
+                () -> assertEquals(503, response.statusCode()),
+                () -> assertEquals(0, calls.get(), "课程上游不应收到任何请求"),
+                () -> assertEquals(1, checks.get(), "必须真实请求一次中心"));
+    }
+
     @Test void invalidTokensNeverReachEitherBoundary() throws Exception {
         assertEquals(401, send("/me", "GET", "", null, Map.of()).statusCode());
         for (String token : List.of(token(KEY,"wrong","test-issuer",Instant.now().plusSeconds(90)),

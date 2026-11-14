@@ -1,5 +1,6 @@
 package com.xmu.rbac.gateway;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -10,9 +11,9 @@ public final class AuthBoundary {
     public AuthBoundary(IdentityClient identity) { this.identity = identity; }
 
     public void authorize(String operationId, String bearer) {
-        IdentityClient.Decision decision;
+        ResponseEntity<IdentityClient.Decision> response;
         try {
-            decision = identity.check(operationId, bearer);
+            response = identity.check(operationId, bearer);
         } catch (HttpClientErrorException exception) {
             int status = exception.getStatusCode().value();
             if (status == 401 || status == 403) { throw new GatewayFailure(status, "IDENTITY_DENIED"); }
@@ -21,6 +22,11 @@ public final class AuthBoundary {
         } catch (RuntimeException exception) {
             throw new GatewayFailure(503, "IDENTITY_UNAVAILABLE");
         }
+        // 不跟随重定向不等于鉴权成功；只有契约明确规定的200响应才可解释决定。
+        if (response == null || response.getStatusCode().value() != 200) {
+            throw new GatewayFailure(503, "IDENTITY_INVALID_RESPONSE");
+        }
+        IdentityClient.Decision decision = response.getBody();
         if (decision == null || !operationId.equals(decision.operationId()) || decision.allowed() == null) {
             throw new GatewayFailure(503, "IDENTITY_INVALID_RESPONSE");
         }
