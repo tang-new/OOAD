@@ -23,7 +23,26 @@ async function browserLogin(page: Page, username: string, password: string) {
   if (new URL(page.url()).pathname !== '/login') await page.goto('/login')
   await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible({ timeout: 30000 })
   await page.getByLabel('账号', { exact: true }).fill(username); await page.getByLabel('密码', { exact: true }).fill(password)
-  await page.getByRole('button', { name: '登录', exact: true }).click(); await expect(page.getByRole('heading', { name: '本人资料' })).toBeVisible()
+  // 登录会继续等待三个身份/导航请求；不能让默认 15s UI 断言早于 20s Axios 请求超时。
+  // 精确匹配本源请求，有限等待并逐个校验 HTTP，绝不把 401/403 或重试当成功。
+  const base = new URL(env.web)
+  const response = (path: string, method: string) => page.waitForResponse(result => {
+    const url = new URL(result.url())
+    return url.origin === base.origin && url.pathname === path && result.request().method() === method
+  }, { timeout: 30000 })
+  const initialized = Promise.all([
+    response('/auth/login', 'POST').then(async result => {
+      expect(result.status(), '浏览器登录 HTTP').toBe(200)
+      const body = await result.json()
+      expect(body.code).toBeUndefined(); expect(body.data).toBeUndefined()
+      expect(body.tokenType).toBe('Bearer'); expect(typeof body.accessToken).toBe('string')
+    }),
+    ...['/auth/me', '/api/v1/me', '/api/v1/menus/me'].map(path => response(path, 'GET').then(result => {
+      expect(result.status(), `浏览器登录初始化 ${path} HTTP`).toBe(200)
+    })),
+  ])
+  await Promise.all([initialized, page.getByRole('button', { name: '登录', exact: true }).click()])
+  await expect(page.getByRole('heading', { name: '本人资料' })).toBeVisible()
 }
 
 /** 截图只在真实数据与字体就绪后生成；断言容器滚动而非整页横溢，不用固定 sleep。 */

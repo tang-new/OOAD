@@ -321,7 +321,60 @@ def er():
     write('schema-constraints','json',json.dumps({name:{'columns':body.strip().splitlines(),'ddlSha256':sha(sqlpath)} for name,body in tables},ensure_ascii=False,indent=2))
     dot_render('role-senior-junior-dag','digraph G {rankdir=TB;node [shape=box];graph [label="Semantic example, NOT database snapshot: senior inherits junior; multiple juniors/parents legal"];A [label="A senior: p1"];B [label="B: p2"];C [label="C: p3"];D [label="D junior: p4"]; A->B;A->C;B->D;C->D; note [shape=note,label="A effective = {p1,p2,p3,p4}\\nD contributes once, sources retain both paths\\nDisabled B cuts A→B→D, not A→C→D\\nD→A rejected by link/reachable"]; }')
 
-def ancillary():
+def deployment_snapshot(evidence, local, shared, runtime_evidence='current', root=None, configuration_sha=None, evidence_sha=None):
+    """Validate immutable recorded evidence; never turn rebuilds into runtime acceptance.
+
+    current (default): reject absent/mismatching current JARs.
+    archived: validate historical rounds and report identities only. Current JARs
+    may differ or be absent on compile-only CI; no runtime/build acceptance follows.
+    """
+    if runtime_evidence not in ('current','archived'):raise ValueError('Unknown runtime evidence mode: '+runtime_evidence)
+    root=ROOT if root is None else Path(root)
+    expected=['mysql','redis','rbac-backend','rbac-gateway','rbac-web','course-backend','course-web']
+    if evidence.get('format')!='rbac1-local-final-dual-swarm-v1':raise ValueError('Expected nested local-final dual Swarm evidence')
+    if evidence.get('status')!='local-final-dual-runtime-passed' or evidence.get('activeModule')!='rbac-ddd':raise ValueError('Expected completed local dual runtime with final DDD active')
+    rounds={}
+    for module in ['rbac-structured','rbac-ddd']:
+        r=evidence.get('rounds',{}).get(module)
+        if not isinstance(r,dict):raise ValueError('Missing deployment round: '+module)
+        services=r.get('services',[]);probes=r.get('probes',[])
+        roles={e['name'].removeprefix(evidence['stack']+'_') for e in services}
+        if roles!=set(expected) or len(services)!=7 or len(probes)!=11 or not all(p.get('passed') is True for p in probes):raise ValueError('Incomplete seven-service / eleven-probe archived round: '+module)
+        if not r.get('nodes') or not all(n.get('Status')=='Ready' for n in r['nodes']):raise ValueError('Missing/unready archived nodes: '+module)
+        if not all(e.get('imageMatchesLocalBuild') is True and e.get('imageId')==e.get('expectedLocalImageId') and re.fullmatch(r'sha256:[0-9a-f]{64}',e.get('imageId','')) for e in services):raise ValueError('Archived image identity not proven: '+module)
+        rounds[module]={'recordedAt':r.get('timestamp'),'stage':r.get('stage'),'status':r.get('status'),'finalAcceptance':r.get('finalAcceptance'),'verificationScope':r.get('verificationScope'),'serviceCount':len(services),'probeCount':len(probes),'passedProbes':sum(p.get('passed') is True for p in probes),'services':[{k:e.get(k) for k in ['name','image','imageId','expectedLocalImageId','imageMatchesLocalBuild','replicas','ports','containerId','persistentVolumes','health','ping']} for e in services],'nodes':[{k:n.get(k) for k in ['Hostname','Status','ManagerStatus','TLSStatus']} for n in r.get('nodes',[])],'probes':[{k:p[k] for k in ['url','via','status','expected','passed','health'] if k in p} for p in probes]}
+    same_frontends=all(next(e['imageId'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['imageId'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['rbac-web','course-web'])
+    same_volumes=all(next(e['persistentVolumes'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['persistentVolumes'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['mysql','redis'])
+    same_data_containers=all(next(e['containerId'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['containerId'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['mysql','redis'])
+    if evidence.get('localFinalDeploymentAccepted') is not True or not same_frontends or not same_volumes or not same_data_containers:raise ValueError('Local-final acceptance / same frontend / persistent resources evidence inconsistent')
+    snapshot={'configurationSha256':configuration_sha,'scope':'Archived final LOCAL dual-runtime evidence; renderer performs no new live probe; no external server/CI claim. Per-round finalAcceptance=false means runtime-only scope, not local deployment failure.','evidencePath':'deploy/deployment-evidence.json','evidenceSha256':evidence_sha,'recordedAt':evidence.get('timestamp'),'stage':'local-final','status':evidence.get('status'),'tag':evidence.get('tag'),'stack':evidence.get('stack'),'archivedLocalFinalDeploymentAccepted':evidence.get('localFinalDeploymentAccepted'),'finalProjectAcceptance':evidence.get('finalProjectAcceptance'),'externalDeployment':evidence.get('externalDeployment'),'activeModule':evidence.get('activeModule'),'sameFrontendImageIds':same_frontends,'samePersistentVolumes':same_volumes,'sameDataServiceContainers':same_data_containers,'rounds':rounds,'localJars':{}}
+    artifacts=evidence.get('prerequisites',{}).get('canonicalArtifacts',{})
+    if set(artifacts)!={'rbac-structured','rbac-ddd','rbac-gateway','course-backend'}:raise ValueError('Missing/corrupt archived canonical artifact set')
+    for module,artifact in artifacts.items():
+        path=artifact.get('path','');recorded_sha=artifact.get('sha256','')
+        if not path or Path(path).is_absolute() or '..' in Path(path).parts or not re.fullmatch(r'[0-9a-f]{64}',recorded_sha):raise ValueError('Invalid archived canonical artifact: '+module)
+        jar=root/path;digest=sha(jar) if jar.is_file() else None
+        if runtime_evidence=='current':
+            if digest is None:raise ValueError('Canonical JAR missing: '+path)
+            if digest!=recorded_sha:raise ValueError('Current JAR differs from final recorded canonical: '+module)
+        snapshot['localJars'][path]={'sha256':digest,'exists':digest is not None,'recordedCanonicalSha256':recorded_sha,'comparisonPerformed':runtime_evidence=='current','matchesRecordedCanonical':True if runtime_evidence=='current' else None,'claim':'Current build raw bytes only. Archived mode does not bind these artifacts to historical runtime acceptance.'}
+    snapshot.update({'runtimeEvidenceMode':runtime_evidence,'currentRuntimeVerified':False,'artifactsMatchCurrentBuild':runtime_evidence=='current','artifactMatchClaim':'RAW_SHA_MATCH_TO_DATED_ARCHIVE' if runtime_evidence=='current' else 'NOT_ESTABLISHED_IN_ARCHIVED_MODE','currentBuildAcceptanceClaim':False})
+    if shared.get('summary')!={'pass':51,'fail':0}:raise ValueError('Expected archived shared HTTP 51 PASS')
+    for short in ['structured','ddd']:
+        if shared['modules'][short]['jarSha256']!=evidence['prerequisites']['canonicalArtifacts']['rbac-'+short]['sha256']:raise ValueError('Shared HTTP canonical identity mismatch: '+short)
+    snapshot['localAcceptanceSummary']={'source':'docs/acceptance/local-results.json','sharedHttp':shared['summary'],'verify':local['verify'],'junitTotal':local['junitTotal'],'course':local['course'],'frontendUnit':local['frontendUnit'],'browser':local['browser']}
+    return snapshot
+
+def runtime_evidence_note(snapshot):
+    return chr(10).join([
+        'Evidence mode: '+snapshot['runtimeEvidenceMode']+'; historical LOCAL archive only.',
+        'currentRuntimeVerified=false; artifactsMatchCurrentBuild='+str(snapshot['artifactsMatchCurrentBuild']).lower()+'.',
+        'Historical localFinalDeploymentAccepted=true; not current CI/build acceptance.',
+        'Historical shared/course/frontend reports bind archived canonical SHA only.',
+        'Current source/class signatures and method order are checked separately.',
+        'No new live probe, current business/final acceptance, external server or CI runtime claim.'])
+
+def ancillary(runtime_evidence='current'):
     global CURRENT_FIGURE
     CURRENT_FIGURE='role-state'
     role=key('Role','ddd');method(role,'changeStatus')
@@ -353,38 +406,13 @@ end note
     for service in expected:
         if not re.search(r'^  '+re.escape(service)+r':',compose,re.M):raise ValueError('Deployment definition changed: missing '+service)
     evidence=json.loads(INPUTS['deploy/deployment-evidence.json']['source'])
-    if evidence.get('format')!='rbac1-local-final-dual-swarm-v1':raise ValueError('Expected nested local-final dual Swarm evidence')
-    if evidence.get('status')!='local-final-dual-runtime-passed' or evidence.get('activeModule')!='rbac-ddd':raise ValueError('Expected completed local dual runtime with final DDD active')
-    rounds={}
-    for module in ['rbac-structured','rbac-ddd']:
-        r=evidence.get('rounds',{}).get(module)
-        if not isinstance(r,dict):raise ValueError('Missing deployment round: '+module)
-        services=r.get('services',[]);probes=r.get('probes',[])
-        roles={e['name'].removeprefix(evidence['stack']+'_') for e in services}
-        if roles!=set(expected) or len(services)!=7 or len(probes)!=11 or not all(p.get('passed') is True for p in probes):raise ValueError('Incomplete seven-service / eleven-probe archived round: '+module)
-        if not all(e.get('imageMatchesLocalBuild') is True for e in services):raise ValueError('Archived image identity not proven: '+module)
-        rounds[module]={'recordedAt':r.get('timestamp'),'stage':r.get('stage'),'status':r.get('status'),'finalAcceptance':r.get('finalAcceptance'),'verificationScope':r.get('verificationScope'),'serviceCount':len(services),'probeCount':len(probes),'passedProbes':sum(p.get('passed') is True for p in probes),'services':[{k:e.get(k) for k in ['name','image','imageId','expectedLocalImageId','imageMatchesLocalBuild','replicas','ports','containerId','persistentVolumes','health','ping']} for e in services],'nodes':[{k:n.get(k) for k in ['Hostname','Status','ManagerStatus','TLSStatus']} for n in r.get('nodes',[])],'probes':[{k:p[k] for k in ['url','via','status','expected','passed','health'] if k in p} for p in probes]}
-    same_frontends=all(next(e['imageId'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['imageId'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['rbac-web','course-web'])
-    same_volumes=all(next(e['persistentVolumes'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['persistentVolumes'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['mysql','redis'])
-    same_data_containers=all(next(e['containerId'] for e in rounds['rbac-structured']['services'] if e['name'].endswith('_'+role))==next(e['containerId'] for e in rounds['rbac-ddd']['services'] if e['name'].endswith('_'+role)) for role in ['mysql','redis'])
-    if evidence.get('localFinalDeploymentAccepted') is not True or not same_frontends or not same_volumes or not same_data_containers:raise ValueError('Local-final acceptance / same frontend / persistent resources evidence inconsistent')
-    snapshot={'configurationSha256':INPUTS['docker-compose.yml']['sha256'],'scope':'Archived final LOCAL dual-runtime evidence; renderer performs no new live probe; no external server/CI claim. Per-round finalAcceptance=false means runtime-only scope, not local deployment failure.','evidencePath':'deploy/deployment-evidence.json','evidenceSha256':INPUTS['deploy/deployment-evidence.json']['sha256'],'recordedAt':evidence.get('timestamp'),'stage':'local-final','status':evidence.get('status'),'tag':evidence.get('tag'),'stack':evidence.get('stack'),'localFinalDeploymentAccepted':evidence.get('localFinalDeploymentAccepted'),'finalProjectAcceptance':evidence.get('finalProjectAcceptance'),'externalDeployment':evidence.get('externalDeployment'),'activeModule':evidence.get('activeModule'),'sameFrontendImageIds':same_frontends,'samePersistentVolumes':same_volumes,'sameDataServiceContainers':same_data_containers,'rounds':rounds,'localJars':{}}
-    for module,artifact in evidence.get('prerequisites',{}).get('canonicalArtifacts',{}).items():
-        jar=ROOT/artifact['path']
-        if not jar.is_file():raise ValueError('Canonical JAR missing: '+artifact['path'])
-        digest=sha(jar)
-        if digest!=artifact['sha256']:raise ValueError('Current JAR differs from final recorded canonical: '+module)
-        snapshot['localJars'][artifact['path']]={'sha256':digest,'matchesRecordedCanonical':True,'claim':'Raw binary SHA matches dated canonical prerequisite; runtime image identity is recorded separately in each round'}
     local=json.loads(INPUTS['docs/acceptance/local-results.json']['source']);shared=json.loads(INPUTS['docs/acceptance/shared-http.json']['source'])
-    if shared.get('summary')!={'pass':51,'fail':0}:raise ValueError('Expected final m18 shared HTTP 51 PASS')
-    for short in ['structured','ddd']:
-        if shared['modules'][short]['jarSha256']!=evidence['prerequisites']['canonicalArtifacts']['rbac-'+short]['sha256']:raise ValueError('Shared HTTP canonical identity mismatch: '+short)
-    snapshot['localAcceptanceSummary']={'source':'docs/acceptance/local-results.json','sharedHttp':shared['summary'],'verify':local['verify'],'junitTotal':local['junitTotal'],'course':local['course'],'frontendUnit':local['frontendUnit'],'browser':local['browser']}
+    snapshot=deployment_snapshot(evidence,local,shared,runtime_evidence,configuration_sha=INPUTS['docker-compose.yml']['sha256'],evidence_sha=INPUTS['deploy/deployment-evidence.json']['sha256'])
     write('deployment-snapshot','json',json.dumps(snapshot,ensure_ascii=False,indent=2))
     timestamp=str(evidence.get('timestamp','unknown'))
     write('swarm-deployment','puml',r'''@startuml
 skinparam defaultFontName Microsoft YaHei
-title Final LOCAL dual Swarm — archived runtime evidence (not a renderer live probe)
+title Historical LOCAL dual Swarm — evidence mode EVIDENCE_MODE (not a renderer live probe)
 actor Browser
 node "Swarm private overlay (attachable)" {
  node "application services (one active central backend)" {
@@ -417,12 +445,9 @@ deployment-evidence.json: EVIDENCE_STATUS
 recorded TIMESTAMP; immutable tag EVIDENCE_TAG.
 structured -> DDD: each 7/7 services, 11/11 probes, exact recorded image IDs.
 Same frontend images + MySQL/Redis persistent resources; final active = rbac-ddd.
-localFinalDeploymentAccepted=true; round finalAcceptance=false is runtime-only scope.
-m18 shared HTTP 51 PASS matches canonical JARs; m17 verify + 188 JUnit PASS.
-Current canonical course 12/12; frontend 38 unit + 4 browser E2E PASS (separate reports).
-Archived LOCAL acceptance only: no new live probe, external server or CI claim.
+RUNTIME_EVIDENCE_NOTE
 end note
-@enduml'''.replace('TIMESTAMP',timestamp).replace('EVIDENCE_STATUS',str(evidence.get('status','UNVERIFIED'))).replace('EVIDENCE_TAG',str(evidence.get('tag','UNVERIFIED'))))
+@enduml'''.replace('TIMESTAMP',timestamp).replace('EVIDENCE_STATUS',str(evidence.get('status','UNVERIFIED'))).replace('EVIDENCE_TAG',str(evidence.get('tag','UNVERIFIED'))).replace('RUNTIME_EVIDENCE_NOTE',runtime_evidence_note(snapshot)).replace('EVIDENCE_MODE',runtime_evidence))
 
 def plantuml():
     jar=Path(tempfile.gettempdir())/f'rbac1-plantuml-{VERSION}.jar'
@@ -433,9 +458,11 @@ def plantuml():
     return {'plantumlVersion':VERSION,'jarSha256':sha(jar),'java':str(find_java('java'))}
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--strict-compiled',action='store_true');parser.add_argument('--check',action='store_true',help='check saved source hashes without rendering');args=parser.parse_args();OUT.mkdir(parents=True,exist_ok=True)
+    parser=argparse.ArgumentParser();parser.add_argument('--runtime-evidence',choices=['current','archived'],default='current',help='current (default) requires exact current JAR SHA match; archived validates historical local evidence only, never current runtime/build acceptance');parser.add_argument('--strict-compiled',action='store_true');parser.add_argument('--check',action='store_true',help='check saved source hashes without rendering');args=parser.parse_args();OUT.mkdir(parents=True,exist_ok=True)
     if args.check:
         data=json.loads((OUT/'source-index.json').read_text(encoding='utf-8'))
+        if data.get('runtimeEvidenceMode','current')!=args.runtime_evidence:raise SystemExit('Evidence mode differs from saved snapshot; regenerate/check with the explicit matching --runtime-evidence mode')
+        if data.get('currentRuntimeVerified') is not False or data.get('artifactsMatchCurrentBuild') is not (args.runtime_evidence=='current'):raise SystemExit('Invalid saved runtime/build acceptance claims for evidence mode')
         if data.get('hashRules')!=HASH_RULES:raise SystemExit('STALE hash rules: regenerate with current text/binary hash policy')
         changed=[p for p,v in data['sources'].items() if not (ROOT/p).exists() or sha(ROOT/p)!=v['sha256']]
         for path,entry in data['sources'].items():
@@ -449,18 +476,19 @@ def main():
         for p,digest in data.get('artifacts',{}).items():
             if not (OUT/p).exists() or sha(OUT/p)!=digest:changed.append('docs/design/'+p)
         if changed: raise SystemExit('STALE diagrams: '+'; '.join(changed))
-        print('Source hashes match saved diagram snapshot. Not a test/deployment assertion.');return
+        deployment_snapshot(json.loads(source_text(ROOT/'deploy/deployment-evidence.json')),json.loads(source_text(ROOT/'docs/acceptance/local-results.json')),json.loads(source_text(ROOT/'docs/acceptance/shared-http.json')),args.runtime_evidence)
+        print('Source hashes and explicit '+args.runtime_evidence+' evidence policy match saved diagram snapshot. Not a test/deployment assertion.');return
     collect()
     if args.strict_compiled and any(e['bytecode']!='COMPILED' for e in INDEX.values()):
         write('generation-status','json',json.dumps({'status':'PENDING_COMPILE','files':[e['path'] for e in INDEX.values() if e['bytecode']!='COMPILED']},indent=2));raise SystemExit('PENDING_COMPILE: compile all three modules before --strict-compiled; no success claimed')
-    verify_call_chains();classes();sequences();packages();er();ancillary();tool=plantuml()
+    verify_call_chains();classes();sequences();packages();er();ancillary(args.runtime_evidence);tool=plantuml()
     sources={e['path']:{'sha256':e['sha256'],'bytecode':e['bytecode'],'classPath':e['classPath'],'classSha256':e['classSha256'],'javap':e['signatures']} for e in INDEX.values()}
     for path,entry in INPUTS.items():sources[path]={'sha256':entry['sha256']}
     changed=[p for p,v in sources.items() if sha(ROOT/p)!=v['sha256']]
     changed.extend(e['classPath'] for e in INDEX.values() if e['classSha256'] and (not (ROOT/e['classPath']).exists() or sha(ROOT/e['classPath'])!=e['classSha256']))
     if changed:raise RuntimeError('Sources changed DURING generation; rerun after compile: '+str(changed))
-    index={'hashRules':HASH_RULES,'generatorSha256':sha(Path(__file__)),'artifacts':{p.name:sha(p) for f in sorted(set(FIGURES)) for p in [OUT/(f+'.svg'),OUT/(f+'.png')]},'generatedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'strictCompiled':args.strict_compiled,'status':'SOURCE_ONLY_PENDING_COMPILE' if WARNINGS else ('STRICT_COMPILED_CHECKED' if args.strict_compiled else 'SIGNATURE_CHECKED'),'warnings':WARNINGS,'tool':tool,'sources':sources,'references':REFS,'callChains':CALL_CHAINS,'figures':sorted(set(FIGURES)),'checks':{'classBoxes':'PASS','classEdgesThirdPartyBoxes':'PASS','symbols':'PASS','orderedSourceCallChains':'PASS','sourceHashesStable':'PASS','sequenceActivationBalance':'PASS','plantumlSyntax':'PASS','pngVisualInspection':'MANUAL_REQUIRED','tests':'NOT_RUN','deployment':'ARCHIVED_LOCAL_FINAL_CHECKED_NO_NEW_LIVE_PROBE'}}
-    write('source-index','json',json.dumps(index,ensure_ascii=False,indent=2));write('generation-status','json',json.dumps({k:index[k] for k in ['generatedAt','hashRules','strictCompiled','status','warnings','checks']},ensure_ascii=False,indent=2))
+    index={'runtimeEvidenceMode':args.runtime_evidence,'currentRuntimeVerified':False,'artifactsMatchCurrentBuild':args.runtime_evidence=='current','hashRules':HASH_RULES,'generatorSha256':sha(Path(__file__)),'artifacts':{p.name:sha(p) for f in sorted(set(FIGURES)) for p in [OUT/(f+'.svg'),OUT/(f+'.png')]},'generatedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'strictCompiled':args.strict_compiled,'status':'SOURCE_ONLY_PENDING_COMPILE' if WARNINGS else ('STRICT_COMPILED_CHECKED' if args.strict_compiled else 'SIGNATURE_CHECKED'),'warnings':WARNINGS,'tool':tool,'sources':sources,'references':REFS,'callChains':CALL_CHAINS,'figures':sorted(set(FIGURES)),'checks':{'classBoxes':'PASS','classEdgesThirdPartyBoxes':'PASS','symbols':'PASS','orderedSourceCallChains':'PASS','sourceHashesStable':'PASS','sequenceActivationBalance':'PASS','plantumlSyntax':'PASS','pngVisualInspection':'MANUAL_REQUIRED','tests':'NOT_RUN','deployment':'ARCHIVED_LOCAL_FINAL_CHECKED_NO_NEW_LIVE_PROBE'}}
+    write('source-index','json',json.dumps(index,ensure_ascii=False,indent=2));write('generation-status','json',json.dumps({k:index[k] for k in ['generatedAt','runtimeEvidenceMode','currentRuntimeVerified','artifactsMatchCurrentBuild','hashRules','strictCompiled','status','warnings','checks']},ensure_ascii=False,indent=2))
     write('index','adoc','= 当前源码图索引\n\n自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。\n\n'+'\n\n'.join('== '+f+'\n\nimage::'+f+'.svg['+f+']\n\nlink:'+f+'.png[PNG] / link:'+f+('.puml[PlantUML]' if (OUT/(f+'.puml')).exists() else '.dot[DOT]') for f in sorted(set(FIGURES))))
     print(json.dumps({'status':index['status'],'figures':len(set(FIGURES)),'warnings':WARNINGS,'visual':'Every PNG must be opened; renderer does not assert manual inspection.'},ensure_ascii=False))
 if __name__=='__main__':
