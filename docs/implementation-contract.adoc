@@ -3,7 +3,7 @@
 
 本文件将完整需求细化为并行实现合同；完整需求仍见sources/requirements-final.md。
 重构开发空库，不兼容一期company/scope/selfOnly/统计接口；不操作旧生产库。
-两后端内部算法独立实现，仅共享本合同、OpenAPI、DDL和黑盒夹具。
+两后端内部算法独立实现，仅共享本合同、OpenAPI、DDL、纯HTTP协议类型/错误词汇和黑盒夹具；不共享鉴权、领域计算或应用服务。
 
 == 公共协议
 
@@ -13,6 +13,15 @@
 DTO禁止未知字段，格式校验在HTTP输入层；输出VO不返回密码/哈希/内部版本缓存或JPA对象。
 状态统一ENABLED/DISABLED；用户ACTIVE/DISABLED/DELETED；日期为UTC ISO8601。
 中心系统码rbac-center，课程系统码course-project-management。
+
+未声明返回VO的mutation严格返回包装中的 `data:null`，不把内部服务返回列表/实体误当协议输出。
+User/Role的version是实际持久化乐观版本，新建从0起，响应前须flush使其与数据库一致；subject是创建前生成的稳定不透明标识，不依赖数字主键且不可改写。
+permissionCode按当前system和目标kind查找；该类型引用不存在返回404 `PERMISSION_NOT_FOUND`（即使另一个kind/系统存在同字符串），且不得产生任何新元数据记录。
+对外错误由 `rbac-contract` 的纯协议 `ApiErrors` 定义，REST边界投影，不约束DDD内部原因名：
+认证身份无效 `UNAUTHENTICATED`，登录口令错误 `INVALID_CREDENTIALS`，格式/分页/审计输入错误 `VALIDATION_ERROR`，
+aud错误 `AUDIENCE_MISMATCH`，权限不足 `PERMISSION_DENIED`，管理范围外 `OUT_OF_MANAGE_SCOPE`，
+超授权上界 `PRIVILEGE_ESCALATION`，审计服务凭据不可信 `AUDIT_SERVICE_REQUIRED`；跨系统继承 `400 CROSS_SYSTEM_ROLE`，环仍 `409 ROLE_CYCLE`。
+领域服务的独立策略和真实拒绝条件保持不变，不在黑盒归一化中改写错误码来伪造等价。
 
 身份HTTP端点不加/api/v1前缀、不加成功包装，严格匹配教师七操作：
 

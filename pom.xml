@@ -136,6 +136,8 @@
                                         <element>PACKAGE</element>
                                         <includes>
                                             <include>*.service</include>
+                                            <!-- DDD编排层承担同等业务职责，不能利用包名绕过原85%门槛。 -->
+                                            <include>*.application</include>
                                         </includes>
                                         <limits>
                                             <limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.85</minimum></limit>

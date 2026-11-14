@@ -3143,12 +3143,12 @@ paths:
             application/json:
               schema:
                 type: object
-                additionalProperties: false
+                required:
+                - status
                 properties:
                   status:
                     type: string
-                required:
-                - status
+                additionalProperties: true
   /api/v1/actuator/info:
     get:
       operationId: getInfo
