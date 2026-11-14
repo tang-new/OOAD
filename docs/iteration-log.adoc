@@ -133,5 +133,5 @@ link:evidence/m2/desktop.png[桌面]、link:evidence/m2/mobile.png[手机]。
 新 `m20-reactor-package.log` 正常188JUnit零fail/error/skip；新m21共享51PASS和全reactor覆盖gate绿，canonical与运行快照一致。DDD最新行91.0060%/分支71.3996%/application86.8201%；其余门槛与业务源码未动。
 新版浏览器m21先3/4：登录POST200后初始化仍pending，未确证并行I/O因果。强化精确四HTTP响应200/裸协议及页面断言，保留RED、无sleep/重试；m22完整4/4、38单测和typecheck/build真绿。
 课程m21最新canonical12/12真实落库/审计/清理；新immutable `local-final-20261115-035858` 两轮各7服务/11探针最终DDD，复用相同前端及持久卷。
-后续CI已通过核心package/51HTTP/coverage/19UML/前端单测和两实现浏览器，但首次Gitee完整clone因TLS earlyEOF阻断。改为仅fetch精确固定commit及最多3次传输重试，保留TLS与commit验证；3工具正反例通过，独立新cache真实固定树导出成功。未把传输重试当业务断言重试，原失败日志保留。
+后续CI已通过核心package/51HTTP/coverage/19UML/前端单测和两实现浏览器，但首次Gitee完整clone因TLS earlyEOF阻断。改为仅fetch精确固定commit及最多3次传输重试，保留TLS与commit验证；4工具正反例通过（含先导出、后隔离DB执行原测试的CI顺序），独立新cache真实固定树导出成功。未把传输重试当业务断言重试，原失败日志保留。
 外部服务器与整机灾备仍未执行，CI结论必须按最后实际run核对，不从本地绿外推。
