@@ -2,13 +2,8 @@ package com.xmu.rbac.structured.mapper;
 
 import com.xmu.rbac.structured.entity.SoftwareSystem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface SoftwareSystemMapper extends JpaRepository<SoftwareSystem, Long> {
-
-    Optional<SoftwareSystem> findBySystemCode(String systemCode);
-
-    List<SoftwareSystem> findAllByOrderBySortOrderAscIdAsc();
-}
+/** SoftwareSystem的Spring Data JPA持久化抽象。 */
+public interface SoftwareSystemMapper
+    extends JpaRepository<SoftwareSystem, Long>, JpaSpecificationExecutor<SoftwareSystem> {}

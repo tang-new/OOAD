@@ -1,160 +1,117 @@
 package com.xmu.rbac.structured.service;
+import static com.xmu.rbac.structured.service.Views.*;
 
-import com.xmu.rbac.structured.dto.Operator;
-import com.xmu.rbac.structured.entity.User;
-import com.xmu.rbac.structured.mapper.TokenRevocationMapper;
-import com.xmu.rbac.structured.mapper.UserMapper;
+import com.xmu.rbac.structured.dto.*;
+import com.xmu.rbac.structured.entity.*;
+import com.xmu.rbac.structured.mapper.Store;
+import java.time.Instant;
+import java.util.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-
-/**
- * 1.0 认证：登录、登出、令牌校验、修改口令（docs/architecture-structured.adoc）。
- */
+/** 认证事务脚本；身份只从数据库和验证过的令牌取得。 */
 @Service
 public class AuthenticationService {
-
-    public static final int MAX_LOGIN_FAILURES = 5;
-    public static final int LOCK_MINUTES = 15;
-
-    /** 用户不存在时也比对一次哈希，使失败响应时间与口令错误相近，避免借响应时间枚举用户名。 */
-    private static final String DUMMY_HASH = "$2a$10$QML7HXgspyFoS7XwRrS1meN2EnGnUOGtXCLQteHHodYiCZQIFb/Jm";
-
-    /** 登录成功的结果。 */
-    public record LoginResult(String token, long expiresIn, Long userId, String username, String realName,
-                              boolean mustChangePwd) {
+    private final Store db;
+    private final AuthorizationService authz;
+    private final AuditService audit;
+    private final TokenService tokens;
+    private final PasswordEncoder passwords;
+    private final org.springframework.transaction.support.TransactionTemplate tx;
+    public AuthenticationService(Store db, AuthorizationService authz, AuditService audit,
+        TokenService tokens, PasswordEncoder passwords,
+        org.springframework.transaction.PlatformTransactionManager manager) {
+        this.db = db;
+        this.authz = authz;
+        this.audit = audit;
+        this.tokens = tokens;
+        this.passwords = passwords;
+        this.tx = new org.springframework.transaction.support.TransactionTemplate(manager);
+    }
+    /** 验证凭据并持久化并发失败锁定状态。 */
+    public Object login(Inputs.Login input) {
+        User user = tx.execute(status -> {
+            GrantVersion g = authz.lock();
+            User u = db.one(User.class, "e.username=?1", input.username());
+            boolean valid = u != null && "ACTIVE".equals(u.status)
+                && (u.lockedUntil == null || !u.lockedUntil.isAfter(Instant.now()))
+                && passwords.matches(input.password(), u.passwordHash);
+            if (!valid) {
+                if (u != null && "ACTIVE".equals(u.status)
+                    && (u.lockedUntil == null || !u.lockedUntil.isAfter(Instant.now()))) {
+                    u.failedLoginCount++;
+                    if (u.failedLoginCount >= 5) {
+                        u.lockedUntil = Instant.now().plusSeconds(900);
+                        u.failedLoginCount = 0;
+                    }
+                }
+                return null;
+            }
+            SoftwareSystem system =
+                db.one(SoftwareSystem.class, "e.code=?1", input.systems().getFirst());
+            if (system == null)
+                throw BizException.unauthorized();
+            authz.active(u, system);
+            u.failedLoginCount = 0;
+            u.lockedUntil = null;
+            Actor actor = new Actor(u.id, u.subject, system.code, null, null);
+            audit.success(actor, "LOGIN", system.code);
+            return u;
+        });
+        if (user == null) {
+            throw new BizException(401, "CREDENTIAL_INVALID");
+        }
+        return tokens.issue(user, input.systems().getFirst());
     }
 
-    /** 通过认证的请求主体。 */
-    public record Authenticated(Long userId, String username, String jti, Instant expiresAt, boolean mustChangePwd) {
-    }
-
-    private final UserMapper userMapper;
-    private final TokenRevocationMapper tokenRevocationMapper;
-    private final TokenService tokenService;
-    private final PasswordEncoder passwordEncoder;
-    private final AuditService auditService;
-    private final Clock clock;
-
-    public AuthenticationService(UserMapper userMapper, TokenRevocationMapper tokenRevocationMapper,
-                                 TokenService tokenService, PasswordEncoder passwordEncoder,
-                                 AuditService auditService, Clock clock) {
-        this.userMapper = userMapper;
-        this.tokenRevocationMapper = tokenRevocationMapper;
-        this.tokenService = tokenService;
-        this.passwordEncoder = passwordEncoder;
-        this.auditService = auditService;
-        this.clock = clock;
-    }
-
-    /**
-     * 1.1 登录。失败一律说「用户名或口令错误」，不区分用户不存在与口令错误；
-     * 只有口令正确之后才告诉对方账号已停用或已锁定以外的状态。
-     */
-    @Transactional(noRollbackFor = BizException.class)
-    public LoginResult login(String username, String password, String clientIp) {
-        LocalDateTime now = LocalDateTime.now(clock);
-        Operator who = new Operator(null, username, clientIp);
-        User user = (username == null || username.isBlank()) ? null : userMapper.findByUsername(username).orElse(null);
-        if (user == null || User.DELETED.equals(user.status)) {
-            passwordEncoder.matches(password == null ? "" : password, DUMMY_HASH);
-            throw loginFailed(who, null, "CREDENTIAL_INVALID", BizException.CREDENTIAL_INVALID, "用户名或口令错误");
-        }
-        who = new Operator(user.id, user.username, clientIp);
-        if (user.lockedUntil != null && now.isBefore(user.lockedUntil)) {
-            throw loginFailed(who, user, "ACCOUNT_LOCKED", BizException.ACCOUNT_LOCKED,
-                    "连续登录失败次数过多，账号已锁定 " + LOCK_MINUTES + " 分钟");
-        }
-        if (password == null || !passwordEncoder.matches(password, user.passwordHash)) {
-            // 原子地加一：并发的失败请求不会丢失计数
-            userMapper.recordLoginFailure(user.id, MAX_LOGIN_FAILURES, now.plusMinutes(LOCK_MINUTES));
-            throw loginFailed(who, user, "CREDENTIAL_INVALID", BizException.CREDENTIAL_INVALID, "用户名或口令错误");
-        }
-        String deny = AuthorizationService.subjectDenyReason(user);
-        if (deny != null) {
-            throw loginFailed(who, user, deny, BizException.ACCOUNT_DISABLED, "账号已停用");
-        }
-        if (user.loginFailCount > 0 || user.lockedUntil != null) {
-            userMapper.resetLoginFailure(user.id);
-        }
-        String token = tokenService.issue(user.id, user.username, user.tokenVersion, clock.instant());
-        auditService.record(who, "LOGIN", "USER", user.id, user.username, null, AuditService.SUCCESS, null);
-        return new LoginResult(token, TokenService.TTL_SECONDS, user.id, user.username, user.realName,
-                user.mustChangePwd);
-    }
-
-    /**
-     * 1.2 每个请求的令牌校验：签名与有效期 → 是否已登出 → 账号当前状态 → 令牌版本号与账号一致（改过口令的旧令牌作废）。
-     * 账号状态每次都查库，停用、删除在下一次请求立即生效。
-     */
-    public Authenticated authenticate(String token) {
-        Instant now = clock.instant();
-        TokenService.TokenClaims claims = tokenService.parse(token, now);
-        if (claims == null) {
-            throw unauthenticated("未登录或令牌已失效");
-        }
-        if (tokenRevocationMapper.isRevoked(claims.jti())) {
-            throw unauthenticated("令牌已注销，请重新登录");
-        }
-        User user = userMapper.findById(claims.userId()).orElse(null);
-        String deny = AuthorizationService.subjectDenyReason(user);
-        if (deny != null) {
-            throw unauthenticated("账号不可用：" + deny);
-        }
-        if (claims.version() != user.tokenVersion) {
-            throw unauthenticated("口令已修改，请重新登录");
-        }
-        return new Authenticated(user.id, user.username, claims.jti(), claims.expiresAt(), user.mustChangePwd);
-    }
-
-    /** 1.4 登出：登记令牌编号，令牌原本到期前一直有效拒绝。 */
-    public void logout(Operator op, Authenticated auth) {
-        tokenRevocationMapper.revoke(auth.jti(), Duration.between(clock.instant(), auth.expiresAt()));
-        auditService.record(op, "LOGOUT", "USER", op.userId(), op.username(), null, AuditService.SUCCESS, null);
-    }
-
-    /** 1.5 修改本人口令。成功后此前签发的令牌全部失效。 */
+    /** 持久撤销当前令牌，Redis清空不影响拒绝结果。 */
     @Transactional
-    public void changePassword(Operator op, String oldPassword, String newPassword) {
-        User user = userMapper.findById(op.userId()).orElseThrow(() -> BizException.notFound("用户"));
-        if (oldPassword == null || !passwordEncoder.matches(oldPassword, user.passwordHash)) {
-            auditService.record(op, "PASSWORD_CHANGE", "USER", user.id, user.username, null, AuditService.FAILED,
-                    "CREDENTIAL_INVALID");
-            throw BizException.badRequest("旧口令错误");
+    public void logout(Actor actor) {
+        GrantVersion g = authz.lock();
+        if (db.get(TokenRevocation.class, actor.jti()) == null) {
+            TokenRevocation revoked = new TokenRevocation();
+            revoked.jti = actor.jti();
+            revoked.subject = actor.subject();
+            revoked.expiresAt = actor.expiresAt();
+            revoked.createdAt = Instant.now();
+            db.save(revoked);
         }
-        if (!meetsPolicy(newPassword) || newPassword.equals(oldPassword)) {
-            auditService.record(op, "PASSWORD_CHANGE", "USER", user.id, user.username, null, AuditService.FAILED,
-                    "PASSWORD_POLICY");
-            throw BizException.badRequest("新口令须至少 8 位，含大写、小写、数字与特殊字符，且不同于旧口令");
-        }
-        user.passwordHash = passwordEncoder.encode(newPassword);
-        user.mustChangePwd = false;
+        g.version++;
+        audit.success(actor, "LOGOUT", actor.subject());
+    }
+    /** 校验旧口令并更新令牌版本以失效旧令牌。 */
+    @Transactional
+    public void password(Actor actor, Inputs.Password input) {
+        GrantVersion g = authz.lock();
+        User user = db.lock(User.class, actor.userId());
+        if (!passwords.matches(input.oldPassword(), user.passwordHash))
+            throw new BizException(401, "CREDENTIAL_INVALID");
+        user.passwordHash = passwords.encode(input.newPassword());
         user.tokenVersion++;
-        userMapper.save(user);
-        auditService.record(op, "PASSWORD_CHANGE", "USER", user.id, user.username, null, AuditService.SUCCESS, null);
+        user.mustChangePassword = false;
+        g.version++;
+        audit.success(actor, "PASSWORD_CHANGED", actor.subject());
     }
-
-    public static boolean meetsPolicy(String pw) {
-        return pw != null && pw.length() >= 8
-                && pw.chars().anyMatch(Character::isUpperCase)
-                && pw.chars().anyMatch(Character::isLowerCase)
-                && pw.chars().anyMatch(Character::isDigit)
-                && pw.chars().anyMatch(c -> !Character.isLetterOrDigit(c));
+    /** 执行externalMe操作，保持服务到持久化层的单向依赖。 */
+    public Object externalMe(Actor actor) {
+        User user = authz.require(User.class, actor.userId());
+        AuthorizationService.Snapshot snapshot = authz.snapshot(user.id, actor.systemCode());
+        return map("subject", user.subject, "roles", authz.identities(snapshot), "permissions",
+            snapshot.permissions()
+                .stream()
+                .map(id -> authz.require(Permission.class, id))
+                .filter(p -> "UI".equals(p.kind))
+                .map(p -> p.code)
+                .sorted()
+                .distinct()
+                .toList(),
+            "name", user.name, "no", user.no == null ? "" : user.no);
     }
-
-    private BizException loginFailed(Operator who, User user, String reason, int code, String message) {
-        auditService.record(who, "LOGIN", "USER", user == null ? null : user.id, who.username(), null,
-                AuditService.FAILED, reason);
-        return new BizException(401, code, message);
+    /** 执行me操作，保持服务到持久化层的单向依赖。 */
+    public Object me(Actor actor) {
+        User user = authz.require(User.class, actor.userId());
+        return map("user",
+            Views.user(user, authz.require(Department.class, user.departmentId).name), "effective",
+            authz.effective(authz.snapshot(user.id, actor.systemCode()), actor.systemCode()));
     }
-
-    private static BizException unauthenticated(String message) {
-        return new BizException(401, BizException.UNAUTHENTICATED, message);
-    }
-
 }

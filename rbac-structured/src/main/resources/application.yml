@@ -1,56 +1,46 @@
-# 所有环境差异通过环境变量注入，镜像本身不区分开发与部署（docs/architecture-structured.adoc）
 server:
   port: ${SERVER_PORT:8081}
-  servlet:
-    context-path: /api/v1
-
 spring:
   application:
     name: rbac-structured
   datasource:
-    url: ${DB_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:rbac}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true}
-    username: ${DB_USER:rbac}
-    password: ${DB_PASSWORD:rbac}
-    hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:20}
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:13306/rbac1_structured?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   jpa:
-    # 表结构只由 Flyway 脚本管理，Hibernate 不建表、不改表
     hibernate:
       ddl-auto: none
     open-in-view: false
     properties:
       hibernate:
         jdbc:
-          time_zone: Asia/Shanghai
+          time_zone: UTC
   flyway:
-    # 迁移脚本在 rbac-contract 的 jar 里
     locations: classpath:db/migration
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2s
-  servlet:
-    multipart:
-      max-file-size: 20MB
-      max-request-size: 40MB
-
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:16379}
+      timeout: 500ms
+      connect-timeout: 500ms
 management:
   endpoints:
     web:
+      base-path: /api/v1/actuator
       exposure:
         include: health,info
-  endpoint:
-    health:
-      probes:
-        enabled: true
-
 rbac:
-  jwt:
-    # 部署时必须用 RBAC_JWT_SECRET 覆盖；这个默认值只用于本地开发
-    secret: ${RBAC_JWT_SECRET:dev-only-secret-change-me-at-least-32-bytes!!}
-  # 新建用户未指定口令、以及导入的员工，使用这个初始口令，首次登录必须修改
-  initial-password: ${RBAC_INITIAL_PASSWORD:Init@2026}
+  bootstrap-password: ${RBAC_BOOTSTRAP_PASSWORD:}
+  audit-service-key: ${RBAC_AUDIT_SERVICE_KEY:}
   cache:
-    # 授权数据在 Redis 中的存活时间。正确性靠版本号失效，TTL 只负责清理旧键
-    ttl: PT10M
+    namespace: structured
+  jwt:
+    private-key-file: ${RBAC_JWT_PRIVATE_KEY_FILE:}
+    public-key-file: ${RBAC_JWT_PUBLIC_KEY_FILE:}
+    kid: ${RBAC_JWT_KID:rbac-key-1}
+    issuer: ${RBAC_JWT_ISSUER:rbac-center}
+    previous-public-keys: ${RBAC_JWT_PREVIOUS_PUBLIC_KEYS:}
+    allow-ephemeral: false

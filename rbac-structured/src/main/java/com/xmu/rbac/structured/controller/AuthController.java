@@ -1,79 +1,71 @@
 package com.xmu.rbac.structured.controller;
-
-import com.xmu.rbac.structured.dto.Decision;
-import com.xmu.rbac.structured.dto.Operator;
-import com.xmu.rbac.structured.dto.StatsDtos.AuthzRequest;
-import com.xmu.rbac.structured.dto.UserDtos.UserDetail;
-import com.xmu.rbac.structured.service.AuthenticationService;
-import com.xmu.rbac.structured.service.AuthenticationService.Authenticated;
-import com.xmu.rbac.structured.service.AuthenticationService.LoginResult;
-import com.xmu.rbac.structured.service.AuthzQueryService;
-import com.xmu.rbac.structured.service.UserManagementService;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestAttribute;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-/** 登录场景与鉴权场景的接口。Controller 只做参数转换与结果包装。 */
+import com.xmu.rbac.structured.dto.*;
+import com.xmu.rbac.structured.service.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import java.time.Instant;
+import org.springframework.http.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+/** 教师七接口：无内部成功包装，actor仅来自验证令牌。 */
 @RestController
+@Validated
 public class AuthController {
-
-    public record LoginRequest(String username, String password) {
+    private final AuthenticationService identity;
+    private final AuthorizationService az;
+    private final TokenService tokens;
+    private final AuditService audit;
+    public AuthController(AuthenticationService identity, AuthorizationService az,
+        TokenService tokens, AuditService audit) {
+        this.identity = identity;
+        this.az = az;
+        this.tokens = tokens;
+        this.audit = audit;
     }
-
-    public record PasswordRequest(String oldPassword, String newPassword) {
-    }
-
-    private final AuthenticationService authentication;
-    private final AuthzQueryService authzQuery;
-    private final UserManagementService users;
-
-    public AuthController(AuthenticationService authentication, AuthzQueryService authzQuery,
-                          UserManagementService users) {
-        this.authentication = authentication;
-        this.authzQuery = authzQuery;
-        this.users = users;
-    }
-
     @PostMapping("/auth/login")
-    public ApiResponse<LoginResult> login(@RequestBody LoginRequest req, HttpServletRequest http) {
-        return ApiResponse.ok(authentication.login(req.username(), req.password(),
-                PermissionInterceptor.clientIp(http)));
+    public Object login(@Valid @RequestBody Inputs.Login input) {
+        return identity.login(input);
     }
-
     @PostMapping("/auth/logout")
-    public ApiResponse<Void> logout(@RequestAttribute(PermissionInterceptor.ATTR_OPERATOR) Operator op,
-                                    @RequestAttribute(PermissionInterceptor.ATTR_AUTH) Authenticated auth) {
-        authentication.logout(op, auth);
-        return ApiResponse.ok(null);
+    public ResponseEntity<Void> logout(@RequestAttribute Actor actor) {
+        identity.logout(actor);
+        return ResponseEntity.noContent().build();
     }
-
-    /** 当前用户：基本信息、角色、有效权限（前端据此控制按钮）。 */
     @GetMapping("/auth/me")
-    public ApiResponse<UserDetail> me(@RequestAttribute(PermissionInterceptor.ATTR_OPERATOR) Operator op) {
-        return ApiResponse.ok(users.detail(op, op.userId()));
+    public Object me(@RequestAttribute Actor actor) {
+        return identity.externalMe(actor);
     }
-
-    @PostMapping("/auth/password")
-    public ApiResponse<Void> changePassword(@RequestAttribute(PermissionInterceptor.ATTR_OPERATOR) Operator op,
-                                            @RequestBody PasswordRequest req) {
-        authentication.changePassword(op, req.oldPassword(), req.newPassword());
-        return ApiResponse.ok(null);
+    @GetMapping("/auth/permissions/{permission}")
+    public Object permission(
+        @RequestAttribute Actor actor, @PathVariable @Size(min = 1, max = 128) String permission) {
+        return Views.map(
+            "allowed", az.permission(actor.userId(), actor.systemCode(), "UI", permission));
     }
-
-    /** 鉴权：拒绝也返回 HTTP 200 + allowed=false，那是一次正常完成的判定。 */
-    @PostMapping("/authz/check")
-    public ApiResponse<Decision> check(@RequestAttribute(PermissionInterceptor.ATTR_OPERATOR) Operator op,
-                                       @RequestBody AuthzRequest req) {
-        return ApiResponse.ok(authzQuery.check(op, req, false));
+    @GetMapping("/auth/api-permissions/{operationId}")
+    public Object api(
+        @RequestAttribute Actor actor, @PathVariable @Size(min = 1, max = 128) String operationId) {
+        return Views.map("operationId", operationId, "allowed",
+            az.api(actor.userId(), actor.systemCode(), operationId));
     }
-
-    /** 权限解释：与 check 同一个判定过程，另外返回逐步的判定依据。 */
-    @PostMapping("/authz/explain")
-    public ApiResponse<Decision> explain(@RequestAttribute(PermissionInterceptor.ATTR_OPERATOR) Operator op,
-                                         @RequestBody AuthzRequest req) {
-        return ApiResponse.ok(authzQuery.check(op, req, true));
+    @PostMapping("/auth/audit-logs")
+    public ResponseEntity<Object> write(@RequestAttribute Actor actor,
+        @RequestHeader(name = "X-Audit-Service-Key", required = false) String key,
+        @Valid @RequestBody Inputs.Audit input) {
+        return ResponseEntity.status(201).body(audit.external(actor, input, key));
+    }
+    @GetMapping("/auth/audit-logs")
+    public Object query(@RequestAttribute Actor actor,
+        @RequestHeader(name = "X-Audit-Service-Key", required = false) String key,
+        @RequestParam(name = "actor", required = false) String actorName,
+        @RequestParam(required = false) Long actorId, @RequestParam(required = false) String target,
+        @RequestParam(required = false) Instant from, @RequestParam(required = false) Instant to,
+        @RequestParam(defaultValue = "1") @Min(1) int page,
+        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
+        return audit.query(
+            actor, true, key, null, actorName, actorId, target, from, to, page, pageSize);
+    }
+    @GetMapping("/.well-known/jwks.json")
+    public Object jwks() {
+        return tokens.jwks();
     }
 }

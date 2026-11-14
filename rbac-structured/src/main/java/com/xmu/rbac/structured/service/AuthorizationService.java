@@ -1,304 +1,317 @@
 package com.xmu.rbac.structured.service;
+import static com.xmu.rbac.structured.service.Views.*;
 
-import com.xmu.rbac.structured.dto.AssignmentRow;
-import com.xmu.rbac.structured.dto.Decision;
-import com.xmu.rbac.structured.dto.GrantRow;
-import com.xmu.rbac.structured.dto.GrantSet;
-import com.xmu.rbac.structured.dto.Operator;
-import com.xmu.rbac.structured.dto.Scope;
-import com.xmu.rbac.structured.entity.Role;
-import com.xmu.rbac.structured.entity.User;
-import com.xmu.rbac.structured.mapper.DepartmentMapper;
-import com.xmu.rbac.structured.mapper.GrantCacheMapper;
-import com.xmu.rbac.structured.mapper.GrantVersionMapper;
-import com.xmu.rbac.structured.mapper.UserMapper;
-import com.xmu.rbac.structured.mapper.UserRoleMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xmu.rbac.structured.dto.Actor;
+import com.xmu.rbac.structured.entity.*;
+import com.xmu.rbac.structured.mapper.Store;
+import java.time.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-/**
- * 3.0 授权判定（docs/architecture-structured.adoc）。
- *
- * <pre>
- * 3.1 校验主体状态 → 3.2 读取授权数据（缓存 / 数据库）→ 3.3 超级管理员旁路
- *   → 3.4 找出含目标权限的授权 → 3.5 作用域判定（逐条授权）→ ALLOW / DENY
- * </pre>
- *
- * 鉴权接口 /authz/check、权限解释 /authz/explain、所有管理接口的权限拦截、
- * 以及 Service 里「目标对象是否在管理范围内」的检查，全部调用同一个 {@link #decide}。
- */
+/** 结构化授权过程：同系统DAG闭包、有效状态切断、版本化两级缓存。 */
 @Service
 public class AuthorizationService {
-
-    public static final String ROLE_GRANTED = "ROLE_GRANTED";
-    public static final String SUPER_ADMIN_BYPASS = "SUPER_ADMIN_BYPASS";
-    public static final String SUBJECT_NOT_FOUND = "SUBJECT_NOT_FOUND";
-    public static final String SUBJECT_DISABLED = "SUBJECT_DISABLED";
-    public static final String SUBJECT_DELETED = "SUBJECT_DELETED";
-    public static final String MISSING_PERMISSION = "MISSING_PERMISSION";
-    public static final String OUT_OF_DATA_SCOPE = "OUT_OF_DATA_SCOPE";
-    public static final String TARGET_DEPT_NOT_FOUND = "TARGET_DEPT_NOT_FOUND";
-
-    /** 审计事件：管理操作的目标超出管理范围，或碰到只有超级管理员能动的对象 */
-    public static final String ACCESS_DENIED = "ACCESS_DENIED";
-
-    private final UserMapper userMapper;
-    private final UserRoleMapper userRoleMapper;
-    private final DepartmentMapper departmentMapper;
-    private final GrantCacheMapper grantCacheMapper;
-    private final GrantVersionMapper grantVersionMapper;
-    private final AuditService audit;
-    private final Clock clock;
-
-    public AuthorizationService(UserMapper userMapper, UserRoleMapper userRoleMapper,
-                                DepartmentMapper departmentMapper, GrantCacheMapper grantCacheMapper,
-                                GrantVersionMapper grantVersionMapper, AuditService audit, Clock clock) {
-        this.userMapper = userMapper;
-        this.userRoleMapper = userRoleMapper;
-        this.departmentMapper = departmentMapper;
-        this.grantCacheMapper = grantCacheMapper;
-        this.grantVersionMapper = grantVersionMapper;
-        this.audit = audit;
-        this.clock = clock;
+    private final Store db;
+    private final StringRedisTemplate redis;
+    private final ObjectMapper json;
+    private final String namespace;
+    private final ConcurrentHashMap<String, Entry> l1 = new ConcurrentHashMap<>();
+    private final Object upperKey = new Object();
+    private record Upper(Long userId, boolean superAdmin, Map<String, Snapshot> systems) {}
+    /** 在授权变更之前冻结操作者上界，防止修改自己的角色后用新权限证明新权限。 */
+    public void captureUpper(Actor actor) {
+        if (TransactionSynchronizationManager.hasResource(upperKey))
+            return;
+        Map<String, Snapshot> snapshots = new HashMap<>();
+        for (SoftwareSystem system : db.all(SoftwareSystem.class))
+            if ("ENABLED".equals(system.status))
+                snapshots.put(system.code, calculate(direct(actor.userId(), system.id), system.id));
+        Upper upper = new Upper(actor.userId(), superAdmin(actor), Map.copyOf(snapshots));
+        TransactionSynchronizationManager.bindResource(upperKey, upper);
+        TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    TransactionSynchronizationManager.unbindResourceIfPossible(upperKey);
+                }
+            });
     }
-
-    /** 读取授权数据的结果：数据本身，以及是否来自缓存。 */
-    public record LoadedGrants(GrantSet grants, boolean cacheHit) {
+    /** 执行Snapshot操作，保持服务到持久化层的单向依赖。 */
+    public record Snapshot(List<Long> direct, List<Long> roles, List<Long> permissions,
+        List<Map<String, Object>> sources) {}
+    private record Entry(Snapshot snapshot, Instant expires) {}
+    public AuthorizationService(Store db, StringRedisTemplate redis, ObjectMapper json) {
+        this(db, redis, json, "structured");
     }
-
-    // ------------------------------------------------------------------ 3.0 判定
-
-    /**
-     * @param targetDeptId 被操作对象所属部门；为空表示不涉及具体部门的数据（只问「能否执行该操作」）
-     * @param explain      true 时逐步记录判定依据（权限解释接口）
-     */
-    public Decision decide(Long userId, String permissionCode, Long targetDeptId, boolean explain) {
-        long start = System.nanoTime();
-        List<String> trace = explain ? new ArrayList<>() : null;
-
-        // ---- 3.1 校验主体状态 ----
-        User user = userId == null ? null : userMapper.findById(userId).orElse(null);
-        String username = user == null ? null : user.username;
-        String deny = subjectDenyReason(user);
-        if (deny != null) {
-            note(trace, "主体无效：" + deny);
-            return result(false, deny, userId, username, permissionCode, targetDeptId, null, false, start, trace);
-        }
-        note(trace, "用户 " + user.username + "（" + user.realName + "）账号有效");
-
-        // ---- 3.2 读取授权数据 ----
-        LoadedGrants loaded = loadGrants(userId);
-        GrantSet grants = loaded.grants();
-
-        // ---- 3.3 超级管理员旁路 ----
-        if (holdsSuperAdmin(grants)) {
-            note(trace, "持有超级管理员角色，越过权限引擎直接放行");
-            return result(true, SUPER_ADMIN_BYPASS, userId, username, permissionCode, targetDeptId,
-                    null, loaded.cacheHit(), start, trace);
-        }
-
-        // ---- 3.4 找出含目标权限的授权 ----
-        List<GrantRow> matching = grants.grants().stream()
-                .filter(g -> g.permissionCode().equals(permissionCode))
-                .toList();
-        if (matching.isEmpty()) {
-            if (trace != null) {
-                if (grants.assignments().isEmpty()) {
-                    trace.add("没有任何启用中的角色");
-                } else {
-                    trace.add("当前角色：" + describeAssignments(grants.assignments()) + "，均不包含 " + permissionCode);
+    /** 缓存命名空间属于运行实例的数据边界，不得跨独立数据库复用授权快照。 */
+    @Autowired
+    public AuthorizationService(Store db, StringRedisTemplate redis, ObjectMapper json,
+        @Value("${rbac.cache.namespace:structured}") String namespace) {
+        this.db = db;
+        this.redis = redis;
+        this.json = json;
+        if (namespace == null || namespace.isBlank())
+            throw new IllegalArgumentException("授权缓存命名空间不能为空");
+        this.namespace = namespace;
+    }
+    /** 执行require操作，保持服务到持久化层的单向依赖。 */
+    public <T> T require(Class<T> type, Long id) {
+        T value = db.get(type, id);
+        if (value == null)
+            throw BizException.missing("NOT_FOUND");
+        return value;
+    }
+    /** 执行system操作，保持服务到持久化层的单向依赖。 */
+    public SoftwareSystem system(String code) {
+        SoftwareSystem s = db.one(SoftwareSystem.class, "e.code=?1", code);
+        if (s == null)
+            throw BizException.missing("SYSTEM_NOT_FOUND");
+        return s;
+    }
+    /** 执行active操作，保持服务到持久化层的单向依赖。 */
+    public void active(User u, SoftwareSystem s) {
+        if (!"ACTIVE".equals(u.status) || !"ENABLED".equals(s.status))
+            throw BizException.unauthorized();
+    }
+    /** 每次调用读取数据库全局版本；事务内禁止读写缓存。 */
+    public Snapshot snapshot(Long userId, String code) {
+        User u = require(User.class, userId);
+        SoftwareSystem s = system(code);
+        active(u, s);
+        boolean tx = TransactionSynchronizationManager.isActualTransactionActive();
+        if (tx)
+            return calculate(direct(userId, s.id), s.id);
+        for (int attempt = 0; attempt < 3; attempt++) {
+            long version = version();
+            String key = namespace + ":authz:" + code + ":" + userId + ":" + version;
+            Entry entry = l1.get(key);
+            Snapshot result = null;
+            if (entry != null && entry.expires.isAfter(Instant.now()))
+                result = entry.snapshot;
+            if (result == null) {
+                try {
+                    String value = redis.opsForValue().get(key);
+                    if (value != null)
+                        result = json.readValue(value, Snapshot.class);
+                } catch (Exception ignored) { /* Redis不是事实来源，受限回退数据库。 */
                 }
             }
-            return result(false, MISSING_PERMISSION, userId, username, permissionCode, targetDeptId,
-                    null, loaded.cacheHit(), start, trace);
-        }
-
-        // ---- 3.5 作用域判定：逐条授权检查适用部门是否覆盖目标部门 ----
-        if (targetDeptId == null) {
-            GrantRow g = preferUnrestricted(matching);
-            note(trace, "角色 " + g.roleName() + "（适用部门：" + g.scopeDeptName() + "）具有 " + permissionCode
-                    + "；本次请求不涉及具体部门");
-            return allow(g, matching, userId, username, permissionCode, null, loaded.cacheHit(), start, trace);
-        }
-        Optional<String> targetPath = departmentMapper.findPathById(targetDeptId);
-        if (targetPath.isEmpty()) {
-            note(trace, "目标部门 " + targetDeptId + " 不存在");
-            return result(false, TARGET_DEPT_NOT_FOUND, userId, username, permissionCode, targetDeptId,
-                    null, loaded.cacheHit(), start, trace);
-        }
-        List<GrantRow> covering = matching.stream()
-                .filter(g -> covers(g.scopePath(), targetPath.get()))
-                .toList();
-        if (covering.isEmpty()) {
-            if (trace != null) {
-                for (GrantRow g : matching) {
-                    trace.add("角色 " + g.roleName() + " 具有该权限，但只适用于「" + g.scopeDeptName()
-                            + "」及其下级，目标部门不在其中");
-                }
+            if (result == null)
+                result = calculate(direct(userId, s.id), s.id);
+            if (version != version())
+                continue;
+            if (l1.size() > 10000)
+                l1.clear();
+            l1.put(key, new Entry(result, Instant.now().plusSeconds(15)));
+            try {
+                redis.opsForValue().set(
+                    key, json.writeValueAsString(result), Duration.ofMinutes(5));
+            } catch (Exception ignored) {
             }
-            return result(false, OUT_OF_DATA_SCOPE, userId, username, permissionCode, targetDeptId,
-                    null, loaded.cacheHit(), start, trace);
+            return result;
         }
-        GrantRow g = preferUnrestricted(covering);
-        note(trace, "角色 " + g.roleName() + " 具有 " + permissionCode + "，适用部门「" + g.scopeDeptName()
-                + "」覆盖目标部门");
-        return allow(g, covering, userId, username, permissionCode, targetDeptId, loaded.cacheHit(), start, trace);
+        throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
     }
-
-    /** 3.1 主体有效性：不存在、已删除、已停用。有效时返回 null。账号没有到期时间，临时用户用完由管理员停用（12 R-21）。 */
-    public static String subjectDenyReason(User u) {
-        if (u == null) {
-            return SUBJECT_NOT_FOUND;
-        }
-        if (User.DELETED.equals(u.status)) {
-            return SUBJECT_DELETED;
-        }
-        if (!User.ACTIVE.equals(u.status)) {
-            return SUBJECT_DISABLED;
-        }
-        return null;
+    /** 执行version操作，保持服务到持久化层的单向依赖。 */
+    public long version() {
+        GrantVersion g = db.get(GrantVersion.class, 1L);
+        if (g == null)
+            throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
+        return g.version;
     }
-
-    /** 物化路径前缀比较：目标部门在适用部门之下（含其本身）。 */
-    public static boolean covers(String scopePath, String targetPath) {
-        return scopePath != null && targetPath != null && targetPath.startsWith(scopePath);
+    /** 执行direct操作，保持服务到持久化层的单向依赖。 */
+    public List<Long> direct(Long userId, Long systemId) {
+        return db.where(UserRole.class, "e.userId=?1", userId)
+            .stream()
+            .map(a -> db.get(Role.class, a.roleId))
+            .filter(Objects::nonNull)
+            .filter(r -> r.systemId.equals(systemId) && "ENABLED".equals(r.status))
+            .map(r -> r.id)
+            .toList();
     }
-
-    // ------------------------------------------------------------------ 3.2 授权数据与缓存
-
-    /**
-     * 3.2 读取用户的授权数据。先从 MySQL 读版本号，按它查 Redis，未命中再查库并写回。
-     *
-     * <p>版本号必须在授权数据之前读：授权变更与版本号加一在同一个事务里提交，
-     * 读到新版本号的请求随后读到的授权数据一定也是新的；读到旧版本号的请求即使读到了新数据，
-     * 写回的也是旧版本的键，之后没有人再读它。所以 Redis 出任何故障都不会让回收的权限继续生效
-     * （docs/iteration-log.adoc #37）。代价是每次判定多一次按主键读一行，判定本来就要查 sys_user，缓存省下的是授权连表查询。
-     *
-     * <p>在读写事务里不写回缓存：这时读到的可能包含本事务尚未提交的修改，事务回滚后它就是错的。
-     */
-    public LoadedGrants loadGrants(Long userId) {
-        Long version = grantVersionMapper.current().orElse(null);
-        if (version != null) {
-            Optional<GrantSet> cached = grantCacheMapper.find(version, userId);
-            if (cached.isPresent()) {
-                return new LoadedGrants(cached.get(), true);
+    /** 计算同系统DAG闭包，切断停用节点并保留来源路径。 */
+    public Snapshot calculate(List<Long> direct, Long systemId) {
+        if (!"ENABLED".equals(require(SoftwareSystem.class, systemId).status))
+            return new Snapshot(List.of(), List.of(), List.of(), List.of());
+        Map<Long, Role> roles = new HashMap<>();
+        for (Role r : db.where(Role.class, "e.systemId=?1", systemId)) roles.put(r.id, r);
+        Map<Long, List<Long>> edges = new HashMap<>();
+        for (RoleHierarchy edge : db.all(RoleHierarchy.class))
+            if (roles.containsKey(edge.seniorRoleId) && roles.containsKey(edge.juniorRoleId))
+                edges.computeIfAbsent(edge.seniorRoleId, k -> new ArrayList<>())
+                    .add(edge.juniorRoleId);
+        Map<Long, Permission> permissionById = new HashMap<>();
+        for (Permission p :
+            db.where(Permission.class, "e.systemId=?1 and e.status=?2", systemId, "ENABLED"))
+            permissionById.put(p.id, p);
+        Map<Long, List<Permission>> grants = new HashMap<>();
+        for (RolePermission rp : db.all(RolePermission.class)) {
+            Permission p = permissionById.get(rp.permissionId);
+            if (p != null)
+                grants.computeIfAbsent(rp.roleId, k -> new ArrayList<>()).add(p);
+        }
+        Set<Long> effective = new LinkedHashSet<>(), permissions = new LinkedHashSet<>();
+        List<Map<String, Object>> sources = new ArrayList<>();
+        List<Long> validDirect =
+            direct.stream()
+                .filter(id -> roles.containsKey(id) && "ENABLED".equals(roles.get(id).status))
+                .toList();
+        for (Long root : validDirect)
+            walk(
+                root, roles, edges, grants, new LinkedHashSet<>(), effective, permissions, sources);
+        return new Snapshot(validDirect, List.copyOf(effective), List.copyOf(permissions), sources);
+    }
+    private void walk(Long id, Map<Long, Role> roles, Map<Long, List<Long>> edges,
+        Map<Long, List<Permission>> grants, LinkedHashSet<Long> path, Set<Long> effective,
+        Set<Long> permissions, List<Map<String, Object>> sources) {
+        Role role = roles.get(id);
+        if (role == null || !"ENABLED".equals(role.status) || path.contains(id))
+            return;
+        path.add(id);
+        effective.add(id);
+        for (Permission p : grants.getOrDefault(id, List.of())) {
+            permissions.add(p.id);
+            sources.add(map("permissionCode", p.code, "roleCode", role.code, "inherited",
+                path.size() > 1, "path", path.stream().map(x -> roles.get(x).code).toList()));
+        }
+        for (Long next : edges.getOrDefault(id, List.of()))
+            walk(next, roles, edges, grants, path, effective, permissions, sources);
+        path.remove(id);
+    }
+    /** 执行effective操作，保持服务到持久化层的单向依赖。 */
+    public Map<String, Object> effective(Snapshot s, String code) {
+        return map("directRoles",
+            s.direct.stream().map(id -> role(require(Role.class, id), code)).toList(),
+            "effectiveRoles",
+            s.roles.stream().map(id -> role(require(Role.class, id), code)).toList(), "permissions",
+            s.permissions.stream()
+                .map(id -> Views.permission(require(Permission.class, id), code))
+                .toList(),
+            "sources", s.sources);
+    }
+    /** 执行superAdmin操作，保持服务到持久化层的单向依赖。 */
+    public boolean superAdmin(Actor a) {
+        if (!"rbac-center".equals(a.systemCode()))
+            return false;
+        return snapshot(a.userId(), "rbac-center")
+            .roles.stream()
+            .map(id -> require(Role.class, id))
+            .anyMatch(r -> "SUPER_ADMIN".equals(r.code) && Boolean.TRUE.equals(r.builtin));
+    }
+    /** 执行identities操作，保持服务到持久化层的单向依赖。 */
+    public Set<String> identities(Snapshot s) {
+        Set<String> result = new TreeSet<>();
+        for (Long id : s.roles) {
+            String role = require(Role.class, id).identityRole;
+            if (role != null && Set.of("student", "teacher", "admin").contains(role))
+                result.add(role);
+        }
+        return result;
+    }
+    /** 执行permission操作，保持服务到持久化层的单向依赖。 */
+    public boolean permission(Long user, String code, String kind, String permission) {
+        if (permission == null)
+            return false;
+        Snapshot s = snapshot(user, code);
+        return !s.permissions.isEmpty()
+            && !db.where(Permission.class, "e.id in ?1 and e.kind=?2 and e.code=?3", s.permissions,
+                      kind, permission)
+                    .isEmpty();
+    }
+    /** 执行api操作，保持服务到持久化层的单向依赖。 */
+    public boolean api(Long user, String code, String operation) {
+        SoftwareSystem system = system(code);
+        User u = require(User.class, user);
+        active(u, system);
+        ApiOperation op =
+            db.one(ApiOperation.class, "e.systemId=?1 and e.operationId=?2", system.id, operation);
+        if (op == null)
+            throw BizException.missing("API_OPERATION_NOT_FOUND");
+        if (!Boolean.TRUE.equals(op.enabled))
+            return false;
+        if ("PUBLIC".equals(op.accessPolicy) || "AUTHENTICATED".equals(op.accessPolicy))
+            return true;
+        Snapshot s = snapshot(user, code);
+        boolean hasRole = op.requiredRole == null
+            || (Set.of("student", "teacher", "admin").contains(op.requiredRole)
+                    ? identities(s).contains(op.requiredRole)
+                    : s.roles.stream()
+                          .map(id -> require(Role.class, id))
+                          .anyMatch(role -> op.requiredRole.equals(role.code)));
+        boolean hasPermission = op.permissionId == null || s.permissions.contains(op.permissionId);
+        return hasRole && hasPermission && (op.requiredRole != null || op.permissionId != null);
+    }
+    /** 执行center操作，保持服务到持久化层的单向依赖。 */
+    public void center(Actor a, String permission) {
+        if (!"rbac-center".equals(a.systemCode()))
+            throw BizException.forbidden("AUDIENCE_MISMATCH");
+        if (!superAdmin(a) && !permission(a.userId(), a.systemCode(), "API", permission))
+            throw BizException.forbidden("FORBIDDEN");
+    }
+    /** 执行root操作，保持服务到持久化层的单向依赖。 */
+    public void root(Actor a) {
+        if (require(Department.class, require(User.class, a.userId()).departmentId).parentId
+            != null)
+            throw BizException.forbidden("ROOT_DEPARTMENT_REQUIRED");
+    }
+    /** 执行scope操作，保持服务到持久化层的单向依赖。 */
+    public void scope(Actor a, Long department) {
+        Department own = require(Department.class, require(User.class, a.userId()).departmentId),
+                   target = require(Department.class, department);
+        if (!target.path.startsWith(own.path))
+            throw BizException.forbidden("OUT_OF_MANAGE_SCOPE");
+    }
+    /** 授权上界同时检查权限和受控身份投影，包含新继承闭包。 */
+    public void upper(Actor a, String code, Snapshot proposed) {
+        Upper captured = (Upper) TransactionSynchronizationManager.getResource(upperKey);
+        if (captured != null && !captured.userId.equals(a.userId()))
+            throw BizException.forbidden("PRIVILEGE_ESCALATION");
+        if (captured == null ? superAdmin(a) : captured.superAdmin)
+            return;
+        if (proposed.roles.stream()
+                .map(id -> require(Role.class, id))
+                .anyMatch(r -> Boolean.TRUE.equals(r.builtin) && "SUPER_ADMIN".equals(r.code)))
+            throw BizException.forbidden("PRIVILEGE_ESCALATION");
+        Snapshot own = captured == null
+            ? snapshot(a.userId(), code)
+            : captured.systems.getOrDefault(
+                  code, new Snapshot(List.of(), List.of(), List.of(), List.of()));
+        if (!own.permissions.containsAll(proposed.permissions)
+            || !identities(own).containsAll(identities(proposed)))
+            throw BizException.forbidden("PRIVILEGE_ESCALATION");
+    }
+    /** 内置超级管理员的定义不能由普通管理员修改。 */
+    public void protectRole(Actor a, Role r) {
+        if (Boolean.TRUE.equals(r.builtin) && "SUPER_ADMIN".equals(r.code) && !superAdmin(a))
+            throw BizException.forbidden("SUPER_ADMIN_PROTECTED");
+    }
+    /** 所有授权事实事务的第一个持久化操作。 */
+    public GrantVersion lock() {
+        GrantVersion g = db.lock(GrantVersion.class, 1L);
+        if (g == null)
+            throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
+        return g;
+    }
+    /** 保护最后一个有效超级管理员。 */
+    public void preserveAdministrator() {
+        SoftwareSystem center = system("rbac-center");
+        for (User u : db.where(User.class, "e.status=?1", "ACTIVE"))
+            for (Long id : calculate(direct(u.id, center.id), center.id).roles) {
+                Role r = require(Role.class, id);
+                Department d = require(Department.class, u.departmentId);
+                if ("SUPER_ADMIN".equals(r.code) && Boolean.TRUE.equals(r.builtin)
+                    && d.parentId == null
+                    && db.one(DepartmentAllowedRole.class, "e.departmentId=?1 and e.roleId=?2",
+                           d.id, r.id)
+                        != null
+                    && "ENABLED".equals(center.status))
+                    return;
             }
-        }
-        List<AssignmentRow> assignments = userRoleMapper.findAssignmentsOfUser(userId).stream()
-                .filter(a -> Role.ENABLED.equals(a.roleStatus()))
-                .toList();
-        GrantSet grants = new GrantSet(assignments, userRoleMapper.findGrantsOfUser(userId));
-        if (version != null && !inReadWriteTransaction()) {
-            grantCacheMapper.save(version, userId, grants);
-        }
-        return new LoadedGrants(grants, false);
-    }
-
-    /**
-     * 授权数据（指派、角色权限、角色状态）变更时调用：在当前事务里让版本号加一，随修改一起提交或回滚。
-     * 提交前其他请求读不到新版本号，读的仍是旧键里与已提交数据一致的内容；提交后它们读新版本号，缓存未命中，查库得到新数据。
-     * 版本号那一行会被锁到本事务提交，并发的授权修改因此排队，读请求不受影响。
-     * 版本行缺失时抛异常让整个修改回滚，宁可改不成，也不留下缓存与数据库不一致的状态。
-     */
-    public void bumpGrantVersion() {
-        if (grantVersionMapper.bump() != 1) {
-            throw new IllegalStateException("sys_grant_version 缺少 id = 1 的行，授权修改已回滚");
-        }
-    }
-
-    private static boolean inReadWriteTransaction() {
-        return TransactionSynchronizationManager.isActualTransactionActive()
-                && !TransactionSynchronizationManager.isCurrentTransactionReadOnly();
-    }
-
-    // ------------------------------------------------------------------ 管理范围（供各管理 Service 使用）
-
-    public boolean isSuperAdmin(Long userId) {
-        return holdsSuperAdmin(loadGrants(userId).grants());
-    }
-
-    /** 用户持有某权限的部门范围（超级管理员为全部）。 */
-    public Scope scopeOf(Long userId, String permissionCode) {
-        GrantSet grants = loadGrants(userId).grants();
-        if (holdsSuperAdmin(grants)) {
-            return Scope.ALL;
-        }
-        List<String> paths = grants.grants().stream()
-                .filter(g -> g.permissionCode().equals(permissionCode))
-                .map(GrantRow::scopePath)
-                .distinct()
-                .toList();
-        return new Scope(false, paths);
-    }
-
-    public static boolean inScope(Scope scope, String targetPath) {
-        return scope.all() || scope.paths().stream().anyMatch(p -> covers(p, targetPath));
-    }
-
-    /**
-     * 管理操作的目标对象检查：操作者对目标部门持有该权限，否则 403。
-     * 拦截器只确认「能执行这一类操作」，具体对象是否在管理范围内由这里确认（docs/architecture-structured.adoc）。
-     * 拒绝时记一条 ACCESS_DENIED：用户、角色管理里所有「目标超出管理范围」都经过这里，一处记录即可（docs/architecture-structured.adoc）。
-     */
-    public void requireInScope(Operator op, String permissionCode, Long targetDeptId) {
-        Decision d = decide(op.userId(), permissionCode, targetDeptId, false);
-        if (!d.allowed()) {
-            audit.record(op, ACCESS_DENIED, "DEPARTMENT", targetDeptId, null,
-                    "permission=" + permissionCode + " decision=" + d.reason(), AuditService.DENIED,
-                    "OUT_OF_MANAGE_SCOPE");
-            throw BizException.forbidden(BizException.OUT_OF_MANAGE_SCOPE,
-                    "目标不在你的管理范围内（需要在该部门持有 " + permissionCode + "）");
-        }
-    }
-
-    // ------------------------------------------------------------------ 内部过程
-
-    static boolean holdsSuperAdmin(GrantSet grants) {
-        return grants.assignments().stream().anyMatch(a -> Role.SUPER_ADMIN.equals(a.roleCode()));
-    }
-
-    /** 同一权限有多条授权时，优先取不限本人的那条。 */
-    static GrantRow preferUnrestricted(List<GrantRow> rows) {
-        return rows.stream().filter(r -> !r.selfOnly()).findFirst().orElse(rows.get(0));
-    }
-
-    private static Decision allow(GrantRow g, List<GrantRow> candidates, Long userId, String username,
-                                  String permissionCode, Long targetDeptId, boolean cacheHit, long start,
-                                  List<String> trace) {
-        boolean selfOnly = candidates.stream().allMatch(GrantRow::selfOnly);
-        if (selfOnly) {
-            note(trace, "该权限只限本人记录，由业务系统按记录归属过滤");
-        }
-        return new Decision(true, ROLE_GRANTED, userId, username, permissionCode, targetDeptId, g, selfOnly,
-                cacheHit, elapsedMicros(start), trace);
-    }
-
-    private static Decision result(boolean allowed, String reason, Long userId, String username,
-                                   String permissionCode, Long targetDeptId, GrantRow matched, boolean cacheHit,
-                                   long start, List<String> trace) {
-        return new Decision(allowed, reason, userId, username, permissionCode, targetDeptId, matched, false,
-                cacheHit, elapsedMicros(start), trace);
-    }
-
-    private static String describeAssignments(List<AssignmentRow> rows) {
-        return String.join("、", rows.stream()
-                .map(a -> a.roleName() + "@" + a.scopeDeptName())
-                .toList());
-    }
-
-    private static void note(List<String> trace, String line) {
-        if (trace != null) {
-            trace.add(line);
-        }
-    }
-
-    private static long elapsedMicros(long start) {
-        return (System.nanoTime() - start) / 1000;
+        throw BizException.conflict("LAST_SUPER_ADMIN");
     }
 }
