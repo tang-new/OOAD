@@ -1,1 +1,1 @@
-{"name":"course-integration-ui","private":true,"version":"1.0.0","type":"module","scripts":{"build":"vite build","dev":"vite --host 0.0.0.0"},"devDependencies":{"vite":"6.0.7"}}
+{"name":"course-integration-ui","private":true,"version":"1.0.0","type":"module","scripts":{"build":"vite build","dev":"vite --host 0.0.0.0"},"devDependencies":{"vite":"6.4.6"}}

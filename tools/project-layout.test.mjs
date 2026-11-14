@@ -14,6 +14,12 @@ test('M1: 聚合与部署入口不再构建一期外部演示模块', () => {
   assert.equal(existsSync(new URL('rbac-mock-biz/pom.xml', root)), false)
 })
 
+test('RBAC1: retired Excel ingestion does not retain an unused vulnerable POI dependency', () => {
+  for (const path of ['pom.xml', 'rbac-structured/pom.xml', 'rbac-ddd/pom.xml']) {
+    assert.doesNotMatch(text(path), /org\.apache\.poi|poi-ooxml|<poi\.version>/, path)
+  }
+})
+
 test('M1: 冻结人工审查包退出当前工程', () => {
   assert.equal(existsSync(new URL('human-review/', root)), false)
 })

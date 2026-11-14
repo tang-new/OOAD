@@ -1,0 +1,212 @@
+{
+  "scope": "Actual npm audit snapshots; does not assert remote re-scan or container OS/complete Java audit.",
+  "githubBaseline": {
+    "commit": "a34adf6",
+    "open": 78,
+    "critical": 3,
+    "high": 22,
+    "medium": 48,
+    "low": 5,
+    "allManifestsPresent": true
+  },
+  "rbac-web": {
+    "locked": {
+      "axios": "1.21.1",
+      "vue": "3.5.45",
+      "@vue/server-renderer": "3.5.45",
+      "vite": "8.3.8",
+      "@vitejs/plugin-vue": "6.0.11",
+      "vitest": "4.1.12",
+      "@vitest/coverage-v8": "4.1.12",
+      "@playwright/test": "1.65.1",
+      "@vue/test-utils": "2.5.1",
+      "js-beautify": "2.0.3",
+      "glob": "13.0.7",
+      "minimatch": "10.2.6"
+    },
+    "audit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 5,
+      "high": 0,
+      "critical": 0,
+      "total": 5
+    },
+    "productionAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "remaining": {
+      "@vue/test-utils": {
+        "severity": "moderate",
+        "isDirect": true,
+        "range": ">=2.5.0",
+        "fixAvailable": {
+          "name": "@vue/test-utils",
+          "version": "2.4.11",
+          "isSemVerMajor": true
+        },
+        "via": [
+          "js-beautify"
+        ]
+      },
+      "editorconfig": {
+        "severity": "moderate",
+        "isDirect": false,
+        "range": "1.0.3 - 3.0.2",
+        "fixAvailable": {
+          "name": "@vue/test-utils",
+          "version": "2.4.11",
+          "isSemVerMajor": true
+        },
+        "via": [
+          "minimatch"
+        ]
+      },
+      "glob": {
+        "severity": "moderate",
+        "isDirect": false,
+        "range": "9.0.0 - 14.0.1",
+        "fixAvailable": {
+          "name": "@vue/test-utils",
+          "version": "2.4.11",
+          "isSemVerMajor": true
+        },
+        "via": [
+          {
+            "source": 1244013,
+            "name": "glob",
+            "dependency": "glob",
+            "title": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+            "url": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-400"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": ">=9.0.0 <=14.0.1"
+          },
+          "minimatch"
+        ]
+      },
+      "js-beautify": {
+        "severity": "moderate",
+        "isDirect": false,
+        "range": ">=1.14.9",
+        "fixAvailable": {
+          "name": "@vue/test-utils",
+          "version": "2.4.11",
+          "isSemVerMajor": true
+        },
+        "via": [
+          "editorconfig",
+          "glob"
+        ]
+      },
+      "minimatch": {
+        "severity": "moderate",
+        "isDirect": false,
+        "range": "7.0.0 - 11.0.0",
+        "fixAvailable": {
+          "name": "@vue/test-utils",
+          "version": "2.4.11",
+          "isSemVerMajor": true
+        },
+        "via": [
+          {
+            "source": 1244623,
+            "name": "minimatch",
+            "dependency": "minimatch",
+            "title": "minimatch has potential denial of service via globparts amplification",
+            "url": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-405"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": ">=7.0.0 <11.0.1"
+          }
+        ]
+      }
+    }
+  },
+  "otherProjects": {
+    "course-integration/frontend": {
+      "versions": {
+        "esbuild": "0.25.12",
+        "postcss": "8.5.33",
+        "rollup": "4.68.3",
+        "vite": "6.4.6"
+      },
+      "audit": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "tools/acceptance": {
+      "versions": {
+        "iconv-lite": "0.7.3",
+        "lru.min": "1.1.5",
+        "mysql2": "3.23.1",
+        "named-placeholders": "1.1.6",
+        "sql-escaper": "1.6.0"
+      },
+      "audit": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    },
+    "course-integration/tests": {
+      "versions": {
+        "iconv-lite": "0.7.3",
+        "lru.min": "1.1.5",
+        "mysql2": "3.23.1",
+        "named-placeholders": "1.1.6",
+        "sql-escaper": "1.6.0"
+      },
+      "audit": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    }
+  },
+  "checks": {
+    "acceptance_unit": {
+      "passed": 21,
+      "failed": 0
+    },
+    "course_environment_unit": {
+      "passed": 2,
+      "failed": 0
+    },
+    "coursefrontend_build": "passed",
+    "frontend_test_script": "none"
+  },
+  "removedUnused": [
+    "element-plus",
+    "@element-plus/icons-vue",
+    "org.apache.poi:poi-ooxml"
+  ]
+}

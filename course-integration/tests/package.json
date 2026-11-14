@@ -1,1 +1,1 @@
-{"name":"course-real-centers-acceptance","private":true,"type":"module","dependencies":{"mysql2":"3.14.5"},"scripts":{"real":"node run-real-centers.mjs","test":"node --test real-environment.test.mjs"},"engines":{"node":">=22"}}
+{"name":"course-real-centers-acceptance","private":true,"type":"module","dependencies":{"mysql2":"3.23.1"},"scripts":{"real":"node run-real-centers.mjs","test":"node --test real-environment.test.mjs"},"engines":{"node":">=22"}}

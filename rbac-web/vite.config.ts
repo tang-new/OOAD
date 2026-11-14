@@ -1,5 +1,4 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -28,7 +27,6 @@ export default defineConfig({
     setupFiles: ['tests/setup.ts'],
     css: false,
     testTimeout: 30_000,
-    server: { deps: { inline: ['element-plus'] } },
     coverage: {
       provider: 'v8',
       // 单测覆盖逻辑层（请求与错误处理、登录与权限状态、路由、指令、格式化）；

@@ -1,0 +1,31 @@
+= 依赖安全核验与剩余风险
+:toc:
+
+== 实际发现，不归因为旧路径
+
+首次push提示54条；随后按实时Dependabot API分页核验为78 open（3 critical、22 high、48 medium、5 low）。
+这些manifest均存在于当时main，不能归因为已删除intro或旧分支扫描。GitHub告警条数与npm按包计数不同，不能直接相减。
+三条critical位于Vitest/tinypool测试链，不是已经证明线上可达的critical利用；仍进行了工具链修复。
+
+== 最小修复及真实验证
+
+* 未用Element Plus/icons移除，包含tsconfig全局类型和测试inline配置；Axios真实使用，保留并升级至1.21.1。
+* Vue及renderer协调至3.5.45；Vite8.3.8/plugin-vue6.0.11，Vitest/coverage/mocker4.1.12，Playwright1.65.1；tinypool自然消失，无跨major强制override。
+* 课程前端保持Vite6同主版本升级到6.4.6；6.4.4仍有告警，所以没有把初始API修复边界当最终安全版本。
+* 两套真实验收mysql2升级3.23.1；esbuild/Rollup等按父范围自然解析，未用override掩盖冲突。
+* 一期xlsx导入已退休，Java生产/测试均无POI引用，删除父管理与structured声明，不把未用脆弱库留在运行classpath。正常188JUnit及打包复验，structured jar核对不含POI/xmlbeans等原专有传递库。
+* Boot3.3.5、Java21、领域/授权算法、所有业务断言、coverage范围及原85/80等门槛未改。前端38个原测试全部保留，typecheck/build/coverage通过。
+
+机器摘要见link:acceptance/dependency-audit.json[实际audit和锁定版本]。三项目（课程前端、两验收工具）npm audit均0；中心前端生产依赖audit0，高/critical均0。
+依赖变化后的新canonical继续执行完整51真实HTTP、课程12、浏览器4和新immutable双轮Swarm，不用旧jar/旧图证明新版本。
+
+== 明确剩余：5个dev-only moderate
+
+中心前端完整audit仍有5个moderate，链为实际使用的@vue/test-utils→js-beautify及其CLI工具依赖；没有删除组件测试或卸载test-utils来做假清零。
+
+* js-beautify2.0.3要求glob ^13.0.6，最新兼容13.0.7；GHSA-3g3m-2fjr-6pw4修复边界≥14.0.2。
+* editorconfig3.0.2要求minimatch ^10.2.2，最新兼容10.2.6；GHSA-g3hv-75wg-m249修复边界≥11.0.1。
+* 实际执行兼容范围的npm update js-beautify glob minimatch，up to date，仍5moderate；没有未经兼容验证强制覆盖跨主版本。
+
+这些不进入Nginx静态生产依赖；并不意味着开发环境零风险。应继续跟踪上游兼容发布，避免把格式化/CLI工具用于不可信输入或公开开发服务器。
+不据本次npm/GitHub检查宣称容器OS、所有Java传递依赖、供应链或完整渗透测试“零漏洞”。GitHub异步重扫的open数要在实际push后核验，不能用本地audit0冒称远端已经关闭。
