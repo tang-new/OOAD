@@ -7,7 +7,7 @@ python deploy/full-config-test.py
 # package runs normal JUnit and produces executable jars; verify gates wait for real HTTP coverage.
 bash mvnw -B -ntp -s deploy/maven-settings-huawei.xml clean package
 python tools/generate-rbac1-contract-test.py
-node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
+node --test tools/*.test.mjs diagrams/phase1/tools/gen-mdj.test.mjs
 source deploy/full-jacoco-agent.sh -s deploy/maven-settings-huawei.xml
 (cd tools/acceptance && npm ci && npm test)
 _http_status=0

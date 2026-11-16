@@ -59,7 +59,7 @@ jobs:
       # Run normal JUnit and package jars before collecting out-of-process HTTP coverage.
       - run: bash mvnw -B -ntp clean package
       - run: python tools/generate-rbac1-contract-test.py
-      - run: node --test tools/*.test.mjs diagrams/tools/gen-mdj.test.mjs
+      - run: node --test tools/*.test.mjs diagrams/phase1/tools/gen-mdj.test.mjs
       - name: Locate the Maven-cached JaCoCo 0.8.12 runtime agent
         shell: bash
         run: |

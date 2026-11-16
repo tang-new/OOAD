@@ -1,0 +1,59 @@
+{
+  "generatedOn": "2026-11-16",
+  "commit": "3a14bb3897702072862cce1b7ee88de1747681bc",
+  "scope": "静态阅读与提取；不代表本轮执行了业务测试或部署",
+  "sources": [
+    {
+      "path": "rbac-contract/src/main/resources/openapi/rbac-api.yaml",
+      "sha256": "4d466c1d0061a563f80c4c22dcc008ff09a7741196357d51a97a8758e22b0767"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/catalog/course-openapi.source.yaml",
+      "sha256": "4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql",
+      "sha256": "b05195002bfb1bab73fa10e05f3e0977094baa5837c30ab9ac6515afd51ab2b9"
+    },
+    {
+      "path": "docker-compose.yml",
+      "sha256": "4c0b5f87c822154569f6ee7735ec65ef7188d99267aa69c9561081e87b88eefd"
+    },
+    {
+      "path": "rbac-web/nginx.conf",
+      "sha256": "73e13dee8e81ddff78fc3808e563f722f112fad9c0577717eed348fd5593bc10"
+    },
+    {
+      "path": "deploy/full-course-nginx.conf",
+      "sha256": "d91aa9a09f33707a230d1da97fd5fa935a5b66cc30f5daa5aefcfd647adbbdc6"
+    },
+    {
+      "path": "course-integration/UPSTREAM.lock",
+      "sha256": "23c693c07cace2cb945482cc872f7ef37fb2888a0e8b5e67ba69670683fd0add"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java",
+      "sha256": "9dcd52a9461b2acc567960b95eeedfa27ccd1f506330ad261ad64dca635d28b9"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sha256": "5e68860ef02e9817d13f8b8adc89518a76004131a8b47cf8778637be6f223030"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuthorizationPolicy.java",
+      "sha256": "7f8a1128e3410e8b552dadee99dc83713c98362d820d839c9188d87b483e46eb"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayController.java",
+      "sha256": "b7ac76d31f042d65c7ed4847ef28546df72a0223efe80819ac56593e312c0aa5"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/OperationGate.java",
+      "sha256": "53cf24ab707c99b06ed77437d7c25d75535f1e6fcce3ae67d4abdc4e0923b97b"
+    }
+  ]
+}

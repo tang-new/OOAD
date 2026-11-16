@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// 生成 StarUML 模型 diagrams/rbac.mdj（ER图 / 用例总图 / 领域模型），并做结构校验。纯 Node，无依赖。
+// 生成 StarUML 模型 diagrams/phase1/rbac.mdj（ER图 / 用例总图 / 领域模型），并做结构校验。纯 Node，无依赖。
 //
-//   node diagrams/tools/gen-mdj.mjs                       生成 + 校验
-//   node diagrams/tools/gen-mdj.mjs --check-only          只校验已有的 rbac.mdj
-//   node diagrams/tools/gen-mdj.mjs --samples <目录>      另外与官方样例逐类型比对键集合与子视图结构
+//   node diagrams/phase1/tools/gen-mdj.mjs                       生成 + 校验
+//   node diagrams/phase1/tools/gen-mdj.mjs --check-only          只校验已有的 rbac.mdj
+//   node diagrams/phase1/tools/gen-mdj.mjs --samples <目录>      另外与官方样例逐类型比对键集合与子视图结构
 //                                                        （样例：github.com/staruml/staruml-samples 的 ERDExample.mdj、UMLExample.mdj）
-//   node diagrams/tools/gen-mdj.mjs --out <文件>          输出到别处
+//   node diagrams/phase1/tools/gen-mdj.mjs --out <文件>          输出到别处
 //
 // 结构照搬 staruml-samples 中 ERDExample.mdj（ERDEntity / ERDColumn / ERDRelationship 及其视图）
 // 与 UMLExample.mdj（UMLActor / UMLUseCase / UMLInclude / UMLGeneralization / UMLClass / UMLAttribute /

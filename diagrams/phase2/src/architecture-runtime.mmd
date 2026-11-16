@@ -1,0 +1,14 @@
+flowchart TB
+  rbUser["权限管理用户"] --> rbWeb["rbac-web / Nginx"]
+  courseUser["课程用户"] --> courseWeb["course-web / Nginx"]
+  subgraph network["Docker 私有网络"]
+    rbWeb -->|"中心管理与身份接口"| center["rbac-backend：structured 或 ddd"]
+    courseWeb -->|"auth 与 JWKS"| center
+    courseWeb -->|"api"| gateway["rbac-gateway"]
+    gateway -.->|"逐请求 API 准入"| center
+    gateway --> courseBackend["course-backend：教师源码与接入补丁"]
+    courseBackend -.->|"准入、能力、审计"| center
+    center --> centerDb["MySQL / rbac_center"]
+    courseBackend --> courseDb["MySQL / rbac_course"]
+    center -.-> redis["Redis L2；L1 在后端进程内"]
+  end

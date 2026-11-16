@@ -1,0 +1,158 @@
+erDiagram
+  sys_system {
+    BIGINT id PK
+    VARCHAR_64_ code
+    VARCHAR_128_ name
+    VARCHAR_16_ status
+    BIGINT version
+  }
+  sys_department {
+    BIGINT id PK
+    BIGINT parent_id FK
+    VARCHAR_64_ code
+    VARCHAR_128_ name
+    VARCHAR_1024_ path
+    VARCHAR_16_ status
+    BIGINT version
+  }
+  sys_user {
+    BIGINT id PK
+    VARCHAR_128_ subject
+    VARCHAR_128_ username
+    VARCHAR_100_ password_hash
+    VARCHAR_128_ name
+    VARCHAR_64_ no
+    VARCHAR_32_ phone
+    BIGINT department_id FK
+    VARCHAR_16_ status
+    BIGINT token_version
+    BOOLEAN must_change_password
+    INT failed_login_count
+    TIMESTAMP_3_ locked_until
+    BIGINT version
+    TIMESTAMP_3_ created_at
+  }
+  sys_role {
+    BIGINT id PK
+    BIGINT system_id FK
+    VARCHAR_64_ code
+    VARCHAR_128_ name
+    VARCHAR_500_ description
+    VARCHAR_16_ status
+    BOOLEAN builtin
+    VARCHAR_16_ identity_role
+    BIGINT version
+  }
+  sys_permission {
+    BIGINT id PK
+    BIGINT system_id FK
+    VARCHAR_128_ code
+    VARCHAR_128_ name
+    VARCHAR_8_ kind
+    VARCHAR_16_ status
+    BIGINT version
+  }
+  sys_role_permission {
+    BIGINT id PK
+    BIGINT role_id FK
+    BIGINT permission_id FK
+  }
+  sys_user_role {
+    BIGINT id PK
+    BIGINT user_id FK
+    BIGINT role_id FK
+    BIGINT assigned_by FK
+    TIMESTAMP_3_ assigned_at
+  }
+  sys_department_allowed_role {
+    BIGINT id PK
+    BIGINT department_id FK
+    BIGINT role_id FK
+  }
+  sys_role_hierarchy {
+    BIGINT id PK
+    BIGINT senior_role_id FK
+    BIGINT junior_role_id FK
+  }
+  sys_ui_resource {
+    BIGINT id PK
+    BIGINT system_id FK
+    BIGINT parent_id FK
+    VARCHAR_16_ type
+    VARCHAR_128_ code
+    VARCHAR_128_ name
+    VARCHAR_255_ route
+    VARCHAR_64_ component
+    INT sort_order
+    VARCHAR_16_ status
+    BIGINT permission_id FK
+    BIGINT version
+  }
+  sys_api_operation {
+    BIGINT id PK
+    BIGINT system_id FK
+    VARCHAR_128_ operation_id
+    VARCHAR_16_ method
+    VARCHAR_500_ path_template
+    BIGINT permission_id FK
+    VARCHAR_64_ required_role
+    VARCHAR_32_ access_policy
+    BOOLEAN enabled
+    BIGINT version
+  }
+  sys_ui_api_mapping {
+    BIGINT id PK
+    BIGINT ui_resource_id FK
+    BIGINT api_operation_id FK
+  }
+  sys_token_revocation {
+    VARCHAR_128_ jti PK
+    VARCHAR_128_ subject
+    TIMESTAMP_3_ expires_at
+    TIMESTAMP_3_ created_at
+  }
+  sys_grant_version {
+    TINYINT id PK
+    BIGINT version
+  }
+  sys_audit_log {
+    BIGINT id PK
+    CHAR_36_ request_id
+    VARCHAR_64_ source_system_code
+    VARCHAR_16_ origin
+    BIGINT actor_id
+    VARCHAR_128_ actor_subject
+    VARCHAR_128_ actor_name
+    JSON actor_roles_json
+    VARCHAR_64_ event_type
+    VARCHAR_64_ object_type
+    VARCHAR_128_ object_id
+    VARCHAR_500_ target
+    JSON before_json
+    JSON after_json
+    VARCHAR_16_ result
+    VARCHAR_255_ reason
+    VARCHAR_64_ trace_id
+    VARCHAR_64_ payload_hash
+    TIMESTAMP_3_ occurred_at
+  }
+  sys_department |o--o{ sys_department : "parent_id"
+  sys_department ||--o{ sys_user : "department_id"
+  sys_system ||--o{ sys_role : "system_id"
+  sys_system ||--o{ sys_permission : "system_id"
+  sys_role ||--o{ sys_role_permission : "role_id"
+  sys_permission ||--o{ sys_role_permission : "permission_id"
+  sys_user ||--o{ sys_user_role : "user_id"
+  sys_role ||--o{ sys_user_role : "role_id"
+  sys_user |o--o{ sys_user_role : "assigned_by"
+  sys_department ||--o{ sys_department_allowed_role : "department_id"
+  sys_role ||--o{ sys_department_allowed_role : "role_id"
+  sys_role ||--o{ sys_role_hierarchy : "senior_role_id"
+  sys_role ||--o{ sys_role_hierarchy : "junior_role_id"
+  sys_system ||--o{ sys_ui_resource : "system_id"
+  sys_ui_resource |o--o{ sys_ui_resource : "parent_id"
+  sys_permission |o--o{ sys_ui_resource : "permission_id"
+  sys_system ||--o{ sys_api_operation : "system_id"
+  sys_permission |o--o{ sys_api_operation : "permission_id"
+  sys_ui_resource ||--o{ sys_ui_api_mapping : "ui_resource_id"
+  sys_api_operation ||--o{ sys_ui_api_mapping : "api_operation_id"

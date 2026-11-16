@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam defaultFontName Microsoft YaHei
+actor "已认证用户" as U
+actor "权限管理员" as A
+actor "审计查看者" as V
+actor "课程后端 / 网关" as X
+rectangle "统一身份与权限中心" {
+usecase "登录、退出与修改密码" as session
+usecase "查看本人资料与有效权限" as me
+usecase "登记和启停受管系统" as system
+usecase "管理用户与部门" as directory
+usecase "管理角色、权限与继承" as roles
+usecase "配置准入、指派和回收角色" as assign
+usecase "登记菜单、按钮和 API" as resources
+usecase "维护 UI / API 映射" as mapping
+usecase "检查权限并解释授权来源" as explain
+usecase "查询管理操作审计" as audit
+usecase "查询身份及 UI / API 准入" as external
+usecase "写入 / 查询课程审计及私有投影" as integration
+}
+U -- session
+U -- me
+A -- system
+A -- directory
+A -- roles
+A -- assign
+A -- resources
+A -- mapping
+A -- explain
+A -- audit
+V -- audit
+X -- external
+X -- integration
+@enduml

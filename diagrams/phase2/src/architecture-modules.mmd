@@ -1,0 +1,18 @@
+flowchart TB
+  contract["rbac-contract：OAS / 目录 / DDL / 错误词汇"]
+  subgraph structured["rbac-structured"]
+    controllers["controller"] --> services["service：业务过程 / 事务脚本"]
+    services --> mappers["mapper / Store：JPA 数据访问"]
+    support["辅助包 entity / dto / config"]
+  end
+  subgraph ddd["rbac-ddd"]
+    interfaces["interfaces.rest"] --> application["application：用例编排"]
+    application --> domain["domain / domain.port：领域规则与端口"]
+    infrastructure["infrastructure：JPA / Redis / JWT / AOP"] -.->|"实现与依赖"| domain
+  end
+  controllers --> contract
+  interfaces --> contract
+  gateway["rbac-gateway：HTTP 调用中心与课程"] --> contract
+  frontend["rbac-web：独立 npm 工程"]
+  integration["course-integration：锁定上游 / 补丁 / 覆盖层 / 前端"]
+  supportTools["tools / deploy / CI / docs"]

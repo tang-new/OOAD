@@ -1,0 +1,1359 @@
+{
+  "tables": [
+    {
+      "name": "sys_system",
+      "label": "受管系统",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "code VARCHAR(64) NOT NULL UNIQUE"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [],
+      "constraints": [
+        "CHECK(status IN ('ENABLED','DISABLED'))"
+      ],
+      "line": 4
+    },
+    {
+      "name": "sys_department",
+      "label": "组织部门",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "parent_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": {
+            "column": "parent_id",
+            "table": "sys_department",
+            "target": "id"
+          },
+          "definition": "parent_id BIGINT NULL"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "code VARCHAR(64) NOT NULL UNIQUE"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "path",
+          "type": "VARCHAR(1024)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "path VARCHAR(1024) NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [
+        {
+          "column": "parent_id",
+          "table": "sys_department",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "CHECK(status IN ('ENABLED','DISABLED'))"
+      ],
+      "line": 13
+    },
+    {
+      "name": "sys_user",
+      "label": "统一用户",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "subject VARCHAR(128) NOT NULL UNIQUE"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "username VARCHAR(128) NOT NULL UNIQUE"
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "password_hash VARCHAR(100) NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "no",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "no VARCHAR(64) NULL"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(32)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "phone VARCHAR(32) NULL"
+        },
+        {
+          "name": "department_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "department_id",
+            "table": "sys_department",
+            "target": "id"
+          },
+          "definition": "department_id BIGINT NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "token_version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "token_version BIGINT NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "must_change_password",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "must_change_password BOOLEAN NOT NULL DEFAULT true"
+        },
+        {
+          "name": "failed_login_count",
+          "type": "INT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "failed_login_count INT NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "locked_until",
+          "type": "TIMESTAMP(3)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "locked_until TIMESTAMP(3) NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP(3)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)"
+        }
+      ],
+      "fks": [
+        {
+          "column": "department_id",
+          "table": "sys_department",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "CHECK(status IN ('ACTIVE','DISABLED','DELETED'))",
+        "CHECK(token_version>=0 AND failed_login_count>=0 AND version>=0)",
+        "INDEX ix_user_department_status(department_id,status,id)",
+        "INDEX ix_user_name(name)"
+      ],
+      "line": 25
+    },
+    {
+      "name": "sys_role",
+      "label": "系统角色",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "system_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "system_id",
+            "table": "sys_system",
+            "target": "id"
+          },
+          "definition": "system_id BIGINT NOT NULL"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "code VARCHAR(64) NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "description VARCHAR(500) NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "builtin",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "builtin BOOLEAN NOT NULL DEFAULT false"
+        },
+        {
+          "name": "identity_role",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "identity_role VARCHAR(16) NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [
+        {
+          "column": "system_id",
+          "table": "sys_system",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(system_id,code)",
+        "CHECK(status IN ('ENABLED','DISABLED'))",
+        "CHECK(identity_role IS NULL OR identity_role IN ('student','teacher','admin'))"
+      ],
+      "line": 48
+    },
+    {
+      "name": "sys_permission",
+      "label": "权限定义",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "system_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "system_id",
+            "table": "sys_system",
+            "target": "id"
+          },
+          "definition": "system_id BIGINT NOT NULL"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "code VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "kind",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "kind VARCHAR(8) NOT NULL"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [
+        {
+          "column": "system_id",
+          "table": "sys_system",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(system_id,kind,code)",
+        "CHECK(kind IN ('UI','API'))",
+        "CHECK(status IN ('ENABLED','DISABLED'))"
+      ],
+      "line": 64
+    },
+    {
+      "name": "sys_role_permission",
+      "label": "角色直接权限",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "role_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "role_id",
+            "table": "sys_role",
+            "target": "id"
+          },
+          "definition": "role_id BIGINT NOT NULL"
+        },
+        {
+          "name": "permission_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "permission_id",
+            "table": "sys_permission",
+            "target": "id"
+          },
+          "definition": "permission_id BIGINT NOT NULL"
+        }
+      ],
+      "fks": [
+        {
+          "column": "role_id",
+          "table": "sys_role",
+          "target": "id"
+        },
+        {
+          "column": "permission_id",
+          "table": "sys_permission",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(role_id,permission_id)"
+      ],
+      "line": 78
+    },
+    {
+      "name": "sys_user_role",
+      "label": "用户直接角色指派",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "user_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "user_id",
+            "table": "sys_user",
+            "target": "id"
+          },
+          "definition": "user_id BIGINT NOT NULL"
+        },
+        {
+          "name": "role_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "role_id",
+            "table": "sys_role",
+            "target": "id"
+          },
+          "definition": "role_id BIGINT NOT NULL"
+        },
+        {
+          "name": "assigned_by",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": {
+            "column": "assigned_by",
+            "table": "sys_user",
+            "target": "id"
+          },
+          "definition": "assigned_by BIGINT NULL"
+        },
+        {
+          "name": "assigned_at",
+          "type": "TIMESTAMP(3)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "assigned_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)"
+        }
+      ],
+      "fks": [
+        {
+          "column": "user_id",
+          "table": "sys_user",
+          "target": "id"
+        },
+        {
+          "column": "role_id",
+          "table": "sys_role",
+          "target": "id"
+        },
+        {
+          "column": "assigned_by",
+          "table": "sys_user",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(user_id,role_id)"
+      ],
+      "line": 87
+    },
+    {
+      "name": "sys_department_allowed_role",
+      "label": "部门角色准入",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "department_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "department_id",
+            "table": "sys_department",
+            "target": "id"
+          },
+          "definition": "department_id BIGINT NOT NULL"
+        },
+        {
+          "name": "role_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "role_id",
+            "table": "sys_role",
+            "target": "id"
+          },
+          "definition": "role_id BIGINT NOT NULL"
+        }
+      ],
+      "fks": [
+        {
+          "column": "department_id",
+          "table": "sys_department",
+          "target": "id"
+        },
+        {
+          "column": "role_id",
+          "table": "sys_role",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(department_id,role_id)"
+      ],
+      "line": 99
+    },
+    {
+      "name": "sys_role_hierarchy",
+      "label": "角色继承边",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "senior_role_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "senior_role_id",
+            "table": "sys_role",
+            "target": "id"
+          },
+          "definition": "senior_role_id BIGINT NOT NULL"
+        },
+        {
+          "name": "junior_role_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "junior_role_id",
+            "table": "sys_role",
+            "target": "id"
+          },
+          "definition": "junior_role_id BIGINT NOT NULL"
+        }
+      ],
+      "fks": [
+        {
+          "column": "senior_role_id",
+          "table": "sys_role",
+          "target": "id"
+        },
+        {
+          "column": "junior_role_id",
+          "table": "sys_role",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(senior_role_id,junior_role_id)",
+        "CHECK(senior_role_id<>junior_role_id)"
+      ],
+      "line": 108
+    },
+    {
+      "name": "sys_ui_resource",
+      "label": "菜单与按钮",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "system_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "system_id",
+            "table": "sys_system",
+            "target": "id"
+          },
+          "definition": "system_id BIGINT NOT NULL"
+        },
+        {
+          "name": "parent_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": {
+            "column": "parent_id",
+            "table": "sys_ui_resource",
+            "target": "id"
+          },
+          "definition": "parent_id BIGINT NULL"
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "type VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "code VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "name VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "route",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "route VARCHAR(255) NULL"
+        },
+        {
+          "name": "component",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "component VARCHAR(64) NULL"
+        },
+        {
+          "name": "sort_order",
+          "type": "INT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "sort_order INT NOT NULL DEFAULT 0"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "status VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "permission_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": {
+            "column": "permission_id",
+            "table": "sys_permission",
+            "target": "id"
+          },
+          "definition": "permission_id BIGINT NULL"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [
+        {
+          "column": "system_id",
+          "table": "sys_system",
+          "target": "id"
+        },
+        {
+          "column": "parent_id",
+          "table": "sys_ui_resource",
+          "target": "id"
+        },
+        {
+          "column": "permission_id",
+          "table": "sys_permission",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(system_id,code)",
+        "CHECK(type IN ('MENU','BUTTON'))",
+        "CHECK(status IN ('ENABLED','DISABLED'))",
+        "INDEX ix_ui_tree(system_id,parent_id,sort_order,id)"
+      ],
+      "line": 118
+    },
+    {
+      "name": "sys_api_operation",
+      "label": "API 操作",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "system_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "system_id",
+            "table": "sys_system",
+            "target": "id"
+          },
+          "definition": "system_id BIGINT NOT NULL"
+        },
+        {
+          "name": "operation_id",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "operation_id VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "method",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "method VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "path_template",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "path_template VARCHAR(500) NOT NULL"
+        },
+        {
+          "name": "permission_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": {
+            "column": "permission_id",
+            "table": "sys_permission",
+            "target": "id"
+          },
+          "definition": "permission_id BIGINT NULL"
+        },
+        {
+          "name": "required_role",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "required_role VARCHAR(64) NULL"
+        },
+        {
+          "name": "access_policy",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "access_policy VARCHAR(32) NOT NULL"
+        },
+        {
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "enabled BOOLEAN NOT NULL DEFAULT true"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [
+        {
+          "column": "system_id",
+          "table": "sys_system",
+          "target": "id"
+        },
+        {
+          "column": "permission_id",
+          "table": "sys_permission",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(system_id,operation_id)",
+        "UNIQUE(system_id,method,path_template)",
+        "CHECK(access_policy IN ('PUBLIC','AUTHENTICATED','PROTECTED'))",
+        "CHECK(method IN ('GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS'))",
+        "CHECK(access_policy<>'PROTECTED' OR permission_id IS NOT NULL OR required_role IS NOT NULL)"
+      ],
+      "line": 140
+    },
+    {
+      "name": "sys_ui_api_mapping",
+      "label": "UI / API 映射",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "ui_resource_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "ui_resource_id",
+            "table": "sys_ui_resource",
+            "target": "id"
+          },
+          "definition": "ui_resource_id BIGINT NOT NULL"
+        },
+        {
+          "name": "api_operation_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": {
+            "column": "api_operation_id",
+            "table": "sys_api_operation",
+            "target": "id"
+          },
+          "definition": "api_operation_id BIGINT NOT NULL"
+        }
+      ],
+      "fks": [
+        {
+          "column": "ui_resource_id",
+          "table": "sys_ui_resource",
+          "target": "id"
+        },
+        {
+          "column": "api_operation_id",
+          "table": "sys_api_operation",
+          "target": "id"
+        }
+      ],
+      "constraints": [
+        "UNIQUE(ui_resource_id,api_operation_id)"
+      ],
+      "line": 160
+    },
+    {
+      "name": "sys_token_revocation",
+      "label": "令牌撤销",
+      "columns": [
+        {
+          "name": "jti",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "jti VARCHAR(128) PRIMARY KEY"
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "subject VARCHAR(128) NOT NULL"
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP(3)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "expires_at TIMESTAMP(3) NOT NULL"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP(3)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)"
+        }
+      ],
+      "fks": [],
+      "constraints": [
+        "INDEX ix_revocation_expiry(expires_at)",
+        "INDEX ix_revocation_subject(subject)"
+      ],
+      "line": 169
+    },
+    {
+      "name": "sys_grant_version",
+      "label": "全局授权版本",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TINYINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id TINYINT PRIMARY KEY"
+        },
+        {
+          "name": "version",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "version BIGINT NOT NULL DEFAULT 0"
+        }
+      ],
+      "fks": [],
+      "constraints": [
+        "CHECK(id=1)",
+        "CHECK(version>=0)"
+      ],
+      "line": 178
+    },
+    {
+      "name": "sys_audit_log",
+      "label": "安全审计快照",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "pk": true,
+          "fk": null,
+          "definition": "id BIGINT AUTO_INCREMENT PRIMARY KEY"
+        },
+        {
+          "name": "request_id",
+          "type": "CHAR(36)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "request_id CHAR(36) NOT NULL UNIQUE"
+        },
+        {
+          "name": "source_system_code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "source_system_code VARCHAR(64) NOT NULL"
+        },
+        {
+          "name": "origin",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "origin VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "actor_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "actor_id BIGINT NULL"
+        },
+        {
+          "name": "actor_subject",
+          "type": "VARCHAR(128)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "actor_subject VARCHAR(128) NULL"
+        },
+        {
+          "name": "actor_name",
+          "type": "VARCHAR(128)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "actor_name VARCHAR(128) NULL"
+        },
+        {
+          "name": "actor_roles_json",
+          "type": "JSON",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "actor_roles_json JSON NOT NULL"
+        },
+        {
+          "name": "event_type",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "event_type VARCHAR(64) NOT NULL"
+        },
+        {
+          "name": "object_type",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "object_type VARCHAR(64) NULL"
+        },
+        {
+          "name": "object_id",
+          "type": "VARCHAR(128)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "object_id VARCHAR(128) NULL"
+        },
+        {
+          "name": "target",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "target VARCHAR(500) NOT NULL"
+        },
+        {
+          "name": "before_json",
+          "type": "JSON",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "before_json JSON NULL"
+        },
+        {
+          "name": "after_json",
+          "type": "JSON",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "after_json JSON NULL"
+        },
+        {
+          "name": "result",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "result VARCHAR(16) NOT NULL"
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "pk": false,
+          "fk": null,
+          "definition": "reason VARCHAR(255) NULL"
+        },
+        {
+          "name": "trace_id",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "trace_id VARCHAR(64) NOT NULL"
+        },
+        {
+          "name": "payload_hash",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "payload_hash VARCHAR(64) NOT NULL"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TIMESTAMP(3)",
+          "nullable": false,
+          "pk": false,
+          "fk": null,
+          "definition": "occurred_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)"
+        }
+      ],
+      "fks": [],
+      "constraints": [
+        "CHECK(origin IN ('COURSE','INTERNAL'))",
+        "CHECK(result IN ('SUCCESS','DENIED','FAILURE'))",
+        "INDEX ix_audit_system_time(source_system_code,occurred_at,id)",
+        "INDEX ix_audit_system_actor(source_system_code,actor_id,occurred_at,id)",
+        "INDEX ix_audit_system_object(source_system_code,object_type,object_id,occurred_at,id)"
+      ],
+      "line": 185
+    }
+  ],
+  "fks": [
+    {
+      "from": "sys_department",
+      "to": "sys_department",
+      "column": "parent_id",
+      "nullable": true
+    },
+    {
+      "from": "sys_user",
+      "to": "sys_department",
+      "column": "department_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_role",
+      "to": "sys_system",
+      "column": "system_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_permission",
+      "to": "sys_system",
+      "column": "system_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_role_permission",
+      "to": "sys_role",
+      "column": "role_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_role_permission",
+      "to": "sys_permission",
+      "column": "permission_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_user_role",
+      "to": "sys_user",
+      "column": "user_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_user_role",
+      "to": "sys_role",
+      "column": "role_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_user_role",
+      "to": "sys_user",
+      "column": "assigned_by",
+      "nullable": true
+    },
+    {
+      "from": "sys_department_allowed_role",
+      "to": "sys_department",
+      "column": "department_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_department_allowed_role",
+      "to": "sys_role",
+      "column": "role_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_role_hierarchy",
+      "to": "sys_role",
+      "column": "senior_role_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_role_hierarchy",
+      "to": "sys_role",
+      "column": "junior_role_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_ui_resource",
+      "to": "sys_system",
+      "column": "system_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_ui_resource",
+      "to": "sys_ui_resource",
+      "column": "parent_id",
+      "nullable": true
+    },
+    {
+      "from": "sys_ui_resource",
+      "to": "sys_permission",
+      "column": "permission_id",
+      "nullable": true
+    },
+    {
+      "from": "sys_api_operation",
+      "to": "sys_system",
+      "column": "system_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_api_operation",
+      "to": "sys_permission",
+      "column": "permission_id",
+      "nullable": true
+    },
+    {
+      "from": "sys_ui_api_mapping",
+      "to": "sys_ui_resource",
+      "column": "ui_resource_id",
+      "nullable": false
+    },
+    {
+      "from": "sys_ui_api_mapping",
+      "to": "sys_api_operation",
+      "column": "api_operation_id",
+      "nullable": false
+    }
+  ]
+}

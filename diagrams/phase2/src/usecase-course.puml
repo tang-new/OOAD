@@ -1,0 +1,33 @@
+@startuml
+left to right direction
+skinparam defaultFontName Microsoft YaHei
+actor "学生 / 学生组长" as A0
+actor "教师 / 课程组长" as A1
+actor "课程管理员" as A2
+actor "统一身份与权限中心" as A3
+rectangle "教师课程项目管理系统" {
+usecase "创建 / 审核 / 维护课程" as C0
+usecase "教学班、教师与学生名单" as C1
+usecase "创建、加入、管理小组" as C2
+usecase "里程碑与材料提交" as C3
+usecase "口试时段、预约与检查" as C4
+usecase "评分、成绩查询与导出" as C5
+usecase "使用统一身份与全局鉴权" as C6
+usecase "记录和查询关键操作审计" as C7
+}
+A0 -- C2
+A0 -- C3
+A0 -- C4
+A0 -- C5
+A1 -- C0
+A1 -- C1
+A1 -- C2
+A1 -- C3
+A1 -- C4
+A1 -- C5
+A2 -- C0
+A2 -- C1
+A2 -- C7
+A3 -- C6
+A3 -- C7
+@enduml

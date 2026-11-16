@@ -1,0 +1,10 @@
+(() => {
+const panels=[...document.querySelectorAll('.panel')];
+function navigate(){const id=location.hash.slice(1)||'overview';const target=panels.some(p=>p.id===id)?id:'overview';panels.forEach(p=>p.hidden=p.id!==target);document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.hash==='#'+target));window.scrollTo(0,0)}
+window.addEventListener('hashchange',navigate);navigate();
+for(const figure of document.querySelectorAll('figure')){let zoom=1;const img=figure.querySelector('img'),label=figure.querySelector('.zoom-value');figure.querySelectorAll('[data-zoom]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.zoom;zoom=v==='reset'?1:Math.min(3.5,Math.max(.5,zoom+(v==='+'?.25:-.25)));img.style.width=(zoom*100)+'%';label.textContent=Math.round(zoom*100)+'%'}));}
+const endpoints=[...document.querySelectorAll('.endpoint')],search=document.querySelector('#api-search'),scope=document.querySelector('#api-scope'),method=document.querySelector('#api-method'),group=document.querySelector('#api-group'),count=document.querySelector('#api-count');
+function groups(){const previous=group.value;group.replaceChildren(new Option('全部功能','all'));const values=[...new Set(endpoints.filter(e=>scope.value==='all'||e.dataset.scope===scope.value).map(e=>e.dataset.group))];values.forEach(v=>group.add(new Option(v,v)));if(values.includes(previous))group.value=previous;}
+function filter(){let n=0;const q=search.value.trim().toLowerCase();for(const e of endpoints){const show=(scope.value==='all'||e.dataset.scope===scope.value)&&(method.value==='all'||e.dataset.method===method.value)&&(group.value==='all'||e.dataset.group===group.value)&&(!q||e.dataset.search.includes(q));e.hidden=!show;if(show)n++;}count.textContent=n+' 个操作';}
+scope.addEventListener('change',()=>{groups();filter()});search.addEventListener('input',filter);method.addEventListener('change',filter);group.addEventListener('change',filter);groups();filter();
+})();

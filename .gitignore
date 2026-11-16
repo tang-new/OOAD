@@ -68,3 +68,6 @@ intro-spec-coding/bench/docker/vendor/
 # Python deployment-tool bytecode
 __pycache__/
 *.py[cod]
+
+# 本地 AI 临时工作区和原始上下文，不纳入版本归档
+/.tmp/
