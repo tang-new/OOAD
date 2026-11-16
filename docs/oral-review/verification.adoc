@@ -1,0 +1,21 @@
+= 审查工作包本次核验：2026-11-16
+
+link:README.adoc[工作包入口]。本页记录文档/索引/辅助工具的实际检查，不记录成员已经完成审查，不复用产品归档报告作为本次运行结果。
+开始时仓库HEAD为 `84685b722c2117f1944e780b69f217d10e99f158`，工作区无已有修改；本次不提交或推送。
+
+[cols="3,4",options="header"]
+|===
+|本次命令/检查 |实际结果和范围
+|`python tools/review-history.py check` |通过；392个源码/测试/配置/工具/补丁/图源均有责任人，64个中心操作与OAS一致，15表与V1一致；共享Java方法声明和本包本地链接存在。humanReviewVerified=false
+|`python tools/review-history.py context` |11个本地原始文件大小及SHA-256一致；仅核对指纹，无复制/归档；humanReadConfirmed=false，正式评分和课堂PPT原件保留缺项
+|`python tools/review-history.test.py` |8个测试通过。独立临时Git仓库验证空区间、真实提交/成员关注、未提交变化、私有路径排除、非法/反向引用、源码清点、AsciiDoc分隔符和本地上下文指纹
+|`node --test tools/project-layout.test.mjs` |现有5项全部通过，0失败/跳过；包括根文档链接检查
+|`python tools/review-history.py history --format json` |当前基线之后没有已提交变化；真实返回commits=[]、workingTreeHasChanges=true，没有生成审查签字
+|`history --since-ref HEAD~1 --member E --format json` |只读回查实际add diagrams提交，按路径输出E关注范围；不是新增审查历史
+|文档结构检查 |15份adoc标题、表/代码块闭合、便携相对链接及6张个人卡存在性通过；未生成PDF或新业务UML
+|`git diff --check`及`.tmp`跟踪检查 |格式检查通过；`git ls-files -- .tmp`为空，忽略规则保持不变
+|===
+
+新增指纹测试首轮因Windows夹具自动写入CRLF导致预期哈希不一致；修正为夹具明确LF后8项全部通过，保留原始资料逐字节SHA-256比较，没有改成忽略换行。
+人工任务卡状态仍为NOT_STARTED；产品API/数据库/业务代码/部署配方未改，没有重新跑JUnit/共享HTTP/课程/浏览器/Swarm产品验收。
+后续源码/合同/分工改变应重跑check；本次结果仅覆盖此工作包的索引与工具。

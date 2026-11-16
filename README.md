@@ -15,6 +15,7 @@
 | [课程集成合同](docs/course-integration-contract.adoc) | 教师身份/审计接口、真实 CC 与服务端边界 |
 | [结构化设计](docs/architecture-structured.adoc) / [DDD 设计](docs/architecture-ddd.adoc) | 实际分层、事务与独立领域模型 |
 | [最终设计与 UML](docs/final-design.adoc) / [答辩](docs/defense.adoc) | 六组对应类图/顺序图、图源与源码索引 |
+| [六人口试审查分工](docs/oral-review/README.adoc) | 全员共同任务、A–F任务卡、交叉口试、迭代复现与只读Git索引 |
 | [数据库](docs/database.adoc) / [API](docs/api.adoc) | 当前唯一契约、种子及安全边界 |
 | [最终验收](docs/final-acceptance.adoc) / [测试证据](docs/test-plan.adoc) / [共享验收](docs/acceptance-plan.adoc) | 真实结果、双实例、故障注入及行为等价 |
 | [浏览器截图](docs/acceptance/screenshots/README.adoc) | 两后端PC/手机真实已加载页面，不含真实人员或秘密 |

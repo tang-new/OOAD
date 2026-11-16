@@ -1,0 +1,500 @@
+= 完整源码分工索引
+:toc: left
+
+link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage.json[机器清单]。
+
+基线 `84685b722c2117f1944e780b69f217d10e99f158`；共392个源码/测试/配置/SQL/工具/补丁文件。由Git跟踪及未忽略新文件清点，不读取target/node_modules或教师完整缓存；diagrams中的图源/工具单列historical/coordination，docs/design生成业务图按个人卡片核对。
+所有人工状态NOT_STARTED。主责表示汇总和定位责任，多人文件按下面方法表分工；人数/文件数不是工时度量。auxiliary为网关/前端/课程/部署辅助，coordination为F组织图版本，不要求F独自审全部图。
+
+== 共享大文件：按方法分工
+
+[cols="3,1,4,3",options="header"]
+|===
+|源码 |负责 |方法入口 |交接
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |B |`departments`, `createDepartment`, `renameDepartment`, `deleteDepartment`, `allowedRoles`, `replaceAllowed`, `users`, `user`, `createUser`, `patchUser`, `userStatus`, `moveUser`, `assignments`, `assign`, `unassign`, `effectiveUser`, `dashboard` |用户/组织/准入/指派；有效读取与D交接
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |C |`roles`, `role`, `createRole`, `patchRole`, `changedUpper`, `roleStatus`, `deleteRole`, `directPermissions`, `replacePermissions`, `effectiveRole`, `hierarchy`, `reachable`, `inherit` |角色定义与图写入；计算与D交接
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |E |`systems`, `createSystem`, `renameSystem`, `systemStatus`, `permissions`, `createPermission`, `permissionStatus` |系统/权限目录
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |C/D/F |`begin`, `finish` |C业务完整性，D版本/变更前上界，F同事务成功审计
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |D |`snapshot`, `direct`, `calculate`, `walk`, `effective`, `permission`, `api`, `identities`, `version`, `active` |闭包/决策/缓存读取
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |B/C |`scope`, `root`, `upper`, `captureUpper`, `protectRole`, `preserveAdministrator`, `lock` |B管理范围，C上界/特殊管理员/完整性与写锁，D版本协作
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.java] |D |`check` |管理check/explain
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.java] |E |`ui`, `menus`, `saveUi`, `deleteUi`, `apis`, `saveApi`, `mappings`, `replaceMappings`, `patchUi`, `patchApi` |资源树/操作/映射
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |A |`login`, `logout`, `me`, `jwks` |身份与公钥
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |D |`permission`, `api` |对外UI/API决定
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |F |`write`, `query` |对外同步审计
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java[BootstrapService.java] |A/E |`initialize` |初始化口令归A，OAS/持久目录核验归E
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |B |`departments`, `department`, `deleteDepartment`, `allowed`, `users`, `user`, `createUser`, `patchUser`, `aggregate`, `save`, `statusUser`, `transfer`, `assignments`, `assign`, `unassign`, `self`, `effective`, `dashboard`, `managed` |组织/用户/指派和局部装配；身份与A，计算与D交接
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |C |`deleteRole` |角色删除不能因目录命名漏审
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |E |`systems`, `system` |系统管理
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |C/D/F |`done` |共享完整性/版本/审计边界
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |C |`deleteRole` |关联清理
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |E |`systems`, `system`, `saveSystem` |系统持久化
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |B |`department`, `departments`, `saveDepartment`, `departmentOccupied`, `deleteDepartment`, `user`, `saveUser`, `users`, `assignments`, `assign`, `removeAssignment`, `allowed`, `replaceEligibility` |组织/用户/准入/指派
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |A |`username`, `lockLogin`, `saveLoginState`, `revoked`, `revoke`, `password` |凭据、失败计数和持久注销
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |C |`restore`, `role`, `hierarchy`, `saveRole`, `saveEdges`, `roles` |RoleState/领域恢复与图/关联保存
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |D |`freshenRead`, `lockGrants`, `version`, `advanceVersion`, `systemEnabled`, `identity`, `assignments`, `permissions`, `operation` |权威状态/事实读取，操作目录与E交接
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |A |`login`, `logout`, `jwks`, `me`, `password` |身份/本人输出
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |D |`permission`, `api` |UI/API授权
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |F |`auditActor`, `audit`, `auditLogs` |受信审计入口
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |C |`deleteRole` |角色删除
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java[RestSupport.java] |A/C/D/F |`principal`, `role`, `effective`, `audit` |A主体验证，C角色VO，D有效权限投影，F审计投影
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |C/D |`link`, `unlink`, `required`, `reachable`, `paths`, `visit`, `requireGrantable` |C写入不变量/特殊能力；D有效路径遍历
+|===
+
+== 15表责任
+
+[cols="3,1,2",options="header"]
+|===
+|表 |主责 |协作
+|`sys_system` |E |D
+|`sys_department` |B |C
+|`sys_user` |B |A/D/F
+|`sys_role` |C |B/D
+|`sys_permission` |E |C/D
+|`sys_role_permission` |C |D
+|`sys_user_role` |B |C/D
+|`sys_department_allowed_role` |B |C
+|`sys_role_hierarchy` |C |D
+|`sys_ui_resource` |E |D
+|`sys_api_operation` |E |D
+|`sys_ui_api_mapping` |E |D
+|`sys_token_revocation` |A |D
+|`sys_grant_version` |D |C/F
+|`sys_audit_log` |F |A
+|===
+
+源为link:../../rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql[当前V1]及link:../schema-contract.adoc[物理合同]。所有成员都能讲核心RBAC关联；当前有15表，不从旧归档SQL推导二期事实。
+
+== A主责定位（86文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../.dockerignore[.dockerignore] |E |support
+|link:../../.mvn/wrapper/maven-wrapper.properties[.mvn/wrapper/maven-wrapper.properties] |E |support
+|link:../../Dockerfile[Dockerfile] |E |support
+|link:../../docker-compose.yml[docker-compose.yml] |E |support
+|link:../../mvnw[mvnw] |E |support
+|link:../../mvnw.cmd[mvnw.cmd] |E |support
+|link:../../pom.xml[pom.xml] |E |support
+|link:../../rbac-ddd/pom.xml[rbac-ddd/pom.xml] |D/E |support
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/RbacDddApplication.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/RbacDddApplication.java] |D/E |support
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IdentityApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IdentityApplicationService.java] |F |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/LoginAttemptApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/LoginAttemptApplicationService.java] |F |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicy.java] |F |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/CredentialEncoder.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/CredentialEncoder.java] |F |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/TokenProvider.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/TokenProvider.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/HttpSecurityConfiguration.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/HttpSecurityConfiguration.java] |D/E |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/health/ImplementationHealthIndicator.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/health/ImplementationHealthIndicator.java] |D/E |support
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BcryptCredentialEncoder.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BcryptCredentialEncoder.java] |F |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BootstrapInitializer.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BootstrapInitializer.java] |F |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/RsaTokenProvider.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/RsaTokenProvider.java] |F |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/logging/LayerLoggingAspect.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/logging/LayerLoggingAspect.java] |F |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/package-info.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/package-info.java] |D/E |support
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UserEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UserEntity.java] |B/D/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/UserJpaRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/UserJpaRepository.java] |B/D/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/package-info.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/package-info.java] |D/E |support
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java] |D/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java] |B/C/D/E/F |shared-methods
+|link:../../rbac-ddd/src/main/resources/application-test.yml[rbac-ddd/src/main/resources/application-test.yml] |D/E |support
+|link:../../rbac-ddd/src/main/resources/application.yml[rbac-ddd/src/main/resources/application.yml] |D/E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/CloneBoundaryTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/CloneBoundaryTest.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddHttpTestSupport.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddHttpTestSupport.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java] |B/C/D/F |shared-methods
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/ImplementationHealthIndicatorTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/ImplementationHealthIndicatorTest.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/SkeletonHttpTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/SkeletonHttpTest.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/archfixture/PersistenceDependent.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/archfixture/PersistenceDependent.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/BackendIsolationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/BackendIsolationTest.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/DomainArchitectureTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/DomainArchitectureTest.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/fixture/StructuredDependent.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/fixture/StructuredDependent.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicyTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicyTest.java] |F |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/archfixture/TechnicalDomain.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/archfixture/TechnicalDomain.java] |E |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/infrastructure/RsaTokenProviderTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/infrastructure/RsaTokenProviderTest.java] |F |support
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/structured/archfixture/StructuredMarker.java[rbac-ddd/src/test/java/com/xmu/rbac/structured/archfixture/StructuredMarker.java] |E |support
+|link:../../rbac-ddd/src/test/resources/application-test.yml[rbac-ddd/src/test/resources/application-test.yml] |E |support
+|link:../../rbac-ddd/tools/format-java.sh[rbac-ddd/tools/format-java.sh] |D/E |support
+|link:../../rbac-ddd/tools/verify-login-restart.py[rbac-ddd/tools/verify-login-restart.py] |D/E |support
+|link:../../rbac-structured/format-java.sh[rbac-structured/format-java.sh] |E |support
+|link:../../rbac-structured/pom.xml[rbac-structured/pom.xml] |E |support
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/RbacStructuredApplication.java[rbac-structured/src/main/java/com/xmu/rbac/structured/RbacStructuredApplication.java] |E |support
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/CompatiblePasswordEncoder.java[rbac-structured/src/main/java/com/xmu/rbac/structured/config/CompatiblePasswordEncoder.java] |F |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/LayerLoggingAspect.java[rbac-structured/src/main/java/com/xmu/rbac/structured/config/LayerLoggingAspect.java] |F |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/TraceFilter.java[rbac-structured/src/main/java/com/xmu/rbac/structured/config/TraceFilter.java] |F |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/WebConfig.java[rbac-structured/src/main/java/com/xmu/rbac/structured/config/WebConfig.java] |E |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java] |D/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Actor.java[rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Actor.java] |D/F |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/TokenRevocation.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/TokenRevocation.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/User.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/User.java] |B/D/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/TokenRevocationMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/TokenRevocationMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserMapper.java] |B/D/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthenticationService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthenticationService.java] |F |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java] |E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/TokenService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/TokenService.java] |D |core
+|link:../../rbac-structured/src/main/resources/application.yml[rbac-structured/src/main/resources/application.yml] |E |support
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/ArchitectureTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/ArchitectureTest.java] |E |core
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/JsonBoundaryTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/JsonBoundaryTest.java] |F |core
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/MappingSafetyTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/MappingSafetyTest.java] |F |core
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/PasswordBoundaryTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/PasswordBoundaryTest.java] |F |core
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/Rbac1ProtocolRedTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/Rbac1ProtocolRedTest.java] |F |core
+|link:../../rbac-structured/src/test/resources/application-test.yml[rbac-structured/src/test/resources/application-test.yml] |F |core
+|link:../../rbac-structured/stage-reactor.py[rbac-structured/stage-reactor.py] |E |support
+|link:../../rbac-web/e2e/http.ts[rbac-web/e2e/http.ts] |D/F |auxiliary
+|link:../../rbac-web/src/api/http.ts[rbac-web/src/api/http.ts] |D/F |auxiliary
+|link:../../rbac-web/src/stores/auth.ts[rbac-web/src/stores/auth.ts] |D/F |auxiliary
+|link:../../rbac-web/src/utils/password.ts[rbac-web/src/utils/password.ts] |D/F |auxiliary
+|link:../../rbac-web/src/views/LoginView.vue[rbac-web/src/views/LoginView.vue] |D/F |auxiliary
+|link:../../rbac-web/src/views/MeView.vue[rbac-web/src/views/MeView.vue] |D/F |auxiliary
+|link:../../rbac-web/tests/auth.spec.ts[rbac-web/tests/auth.spec.ts] |D/F |auxiliary
+|link:../../rbac-web/tests/http.spec.ts[rbac-web/tests/http.spec.ts] |D/F |auxiliary
+|link:../../rbac-web/tests/protocol.spec.ts[rbac-web/tests/protocol.spec.ts] |D/F |auxiliary
+|link:../../tools/clonefactory-smoke/pom.xml[tools/clonefactory-smoke/pom.xml] |F |support
+|link:../../tools/clonefactory-smoke/settings.xml[tools/clonefactory-smoke/settings.xml] |F |support
+|link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/Domain.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/Domain.java] |F |support
+|link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PatchBean.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PatchBean.java] |F |support
+|link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PublicView.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PublicView.java] |F |support
+|link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/RequestBean.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/RequestBean.java] |F |support
+|link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/StoredBean.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/StoredBean.java] |F |support
+|link:../../tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java[tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java] |F |support
+|link:../../tools/install-clonefactory.sh[tools/install-clonefactory.sh] |F |support
+|===
+
+== B主责定位（31文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql[rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql] |A/C/D/E/F |shared-methods
+|link:../../rbac-contract/src/main/resources/db/migration/V2__rbac1_seed.sql[rbac-contract/src/main/resources/db/migration/V2__rbac1_seed.sql] |A/C/D/E/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java] |A/C/D/E/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UserUpdateCommand.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UserUpdateCommand.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DepartmentEligibility.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DepartmentEligibility.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/OrganizationPolicy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/OrganizationPolicy.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/DirectoryRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/DirectoryRepository.java] |A/C/E |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java] |A/C/E |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AssignmentEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AssignmentEntity.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/DepartmentEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/DepartmentEntity.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/EligibilityEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/EligibilityEntity.java] |C |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java] |A/C/E |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryViews.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryViews.java] |A/E |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UserUpdateRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UserUpdateRequest.java] |A |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java] |C/D/E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java[rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java] |A/C/D/E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/dto/DisplayName.java[rbac-structured/src/main/java/com/xmu/rbac/structured/dto/DisplayName.java] |A/E |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Inputs.java[rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Inputs.java] |A/C/E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/dto/NameChange.java[rbac-structured/src/main/java/com/xmu/rbac/structured/dto/NameChange.java] |A/E |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Department.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Department.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/DepartmentAllowedRole.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/DepartmentAllowedRole.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UserRole.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UserRole.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentAllowedRoleMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentAllowedRoleMapper.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentMapper.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java] |A/C/D/E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserRoleMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserRoleMapper.java] |C |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java] |A/C/D/E/F |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/Views.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/Views.java] |A/C/E/F |shared-methods
+|link:../../rbac-web/src/views/UserWorkspace.vue[rbac-web/src/views/UserWorkspace.vue] |C |auxiliary
+|link:../../rbac-web/tests/user-workspace.spec.ts[rbac-web/tests/user-workspace.spec.ts] |C |auxiliary
+|===
+
+== C主责定位（27文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleCommand.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleCommand.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleResult.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleResult.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleUpdateCommand.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleUpdateCommand.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LastAdministratorPolicy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LastAdministratorPolicy.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/RoleState.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/RoleState.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/HierarchyEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/HierarchyEntity.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RoleEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RoleEntity.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RolePermissionEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RolePermissionEntity.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/RoleJpaRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/RoleJpaRepository.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java] |B/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/CreateRoleRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/CreateRoleRequest.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleUpdateRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleUpdateRequest.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleView.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleView.java] |A |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java] |B/D/E/F |shared-methods
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Role.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Role.java] |B/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RoleHierarchy.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RoleHierarchy.java] |B/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RolePermission.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RolePermission.java] |B/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleHierarchyMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleHierarchyMapper.java] |B/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleMapper.java] |B/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RolePermissionMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RolePermissionMapper.java] |B/D |core
+|link:../../rbac-web/src/components/RoleDag.vue[rbac-web/src/components/RoleDag.vue] |B/D |auxiliary
+|link:../../rbac-web/src/views/RoleWorkspace.vue[rbac-web/src/views/RoleWorkspace.vue] |B/D |auxiliary
+|===
+
+== D主责定位（39文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java[rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java] |A/F |boundary
+|link:../../rbac-contract/src/test/java/com/xmu/rbac/contract/ApiErrorsTest.java[rbac-contract/src/test/java/com/xmu/rbac/contract/ApiErrorsTest.java] |A/F |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationReadTransaction.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationReadTransaction.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/package-info.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/package-info.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuthorizationPolicy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuthorizationPolicy.java] |A/C/E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DomainException.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DomainException.java] |A/C/E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/package-info.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/package-info.java] |A/C/E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java] |A/B/C |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/EffectiveCache.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/EffectiveCache.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/cache/VersionedEffectiveCache.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/cache/VersionedEffectiveCache.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java] |A/B/C/E |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/GrantVersionEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/GrantVersionEntity.java] |C |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/GrantVersionJpaRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/GrantVersionJpaRepository.java] |C |boundary
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/AuthorizationController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/AuthorizationController.java] |E |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RegisteredApiInterceptor.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RegisteredApiInterceptor.java] |A/E |boundary
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationSecurityRegressionTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationSecurityRegressionTest.java] |A/C/E |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationTokenAudienceTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationTokenAudienceTest.java] |A/C/E |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/PermissionInterceptor.java[rbac-structured/src/main/java/com/xmu/rbac/structured/controller/PermissionInterceptor.java] |A/E/F |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/GrantVersion.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/GrantVersion.java] |C |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/GrantVersionMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/GrantVersionMapper.java] |C |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java] |A/B/C/E |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BizException.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/BizException.java] |A/F |boundary
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java] |E |core
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java] |A/B/C/E/F |shared-methods
+|link:../../rbac-web/src/components/EffectivePermissions.vue[rbac-web/src/components/EffectivePermissions.vue] |B/C |auxiliary
+|link:../../tools/acceptance/environment.mjs[tools/acceptance/environment.mjs] |A/E |support
+|link:../../tools/acceptance/environment.test.mjs[tools/acceptance/environment.test.mjs] |A/E |support
+|link:../../tools/acceptance/equivalence.mjs[tools/acceptance/equivalence.mjs] |A/E |support
+|link:../../tools/acceptance/equivalence.test.mjs[tools/acceptance/equivalence.test.mjs] |A/E |support
+|link:../../tools/acceptance/fixture-guard.mjs[tools/acceptance/fixture-guard.mjs] |A/E |support
+|link:../../tools/acceptance/fixture.mjs[tools/acceptance/fixture.mjs] |A/E |support
+|link:../../tools/acceptance/http.mjs[tools/acceptance/http.mjs] |A/E |support
+|link:../../tools/acceptance/normalization.mjs[tools/acceptance/normalization.mjs] |A/E |support
+|link:../../tools/acceptance/package.json[tools/acceptance/package.json] |A/E |support
+|link:../../tools/acceptance/redis.mjs[tools/acceptance/redis.mjs] |A/E |support
+|link:../../tools/acceptance/run.mjs[tools/acceptance/run.mjs] |A/E |support
+|link:../../tools/acceptance/static.test.mjs[tools/acceptance/static.test.mjs] |A/E |support
+|link:../../tools/acceptance/suite.mjs[tools/acceptance/suite.mjs] |A/B/C/E/F |shared-methods
+|===
+
+== E主责定位（167文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../.github/workflows/ci.yml[.github/workflows/ci.yml] |A/D |support
+|link:../../course-integration/build-images.sh[course-integration/build-images.sh] |A/D |auxiliary
+|link:../../course-integration/frontend/.dockerignore[course-integration/frontend/.dockerignore] |D |support
+|link:../../course-integration/frontend/Dockerfile[course-integration/frontend/Dockerfile] |A/D |auxiliary
+|link:../../course-integration/frontend/index.html[course-integration/frontend/index.html] |A/D |auxiliary
+|link:../../course-integration/frontend/nginx.conf[course-integration/frontend/nginx.conf] |A/D |auxiliary
+|link:../../course-integration/frontend/package.json[course-integration/frontend/package.json] |A/D |auxiliary
+|link:../../course-integration/frontend/style.css[course-integration/frontend/style.css] |A/D |auxiliary
+|link:../../course-integration/maven-settings.xml[course-integration/maven-settings.xml] |A/D |auxiliary
+|link:../../course-integration/overlay/.dockerignore[course-integration/overlay/.dockerignore] |D |support
+|link:../../course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/AuditSnapshots.java[course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/AuditSnapshots.java] |F |auxiliary
+|link:../../course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralClient.java[course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralClient.java] |A/D |auxiliary
+|link:../../course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralSecurity.java[course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralSecurity.java] |A/D |auxiliary
+|link:../../course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/ConfirmedAuditFilter.java[course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/ConfirmedAuditFilter.java] |F |auxiliary
+|link:../../course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/OperationGate.java[course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/OperationGate.java] |A/D |auxiliary
+|link:../../course-integration/overlay/backend/src/main/resources/application-integration.yaml[course-integration/overlay/backend/src/main/resources/application-integration.yaml] |A/D |auxiliary
+|link:../../course-integration/patches/001-central-clients.patch[course-integration/patches/001-central-clients.patch] |A/D |auxiliary
+|link:../../course-integration/patches/002-copy-teacher-first.patch[course-integration/patches/002-copy-teacher-first.patch] |A/D |auxiliary
+|link:../../course-integration/patches/003-current-subject-authorities.patch[course-integration/patches/003-current-subject-authorities.patch] |A/D |auxiliary
+|link:../../course-integration/patches/004-audit-context.patch[course-integration/patches/004-audit-context.patch] |F |auxiliary
+|link:../../course-integration/patches/005-current-teacher-role.patch[course-integration/patches/005-current-teacher-role.patch] |A/D |auxiliary
+|link:../../course-integration/patches/006-explicit-test-identity.patch[course-integration/patches/006-explicit-test-identity.patch] |A/D |auxiliary
+|link:../../course-integration/swarm-course.yaml[course-integration/swarm-course.yaml] |A/D |auxiliary
+|link:../../course-integration/tests/fixture.sql[course-integration/tests/fixture.sql] |A/D |auxiliary
+|link:../../course-integration/tests/http-boundary.mjs[course-integration/tests/http-boundary.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/live-six-api.mjs[course-integration/tests/live-six-api.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/package.json[course-integration/tests/package.json] |A/D |auxiliary
+|link:../../course-integration/tests/real-environment.mjs[course-integration/tests/real-environment.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/real-environment.test.mjs[course-integration/tests/real-environment.test.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/real-provision.mjs[course-integration/tests/real-provision.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/run-domain-tests.sh[course-integration/tests/run-domain-tests.sh] |A/D |auxiliary
+|link:../../course-integration/tests/run-real-centers.mjs[course-integration/tests/run-real-centers.mjs] |A/D |auxiliary
+|link:../../course-integration/tests/verify-prepared.py[course-integration/tests/verify-prepared.py] |A/D |auxiliary
+|link:../../deploy/backend-module.sh[deploy/backend-module.sh] |A/D |auxiliary
+|link:../../deploy/build.sh[deploy/build.sh] |A/D |auxiliary
+|link:../../deploy/deployment-evidence.json[deploy/deployment-evidence.json] |A/D |auxiliary
+|link:../../deploy/env.example[deploy/env.example] |D |support
+|link:../../deploy/full-build.sh[deploy/full-build.sh] |A/D |auxiliary
+|link:../../deploy/full-config-test.py[deploy/full-config-test.py] |A/D |auxiliary
+|link:../../deploy/full-course-backend.Dockerfile[deploy/full-course-backend.Dockerfile] |A/D |auxiliary
+|link:../../deploy/full-course-nginx.conf[deploy/full-course-nginx.conf] |A/D |auxiliary
+|link:../../deploy/full-course-web.Dockerfile[deploy/full-course-web.Dockerfile] |A/D |auxiliary
+|link:../../deploy/full-env.example[deploy/full-env.example] |D |support
+|link:../../deploy/full-env.sh[deploy/full-env.sh] |A/D |auxiliary
+|link:../../deploy/full-final-gate.py[deploy/full-final-gate.py] |A/D |auxiliary
+|link:../../deploy/full-final.sh[deploy/full-final.sh] |A/D |auxiliary
+|link:../../deploy/full-jacoco-agent.sh[deploy/full-jacoco-agent.sh] |A/D |auxiliary
+|link:../../deploy/full-mysql-init.sh[deploy/full-mysql-init.sh] |A/D |auxiliary
+|link:../../deploy/full-secrets.sh[deploy/full-secrets.sh] |A/D |auxiliary
+|link:../../deploy/full-stack.sh[deploy/full-stack.sh] |A/D |auxiliary
+|link:../../deploy/full-switch-evidence.py[deploy/full-switch-evidence.py] |A/D |auxiliary
+|link:../../deploy/full-verify.sh[deploy/full-verify.sh] |A/D |auxiliary
+|link:../../deploy/maven-settings-huawei.xml[deploy/maven-settings-huawei.xml] |A/D |auxiliary
+|link:../../deploy/rbac-demo.http[deploy/rbac-demo.http] |A/D |auxiliary
+|link:../../deploy/setup-server.sh[deploy/setup-server.sh] |A/D |auxiliary
+|link:../../deploy/stack.sh[deploy/stack.sh] |A/D |auxiliary
+|link:../../rbac-contract/pom.xml[rbac-contract/pom.xml] |A/B/D/F |support
+|link:../../rbac-contract/src/main/resources/catalog/course-openapi.source.yaml[rbac-contract/src/main/resources/catalog/course-openapi.source.yaml] |A/B/D/F |support
+|link:../../rbac-contract/src/main/resources/catalog/course-operations.json[rbac-contract/src/main/resources/catalog/course-operations.json] |A/B/D/F |support
+|link:../../rbac-contract/src/main/resources/catalog/coverage-samples.json[rbac-contract/src/main/resources/catalog/coverage-samples.json] |A/B/D/F |support
+|link:../../rbac-contract/src/main/resources/openapi/rbac-api.yaml[rbac-contract/src/main/resources/openapi/rbac-api.yaml] |A/B/D/F |shared-methods
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationService.java] |A/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiChangeCommand.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiChangeCommand.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiResult.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiResult.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ApiOperation.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ApiOperation.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Permission.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Permission.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ResourcePolicy.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ResourcePolicy.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/OperationContract.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/OperationContract.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/ResourceRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/ResourceRepository.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/OpenApiOperationContract.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/OpenApiOperationContract.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/RouteContractVerifier.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/RouteContractVerifier.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaResourceRepositoryAdapter.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaResourceRepositoryAdapter.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/UiState.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/UiState.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/ApiOperationEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/ApiOperationEntity.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/MappingEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/MappingEntity.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/PermissionEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/PermissionEntity.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/SystemEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/SystemEntity.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UiResourceEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UiResourceEntity.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IntegrationIdentityController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IntegrationIdentityController.java] |A/D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceController.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceController.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceViews.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceViews.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/ApiUpdateRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/ApiUpdateRequest.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiChangeRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiChangeRequest.java] |D |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiResourceView.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiResourceView.java] |D |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/UiPatchBoundaryTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/UiPatchBoundaryTest.java] |D |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationServiceTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationServiceTest.java] |D |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/ResourcePolicyTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/ResourcePolicyTest.java] |D |core
+|link:../../rbac-gateway/pom.xml[rbac-gateway/pom.xml] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/AuthBoundary.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/AuthBoundary.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedBody.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedBody.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedExchange.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedExchange.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/CourseJwtValidator.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/CourseJwtValidator.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayApplication.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayApplication.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayController.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayController.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayErrors.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayErrors.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayFailure.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayFailure.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/IdentityClient.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/IdentityClient.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/ProxyClient.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/ProxyClient.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/RouteRegistry.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/RouteRegistry.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/TraceFilter.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/TraceFilter.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/GatewayProperties.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/GatewayProperties.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/HttpConfiguration.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/HttpConfiguration.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/SecurityConfiguration.java[rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/SecurityConfiguration.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/main/resources/application.yml[rbac-gateway/src/main/resources/application.yml] |A/D |auxiliary
+|link:../../rbac-gateway/src/test/java/com/xmu/rbac/gateway/ConfigurationTest.java[rbac-gateway/src/test/java/com/xmu/rbac/gateway/ConfigurationTest.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/test/java/com/xmu/rbac/gateway/GatewayHttpTest.java[rbac-gateway/src/test/java/com/xmu/rbac/gateway/GatewayHttpTest.java] |A/D |auxiliary
+|link:../../rbac-gateway/src/test/java/com/xmu/rbac/gateway/RouteRegistryTest.java[rbac-gateway/src/test/java/com/xmu/rbac/gateway/RouteRegistryTest.java] |A/D |auxiliary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/IntegrationIdentityController.java[rbac-structured/src/main/java/com/xmu/rbac/structured/controller/IntegrationIdentityController.java] |A/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/dto/IntegrationViews.java[rbac-structured/src/main/java/com/xmu/rbac/structured/dto/IntegrationViews.java] |A |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/ApiOperation.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/ApiOperation.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Permission.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Permission.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/SoftwareSystem.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/SoftwareSystem.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiApiMapping.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiApiMapping.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiResource.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiResource.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/ApiOperationMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/ApiOperationMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/PermissionMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/PermissionMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/SoftwareSystemMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/SoftwareSystemMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiApiMappingMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiApiMappingMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiResourceMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiResourceMapper.java] |D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java] |A/D |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java] |D |shared-methods
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java] |D |core
+|link:../../rbac-web/.dockerignore[rbac-web/.dockerignore] |D |support
+|link:../../rbac-web/Dockerfile[rbac-web/Dockerfile] |A/D |auxiliary
+|link:../../rbac-web/e2e/console.spec.ts[rbac-web/e2e/console.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/e2e/environment.ts[rbac-web/e2e/environment.ts] |A/D |auxiliary
+|link:../../rbac-web/e2e/global-setup.ts[rbac-web/e2e/global-setup.ts] |A/D |auxiliary
+|link:../../rbac-web/e2e/sandbox.ts[rbac-web/e2e/sandbox.ts] |A/D |auxiliary
+|link:../../rbac-web/index.html[rbac-web/index.html] |A/D |auxiliary
+|link:../../rbac-web/nginx.conf[rbac-web/nginx.conf] |A/D |auxiliary
+|link:../../rbac-web/package.json[rbac-web/package.json] |A/D |auxiliary
+|link:../../rbac-web/playwright.config.ts[rbac-web/playwright.config.ts] |A/D |auxiliary
+|link:../../rbac-web/src/App.vue[rbac-web/src/App.vue] |A/D |auxiliary
+|link:../../rbac-web/src/api/index.ts[rbac-web/src/api/index.ts] |A/D |auxiliary
+|link:../../rbac-web/src/api/types.ts[rbac-web/src/api/types.ts] |A/D |auxiliary
+|link:../../rbac-web/src/components/PermissionCode.vue[rbac-web/src/components/PermissionCode.vue] |A/D |auxiliary
+|link:../../rbac-web/src/components/RecordForm.vue[rbac-web/src/components/RecordForm.vue] |A/D |auxiliary
+|link:../../rbac-web/src/directives/perm.ts[rbac-web/src/directives/perm.ts] |A/D |auxiliary
+|link:../../rbac-web/src/env.d.ts[rbac-web/src/env.d.ts] |A/D |auxiliary
+|link:../../rbac-web/src/layouts/AppLayout.vue[rbac-web/src/layouts/AppLayout.vue] |A/D |auxiliary
+|link:../../rbac-web/src/main.ts[rbac-web/src/main.ts] |A/D |auxiliary
+|link:../../rbac-web/src/router/index.ts[rbac-web/src/router/index.ts] |A/D |auxiliary
+|link:../../rbac-web/src/router/routes.ts[rbac-web/src/router/routes.ts] |A/D |auxiliary
+|link:../../rbac-web/src/styles.css[rbac-web/src/styles.css] |A/D |auxiliary
+|link:../../rbac-web/src/utils/format.ts[rbac-web/src/utils/format.ts] |A/D |auxiliary
+|link:../../rbac-web/src/views/CatalogWorkspace.vue[rbac-web/src/views/CatalogWorkspace.vue] |B/D/F |shared-methods
+|link:../../rbac-web/src/views/ManagementView.vue[rbac-web/src/views/ManagementView.vue] |A/D |auxiliary
+|link:../../rbac-web/src/views/ResourceWorkspace.vue[rbac-web/src/views/ResourceWorkspace.vue] |A/D |auxiliary
+|link:../../rbac-web/src/views/StatusView.vue[rbac-web/src/views/StatusView.vue] |A/D |auxiliary
+|link:../../rbac-web/src/views/workspace.ts[rbac-web/src/views/workspace.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/components.spec.ts[rbac-web/tests/components.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/router.spec.ts[rbac-web/tests/router.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/safety.spec.ts[rbac-web/tests/safety.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/sandbox.spec.ts[rbac-web/tests/sandbox.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/setup.ts[rbac-web/tests/setup.ts] |A/D |auxiliary
+|link:../../rbac-web/tsconfig.json[rbac-web/tsconfig.json] |A/D |auxiliary
+|link:../../rbac-web/vite.config.ts[rbac-web/vite.config.ts] |A/D |auxiliary
+|link:../../tools/backend-scripts.test.mjs[tools/backend-scripts.test.mjs] |A/D/F |support
+|link:../../tools/collect-acceptance-evidence.py[tools/collect-acceptance-evidence.py] |A/D/F |support
+|link:../../tools/collect-acceptance-evidence.test.py[tools/collect-acceptance-evidence.test.py] |A/D/F |support
+|link:../../tools/generate-rbac1-contract-test.py[tools/generate-rbac1-contract-test.py] |B/C/D |support
+|link:../../tools/generate-rbac1-contract.py[tools/generate-rbac1-contract.py] |B/C/D |support
+|link:../../tools/m2-layout.test.mjs[tools/m2-layout.test.mjs] |A/D/F |support
+|link:../../tools/prepare-course.sh[tools/prepare-course.sh] |D |auxiliary
+|link:../../tools/prepare-course.test.mjs[tools/prepare-course.test.mjs] |D |auxiliary
+|link:../../tools/project-layout.test.mjs[tools/project-layout.test.mjs] |A/D/F |support
+|===
+
+== F主责定位（42文件）
+
+[cols="6,1,2",options="header"]
+|===
+|源码/配置/测试 |协作关注 |深度
+|link:../../course-integration/frontend/src.js[course-integration/frontend/src.js] |E/A/B/C/D |coordination
+|link:../../course-integration/frontend/vite.config.js[course-integration/frontend/vite.config.js] |E/A/B/C/D |coordination
+|link:../../diagrams/phase1/rbac.mdj[diagrams/phase1/rbac.mdj] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/src/domain-model.mmd[diagrams/phase1/src/domain-model.mmd] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/src/er-diagram.mmd[diagrams/phase1/src/er-diagram.mmd] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/src/usecase-overall.mmd[diagrams/phase1/src/usecase-overall.mmd] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/tools/gen-mdj.mjs[diagrams/phase1/tools/gen-mdj.mjs] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/tools/gen-mdj.test.mjs[diagrams/phase1/tools/gen-mdj.test.mjs] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/tools/mermaid-config.json[diagrams/phase1/tools/mermaid-config.json] |E/A/B/C/D |historical
+|link:../../diagrams/phase1/tools/puppeteer-config.json[diagrams/phase1/tools/puppeteer-config.json] |E/A/B/C/D |historical
+|link:../../diagrams/phase2/assets/app.js[diagrams/phase2/assets/app.js] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/assets/style.css[diagrams/phase2/assets/style.css] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/data/openapi-operations.json[diagrams/phase2/data/openapi-operations.json] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/data/provenance.json[diagrams/phase2/data/provenance.json] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/data/schema.json[diagrams/phase2/data/schema.json] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/data/verification.json[diagrams/phase2/data/verification.json] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/index.html[diagrams/phase2/index.html] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/src/architecture-modules.mmd[diagrams/phase2/src/architecture-modules.mmd] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/src/architecture-runtime.mmd[diagrams/phase2/src/architecture-runtime.mmd] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/src/er-physical.mmd[diagrams/phase2/src/er-physical.mmd] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/src/usecase-center.puml[diagrams/phase2/src/usecase-center.puml] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/src/usecase-course.puml[diagrams/phase2/src/usecase-course.puml] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/tools/generate.cjs[diagrams/phase2/tools/generate.cjs] |E/A/B/C/D |coordination
+|link:../../diagrams/phase2/tools/render.cjs[diagrams/phase2/tools/render.cjs] |E/A/B/C/D |coordination
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuditFact.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuditFact.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuditRepositoryAdapter.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuditRepositoryAdapter.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AuditEntity.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AuditEntity.java] |A |core
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ApiExceptionAdvice.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ApiExceptionAdvice.java] |A/D |boundary
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddAuditIntegrationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddAuditIntegrationTest.java] |A |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuditRoleSnapshotTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuditRoleSnapshotTest.java] |A |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/AuditTimestampPrecisionTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/AuditTimestampPrecisionTest.java] |A |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/GlobalExceptionHandler.java[rbac-structured/src/main/java/com/xmu/rbac/structured/controller/GlobalExceptionHandler.java] |A/D |boundary
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/AuditLog.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/AuditLog.java] |A |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/AuditLogMapper.java[rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/AuditLogMapper.java] |A |core
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java] |A |core
+|link:../../tools/render-rbac1-design.py[tools/render-rbac1-design.py] |A/B/C/D/E |coordination
+|link:../../tools/render-rbac1-design.scenarios.py[tools/render-rbac1-design.scenarios.py] |A/B/C/D/E |coordination
+|link:../../tools/render-rbac1-design.test.py[tools/render-rbac1-design.test.py] |A/B/C/D/E |coordination
+|link:../../tools/review-history.py[tools/review-history.py] |A |support
+|link:../../tools/review-history.test.py[tools/review-history.test.py] |A |support
+|===

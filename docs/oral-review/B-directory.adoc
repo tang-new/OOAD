@@ -1,0 +1,90 @@
+= B：用户、组织、准入与角色指派
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：C；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+ID-04/05/06、ROLE-05/06/08、组织管理相关SELF；身份字段A、角色定义C、有效权限D协作。
+
+用户档案、部门树、管理子树、直接角色准入与指派/撤销、调动及稳定分页；负责汇总ER，但不替其他成员审查全部表。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java[ManagementController.java] |用户/部门/准入/指派入口；DTO不应夹带状态、部门或scope
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |departments/createDepartment/renameDepartment/deleteDepartment、allowedRoles/replaceAllowed、users/user/createUser/patchUser/userStatus/moveUser、assignments/assign/unassign/effectiveUser、dashboard
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |scope/root/upper/captureUpper协作；权限计算主体归D，上界/管理员保护与C共审
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java[Store.java] |page在SQL完成、用户排他锁、查询参数绑定；通用Store其他调用归对应链
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |用户/部门/准入/指派/调动与DTO→Command；系统入口E、角色删除C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |managed、allowed、users/user、createUser/patchUser/statusUser/transfer/assign/unassign、aggregate/save/effective/dashboard；system和deleteRole另交E/C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java[User.java] |assign/transfer/changeStatus、roleIds和tokenVersion，不自行查库
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DepartmentEligibility.java[DepartmentEligibility.java] |requireEligible/retained与管理范围检查
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/OrganizationPolicy.java[OrganizationPolicy.java] |路径范围、版本和可删除性
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/DirectoryRepository.java[DirectoryRepository.java] |Profile/Department/Assignment、目录读写端口；识别包含凭据的内部Profile不直接输出
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |分页、用户/部门写入、准入替换与关联回收；deleteRole交C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/UserJpaRepository.java[UserJpaRepository.java] |搜索PageRequest、账号/用户锁；登录锁与A共享
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+structured：ManagementController → ManagementService.begin(授权锁/入口/上界) → scope/准入/角色校验 → UserRole或用户部门变更 → finish(版本/成功审计)。
+
+DDD指派：DirectoryController.assign → DirectoryApplicationService.assign → lockGrants/actor/managed/upperBound → aggregate(profile).assign(role, eligibility) → DirectoryRepository.assign → done。
+
+DDD调动：transfer → 锁用户并检查原/新范围和version → User.transfer保留目标准入交集 → save删除本人不合法assignment → 版本/审计；不修改共享RolePermission。
+
+== 主审检查项
+
+* [ ] 画清UserRole与DepartmentAllowedRole的两个多对多联结实体，资格不自动授权。
+* [ ] 直接指派仅接收roleId，用户当前部门来自数据库；超级管理员也必须满足目标部门准入。
+* [ ] 撤销检查当前管理权限、部门范围和assignment属于路径用户，不能凭曾授出就越界。
+* [ ] 部门迁移只回收本人不合资格角色，其他用户及RolePermission不变；替换准入也需核对回收范围。
+* [ ] 用户状态/资料/部门独立API；PATCH存在性和显式null、version与不可改字段逐项核对。
+* [ ] 分页过滤、稳定顺序、万级用户场景和数据库offset边界；删除部门遇员工/子部门冲突。
+* [ ] 用户停用/恢复与上界、最后管理员、tokenVersion分别与A/C/D确认。
+
+== 数据与职责
+
+sys_department、sys_user组织/档案列、sys_user_role、sys_department_allowed_role；与A共享User凭据、与C共享Role关联。汇总其余成员的15表关系而非自行包办。
+
+GRASP：User掌握自己的状态/部门/直接角色，Eligibility掌握允许集合，OrganizationPolicy掌握范围；应用协调跨对象事实和事务。ER使用当前15表，旧公司/scope模型不进入现行解释。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |organizationAdmissionMovementAndUpperBound、crossSystemAndManagementBoundary、managementLifecycleAndSqlPaging、departmentAdministratorCannotEscapeScopeOrSharedCatalogAndInheritedUpperBound
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |transferReclaimsIneligibleAssignmentWithoutChangingSharedRole、independentJpaPagingIsStableAndRejectsInvalidBounds
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[DomainRulesTest.java] |departmentChecksDirectEligibility、userTransferOnlyDropsOwnAssignments、statusRevokesTokenAndDeletedCannotReactivate、departmentPathIsSegmentSafe
+|link:../../tools/acceptance/suite.mjs[suite.mjs] |ROLE-05、ID-05、ROLE-06、ID-04 10000 synthetic SQL users场景，检查HTTP与SQL后置条件
+|link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace.vue] |用户分页、真实准入选项、独立状态和调动；页面辅助核对
+|===
+
+== 必须准备的场景
+
+* 正常：允许部门中的用户获得角色，调往仍允许的部门保留指派。
+* 等价/边界：不准入、兄弟部门管理员、空角色集合、无用户/无部门、可空PATCH及分页0/1/最大值。
+* 异常/并发：assignment属于别人、部门有子节点/用户、调动版本冲突；两次调动后的唯一部门与实际指派一致。
+
+== 对照图与口试题
+
+* link:../design/S02-structured-class.svg[S02-structured-class SVG] / link:../design/S02-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S02-structured-sequence.svg[S02-structured-sequence SVG] / link:../design/S02-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S02-ddd-class.svg[S02-ddd-class SVG] / link:../design/S02-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S02-ddd-sequence.svg[S02-ddd-sequence SVG] / link:../design/S02-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+
+. 准入为什么不是授权？继承来的角色还要逐一准入吗？
+. 迁移用户为什么不能清空角色权限？
+. 一个撤销请求中userId与assignmentId不匹配，应在哪里拒绝？
+. 为什么同为root部门管理者也不能随意授予自己没有的身份能力？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

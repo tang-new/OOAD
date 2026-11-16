@@ -1,0 +1,5526 @@
+{
+  "format": "rbac1-oral-review-assignment-v1",
+  "baselineCommit": "84685b722c2117f1944e780b69f217d10e99f158",
+  "reviewState": "NOT_STARTED",
+  "humanReviewVerified": false,
+  "scope": "当前仓库我方源码、测试、配置、SQL、工具、补丁与diagrams图源；课程/网关/前端辅助；一期图源历史；不含完整教师缓存、锁文件和生成/依赖目录",
+  "members": {
+    "A": {
+      "role": "身份/令牌/技术日志",
+      "partner": "F",
+      "card": "A-identity.adoc"
+    },
+    "B": {
+      "role": "组织/用户/准入/指派",
+      "partner": "C",
+      "card": "B-directory.adoc"
+    },
+    "C": {
+      "role": "角色/图写入/完整性",
+      "partner": "B",
+      "card": "C-role-graph.adoc"
+    },
+    "D": {
+      "role": "有效权限/决策/缓存",
+      "partner": "E",
+      "card": "D-authorization.adoc"
+    },
+    "E": {
+      "role": "资源/映射/接入运行边界",
+      "partner": "D",
+      "card": "E-resources.adoc"
+    },
+    "F": {
+      "role": "审计/迭代复现",
+      "partner": "A",
+      "card": "F-audit.adoc"
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": ".dockerignore",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": ".mvn/wrapper/maven-wrapper.properties",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "Dockerfile",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/build-images.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/.dockerignore",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/Dockerfile",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/index.html",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/nginx.conf",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/package.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/src.js",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/style.css",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/frontend/vite.config.js",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/maven-settings.xml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/.dockerignore",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/AuditSnapshots.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralClient.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/CentralSecurity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/ConfirmedAuditFilter.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/java/cn/edu/xmu/projectmgt/integration/OperationGate.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/overlay/backend/src/main/resources/application-integration.yaml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/001-central-clients.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/002-copy-teacher-first.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/003-current-subject-authorities.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/004-audit-context.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/005-current-teacher-role.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/patches/006-explicit-test-identity.patch",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/swarm-course.yaml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/fixture.sql",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/http-boundary.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/live-six-api.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/package.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/real-environment.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/real-environment.test.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/real-provision.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/run-domain-tests.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/run-real-centers.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "course-integration/tests/verify-prepared.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/backend-module.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/build.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/deployment-evidence.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/env.example",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-build.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-config-test.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-course-backend.Dockerfile",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-course-nginx.conf",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-course-web.Dockerfile",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-env.example",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-env.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-final-gate.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-final.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-jacoco-agent.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-mysql-init.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-secrets.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-stack.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-switch-evidence.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/full-verify.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/maven-settings-huawei.xml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/rbac-demo.http",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/setup-server.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "deploy/stack.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/rbac.mdj",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/src/domain-model.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/src/er-diagram.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/src/usecase-overall.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/tools/gen-mdj.mjs",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/tools/gen-mdj.test.mjs",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/tools/mermaid-config.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase1/tools/puppeteer-config.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "historical",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/assets/app.js",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/assets/style.css",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/data/openapi-operations.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/data/provenance.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/data/schema.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/data/verification.json",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/index.html",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/src/architecture-modules.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/src/architecture-runtime.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/src/er-physical.mmd",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/src/usecase-center.puml",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/src/usecase-course.puml",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/tools/generate.cjs",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "diagrams/phase2/tools/render.cjs",
+      "lead": "F",
+      "owners": [
+        "F",
+        "E",
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "docker-compose.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "mvnw",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "mvnw.cmd",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "pom.xml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/pom.xml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/catalog/course-openapi.source.yaml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/catalog/course-operations.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/catalog/coverage-samples.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/db/migration/V2__rbac1_seed.sql",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/main/resources/openapi/rbac-api.yaml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-contract/src/test/java/com/xmu/rbac/contract/ApiErrorsTest.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/pom.xml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/RbacDddApplication.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationReadTransaction.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IdentityApplicationService.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationService.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/LoginAttemptApplicationService.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleCommand.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleResult.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleUpdateCommand.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiChangeCommand.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UiResult.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/UserUpdateCommand.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/package-info.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ApiOperation.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuditFact.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuthorizationPolicy.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DepartmentEligibility.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DomainException.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LastAdministratorPolicy.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicy.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/OrganizationPolicy.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Permission.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ResourcePolicy.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/package-info.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/CredentialEncoder.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/DirectoryRepository.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/EffectiveCache.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/OperationContract.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/ResourceRepository.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/TokenProvider.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/cache/VersionedEffectiveCache.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/HttpSecurityConfiguration.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/OpenApiOperationContract.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/RouteContractVerifier.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/health/ImplementationHealthIndicator.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BcryptCredentialEncoder.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BootstrapInitializer.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/RsaTokenProvider.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/logging/LayerLoggingAspect.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/package-info.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuditRepositoryAdapter.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "B",
+        "C",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaResourceRepositoryAdapter.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/RoleState.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/UiState.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/ApiOperationEntity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AssignmentEntity.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AuditEntity.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/DepartmentEntity.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/EligibilityEntity.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/GrantVersionEntity.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "C"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/HierarchyEntity.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/MappingEntity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/PermissionEntity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RoleEntity.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/RolePermissionEntity.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/SystemEntity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UiResourceEntity.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/UserEntity.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/GrantVersionJpaRepository.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "C"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/RoleJpaRepository.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/UserJpaRepository.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/package-info.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ApiExceptionAdvice.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A",
+        "D"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/AuthorizationController.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryViews.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IntegrationIdentityController.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RegisteredApiInterceptor.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceController.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ResourceViews.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/ApiUpdateRequest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/CreateRoleRequest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleUpdateRequest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleView.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiChangeRequest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UiResourceView.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/UserUpdateRequest.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/resources/application-test.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/main/resources/application.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/CloneBoundaryTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddAuditIntegrationTest.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddHttpTestSupport.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/ImplementationHealthIndicatorTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/SkeletonHttpTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/UiPatchBoundaryTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuditRoleSnapshotTest.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationSecurityRegressionTest.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationTokenAudienceTest.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "C",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationServiceTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/archfixture/PersistenceDependent.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/BackendIsolationTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/DomainArchitectureTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/architecture/fixture/StructuredDependent.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/AuditTimestampPrecisionTest.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicyTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/ResourcePolicyTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/archfixture/TechnicalDomain.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/infrastructure/RsaTokenProviderTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/structured/archfixture/StructuredMarker.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/resources/application-test.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/tools/format-java.sh",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/tools/verify-login-restart.py",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/pom.xml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/AuthBoundary.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedBody.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/BoundedExchange.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/CourseJwtValidator.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayApplication.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayController.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayErrors.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/GatewayFailure.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/IdentityClient.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/ProxyClient.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/RouteRegistry.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/TraceFilter.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/GatewayProperties.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/HttpConfiguration.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/java/com/xmu/rbac/gateway/config/SecurityConfiguration.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/main/resources/application.yml",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/test/java/com/xmu/rbac/gateway/ConfigurationTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/test/java/com/xmu/rbac/gateway/GatewayHttpTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-gateway/src/test/java/com/xmu/rbac/gateway/RouteRegistryTest.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/format-java.sh",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/pom.xml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/RbacStructuredApplication.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/config/CompatiblePasswordEncoder.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/config/LayerLoggingAspect.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/config/TraceFilter.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/config/WebConfig.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/GlobalExceptionHandler.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A",
+        "D"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/IntegrationIdentityController.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/PermissionInterceptor.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Actor.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/DisplayName.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/Inputs.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/IntegrationViews.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/dto/NameChange.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/ApiOperation.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/AuditLog.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Department.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/DepartmentAllowedRole.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/GrantVersion.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "C"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Permission.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Role.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RoleHierarchy.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RolePermission.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/SoftwareSystem.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/TokenRevocation.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiApiMapping.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UiResource.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/User.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/entity/UserRole.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/ApiOperationMapper.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/AuditLogMapper.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentAllowedRoleMapper.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/DepartmentMapper.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/GrantVersionMapper.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "C"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/PermissionMapper.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleHierarchyMapper.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RoleMapper.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/RolePermissionMapper.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/SoftwareSystemMapper.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/TokenRevocationMapper.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiApiMappingMapper.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UiResourceMapper.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserMapper.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/UserRoleMapper.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthenticationService.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "B",
+        "C",
+        "E"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/BizException.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "F"
+      ],
+      "depth": "boundary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/TokenService.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/Views.java",
+      "lead": "B",
+      "owners": [
+        "B",
+        "A",
+        "C",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/main/resources/application.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/ArchitectureTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/JsonBoundaryTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/MappingSafetyTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/PasswordBoundaryTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/Rbac1ProtocolRedTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "B",
+        "C",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/src/test/resources/application-test.yml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-structured/stage-reactor.py",
+      "lead": "A",
+      "owners": [
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/.dockerignore",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/Dockerfile",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/e2e/console.spec.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/e2e/environment.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/e2e/global-setup.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/e2e/http.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/e2e/sandbox.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/index.html",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/nginx.conf",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/package.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/playwright.config.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/App.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/api/http.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/api/index.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/api/types.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/components/EffectivePermissions.vue",
+      "lead": "D",
+      "owners": [
+        "D",
+        "B",
+        "C"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/components/PermissionCode.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/components/RecordForm.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/components/RoleDag.vue",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/directives/perm.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/env.d.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/layouts/AppLayout.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/main.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/router/index.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/router/routes.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/stores/auth.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/styles.css",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/utils/format.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/utils/password.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/CatalogWorkspace.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "B",
+        "D",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/LoginView.vue",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/ManagementView.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/MeView.vue",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/ResourceWorkspace.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/RoleWorkspace.vue",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/StatusView.vue",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/UserWorkspace.vue",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/src/views/workspace.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/auth.spec.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/components.spec.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/http.spec.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/protocol.spec.ts",
+      "lead": "A",
+      "owners": [
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/router.spec.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/safety.spec.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/sandbox.spec.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/setup.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tests/user-workspace.spec.ts",
+      "lead": "B",
+      "owners": [
+        "B",
+        "C"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/tsconfig.json",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-web/vite.config.ts",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/environment.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/environment.test.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/equivalence.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/equivalence.test.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/fixture-guard.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/fixture.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/http.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/normalization.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/package.json",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/redis.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/run.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/static.test.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "E"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/acceptance/suite.mjs",
+      "lead": "D",
+      "owners": [
+        "D",
+        "A",
+        "B",
+        "C",
+        "E",
+        "F"
+      ],
+      "depth": "shared-methods",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/backend-scripts.test.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/pom.xml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/settings.xml",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/Domain.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PatchBean.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/PublicView.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/RequestBean.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/StoredBean.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/collect-acceptance-evidence.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/collect-acceptance-evidence.test.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/generate-rbac1-contract-test.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/generate-rbac1-contract.py",
+      "lead": "E",
+      "owners": [
+        "E",
+        "B",
+        "C",
+        "D"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/install-clonefactory.sh",
+      "lead": "A",
+      "owners": [
+        "A",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/m2-layout.test.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/prepare-course.sh",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/prepare-course.test.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "D"
+      ],
+      "depth": "auxiliary",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/project-layout.test.mjs",
+      "lead": "E",
+      "owners": [
+        "E",
+        "A",
+        "D",
+        "F"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/render-rbac1-design.py",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/render-rbac1-design.scenarios.py",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/render-rbac1-design.test.py",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "depth": "coordination",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/review-history.py",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "tools/review-history.test.py",
+      "lead": "F",
+      "owners": [
+        "F",
+        "A"
+      ],
+      "depth": "support",
+      "reviewState": "NOT_STARTED"
+    }
+  ],
+  "sharedMethods": [
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "owner": "B",
+      "methods": [
+        "departments",
+        "createDepartment",
+        "renameDepartment",
+        "deleteDepartment",
+        "allowedRoles",
+        "replaceAllowed",
+        "users",
+        "user",
+        "createUser",
+        "patchUser",
+        "userStatus",
+        "moveUser",
+        "assignments",
+        "assign",
+        "unassign",
+        "effectiveUser",
+        "dashboard"
+      ],
+      "boundary": "用户/组织/准入/指派；有效读取与D交接"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "owner": "C",
+      "methods": [
+        "roles",
+        "role",
+        "createRole",
+        "patchRole",
+        "changedUpper",
+        "roleStatus",
+        "deleteRole",
+        "directPermissions",
+        "replacePermissions",
+        "effectiveRole",
+        "hierarchy",
+        "reachable",
+        "inherit"
+      ],
+      "boundary": "角色定义与图写入；计算与D交接"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "owner": "E",
+      "methods": [
+        "systems",
+        "createSystem",
+        "renameSystem",
+        "systemStatus",
+        "permissions",
+        "createPermission",
+        "permissionStatus"
+      ],
+      "boundary": "系统/权限目录"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "owner": "C/D/F",
+      "methods": [
+        "begin",
+        "finish"
+      ],
+      "boundary": "C业务完整性，D版本/变更前上界，F同事务成功审计"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "owner": "D",
+      "methods": [
+        "snapshot",
+        "direct",
+        "calculate",
+        "walk",
+        "effective",
+        "permission",
+        "api",
+        "identities",
+        "version",
+        "active"
+      ],
+      "boundary": "闭包/决策/缓存读取"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "owner": "B/C",
+      "methods": [
+        "scope",
+        "root",
+        "upper",
+        "captureUpper",
+        "protectRole",
+        "preserveAdministrator",
+        "lock"
+      ],
+      "boundary": "B管理范围，C上界/特殊管理员/完整性与写锁，D版本协作"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java",
+      "owner": "D",
+      "methods": [
+        "check"
+      ],
+      "boundary": "管理check/explain"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java",
+      "owner": "E",
+      "methods": [
+        "ui",
+        "menus",
+        "saveUi",
+        "deleteUi",
+        "apis",
+        "saveApi",
+        "mappings",
+        "replaceMappings",
+        "patchUi",
+        "patchApi"
+      ],
+      "boundary": "资源树/操作/映射"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java",
+      "owner": "A",
+      "methods": [
+        "login",
+        "logout",
+        "me",
+        "jwks"
+      ],
+      "boundary": "身份与公钥"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java",
+      "owner": "D",
+      "methods": [
+        "permission",
+        "api"
+      ],
+      "boundary": "对外UI/API决定"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java",
+      "owner": "F",
+      "methods": [
+        "write",
+        "query"
+      ],
+      "boundary": "对外同步审计"
+    },
+    {
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java",
+      "owner": "A/E",
+      "methods": [
+        "initialize"
+      ],
+      "boundary": "初始化口令归A，OAS/持久目录核验归E"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+      "owner": "B",
+      "methods": [
+        "departments",
+        "department",
+        "deleteDepartment",
+        "allowed",
+        "users",
+        "user",
+        "createUser",
+        "patchUser",
+        "aggregate",
+        "save",
+        "statusUser",
+        "transfer",
+        "assignments",
+        "assign",
+        "unassign",
+        "self",
+        "effective",
+        "dashboard",
+        "managed"
+      ],
+      "boundary": "组织/用户/指派和局部装配；身份与A，计算与D交接"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+      "owner": "C",
+      "methods": [
+        "deleteRole"
+      ],
+      "boundary": "角色删除不能因目录命名漏审"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+      "owner": "E",
+      "methods": [
+        "systems",
+        "system"
+      ],
+      "boundary": "系统管理"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java",
+      "owner": "C/D/F",
+      "methods": [
+        "done"
+      ],
+      "boundary": "共享完整性/版本/审计边界"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java",
+      "owner": "C",
+      "methods": [
+        "deleteRole"
+      ],
+      "boundary": "关联清理"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java",
+      "owner": "E",
+      "methods": [
+        "systems",
+        "system",
+        "saveSystem"
+      ],
+      "boundary": "系统持久化"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java",
+      "owner": "B",
+      "methods": [
+        "department",
+        "departments",
+        "saveDepartment",
+        "departmentOccupied",
+        "deleteDepartment",
+        "user",
+        "saveUser",
+        "users",
+        "assignments",
+        "assign",
+        "removeAssignment",
+        "allowed",
+        "replaceEligibility"
+      ],
+      "boundary": "组织/用户/准入/指派"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "owner": "A",
+      "methods": [
+        "username",
+        "lockLogin",
+        "saveLoginState",
+        "revoked",
+        "revoke",
+        "password"
+      ],
+      "boundary": "凭据、失败计数和持久注销"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "owner": "C",
+      "methods": [
+        "restore",
+        "role",
+        "hierarchy",
+        "saveRole",
+        "saveEdges",
+        "roles"
+      ],
+      "boundary": "RoleState/领域恢复与图/关联保存"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "owner": "D",
+      "methods": [
+        "freshenRead",
+        "lockGrants",
+        "version",
+        "advanceVersion",
+        "systemEnabled",
+        "identity",
+        "assignments",
+        "permissions",
+        "operation"
+      ],
+      "boundary": "权威状态/事实读取，操作目录与E交接"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java",
+      "owner": "A",
+      "methods": [
+        "login",
+        "logout",
+        "jwks",
+        "me",
+        "password"
+      ],
+      "boundary": "身份/本人输出"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java",
+      "owner": "D",
+      "methods": [
+        "permission",
+        "api"
+      ],
+      "boundary": "UI/API授权"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java",
+      "owner": "F",
+      "methods": [
+        "auditActor",
+        "audit",
+        "auditLogs"
+      ],
+      "boundary": "受信审计入口"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java",
+      "owner": "C",
+      "methods": [
+        "deleteRole"
+      ],
+      "boundary": "角色删除"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java",
+      "owner": "A/C/D/F",
+      "methods": [
+        "principal",
+        "role",
+        "effective",
+        "audit"
+      ],
+      "boundary": "A主体验证，C角色VO，D有效权限投影，F审计投影"
+    },
+    {
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "owner": "C/D",
+      "methods": [
+        "link",
+        "unlink",
+        "required",
+        "reachable",
+        "paths",
+        "visit",
+        "requireGrantable"
+      ],
+      "boundary": "C写入不变量/特殊能力；D有效路径遍历"
+    }
+  ],
+  "operations": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "operationId": "login",
+      "lead": "A",
+      "partners": [
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "operationId": "logout",
+      "lead": "A",
+      "partners": [
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "operationId": "getIdentityCurrentUser",
+      "lead": "A",
+      "partners": [
+        "D",
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/audit-logs",
+      "operationId": "queryIdentityAuditLogs",
+      "lead": "F",
+      "partners": [
+        "A"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/audit-logs",
+      "operationId": "writeIdentityAuditLog",
+      "lead": "F",
+      "partners": [
+        "A"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/permissions/{permission}",
+      "operationId": "checkIdentityPermission",
+      "lead": "D",
+      "partners": [
+        "A",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/api-permissions/{operationId}",
+      "operationId": "getApiAuthority",
+      "lead": "D",
+      "partners": [
+        "A",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me",
+      "operationId": "getMe",
+      "lead": "A",
+      "partners": [
+        "D",
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/password",
+      "operationId": "changePassword",
+      "lead": "A",
+      "partners": [
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/systems",
+      "operationId": "listSystems",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/systems",
+      "operationId": "createSystem",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/systems/{id}",
+      "operationId": "updateSystem",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/systems/{id}/status",
+      "operationId": "setSystemStatus",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/departments/tree",
+      "operationId": "getDepartmentTree",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/departments",
+      "operationId": "createDepartment",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/departments/{id}",
+      "operationId": "updateDepartment",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/departments/{id}",
+      "operationId": "deleteDepartment",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/departments/{id}/assignable-roles",
+      "operationId": "getDepartmentAssignableRoles",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/departments/{id}/assignable-roles",
+      "operationId": "replaceDepartmentAssignableRoles",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users",
+      "operationId": "listUsers",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users",
+      "operationId": "createUser",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{id}",
+      "operationId": "getUser",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/users/{id}",
+      "operationId": "updateUser",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/{id}",
+      "operationId": "deleteUser",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/users/{id}/status",
+      "operationId": "setUserStatus",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/users/{id}/department",
+      "operationId": "changeUserDepartment",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/roles",
+      "operationId": "listRoles",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/roles",
+      "operationId": "createRole",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/roles/{id}",
+      "operationId": "getRole",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/roles/{id}",
+      "operationId": "updateRole",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/roles/{id}",
+      "operationId": "deleteRole",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/roles/{id}/status",
+      "operationId": "setRoleStatus",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/roles/{id}/permissions",
+      "operationId": "getRolePermissions",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/roles/{id}/permissions",
+      "operationId": "replaceRolePermissions",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/roles/{id}/effective-permissions",
+      "operationId": "getRoleEffectivePermissions",
+      "lead": "D",
+      "partners": [
+        "C",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/systems/{code}/role-hierarchy",
+      "operationId": "getRoleHierarchy",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/roles/{seniorId}/inherits/{juniorId}",
+      "operationId": "addRoleInheritance",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/roles/{seniorId}/inherits/{juniorId}",
+      "operationId": "deleteRoleInheritance",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{id}/role-assignments",
+      "operationId": "listUserRoleAssignments",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/{id}/role-assignments",
+      "operationId": "createUserRoleAssignment",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/{id}/role-assignments/{assignmentId}",
+      "operationId": "deleteUserRoleAssignment",
+      "lead": "B",
+      "partners": [
+        "A",
+        "C",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{id}/systems/{code}/permissions",
+      "operationId": "getUserEffectivePermissions",
+      "lead": "D",
+      "partners": [
+        "A",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/permissions",
+      "operationId": "listPermissions",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/permissions",
+      "operationId": "createPermission",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/permissions/{id}/status",
+      "operationId": "setPermissionStatus",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/systems/{code}/ui-resources",
+      "operationId": "getUiResources",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/systems/{code}/ui-resources",
+      "operationId": "createUiResource",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/ui-resources/{id}",
+      "operationId": "updateUiResource",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/ui-resources/{id}",
+      "operationId": "deleteUiResource",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/menus/me",
+      "operationId": "getMyMenus",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/systems/{code}/api-operations",
+      "operationId": "listApiOperations",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/systems/{code}/api-operations",
+      "operationId": "createApiOperation",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/api-operations/{id}",
+      "operationId": "updateApiOperation",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/systems/{code}/ui-api-mappings",
+      "operationId": "getUiApiMappings",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/systems/{code}/ui-api-mappings",
+      "operationId": "replaceUiApiMappings",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/authorization/check",
+      "operationId": "checkAuthorization",
+      "lead": "D",
+      "partners": [
+        "A",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/authorization/explain",
+      "operationId": "explainAuthorization",
+      "lead": "D",
+      "partners": [
+        "A",
+        "E"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/audit-logs",
+      "operationId": "queryAuditLogs",
+      "lead": "F",
+      "partners": [
+        "A"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard",
+      "operationId": "getDashboard",
+      "lead": "B",
+      "partners": [
+        "C"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/integration/authorities",
+      "operationId": "getIntegrationAuthorities",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/identity/users/{userId}",
+      "operationId": "lookupUnifiedIdentityUser",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/.well-known/jwks.json",
+      "operationId": "getJwks",
+      "lead": "A",
+      "partners": [
+        "F"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/actuator/health",
+      "operationId": "getHealth",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/actuator/info",
+      "operationId": "getInfo",
+      "lead": "E",
+      "partners": [
+        "A",
+        "D"
+      ],
+      "reviewState": "NOT_STARTED"
+    }
+  ],
+  "tables": [
+    {
+      "table": "sys_system",
+      "lead": "E",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_department",
+      "lead": "B",
+      "partners": [
+        "C"
+      ]
+    },
+    {
+      "table": "sys_user",
+      "lead": "B",
+      "partners": [
+        "A",
+        "D",
+        "F"
+      ]
+    },
+    {
+      "table": "sys_role",
+      "lead": "C",
+      "partners": [
+        "B",
+        "D"
+      ]
+    },
+    {
+      "table": "sys_permission",
+      "lead": "E",
+      "partners": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "table": "sys_role_permission",
+      "lead": "C",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_user_role",
+      "lead": "B",
+      "partners": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "table": "sys_department_allowed_role",
+      "lead": "B",
+      "partners": [
+        "C"
+      ]
+    },
+    {
+      "table": "sys_role_hierarchy",
+      "lead": "C",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_ui_resource",
+      "lead": "E",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_api_operation",
+      "lead": "E",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_ui_api_mapping",
+      "lead": "E",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_token_revocation",
+      "lead": "A",
+      "partners": [
+        "D"
+      ]
+    },
+    {
+      "table": "sys_grant_version",
+      "lead": "D",
+      "partners": [
+        "C",
+        "F"
+      ]
+    },
+    {
+      "table": "sys_audit_log",
+      "lead": "F",
+      "partners": [
+        "A"
+      ]
+    }
+  ]
+}

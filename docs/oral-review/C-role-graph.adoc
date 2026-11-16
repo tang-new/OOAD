@@ -1,0 +1,95 @@
+= C：角色、继承图写入与管理员保护
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：B；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+ROLE-01/02/03/04/07、NFR-04，UML-S01及S06业务入口；有效权限读取和缓存由D负责。
+
+角色定义、直接权限替换、启停/删除、继承边写入、环与并发、授权上界和最后管理员；图的写入与读时权限计算划开。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |roles/role/createRole/patchRole/roleStatus/deleteRole、directPermissions/replacePermissions/effectiveRole/hierarchy、reachable/inherit/changedUpper、begin/finish
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |lock/captureUpper/upper/protectRole/preserveAdministrator，计算算法归D共审
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java[RoleController.java] |创建/修改/独立状态/直接权限/继承图；CloneFactory请求与输出
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java[RoleApplicationService.java] |create/rename/status/permissions/link/complete、锁→领域规则→上界→保存→版本/审计
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java[Role.java] |rename/replacePermissions、changeStatus实际程度、superAdministratorCapability/requireManageable
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |link/unlink/构造/requireGrantable；paths供D使用
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |deleteRole在这里！不要遗漏目录服务中的角色删除
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |deleteRole清assignment/rolePermission/eligibility/hierarchy
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |role/hierarchy/restore/saveRole/saveEdges、持久化版本与关联
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java[GrantIntegrityService.java] |加载变更后的管理员事实并调用Policy，实际保护范围需逐项核对
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LastAdministratorPolicy.java[LastAdministratorPolicy.java] |requireAvailable的输入与不变量，不把应用查询责任塞给该对象
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+structured加边：inherit → begin(锁/入口/root/冻结上界) → 读角色与现有边 → reachable(junior, senior) → save/changedUpper → finish。
+
+DDD加边：RoleController.link → RoleApplicationService.link → lockGrants/角色与图 → RoleHierarchy.link → requireGraphGrant/upperBound → saveEdges → complete。
+
+角色状态/删除：普通编辑与启停分离；删除同时追DirectoryApplicationService.deleteRole与Adapter；完成环节先完整性检查，再推进版本和本地SUCCESS审计。
+
+== 主审检查项
+
+* [ ] senior继承junior，允许多父；自环、重复、跨系统、反向可达和恢复损坏图均核对。
+* [ ] 全局授权行锁必须先于图读取，事务持锁到提交；无锁DFS/单个Role乐观版本不足以证明并发无环。
+* [ ] 特殊SUPER_ADMIN能力不能因空权限或停用被当普通角色；潜伏继承路径的检查与有效权限计算不同。
+* [ ] 直接权限替换和新增继承是否检查完整新闭包/操作者变更前上界，受影响上级角色如何处理。
+* [ ] 启用角色、系统或用户恢复能力时的校验路径，与B/D/E共同记录，不能只测新增边。
+* [ ] 删除清关联，角色共享权限不会因一个用户调动清空；builtin、identityRole和系统边界解释清楚。
+* [ ] 最后有效管理员由什么事实判定、哪些入口能间接破坏，不能把Policy名字当全部性质证明。
+* [ ] Role.changeStatus当前只是状态赋值，不应在图/口试中虚构复杂状态机或不存在的领域事件。
+
+== 数据与职责
+
+sys_role、sys_role_permission、sys_role_hierarchy；与B交接sys_user_role/department_allowed_role清理，与D交接sys_grant_version和权限计算。
+
+GRASP对照：结构化事务脚本集中规则；DDD图是Information Expert，应用服务是协调者，Repository/Adapter隔离持久化。S06由C负责业务完成环节、D负责版本一致性、F负责审计事务。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |dag05–08/11/13、activationCannotRestoreCapabilitiesAboveActor、nonSuperCannotModifyGrantOrInheritAnEmptySuperAdmin
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java[RoleHierarchyTest.java] |duplicate/selfLoop/cycle/crossSystem/inverseAfterFirstLink、corruptedRestoredGraph*
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[DomainRulesTest.java] |roleOwnsDirectPermissionInvariant、upperBoundIncludesPermission/Identity、protectedWithoutConditionDenies
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |concurrentInverseEdgesCannotCommitCycle、appFailureRollsBackRoleVersionAndSuccessAudit
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java[DddSecurityIntegrationTest.java] |nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability
+|link:../../tools/acceptance/suite.mjs[suite.mjs] |ROLE-03并发反向边、ROLE upper bound、最终SQL无孤儿/无跨系统事实
+|link:../../rbac-web/src/views/RoleWorkspace.vue[RoleWorkspace.vue] |直接/有效权限、DAG多父及独立状态；辅助页面核对
+|===
+
+== 必须准备的场景
+
+* 正常：创建角色、替换直接权限、合法加边/删边及状态切换。
+* 等价/边界：无边/单边/多父、自环、重复、跨系统、空权限特殊管理员、删除缺失边、version冲突。
+* 并发/故障：A→B和B→A只能一成功且落库方向匹配；业务或审计失败不保留边/版本/SUCCESS。
+
+== 对照图与口试题
+
+* link:../design/S01-structured-class.svg[S01-structured-class SVG] / link:../design/S01-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S01-structured-sequence.svg[S01-structured-sequence SVG] / link:../design/S01-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S01-ddd-class.svg[S01-ddd-class SVG] / link:../design/S01-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S01-ddd-sequence.svg[S01-ddd-sequence SVG] / link:../design/S01-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/role-state.svg[role-state SVG] / link:../design/role-state.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-structured-sequence.svg[S06-structured-sequence SVG] / link:../design/S06-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-ddd-sequence.svg[S06-ddd-sequence SVG] / link:../design/S06-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+
+. 为什么Role单独不能证明全图无环？图对象也不负责数据库并发锁吗？
+. 两个线程都先DFS查不到边，会发生什么？
+. 空权限SUPER_ADMIN为什么仍是特殊能力？
+. 最后管理员、角色状态和审计分别由谁保护，为什么这样分配？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

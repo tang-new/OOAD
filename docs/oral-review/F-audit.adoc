@@ -1,0 +1,99 @@
+= F：同步审计；兼任迭代复现者
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：A；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+AUD-01–06、EXT-02及外部审计合同、UML-S05/S06审计部分；AUD-04技术日志归A，调用者事务各主审人先核对。
+
+审计接收/幂等/查询的公共语义和存储边界。源码主审量按普通成员约三分之二控制，剩余用于复现/记账；不包办全项目证据。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |write/query两个外部审计入口；身份认证其他方法归A/D
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java[AuditService.java] |trusted/safe/record/success/denied/external/same/query/view
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/GlobalExceptionHandler.java[GlobalExceptionHandler.java] |真实denied调用入口及错误码；401/403/409哪些记录，失败如何响应
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |auditActor/audit/auditLogs、服务密钥/API权限，其他方法A/D
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java[AuditApplicationService.java] |local/denied/canonical/external/query/actorDeleted；fresh新事务重读
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuditFact.java[AuditFact.java] |不可变快照、毫秒精度、requireReplay绑定system/subject/hash
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java[AuditRepository.java] |find/append/query端口，不引入JPA对象
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuditRepositoryAdapter.java[JpaAuditRepositoryAdapter.java] |append/flush/restore、唯一键和SQL过滤排序
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ApiExceptionAdvice.java[ApiExceptionAdvice.java] |实际拒绝入口和审计不可用响应；不凭denied方法存在推断覆盖全部拒绝
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/AuditLog.java[AuditLog.java] |CHAR(36)、JSON与TIMESTAMP映射
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/entity/AuditEntity.java[AuditEntity.java] |独立JPA模型和物理列
+|link:../../docs/iteration-log.adoc[iteration-log.adoc] |真实分阶段记录只读核对；复现不改写它
+|link:../../tools/review-history.py[review-history.py] |只读汇总真实审查阶段提交，不代签不自动commit
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+structured外部：AuthController.write → AuditService.external(trusted/API权限/安全JSON/规范化hash) → 独立事务查重/插入/flush → 事务结束后201；唯一冲突退出后新事务查回。
+
+DDD外部：IdentityController.auditActor → AuditApplicationService.external → 构建AuditFact → fresh事务find/requireReplay或append → 唯一冲突后新事务重读。
+
+本地：业务Service/应用完成环节 → success/local参与同事务；denied独立REQUIRES_NEW；COMMIT在事务代理边界，AOP不是审计权威。
+
+查询：身份/服务来源/API权限 → 当前aud/origin/事件过滤 → SQL过滤排序分页 → 最小Actor和JSON投影。
+
+== 主审检查项
+
+* [ ] requestId唯一不等于先查后插足够；同键同体同id、异体冲突、跨主体/系统不可读他人记录。
+* [ ] actor/时间/受控角色快照从可信上下文确定，服务密钥不能替代用户身份或被浏览器持有。
+* [ ] 规范化白名单、JSON形态/长度/深度、对象前缀、时间精度和同UUID重试；两版边界差异单列参考。
+* [ ] 201必须代表已提交；commit前失败不返回假成功；唯一冲突不能在rollback-only事务里继续假成功。
+* [ ] 内外origin和事件过滤、时间闭区间/排序tie-breaker、先授权过滤后分页、deleted与历史快照。
+* [ ] 各主审人提供本链路success/denied调用点，F检查公共语义；不假定所有拒绝和409两版都同样记录。
+* [ ] 外部课程已提交但HTTP未确认的窗口如实说明，不引入Outbox/MQ或宣称分布式原子性。
+
+== 数据与职责
+
+sys_audit_log，无业务FK、不随用户/角色删除；request_id唯一、payload_hash、origin、系统/操作者/对象时间索引、TIMESTAMP(3)。
+
+迭代复现细则见link:iteration-replay.adoc[复现与Git记录]。轮数/分支/副本/脚本由F决定；各主审人供本链路图和理由，F只协调索引。对A的互审范围限于身份协议、失败计数事务及可信actor，不深审密码学。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |auditConcurrentIdempotencyConflictAndRollback、localMutationAndAuditRollbackTogether、externalAuditRejectsUnsafePayloadsAndCrossActorReplay、realAuditInsertFailureRollsBackBusinessAndVersion
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddAuditIntegrationTest.java[DddAuditIntegrationTest.java] |concurrentReplayCommitsOneRecordAndBindsSystemAndSubject、serviceTrustAndSafePayloadAreMandatory
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuditRoleSnapshotTest.java[AuditRoleSnapshotTest.java] |成功/拒绝身份角色快照与撤权后的历史稳定性
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/AuditTimestampPrecisionTest.java[AuditTimestampPrecisionTest.java] |新建/恢复截数据库毫秒，响应精度和[at,at]查询
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |appFailureRollsBackRoleVersionAndSuccessAudit
+|link:../../tools/acceptance/suite.mjs[suite.mjs] |AUD-01/02/05：20并发、隔离分页、trigger失败回滚
+|link:../../rbac-web/src/views/CatalogWorkspace.vue[CatalogWorkspace.vue] |只核对audit页字段/日期/分页和详情，其他分支归B/D/E
+|===
+
+== 必须准备的场景
+
+* 正常：新POST201、同键重放、授权GET分页与Actor快照。
+* 等价/边界：同键异体/跨主体/跨系统、UUID/对象前缀/安全JSON、from=to/from>to、分页上限。
+* 并发/故障：20同键只有一行；唯一冲突后新事务；审计写失败业务/版本/SUCCESS回滚；提交后超时重放原id。
+
+== 对照图与口试题
+
+* link:../design/S05-structured-class.svg[S05-structured-class SVG] / link:../design/S05-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S05-structured-sequence.svg[S05-structured-sequence SVG] / link:../design/S05-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S05-ddd-class.svg[S05-ddd-class SVG] / link:../design/S05-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S05-ddd-sequence.svg[S05-ddd-sequence SVG] / link:../design/S05-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-structured-class.svg[S06-structured-class SVG] / link:../design/S06-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-structured-sequence.svg[S06-structured-sequence SVG] / link:../design/S06-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-ddd-class.svg[S06-ddd-class SVG] / link:../design/S06-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S06-ddd-sequence.svg[S06-ddd-sequence SVG] / link:../design/S06-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+
+. 为什么唯一索引冲突后要新事务重读？
+. POST201时到底已经承诺什么？客户端超时后如何安全重试？
+. 本地SUCCESS和DENIED为什么用不同事务？
+. 关闭DEBUG后审计还在吗？课程成功但审计未确认能否宣称同事务？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

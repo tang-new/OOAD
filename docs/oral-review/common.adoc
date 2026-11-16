@@ -1,0 +1,96 @@
+= 全员共同任务与阅读基线
+:toc:
+
+link:README.adoc[返回分工总览]。目标是全员能交叉回答；持有全量资料不等于六人重复逐行审查全部源码。
+
+== 本地原始资料：每人持有同一份
+
+原始输入共11个文件，指纹与大小见 link:context-manifest.json[本地上下文清单]。清单只记录文件名、大小和SHA-256，不复制原文、压缩包或图片。
+`.tmp` 仍由根 .gitignore 的 `/.tmp/` 忽略；分发时由成员在本地取得原始资料，不把它们换目录归档入Git。未见正式评分PDF、课堂OOAD PPT原件，列为缺项；需求中的评分转述不等于核对原件。
+
+在仓库根执行 `python tools/review-history.py context` 可只读核对11份输入的大小与指纹；缺失/变化会明确报告，文件一致不表示成员已经阅读。
+
+[cols="2,4",options="header"]
+|===
+|材料 |阅读任务
+|需求文档.md、需求更改.md |逐条读备注，提取考核重点、一期反馈和歧义；空章不是完整需求
+|需求文档-final.md |重点§3–8、14–15、18–22、24–27；理解已确认需求、建议设计与后续细化的差别
+|README.md |理解各原始材料角色；其中旧仓库/阶段描述不是当前代码状态
+|Conversation.md |这是教师课程系统的开发历史。重点定位详细设计、DTO/VO、JPA/领域分离、端口、CloneFactory、TDD、UML修订；历史命令和被撤回方案不可当当前源码
+|projectmgt-code-conventions.zip |读完整SKILL.md及references/review-checklist.md；Apifox同步参考只了解授权边界，不执行老师项目推送
+|uml-class-sequence-diagrams.zip |读完整SKILL.md及references/checklist.md，理解排版和UML语义
+|qm的课程中心的文档.jpg |识别教师单应用双Service示例与我方独立双后端的差异，学习文档组织方式
+|别的小组犯的问题1/2/3.jpg |用作ER、UI/API、分层/JPA/事务/CloneFactory核查线索，不据照片认定本组有缺陷
+|===
+
+== 现行工程共同阅读路线
+
+. link:../../README.md[工程总入口]、link:../requirements.adoc[需求追踪]、link:../implementation-contract.adoc[精确实施合同]、link:../schema-contract.adoc[物理模型合同]。
+. link:../architecture-structured.adoc[结构化架构]与link:../architecture-ddd.adoc[DDD架构]；能够画出依赖方向，解释为何不共享核心算法。
+. link:../final-design.adoc[六组双设计]、link:../design/index.adoc[当前图索引]、link:../defense.adoc[现有口试卡]。图、源码和测试分别核对。
+. link:../test-plan.adoc[验证方法]、link:../final-acceptance.adoc[归档验收]、link:../deployment.adoc[运行边界]、link:../course-integration-contract.adoc[课程接口边界]。
+. link:../iteration-log.adoc[真实迭代]和link:../team-history-integration.adoc[团队历史整合]，理解旧阶段状态、新状态和模拟复现的区别。
+
+一期图/旧SQL只作历史资料。当前物理事实由V1/V2与实际实体核对，不从旧RBAC0/2文件推断二期规则。
+
+== 全员口径
+
+* RBAC0是用户/角色/权限及两类关联；RBAC1加入同系统多父DAG。senior继承junior，菜单树不等于角色图。
+* 用户唯一部门；部门准入不自动授予角色，部门管理范围不等于课程数据scope。迁移只回收本人的非法指派。
+* UI/API分种类；显式映射用于覆盖追踪；前端隐藏不能替代服务端拒绝。
+* 当前是五鉴权加两审计；旧“暂不审计”不再适用。`/auth/*`裸响应与内部管理包装分开。
+* 中心保存身份/密码哈希与集中审计；课程是身份消费者，持有教学对象并检查对象级权限。
+* 两实现共享契约/DDL/纯错误词汇和黑盒夹具；内部角色图、领域规则、应用服务独立。
+* 角色定义/直接角色/有效角色/identityRole不同；全局teacher不等于某课程组长，也不等于CC能力。
+* 实体version管乐观冲突，tokenVersion使旧令牌失效，sys_grant_version管授权写互斥和缓存版本。
+* SUCCESS审计、DENIED审计、Logback日志、数据库COMMIT分别解释；跨系统同步HTTP不是分布式事务。
+* 对外用例/合同/业务结果应一致；包依赖、职责和消息接收者可以不同。DDD更多类不自动更优秀。
+
+== 编码SKILL：每条链都要检查
+
+以下逐项记录“符合/偏离/不适用/待核对”及源码证据，不先填成全部满足：
+
+* 请求格式/长度/枚举/跨字段校验在API边界；Controller不承载业务查询和持久化。
+* 业务规则与事务边界定位清楚；DDD领域规则归实际对象/Policy，应用负责跨对象编排。
+* 输入/命令/领域/持久化/输出边界明确；Map/Views投影是当前实现事实，不能虚构统一VO层。
+* CloneFactory用目标在前的copy调用；同名同型才复制，安全字段排除，领域行为不由复制代替。
+* record accessor、boolean getter、基本类型copyNotNull、浅复制、显式null清空等限制能解释。
+* Lombok、中文Javadoc、无var、代码可读性按实际检查；不能因为SKILL要求就声称源码已使用Lombok。
+* JPA/真实MySQL、联合唯一/FK/CHECK、SQL分页与锁有落点；mapper包不是MyBatis。
+* flush有明确目的：版本响应、约束捕获或事实可见性；不能一律删除，也不能无理由调用。
+* 错误在何处翻译、统一ApiErrors只共享什么、Advice是否包含业务判定，给出真实例子。
+* AOP统一技术日志不打印敏感值；与审计持久化区分；自调用和事务代理边界要能解释。
+* 外部调用看端口、@HttpExchange、基础设施适配、超时与失败拒绝；老师包名/路径/Boot版本/projectId不能照搬。
+* 等价类、边界、异常和真实TDD证据定位到测试断言；源码存在/方法名/覆盖率数字不能替代行为证明。
+
+== UML SKILL：各人核对自己的图
+
+* 类图目标Service居中；名称/属性/操作三分区，接口用«interface»。
+* 对象字段是association并标role；方法参数/局部/静态调用是dependency，依赖线上不加文字。
+* 实现虚线空心三角指向接口；检查框重叠、线穿框、签名溢出与无意义绕线。
+* 顺序图有obj调用者；普通lifeline为objectName: ClassName，静态调用用«MetaClass»。
+* 同步消息实线实心箭头并编号；回复/异常虚线空心箭头不编号；赋值返回不重复画普通回复。
+* 每次独立调用有执行条；同步箭头落执行条顶边入口；自调用执行条从接收点开始。
+* 未捕获异常从实际抛出方返回caller，不能从已结束执行条发出。
+* alt/opt/loop只包实际分支，循环体执行条完整在框内；类和方法必须真实存在。
+* 图源、SVG、PNG与代码版本一致；实际打开PNG，不以生成脚本通过代替目视。
+
+当前图码核对脚本及证据分级见link:../design/verification.adoc[设计核验说明]。本包不重生成既有业务图，不把图校验冒充产品测试。
+
+== 全员技术与GRASP自测
+
+每项都回答“本项目哪一行/哪一个对象用了它、解决什么问题、不负责什么”：
+
+[cols="2,4",options="header"]
+|===
+|主题 |最低回答要求
+|职责分配 |Information Expert、Creator、Controller、Low Coupling、High Cohesion、Polymorphism、Pure Fabrication、Indirection、Protected Variations；不能把所有模式机械塞进每个API
+|DDD与结构化 |领域模型/聚合/值对象/Policy/端口与事务脚本的真实差别，至少说明一次变更的影响范围
+|Java/Spring |Java21、Bean Validation、依赖注入、MVC、事务传播/隔离、AOP代理和自调用
+|持久化 |JPA/EntityManager、Spring Data、乐观/悲观锁、Flyway、MySQL约束；领域对象不等于JPA Entity
+|身份/缓存 |RS256、JWKS/kid、JWT声明、持久撤销；Redis/Caffeine或内存L1、版本失效与受限回源
+|工程工具 |Maven reactor和注解处理器、CloneFactory生成源码、JaCoCo、ArchUnit、共享HTTP测试和归一化
+|界面/部署 |Vue/TS、Pinia/Router、前端权限只是体验；Swarm服务/overlay/secrets、单活动后端及停写切换
+|===
+
+每人准备5分钟主链路、1条互审链和至少3个追问。不能把CloneFactory称为严格GoF Factory Method，也不能只背“低耦合高内聚”而不指实际依赖。

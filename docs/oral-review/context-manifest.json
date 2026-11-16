@@ -1,0 +1,95 @@
+{
+  "format": "rbac1-oral-local-context-v1",
+  "snapshotDate": "2026-11-16",
+  "files": [
+    {
+      "name": "Conversation.md",
+      "bytes": 5030541,
+      "sha256": "f1bf875c25f7119627318ec18d0651a38d8f164829671f109b8fc9bbce636b28",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "projectmgt-code-conventions.zip",
+      "bytes": 9910,
+      "sha256": "0152f618f92b17de86a50529604ac95645b746820c9aa929a50df7a95092a06e",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "qm的课程中心的文档.jpg",
+      "bytes": 171442,
+      "sha256": "a3b24819b32f89d991492ccac3c3dfa2f02ca2fa37a90d9e0f38fcf23c915aab",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "README.md",
+      "bytes": 4352,
+      "sha256": "be8dbbd8ea015347de23130bac3861da6fe6284cebb50d854fcb69ffa198d200",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "uml-class-sequence-diagrams.zip",
+      "bytes": 6332,
+      "sha256": "f85e0a1a8d817cdcf51796b447ceb74c56de2835c364c5a7a5b2eb49d97592bc",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "别的小组犯的问题1.jpg",
+      "bytes": 190656,
+      "sha256": "fc9aae4cefe47d90925aaaa5878dd6b88a5016f5b316f182e8ce58efd7edef1f",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "别的小组犯的问题2.jpg",
+      "bytes": 196428,
+      "sha256": "a302fbd9c153712acf5a25f96b1cd961a784d4fbf727f48b6a98d0ae3c1770ec",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "别的小组犯的问题3.jpg",
+      "bytes": 178155,
+      "sha256": "8dd535ac404dbd4d0447df3ac69b44e0b06fdb534a33523a59e12d45f86f2497",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "需求文档-final.md",
+      "bytes": 155037,
+      "sha256": "372ca78a3d796461b9c02641276cc59fe215e578a2ae03443169b3e3afa17da3",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "需求文档.md",
+      "bytes": 4721,
+      "sha256": "7f62e1fc6e754dd7204ca73b5a48a4b30ef8178b57ea64a086bac6e7c932b377",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    },
+    {
+      "name": "需求更改.md",
+      "bytes": 1842,
+      "sha256": "fd8102b8f12e0c9a685ff59064da5dfee6d2905356399eb2cd5550c3e3366c9a",
+      "usage": "LOCAL_ONLY_NOT_ARCHIVED"
+    }
+  ],
+  "missingOriginals": [
+    "正式OOAD_Grading_2026 V4评分PDF原件",
+    "课堂《面向对象设计》PPT/PDF原件"
+  ],
+  "note": "仅指纹/大小用于组员本地核对；未归档.tmp原文/图片/ZIP，文件清单不是已阅读签字。",
+  "skills": [
+    {
+      "archive": "projectmgt-code-conventions.zip",
+      "read": [
+        "projectmgt-code-conventions/SKILL.md",
+        "projectmgt-code-conventions/references/review-checklist.md"
+      ],
+      "context": "身份消费者规则/包名/脚本/Apifox项目ID不能机械套给中心提供方"
+    },
+    {
+      "archive": "uml-class-sequence-diagrams.zip",
+      "read": [
+        "uml-class-sequence-diagrams/SKILL.md",
+        "uml-class-sequence-diagrams/references/checklist.md"
+      ],
+      "context": "图应表达对应轮次真实代码，生成后实际查看PNG"
+    }
+  ]
+}

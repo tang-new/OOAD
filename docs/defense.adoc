@@ -1,6 +1,8 @@
 = RBAC1 两范式口试卡
 :toc:
 
+团队准备入口：link:oral-review/README.adoc[六人主审与交叉覆盖工作包]，含共同阅读清单、个人任务卡、模拟口试和迭代复现约定。分工索引不代表成员已经完成审查。
+
 设计入口：link:final-design.adoc[当前设计]；图、路径及哈希：link:design/index.adoc[图索引]、link:design/source-index.json[符号索引]。本卡讨论代码。本轮严格编译图核验为 STRICT_COMPILED_CHECKED，绘图器 19 项回归通过（原 7 项 + 显式证据模式 12 项）；m21 本地两版 25+25 场景及 T21 全绿、188 JUnit 全过，当前覆盖指标已回读核对。本地最终双实现 Swarm 已有真实归档；绘图器不是 live probe，本任务未 push。方法名变化以重生成后的索引为准。
 
 == 开场：为什么不是两个换包名的 CRUD

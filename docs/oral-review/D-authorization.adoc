@@ -1,0 +1,100 @@
+= D：有效权限、鉴权决策与缓存一致性
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：E；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+ROLE-02/04/08读取、NFR-01/03、EXT-01 UI/API决定、管理check/explain，UML-S03/S04中心及SIM。
+
+从权威身份/角色/权限事实得到当前允许或拒绝；主审读链与缓存，图写入归C、资源登记归E；汇总双实现黑盒与归一化。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |snapshot/calculate/walk/direct/effective/identities/permission/api/active、L1/L2和权威version；scope/upper等与B/C共享
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.java] |check/explain只归D；UI/API CRUD和映射归E
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/PermissionInterceptor.java[PermissionInterceptor.java] |可信MVC路由、TokenService、中心守卫与先后顺序；E共审目录来源
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java[AuthorizationApplicationService.java] |validate/unavailableReason、effective/stableEffective、api/stableApi、require/upperBound与registered操作
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/AuthorizationPolicy.java[AuthorizationPolicy.java] |calculate/allows/requireWithin、Effective.has/identities、权限集合与来源
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |paths/visit/停用切断/备用路径，写入不变量归C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationReadTransaction.java[AuthorizationReadTransaction.java] |独立Bean REQUIRES_NEW READ_COMMITTED readOnly；为什么不能在写事务机械使用
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/cache/VersionedEffectiveCache.java[VersionedEffectiveCache.java] |Caffeine与Redis键、TTL、序列化、失败回源；不是权威存储
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |version/freshenRead/operation/identity、JPA上下文与事务快照
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/AuthorizationController.java[AuthorizationController.java] |check/explain、管理员资格与模拟目标停用投影
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RegisteredApiInterceptor.java[RegisteredApiInterceptor.java] |已注册操作状态与应用鉴权；Spring permitAll不能代替此入口
+|link:../../tools/acceptance/normalization.mjs[normalization.mjs] |类型化引用/关系/路径/顺序和版本不能随便去噪
+|link:../../tools/acceptance/equivalence.mjs[equivalence.mjs] |只对白名单对称并发比较合法结果集，不能掩盖普通关系差异
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+structured读取：snapshot(user, system) → active → 事务内直接calculate；非事务取MySQL版本→namespace版本键L1/Redis→必要计算→版本复查→缓存。
+
+DDD读取：effective/api → 若外层只读事务则AuthorizationReadTransaction.fresh → stableEffective/stableApi版本括号/必要freshenRead → Policy/graph/缓存；写事务保留未提交事实。
+
+管理模拟：check/explain先认证有权管理员并检查目标范围/状态；停用目标返回正常拒绝，不把管理员身份变成无效。
+
+API决定要把operation.enabled/策略、目标身份和有效权限一起核对；并非只让权限集合缓存新鲜就足够。
+
+== 主审检查项
+
+* [ ] 直接角色/有效角色/权限集合去重，多条来源路径保持可解释，停用中间节点只切对应路径。
+* [ ] UI/API kind、system、identityRole和权限码分别过滤；API的PUBLIC/AUTHENTICATED/PROTECTED与requiredRole/permission不能混同。
+* [ ] 验证签名与当前用户/系统/撤销先于旁路；正常allowed:false、401/403/404/503分层解释。
+* [ ] 版本化键防旧回填；MySQL版本事实、L1/L2 TTL、两实现缓存结构/TTL不同不意味着合同可不同。
+* [ ] 版本复查与只读隔离/持久化上下文分别解决什么；持续不稳定或权威DB不可用不能放行。
+* [ ] 事务内不能消费/回填旧缓存；Redis可受限回源，不能笼统称缓存失败总503或总允许。
+* [ ] 模拟停用目标时的reason/trace/空effective与缺失目标404，不能用管理员401替代。
+* [ ] 共享黑盒每侧独立正确后再比较等价；只排除真实随机值，保留语义关系/分页和路径顺序。
+
+== 数据与职责
+
+sys_grant_version及所有授权事实读取；与A分清tokenVersion/撤销，与C分清角色写锁与闭包读取，与E交接操作策略。
+
+GRASP：Policy掌握集合/判定，图掌握路径，应用掌握加载/版本/缓存编排，Adapter掌握SQL和序列化。汇总测试时区别188JUnit、共享HTTP、stub边界、真实课程与运行部署各自范围，不复用历史报告冒充本次执行。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |dag01–04/09/10/12/14/15、twoJvmImmediateRevocationWithSharedKeysAndPersistentLogout、inactiveTargetProducesDenyWithoutInvalidatingAdministrator
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java[AuthorizationNamespaceTest.java] |同ID/版本不同数据库namespace不能串缓存
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationSecurityRegressionTest.java[AuthorizationSecurityRegressionTest.java] |计算/命中期间版本变更、持续变化503、operation策略改变、缺失身份/操作
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/AuthorizationTokenAudienceTest.java[AuthorizationTokenAudienceTest.java] |未知aud与模拟目标状态，DB故障不伪装凭据错误
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java[RoleHierarchyTest.java] |diamond/disabledCutsPath/alternatePath/directAndInheritedSources
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java[DddSecurityIntegrationTest.java] |inactiveTargetCannotUseAuthenticatedApiThroughCheckOrExplain
+|link:../../tools/acceptance/static.test.mjs[static.test.mjs] |引用/身份/路径/版本/顺序不能被归一化抹掉
+|link:../../tools/acceptance/equivalence.test.mjs[equivalence.test.mjs] |并发合法胜方与实际方向保护
+|===
+
+== 必须准备的场景
+
+* 正常：多角色/传递/菱形及UI/API决定，来源路径正确。
+* 边界：无角色、停用节点、备用路径、未知operation、停用模拟目标、跨system/kind。
+* 并发/故障：两JVM预热后撤权、计算中版本变化、命中中变化、旧回填、持续变化503、Redis宕机和DB不可用。
+
+== 对照图与口试题
+
+* link:../design/S03-structured-class.svg[S03-structured-class SVG] / link:../design/S03-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S03-structured-sequence.svg[S03-structured-sequence SVG] / link:../design/S03-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S03-ddd-class.svg[S03-ddd-class SVG] / link:../design/S03-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S03-ddd-sequence.svg[S03-ddd-sequence SVG] / link:../design/S03-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S04-ddd-policy-sequence.svg[S04-ddd-policy-sequence SVG] / link:../design/S04-ddd-policy-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/SIM-ddd-class.svg[SIM-ddd-class SVG] / link:../design/SIM-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/SIM-ddd-sequence.svg[SIM-ddd-sequence SVG] / link:../design/SIM-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+
+. 旧token为什么不需要等过期才撤权？每次查询最新版本和TTL分别有什么用？
+. 菱形权限只出现一次而来源两条，怎么解释？
+. REQUIRES_NEW、READ_COMMITTED和EntityManager.clear各解决什么，为什么写事务不能照搬？
+. operation策略已改但缓存权限没改，旧策略会造成什么问题？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

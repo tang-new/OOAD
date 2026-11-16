@@ -1,0 +1,94 @@
+= A：身份认证、令牌生命周期与技术日志
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：F；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+ID-02/03/07、EXT-01的登录/退出/本人、NFR-02/06、AUD-04；用户状态与B共审，实时授权与D共审。
+
+从请求身份到可信主体，登录/失败计数/签发/验证/注销/改密；共同解释构建装配和CloneFactory，不承担全项目的业务映射审查。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |login/logout/me/JWKS；UI/API决定及审计方法分别交D/F，不按整个Controller独占
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthenticationService.java[AuthenticationService.java] |login的TransactionTemplate、失败结果、logout/password、externalMe/me投影
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/TokenService.java[TokenService.java] |issue/verify/jwks、PEM密钥与历史kid，验证时读当前用户/系统和持久撤销
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java[BootstrapService.java] |UNINITIALIZED初始化归A；目录/OAS种子核对交E
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/CompatiblePasswordEncoder.java[CompatiblePasswordEncoder.java] |实际bcrypt-sha256编码与旧BCrypt兼容；不要直接从DTO长度推断密码编码边界
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |login/logout/me/password/jwks，rest.principal；审计方法与F分工
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IdentityApplicationService.java[IdentityApplicationService.java] |外层login抛401时机、logout/password编排
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/LoginAttemptApplicationService.java[LoginAttemptApplicationService.java] |attempt持锁、计数/审计提交和返回null；比较结构化流程
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicy.java[LoginAttemptPolicy.java] |locked/evaluate的5次/900秒、到期/成功/停用边界
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/RsaTokenProvider.java[RsaTokenProvider.java] |签发、声明验证、共享密钥/旧key、生产禁止临时密钥
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BcryptCredentialEncoder.java[BcryptCredentialEncoder.java] |与结构化编码器逐项核对；只是观察差异，未判定兼容
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BootstrapInitializer.java[BootstrapInitializer.java] |初始化条件、参数来源和长度规则
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/LayerLoggingAspect.java[LayerLoggingAspect.java] |API/service/mapper切面、异常类别、trace与敏感值
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/TraceFilter.java[TraceFilter.java] |服务端trace生成和MDC清理
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/logging/LayerLoggingAspect.java[LayerLoggingAspect.java] |API/application/infrastructure代理范围与trace生命周期
+|link:../../pom.xml[pom.xml] |Java/BOM/JaCoCo装配；对照两模块POM中CopyProcessor
+|link:../../tools/install-clonefactory.sh[install-clonefactory.sh] |固定上游处理器、注解处理和生成源码，不把生成工具叫GoF工厂方法
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+structured：AuthController.login → AuthenticationService.login → authz.lock/凭据/失败计数/审计 → 事务返回 → TokenService.issue。失败结果要先结束事务，再抛凭据错误。
+
+DDD：IdentityController.login → IdentityApplicationService.login → LoginAttemptApplicationService.attempt → lockLogin/LoginAttemptPolicy/saveLoginState/审计/TokenProvider → 外层失败响应。
+
+后续请求：两版实际拦截器/RestSupport → 验证签名声明 → 实时身份/系统/tokenVersion/jti → D的授权；退出jti持久化、改密tokenVersion与用户状态联查。
+
+== 主审检查项
+
+* [ ] 逐项解释sub/aud/iss/kid/iat/exp/jti/tokenVersion，不能从JWT角色声明推导当前权限。
+* [ ] 追踪5次失败、锁到期、成功清零、并发失败和不存在账号；读事务边界，不能仅背策略常量。
+* [ ] 退出204无body；Redis丢失后MySQL撤销仍有效；改密及停用恢复不能复活旧token。
+* [ ] 核对本人输出只返回当前aud的受控identityRole/UI权限，密码哈希不出VO。
+* [ ] 选择一次页面动作，指出两版API/应用/基础设施日志与事务提交的差别；代理自调用不虚称必被AOP捕获。
+* [ ] 核对生产配置、bootstrap、错误映射与密钥轮换，注意两实现阈值和编码的差异。
+
+== 数据与职责
+
+sys_user的凭据/subject/token_version/失败计数、sys_token_revocation；用户组织字段归B，sys_grant_version及缓存归D协作。
+
+前端只追auth API/http、Pinia身份刷新、Login/Me与退出；构建说明包括Maven reactor、Annotation Processor、生成源码clean和ArchUnit依赖边界。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |identitySevenOperationsAndJwtValidation、loginFailureLockoutAndPasswordRotation、logoutSurvivesRedisRestart、invalidAudienceKidIssuerIssuedAtAreRejected、previousPublicKeyRemainsVerifiableUntilTokenExpires
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/PasswordBoundaryTest.java[PasswordBoundaryTest.java] |differentPasswordsAfterByte72RemainDifferent、existingBcryptHashesAreNotResetOrReinterpreted
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/infrastructure/RsaTokenProviderTest.java[RsaTokenProviderTest.java] |真实RSA、单aud、声明/轮换/PEM不匹配；不能用mock签名代替
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/LoginAttemptPolicyTest.java[LoginAttemptPolicyTest.java] |第五次、900秒、锁到期、成功/停用
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java[DddSecurityIntegrationTest.java] |concurrentFailuresPersistLockAndCorrectLoginCannotBypassItAfterServiceReconstruction
+|link:../../tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java[CloneFactoryTest.java] |真实生成copy/copyNotNull/Exclude与浅拷贝语义
+|link:../../rbac-web/tests/auth.spec.ts[auth.spec.ts] |登录刷新、权限替换、退出；前端辅助阅读
+|===
+
+== 必须准备的场景
+
+* 正常：登录两个目标系统，核对裸响应和同一subject；退出与改密。
+* 等价/边界：正确/错误/不存在/停用账号、单aud/多aud、过期/未来iat、密码长度和初始化参数。
+* 异常：撤销持久化、未知kid、错误签名、DB/审计失败；说明会提交和会回滚的事实。
+
+== 对照图与口试题
+
+* link:../design/LOGIN-ddd-class.svg[LOGIN-ddd-class SVG] / link:../design/LOGIN-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/LOGIN-ddd-sequence.svg[LOGIN-ddd-sequence SVG] / link:../design/LOGIN-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+
+. 登录失败抛401为什么不会总把计数回滚？两实现在哪一层抛？
+. JWT签名没过期，为何退出/改密后仍必须拒绝？
+. CloneFactory生成于何时？为什么copyNotNull不能一概处理PATCH？
+. AOP记录方法正常返回，为什么不能证明事务已提交？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

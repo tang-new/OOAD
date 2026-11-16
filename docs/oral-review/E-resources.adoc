@@ -1,0 +1,103 @@
+= E：权限资源、API映射与接入运行边界
+:toc:
+
+link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：D；初始人工状态：NOT_STARTED。
+
+== 需求与范围
+
+ID-01、RES-01–06、EXT-03–07、UI-01–06与NFR-05/07；只全面审查我方权限资源和接入边界，课程业务不纳入全面审查。
+
+系统、权限目录、菜单/按钮、API操作、显式映射、路由覆盖和私有投影；网关/前端/部署只做辅助深度并汇总演示。
+
+== 两版源码阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |systems/createSystem/renameSystem/systemStatus、permissions/createPermission/permissionStatus
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.java] |ui/menus/saveUi/patchUi/deleteUi、apis/saveApi/patchApi、mappings/replaceMappings；check交D
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java[RouteRegistry.java] |读取OAS构建安全元数据，WebConfig/BootstrapService启动双向核对
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |systems/system方法；组织/用户归B、角色删除归C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java[ResourceApplicationService.java] |菜单/API/权限/映射用例、PATCH合并及保护中心操作
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ResourcePolicy.java[ResourcePolicy.java] |validate/visible/patch、父子和映射规则
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaResourceRepositoryAdapter.java[JpaResourceRepositoryAdapter.java] |sys+kind权限定位、显式映射、分页/保存和UiState转换
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/OpenApiOperationContract.java[OpenApiOperationContract.java] |现行OAS→OperationContract
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/config/RouteContractVerifier.java[RouteContractVerifier.java] |实际Controller路由与持久目录对齐
+|link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java[IntegrationIdentityService.java] |authorities/lookup：Bearer之外服务密钥、API-only及TEC/admin最小投影
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationService.java[IntegrationIdentityApplicationService.java] |相同私有契约的独立实现
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/RouteRegistry.java[RouteRegistry.java] |辅助：method/path到唯一operationId，静态段优先和歧义拒绝
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/AuthBoundary.java[AuthBoundary.java] |辅助：仅契约200且allowed真实有效才转发
+|link:../../rbac-gateway/src/main/java/com/xmu/rbac/gateway/ProxyClient.java[ProxyClient.java] |辅助：固定上游、头白名单、不跟随重定向及课程对象级响应
+|link:../../course-integration/README.md[README.md] |只理解全局/对象权限、真实CC和审计窗口，不接管教学业务
+|link:../../docker-compose.yml[docker-compose.yml] |七服务、单活动后端、只发布边缘端口
+|link:../../deploy/full-stack.sh[full-stack.sh] |受控停写切换与资源保留；不实际部署
+|link:../../tools/generate-rbac1-contract.py[generate-rbac1-contract.py] |OAS/DDL/种子/课程目录与UI覆盖生成关系，不随意手改生成物
+|===
+
+== 预填调用链：阅读后核对，不代替结论
+
+资源配置：对应Controller → Management/Resource事务脚本，或Directory/Resource应用服务→ResourcePolicy→ResourceRepository→JPA；版本/审计协作。
+
+用户菜单：当前身份/有效UI权限 → menus或ResourcePolicy.visible → 裁剪树；父容器展示不能赋予子按钮。
+
+入口覆盖：OAS → RouteRegistry/OperationContract → MVC路由/DB目录核验；网关可信method/path → operationId → D的中心决定 → 原课程Service对象规则。
+
+课程私有投影：可信Bearer + 服务密钥 → API-only/ROLE_受控身份；lookup再验TEC/admin；公开边缘阻断私有路径。
+
+== 主审检查项
+
+* [ ] 两类权限同名也按system+kind定位，缺引用404且不得生成意外元数据。
+* [ ] 菜单树、BUTTON父约束、停用父节点、环/孤儿、排序及可空字段PATCH。
+* [ ] 映射多对多但只追踪；API策略独立，中心受保护路由不得弱化或改成不存在路径。
+* [ ] OAS、实际Controller和持久目录双向对应，不能只做正向匹配；新受保护路由默认拒绝。
+* [ ] 私有authorities不是把auth/me变成完整API能力清单；服务密钥和Bearer缺一不可，最小身份字段不泄露凭据。
+* [ ] copyCourse全局teacher与本课程组长/非组长CC分别负责什么；课程对象级403保留原职责。
+* [ ] 辅助检查前端各页/按钮符合需求，隐藏后直接HTTP仍拒绝；不深挖样式实现。
+* [ ] 同前端MODULE切换、七服务、网络/secrets、镜像/报告身份、本地与外部证据分界；不执行部署。
+
+== 数据与职责
+
+sys_system、sys_permission、sys_ui_resource、sys_api_operation、sys_ui_api_mapping；种子按系统/角色/权限码对照，不能把菜单/API映射当赋权。
+
+E汇总API、页面和部署证据，不代替其他成员读自己接口；与D互审中心决定。课程完整上游缓存不进入逐文件主审清单，保留老师系统边界和来源即可。
+
+== 测试阅读入口
+
+[cols="2,5",options="header"]
+|===
+|定位 |要阅读的具体责任
+|link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |routeRegistryMatchesImplementedHttp、uiAndApiAreIndependentWithExplicitMappings、copyCourseRequiresTeacherWithoutMakingCcGloballyMandatory
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/ResourcePolicyTest.java[ResourcePolicyTest.java] |父菜单/按钮、停用祖先、环、删除、同系统/kind
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/UiPatchBoundaryTest.java[UiPatchBoundaryTest.java] |省略/显式null、真正生成的copy、安全ID
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/application/IntegrationIdentityApplicationServiceTest.java[IntegrationIdentityApplicationServiceTest.java] |API-only、服务密钥、TEC/admin、最小身份、缺失/删除
+|link:../../rbac-gateway/src/test/java/com/xmu/rbac/gateway/GatewayHttpTest.java[GatewayHttpTest.java] |真实HTTP边界：身份错误、非200、超时、头/路由伪造；不当真实课程业务证据
+|link:../../tools/acceptance/suite.mjs[suite.mjs] |RES-03、EXT-03、私有投影、跨aud和停用系统
+|link:../../rbac-web/e2e/console.spec.ts[console.spec.ts] |真实页面J01/J02，PC/手机×双实现；看已加载内容断言
+|link:../../deploy/full-config-test.py[full-config-test.py] |配置/隔离/门槛静态与脚本测试；不当Swarm运行证明
+|===
+
+== 必须准备的场景
+
+* 正常：系统/权限资源登记、菜单显示、API映射、同前端切两后端。
+* 等价/边界：有UI无API、有API无UI、同字符串不同kind、缺引用、空映射、显式null和省略。
+* 异常：中心路由弱化、未知/歧义路由、假operationId头、服务密钥错误、中心超时、全局允许后课程对象拒绝。
+
+== 对照图与口试题
+
+* link:../design/S04-structured-class.svg[S04-structured-class SVG] / link:../design/S04-structured-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S04-structured-sequence.svg[S04-structured-sequence SVG] / link:../design/S04-structured-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/S04-ddd-class.svg[S04-ddd-class SVG] / link:../design/S04-ddd-class.png[PNG]；核对图源和当前实际方法。
+* link:../design/S04-ddd-sequence.svg[S04-ddd-sequence SVG] / link:../design/S04-ddd-sequence.png[PNG]；核对图源和当前实际方法。
+* link:../design/swarm-deployment.svg[swarm-deployment SVG] / link:../design/swarm-deployment.png[PNG]；核对图源和当前实际方法。
+
+. 菜单与API既然关联，为何不能根据有菜单就允许API？
+. 如何证明新增Controller没有漏登记，反方向又怎么检查？
+. 全局teacher有权进入copyCourse，为什么还要CC或课程组长判断？
+. 同一服务名切换两个后端，哪些东西保持不变、哪些必须重新验证？
+
+== 本卡交付与互审
+
+按link:review-card.adoc[统一审查卡]记录需求、两版实际链路、表与约束、事务/异常、测试、图、GRASP、问题及互审结论。
+同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
+每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
+本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。

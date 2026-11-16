@@ -1,0 +1,117 @@
+= 中心64操作：链路责任表
+:toc:
+
+link:README.adoc[总览] / link:source-map.adoc[源码与共享方法] / link:coverage.json[机器清单]。
+
+直接从link:../../rbac-contract/src/main/resources/openapi/rbac-api.yaml[现行中心OAS]读取方法、路径和operationId；不依赖页面图册的旧快照。每项只设一名主责，协作人按接口衔接复核，全部初始NOT_STARTED。
+五身份鉴权分布于A/D、两审计归F；私有投影E、管理资源E、有效权限读取D。健康/info由E汇总运行边界、A说明装配，不据UP声称业务通过。
+
+== A（6操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|POST |`/auth/login` |`login` |F
+|POST |`/auth/logout` |`logout` |F
+|GET |`/auth/me` |`getIdentityCurrentUser` |D/F
+|GET |`/api/v1/me` |`getMe` |D/F
+|POST |`/api/v1/auth/password` |`changePassword` |F
+|GET |`/.well-known/jwks.json` |`getJwks` |F
+|===
+
+== B（17操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|GET |`/api/v1/departments/tree` |`getDepartmentTree` |C
+|POST |`/api/v1/departments` |`createDepartment` |C
+|PATCH |`/api/v1/departments/{id}` |`updateDepartment` |C
+|DELETE |`/api/v1/departments/{id}` |`deleteDepartment` |C
+|GET |`/api/v1/departments/{id}/assignable-roles` |`getDepartmentAssignableRoles` |C
+|PUT |`/api/v1/departments/{id}/assignable-roles` |`replaceDepartmentAssignableRoles` |C
+|GET |`/api/v1/users` |`listUsers` |A/C/D
+|POST |`/api/v1/users` |`createUser` |A/C/D
+|GET |`/api/v1/users/{id}` |`getUser` |A/C/D
+|PATCH |`/api/v1/users/{id}` |`updateUser` |A/C/D
+|DELETE |`/api/v1/users/{id}` |`deleteUser` |A/C/D
+|PUT |`/api/v1/users/{id}/status` |`setUserStatus` |A/C/D
+|PUT |`/api/v1/users/{id}/department` |`changeUserDepartment` |A/C/D
+|GET |`/api/v1/users/{id}/role-assignments` |`listUserRoleAssignments` |A/C/D
+|POST |`/api/v1/users/{id}/role-assignments` |`createUserRoleAssignment` |A/C/D
+|DELETE |`/api/v1/users/{id}/role-assignments/{assignmentId}` |`deleteUserRoleAssignment` |A/C/D
+|GET |`/api/v1/dashboard` |`getDashboard` |C
+|===
+
+== C（11操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|GET |`/api/v1/roles` |`listRoles` |B/D
+|POST |`/api/v1/roles` |`createRole` |B/D
+|GET |`/api/v1/roles/{id}` |`getRole` |B/D
+|PATCH |`/api/v1/roles/{id}` |`updateRole` |B/D
+|DELETE |`/api/v1/roles/{id}` |`deleteRole` |B/D
+|PUT |`/api/v1/roles/{id}/status` |`setRoleStatus` |B/D
+|GET |`/api/v1/roles/{id}/permissions` |`getRolePermissions` |B/D
+|PUT |`/api/v1/roles/{id}/permissions` |`replaceRolePermissions` |B/D
+|GET |`/api/v1/systems/{code}/role-hierarchy` |`getRoleHierarchy` |B/D
+|POST |`/api/v1/roles/{seniorId}/inherits/{juniorId}` |`addRoleInheritance` |B/D
+|DELETE |`/api/v1/roles/{seniorId}/inherits/{juniorId}` |`deleteRoleInheritance` |B/D
+|===
+
+== D（6操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|GET |`/auth/permissions/{permission}` |`checkIdentityPermission` |A/E
+|GET |`/auth/api-permissions/{operationId}` |`getApiAuthority` |A/E
+|GET |`/api/v1/roles/{id}/effective-permissions` |`getRoleEffectivePermissions` |C/E
+|GET |`/api/v1/users/{id}/systems/{code}/permissions` |`getUserEffectivePermissions` |A/E
+|POST |`/api/v1/authorization/check` |`checkAuthorization` |A/E
+|POST |`/api/v1/authorization/explain` |`explainAuthorization` |A/E
+|===
+
+== E（21操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|GET |`/api/v1/systems` |`listSystems` |A/D
+|POST |`/api/v1/systems` |`createSystem` |A/D
+|PATCH |`/api/v1/systems/{id}` |`updateSystem` |A/D
+|PUT |`/api/v1/systems/{id}/status` |`setSystemStatus` |A/D
+|GET |`/api/v1/permissions` |`listPermissions` |A/D
+|POST |`/api/v1/permissions` |`createPermission` |A/D
+|PUT |`/api/v1/permissions/{id}/status` |`setPermissionStatus` |A/D
+|GET |`/api/v1/systems/{code}/ui-resources` |`getUiResources` |A/D
+|POST |`/api/v1/systems/{code}/ui-resources` |`createUiResource` |A/D
+|PATCH |`/api/v1/ui-resources/{id}` |`updateUiResource` |A/D
+|DELETE |`/api/v1/ui-resources/{id}` |`deleteUiResource` |A/D
+|GET |`/api/v1/menus/me` |`getMyMenus` |A/D
+|GET |`/api/v1/systems/{code}/api-operations` |`listApiOperations` |A/D
+|POST |`/api/v1/systems/{code}/api-operations` |`createApiOperation` |A/D
+|PATCH |`/api/v1/api-operations/{id}` |`updateApiOperation` |A/D
+|GET |`/api/v1/systems/{code}/ui-api-mappings` |`getUiApiMappings` |A/D
+|PUT |`/api/v1/systems/{code}/ui-api-mappings` |`replaceUiApiMappings` |A/D
+|GET |`/integration/authorities` |`getIntegrationAuthorities` |A/D
+|GET |`/identity/users/{userId}` |`lookupUnifiedIdentityUser` |A/D
+|GET |`/api/v1/actuator/health` |`getHealth` |A/D
+|GET |`/api/v1/actuator/info` |`getInfo` |A/D
+|===
+
+== F（3操作）
+
+[cols="1,4,3,1",options="header"]
+|===
+|方法 |路径 |operationId |协作
+|GET |`/auth/audit-logs` |`queryIdentityAuditLogs` |A
+|POST |`/auth/audit-logs` |`writeIdentityAuditLog` |A
+|GET |`/api/v1/audit-logs` |`queryAuditLogs` |A
+|===
+
+== 课程API范围
+
+教师快照87操作中7个是中心提供方协议，80个是课程业务；E了解目录和全局/对象授权边界，不把80个课程Service分给本组全面审查。接口路径/入参/响应以OAS和实施合同为准，不从此分工表修改产品API。

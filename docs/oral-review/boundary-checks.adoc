@@ -1,0 +1,49 @@
+= 双实现边界核对参考：静态观察，尚非缺陷结论
+:toc:
+
+link:README.adoc[分工总览]。以下从当前源码定位差异，目的是帮助成员读代码和应对追问。本轮没有为这些差异新增或运行产品测试，也没有判定全部违反合同；既有正常场景通过不能自动证明所有边界等价。
+先查现行实施合同/OAS、再查两版实际HTTP/DB行为和既有断言。只登记结论及证据，不在本轮自动修复、放宽断言或改历史报告。
+
+== A：密码、初始化与令牌时间
+
+[cols="2,3,3",options="header"]
+|===
+|观察 |structured / DDD源码事实 |由A/F准备的核对问题
+|密码编码 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/config/CompatiblePasswordEncoder.java[CompatiblePasswordEncoder]新编码带bcrypt-sha256前缀并兼容旧BCrypt；link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BcryptCredentialEncoder.java[BcryptCredentialEncoder]使用直接BCrypt |长口令与已有两种哈希的匹配、切换后端时凭据兼容，覆盖了哪侧测试？不能由两侧均能登录短测试口令推出完全兼容
+|引导参数 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java[BootstrapService]检查至少8字符；link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/BootstrapInitializer.java[BootstrapInitializer]检查至少12字符，读取配置位置也不同 |8/11/12边界、部署实际注入、既有root是否被重置分别是什么合同；运行配置与应用默认读取不能混同
+|iat容忍 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/TokenService.java[TokenService.verify]拒绝未来iat；link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/identity/RsaTokenProvider.java[RsaTokenProvider.verify]含约30秒未来容忍判断 |接近当前时间的正/负偏移、声明校验与JJWT默认过期检查，OAS/测试规定到什么精度
+|失败计数 |两版AuthenticationService.login与LoginAttemptPolicy.evaluate对失败次数和锁定字段的保存方式不同 |最终HTTP合同、并发第五次、到期恢复、失败审计副作用是否一致；内存字段不一样不直接当作外部错误
+|===
+
+== B/C：状态、重复操作与上界
+
+* link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.userStatus]与link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java[User.changeStatus]对已经DELETED目标的重复操作检查不同；先查DELETE与PUT状态合同，分别记重复删除、恢复及tokenVersion结果。
+* structured `changedUpper`遍历受影响的上级角色；DDD `RoleApplicationService.status/permissions/link`通过领域图和应用上界处理。需要具体说明提议闭包、操作者变更前快照、受影响角色范围，不能仅说“两侧都调upper所以相同”。
+* structured `preserveAdministrator`与DDD `GrantIntegrityService/LastAdministratorPolicy`读取的有效管理员事实及组织/准入条件需逐项对齐；调用顺序和实际保护语义分别记录。
+* 删除角色、撤销指派、部门调动是不同操作；重复/缺失ID和关联清理需要比较HTTP码及最终DB，不用同名Controller方法推断同义。
+
+参考link:C-role-graph.adoc[C卡]和link:B-directory.adoc[B卡]中对应测试，不扩大为本轮修复。
+
+== D/E：操作策略、PATCH与集合
+
+* link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.saveApi/patchApi]与link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java[ResourceApplicationService.operation/patchOperation]保护中心OAS操作的比较项不完全相同；分别定位enabled、policy、requiredRole、permission、路径以及启动核验。检查“允许修改但运行拒绝”与“禁止修改”的合同口径。
+* UI/API PATCH的字段presence、必填字段显式null、可空关联清空、默认合并位置不同；实际HTTP响应和DB结果才是对照对象。
+* structured映射替换使用去重集合，DDD映射用例显式拒绝重复；分别核对重复映射、空集合、集合数量上限和元素校验的声明与测试。
+* structured `snapshot`与DDD `stableEffective/stableApi`的版本括号、身份重读、缓存回填复查和事务隔离不同。说明各自如何满足即时撤权，不能把同一时序图换包名给两版。
+* 管理check/explain的停用目标正常拒绝与真正认证失败分开；已有SIM图及专项测试只证明其覆盖的输入，不替代所有策略/缓存交错。
+
+== F：审计载荷、精度与拒绝覆盖
+
+[cols="2,3,3",options="header"]
+|===
+|观察 |源码入口 |核对任务
+|JSON白名单 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java[AuditService.SAFE/safe]、link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java[AuditApplicationService.SAFE/canonical]集合并不完全相同 |选择各自独有字段，先查当前允许的课程载荷/合同，再比较两版结果；不直接扩大白名单
+|大小/深度/形态 |结构化有显式递归深度、顶层对象和总规范化字节限制；DDD在canonical中按节点序列化长度和数组/文本大小限制 |对象/数组/null、ASCII/多字节、嵌套边界，分清字符/字节计数，记录规范化是否影响幂等摘要
+|时间与UUID |结构化record与DDD AuditFact截毫秒，requestId的进入/恢复处理位置不同 |POST→重放→GET[at,at]和UUID大小写/规范化的实际合同与既有精度断言
+|DENIED入口 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/GlobalExceptionHandler.java[GlobalExceptionHandler]包含401/403/409；link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/ApiExceptionAdvice.java[ApiExceptionAdvice]拒绝审计分支是401/403 |哪些失败真正被记录、actor如何取得、审计不可用如何响应；方法存在不是覆盖证明
+|===
+
+== 记录格式
+
+每项写“源码观察→合同依据→既有测试具体断言→是否本次运行→结论/待核对”，附两版路径/方法和版本。
+结论可为实现取舍、允许的差异、需要补充依据、待复验或确认问题；没有运行证据时不要写本次验证通过。

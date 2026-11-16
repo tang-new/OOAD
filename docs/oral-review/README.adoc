@@ -1,0 +1,81 @@
+= 第二阶段验收口试：六人审查工作包
+:toc: left
+
+采用“全员掌握整体 + 每人主审完整链路 + 两人互审 + 跨组串讲”。A–F 为匿名职责编号，F 兼任迭代复现者。每人同时审查 structured 和 DDD，不按后端拆人。
+本包落实已确认的分工方案，提供源码定位、接口/表责任矩阵、检查任务、口试题和记录模板。它不是六位成员已经完成审查的报告。
+源码定位基线为 `84685b722c2117f1944e780b69f217d10e99f158`；代码或合同变化后重新检查索引。现有测试证据仅作为归档引用，本轮未重新运行产品测试或部署。
+
+== 开始顺序
+
+. 全员阅读 link:common.adoc[共同任务与两个 SKILL 检查单]，核对本地原始上下文是否齐全。
+. 各人领取下表的个人任务卡，按“需求→接口→两版实现→存储→测试→图”阅读；link:source-map.adoc[完整源码分工索引]帮助定位全部文件。
+. 使用 link:review-card.adoc[审查卡模板]记录实际结论，空白和 NOT_STARTED 不能当作签字。
+. 完成 link:cross-review.adoc[互审与跨组串讲]；F 另按 link:iteration-replay.adoc[复现与 Git 记录约定]开展工作。
+. link:boundary-checks.adoc[双实现边界核对参考]只列待核对事项，不扩展成本轮修复任务。
+
+== 主审、互审与工作量
+
+[cols="1,3,1,3",options="header"]
+|===
+|成员 |主审链路 |互审伙伴 |核心交付
+|link:A-identity.adoc[A] |身份认证、令牌、技术日志、构建/映射技术说明 |F |登录/退出/改密、LOGIN、三层日志及身份边界
+|link:B-directory.adoc[B] |用户、组织、部门准入、指派与调动 |C |S02、组织管理范围、调动回收与数据库分页
+|link:C-role-graph.adoc[C] |角色、直接权限、继承图写入、管理员保护 |B |S01、状态图、并发验环、删除与上界
+|link:D-authorization.adoc[D] |有效权限、运行时决策、缓存和一致性 |E |S03、S04中心决策、SIM、即时撤权
+|link:E-resources.adoc[E] |系统/权限资源、映射、接入及运行边界 |D |资源闭环、路由覆盖、S04接入、配置切换
+|link:F-audit.adoc[F] |同步审计；兼任迭代复现者 |A |S05、S06审计部分、复现材料及真实提交索引
+|===
+
+A–E 按完整链路安排约等量工作。F 的源码主审量按普通成员约三分之二控制，其余精力用于复现与记账；这是任务量目标，不是已经测量的工时。
+F 不包办全部 UML、日志、测试平台和部署。各链路负责人核查自己的审计调用点，F 负责公共审计语义；F 对 A 的备份限于身份协议和事务，不要求复查全部密码学实现。
+
+== 链路之间的交接
+
+身份 A → 运行时决策 D → 接入边界 E；组织指派 B、角色图 C、权限资源 E 提供授权事实；敏感操作将审计事实交 F。
+同一文件可属于多人。结构化 ManagementService、AuthorizationService 以及 DDD DirectoryApplicationService/AuthorizationRepository 需要按方法划界，不能按目录独占。
+DDD 角色删除位于目录服务；有效权限计算同时使用角色图和权限事实。完整方法交接见 link:source-map.adoc[共享方法分工]。
+
+[cols="2,2,3",options="header"]
+|===
+|公共内容 |汇总人 |原始责任仍归属
+|ER/表关系 |B |各人负责本链路表；用户凭据 A/B，角色关联 B/C，授权版本 C/D，审计 F
+|OpenAPI/路由覆盖 |E |各人负责自己操作；link:api-matrix.adoc[64操作责任表]
+|CloneFactory/JPA/事务/错误转换 |A |每人指出自己链路的真实代码，不以公共说明代替检查
+|双实现测试等价/归一化 |D |各人阅读本链路断言、夹具、DB后置条件
+|UML/版本索引 |F协调 |各主审人核对自己的两版图，实际打开PNG
+|页面与完整演示 |E |页面随链路分配，重点核对需求和权限效果
+|部署/CI/覆盖率 |E |A解释构建日志，D解释测试与覆盖机制；不把旧报告称为本次运行
+|===
+
+== 推进门槛
+
+[cols="1,4",options="header"]
+|===
+|轮次 |通过条件
+|共同建立全貌 |六人持有同版资料，能够解释范围、模块、RBAC1与两个SKILL；缺失原件明示
+|主审 |两版调用链、数据关系、输入输出、事务/异常、测试断言、UML和GRASP全部有记录
+|交叉复核 |伙伴无提示定位两版入口并讲解正常/异常分支；三条跨组链串通；疑问有证据
+|模拟口试 |随机抽人/API/图/异常，能从需求定位源码并解释职责取舍；每人准备5分钟主讲、互审链和至少3个追问
+|===
+
+不以天数替代完成门槛。实际进度和签字保存在审查卡；本包各人的初始状态均为 NOT_STARTED。
+
+== 工具与范围
+
+[source,shell]
+----
+python tools/review-history.py check
+python tools/review-history.py context
+python tools/review-history.py history
+python tools/review-history.py history --member F --format json
+----
+
+`check` 只核对分工清单、源码路径/共享方法、现行OAS操作、DDL表及本包链接，不验证业务、不代签人工审查。
+`context` 只核对11份本地原始资料的大小和SHA-256，区分缺失/变化/一致；不复制材料，不表示成员已读。
+`history` 默认汇总基线之后至HEAD的真实已提交变化，输出到标准输出，不执行commit/push或历史改写；没有新提交时明确返回空记录。
+完整源码清单及结构化数据见 link:coverage.json[coverage.json]；更新方式和脚本限制见 link:iteration-replay.adoc[复现约定]。
+本次实际检查与工具回归结果见 link:verification.adoc[工作包核验记录]；人工状态与产品验收分别记账。
+
+课程业务不属于全面审查范围；了解其身份、全局/对象授权、同步审计及部署边界即可。网关/前端采用辅助深度，不深挖样式或教学领域实现。
+本包不修改产品API、数据模型、业务实现或部署状态，不执行模拟历史，不自动扩大为问题修复。
+详细业务图入口是 link:../final-design.adoc[当前双范式设计]；link:../../diagrams/phase2/index.html[二期总体图册]用于建立全貌，link:../../diagrams/phase1/README.md[一期图表]只作历史对照。
