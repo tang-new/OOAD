@@ -20,6 +20,8 @@ public interface AuthorizationRepository {
 
     List<Permission> permissions(String systemCode);
 
+    List<Permission> permissions(Set<Long> ids);
+
     Set<Long> assignments(long userId, String systemCode);
 
     Role role(long id);

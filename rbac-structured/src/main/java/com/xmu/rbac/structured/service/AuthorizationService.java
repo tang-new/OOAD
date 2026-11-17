@@ -273,10 +273,19 @@ public class AuthorizationService {
             throw BizException.forbidden("PRIVILEGE_ESCALATION");
         if (captured == null ? superAdmin(a) : captured.superAdmin)
             return;
-        if (proposed.roles.stream()
-                .map(id -> require(Role.class, id))
-                .anyMatch(r -> Boolean.TRUE.equals(r.builtin) && "SUPER_ADMIN".equals(r.code)))
-            throw BizException.forbidden("PRIVILEGE_ESCALATION");
+        // 特殊能力检查不因停用节点切断，防止预埋继承边等待恢复。
+        Set<Long> seen = new HashSet<>();
+        Deque<Long> pending = new ArrayDeque<>(proposed.direct);
+        while (!pending.isEmpty()) {
+            Long id = pending.pop();
+            if (!seen.add(id))
+                continue;
+            Role role = require(Role.class, id);
+            if (Boolean.TRUE.equals(role.builtin) && "SUPER_ADMIN".equals(role.code))
+                throw BizException.forbidden("PRIVILEGE_ESCALATION");
+            for (RoleHierarchy edge : db.where(RoleHierarchy.class, "e.seniorRoleId=?1", id))
+                pending.push(edge.juniorRoleId);
+        }
         Snapshot own = captured == null
             ? snapshot(a.userId(), code)
             : captured.systems.getOrDefault(

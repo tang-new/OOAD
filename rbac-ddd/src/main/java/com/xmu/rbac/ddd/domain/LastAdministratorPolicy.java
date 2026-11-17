@@ -2,7 +2,7 @@ package com.xmu.rbac.ddd.domain;
 
 import java.util.Collection;
 
-/** 最后有效超级管理员是可用性不变量，不能经任何授权变更间接破坏。 */
+/** 输入限于具有根部门管理资格及角色准入的用户，保护最后可用超级管理员。 */
 public final class LastAdministratorPolicy {
     public void requireAvailable(
             boolean systemEnabled, Collection<AuthorizationPolicy.Effective> activeUsers) {

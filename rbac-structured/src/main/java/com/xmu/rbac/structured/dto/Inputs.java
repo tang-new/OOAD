@@ -76,7 +76,7 @@ public final class Inputs {
         public boolean supplied(String field) {
             return present.contains(field);
         }
-        @Size(min = 1, max = 128) private String name;
+        @Size(min = 1, max = 128) @Pattern(regexp = "(?s).*\\S.*") private String name;
         public String name() {
             return name;
         }

@@ -16,6 +16,7 @@ DTO禁止未知字段，格式校验在HTTP输入层；输出VO不返回密码/�
 
 未声明返回VO的mutation严格返回包装中的 `data:null`，不把内部服务返回列表/实体误当协议输出。
 User/Role的version是实际持久化乐观版本，新建从0起，响应前须flush使其与数据库一致；subject是创建前生成的稳定不透明标识，不依赖数字主键且不可改写。
+角色直接权限替换按原始请求数组限制最多1000项；范围内重复ID去重，空数组清空。角色PATCH省略name保持原值，提供name须含非空白字符；description显式null清空，version为非负数。
 permissionCode按当前system和目标kind查找；该类型引用不存在返回404 `PERMISSION_NOT_FOUND`（即使另一个kind/系统存在同字符串），且不得产生任何新元数据记录。
 对外错误由 `rbac-contract` 的纯协议 `ApiErrors` 定义，REST边界投影，不约束DDD内部原因名：
 认证身份无效 `UNAUTHENTICATED`，登录口令错误 `INVALID_CREDENTIALS`，格式/分页/审计输入错误 `VALIDATION_ERROR`，
@@ -118,8 +119,10 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 . 组织管理范围：中心管理权限 + actor当前部门子树；总部根部门覆盖全部。权限计算不再带部门数据scope。
 . 直接指派必须在目标用户当前部门的DepartmentAllowedRole清单内，即使超级管理员也要满足；引导root的SUPER_ADMIN准入在种子中明确建立。
 . 非超级管理员不能赋予或改出自己在目标系统没有的有效权限及identityRole标记，改继承前按完整新闭包检验提升。中心管理入口资格与目标系统授权上界分开读取。系统级共享定义（系统/角色/权限/继承/UI/API）的写操作还要求操作者所属根部门；部门管理员只管理子树人员、准入和指派，不能借共享角色影响范围外人员。
+角色直接权限替换、加继承边及重新启用均检查自身与全部受影响上级的最终闭包，操作者上界取保存前事实。特殊SUPER_ADMIN可达性检查不因停用节点切断，避免预埋恢复能力。
 . RoleHierarchy同系统senior→junior，停用节点切断路径；系统行/授权版本行排他锁串行化所有图写，避免并发成环。版本与授权/状态/映射变更同本地事务提交。
 . 移部门先锁用户，校验原/新管理范围，更新部门并回收不准入指派；不改共享角色权限。保护最后有效SUPER_ADMIN，不能经停用用户/角色/准入/删除间接锁死。
+受保护的最后管理员须同时具备根部门管理资格、SUPER_ADMIN角色准入、活动用户状态和有效超级管理员能力；存在其他合格管理员时允许迁移。
 . 用户/系统/令牌状态先于角色快照。MySQL授权版本每次读；L1短期内存+L2 Redis均以system+user+version命名；读写事务不回填。Redis故障可受限直查DB，不能用不确定旧权限放行。
 . JWT RS256，稳定sub、单一aud、iss、iat、exp、jti、kid和tokenVersion；无角色权限claim。生产必须配置可共享私钥/公钥及kid；测试可独立生成，公钥JWKS可轮换保留旧kid。
 . TokenRevocation在MySQL持久化，Redis只是加速；数据库不可用则503，不因Redis重启让已注销token复活。

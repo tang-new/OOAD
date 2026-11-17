@@ -119,14 +119,9 @@ public class RoleApplicationService {
             List<Role> updated = new ArrayList<>(original.roles());
             updated.removeIf(r -> r.id() == id);
             updated.add(role);
-            authorization.upperBound(
-                    actor,
-                    role.systemCode(),
-                    policy.calculate(
-                            role.systemCode(),
-                            Set.of(id),
-                            new RoleHierarchy(updated, original.edges()),
-                            repository.permissions(role.systemCode())));
+            requireAffectedGrants(
+                    actor, new RoleHierarchy(updated, original.edges()), role,
+                    repository.permissions(role.systemCode()));
         }
         Role saved = repository.saveRole(role);
         complete(actor, role.systemCode(), "ROLE_STATUS_CHANGED", role.code());
@@ -141,21 +136,14 @@ public class RoleApplicationService {
         Role role = repository.role(id);
         authorization.requireRoleManagement(actor, role);
         List<Permission> all = repository.permissions(role.systemCode());
-        List<Permission> selected = all.stream().filter(p -> ids.contains(p.id())).toList();
+        List<Permission> selected = repository.permissions(ids);
         DomainException.require(selected.size() == ids.size(), 404, "PERMISSION_NOT_FOUND");
         role.replacePermissions(selected);
         RoleHierarchy graph = repository.hierarchy(role.systemCode());
         List<Role> updated = new ArrayList<>(graph.roles());
         updated.removeIf(r -> r.id() == id);
         updated.add(role);
-        authorization.upperBound(
-                actor,
-                role.systemCode(),
-                policy.calculate(
-                        role.systemCode(),
-                        Set.of(id),
-                        new RoleHierarchy(updated, graph.edges()),
-                        all));
+        requireAffectedGrants(actor, new RoleHierarchy(updated, graph.edges()), role, all);
         Role saved = repository.saveRole(role);
         complete(actor, role.systemCode(), "ROLE_PERMISSIONS_CHANGED", role.code());
         return saved;
@@ -175,22 +163,25 @@ public class RoleApplicationService {
         RoleHierarchy graph = repository.hierarchy(role.systemCode());
         if (add) graph.link(senior, junior);
         else graph.unlink(senior, junior);
-        if (add) authorization.requireGraphGrant(actor, graph, senior);
         if (add)
-            authorization.upperBound(
-                    actor,
-                    role.systemCode(),
-                    policy.calculate(
-                            role.systemCode(),
-                            Set.of(senior),
-                            graph,
-                            repository.permissions(role.systemCode())));
+            requireAffectedGrants(actor, graph, role, repository.permissions(role.systemCode()));
         repository.saveEdges(role.systemCode(), graph.edges());
         complete(
                 actor,
                 role.systemCode(),
                 add ? "ROLE_INHERITANCE_ADDED" : "ROLE_INHERITANCE_REMOVED",
                 role.code());
+    }
+
+    /** 在任何角色/边保存之前检查提议图，操作者能力仍来自变更前数据库事实。 */
+    private void requireAffectedGrants(
+            AuthorizationRepository.Identity actor, RoleHierarchy graph,
+            Role changed, List<Permission> permissions) {
+        for (Long id : graph.affectedBy(changed.id())) {
+            authorization.requireGraphGrant(actor, graph, id);
+            authorization.upperBound(actor, changed.systemCode(),
+                    policy.calculate(changed.systemCode(), Set.of(id), graph, permissions));
+        }
     }
 
     private void complete(

@@ -85,6 +85,20 @@ public final class RoleHierarchy {
         return Set.copyOf(edges);
     }
 
+    /** 返回自身和全部受影响上级，包含多父与停用节点，供写入上界校验。 */
+    public Set<Long> affectedBy(long changed) {
+        required(changed);
+        Set<Long> affected = new LinkedHashSet<>(Set.of(changed));
+        boolean added;
+        do {
+            added = false;
+            for (Edge edge : edges)
+                if (affected.contains(edge.juniorRoleId()))
+                    added |= affected.add(edge.seniorRoleId());
+        } while (added);
+        return Set.copyOf(affected);
+    }
+
     /** 检查特殊能力时不切断停用节点，防止预埋继承边等待超级管理员恢复。 */
     public void requireGrantable(Set<Long> direct, boolean actorSuperAdministrator) {
         if (actorSuperAdministrator) return;

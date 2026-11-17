@@ -1,0 +1,96 @@
+= C局部迭代：风险确认、修复与验证（2026-11-17）
+:toc:
+
+link:C-role-graph.adoc[C任务卡] / link:C-iteration-evidence.json[本轮脱敏测试证据] / link:C-diagrams-verification.json[C图编译符号与摘要]。
+人工状态：待用户审核，未代签。起点为 `ce4ea832789abaa4470045839c52835098c37aba`；只处理C角色链路及必要的B/D/F交接。
+
+== 已确认的两个风险与修复方案
+
+[cols="1,3,3,3",options="header"]
+|===
+|风险 |旧实现的真实结果 |修复 |数据库验收
+|C01：structured潜伏超级管理员路径
+|根部门普通管理员向停用桥添加继承；桥已继承SUPER_ADMIN。旧实现返回200，桥启用后原操作者可获得特殊能力。新回归期望403，旧实现确实失败。
+|AuthorizationService.upper从提议直接角色沿全部边检查特殊能力，停用节点不切断；普通有效权限计算仍按启停切断。沿用原事务锁、变更前上界与错误码。
+|新请求403；无新边、授权版本不变、SUCCESS不增加；有权操作者随后启用桥，原操作者仍无SUPER_ADMIN。
+|C02：DDD最后管理员失去根部门写资格
+|只有root是有效超级管理员，子部门允许其角色；旧实现允许root迁到子部门，随后共享角色写403。新回归期望409，旧实现确实失败。
+|GrantIntegrityService只向LastAdministratorPolicy提供同时满足活动状态、根部门路径、特殊角色准入和有效超级管理员能力的候选。领域Policy不承担数据库查询。
+|失败迁移409；用户部门、原指派、授权版本与SUCCESS保持不变。存在其他合格根管理员时，迁移及备份管理员的共享写操作均通过。
+|===
+
+== 按顺序完成的迭代
+
+[cols="1,2,4,2",options="header"]
+|===
+|轮次 |Git标签 |范围与取舍 |提交
+|I1 |`c-role-i1-20261117` |阻断停用路径预埋特殊能力；增加真实HTTP/SQL回归 |`85eede0`
+|I2 |`c-role-i2-20261117` |保护最后具备根部门写资格的管理员；保留有备份管理员时的合法迁移 |`1e74062`
+|I3 |`c-role-i3-20261117` |替换直接权限、加边、重新启用均检查自身及全部受影响上级的最终闭包；RoleHierarchy.affectedBy提供反向影响集合。所有检查先于save，操作者能力仍取保存前事实 |`a9b3a64`
+|I4 |`c-role-i4-20261117` |实际DTO角色/系统码64上限；原始权限数组最多1000项且范围内去重；PATCH空白/null名称及非负版本；非正角色/继承ID；跨系统权限400。同步角色输入OAS与生成器，无DDL变化 |`0857b71`
+|I5 |`c-role-i5-20261117` |C组合回归、成对HTTP/SQL、C顺序图和责任索引、脱敏证据、本文；未扩展为全仓验收 |本记录所在提交
+|===
+
+上界采用与现有structured及C任务卡一致的保守口径：所有受影响角色的最终闭包均须在上界内，包括上级原有权限。原反例只证明接受范围不一致，不把它表述为操作者已经取得上级高权限。若以后希望只约束“本次新增能力”，须单独变更合同并同步两版，不能只放宽一侧。
+
+== 测试断言和数据库结果
+
+所有测试使用专属MySQL8.0与Redis7临时容器；MySQL数据位于tmpfs，未挂载原库卷。JUnit在Maven3.9.11/JDK21.0.9容器内执行，独立HTTP使用Windows JDK21.0.11启动本轮JAR。Maven与MySQL共享专属网络，测试仍使用固定13306/16379，不修改测试地址或业务代码迁就宿主机保留端口。
+
+[cols="2,1,3",options="header"]
+|===
+|阶段 |结果 |证明范围
+|两个风险RED |2失败、0错误 |预期403/409，旧实现均返回200
+|上界RED |3失败、0错误 |三类入口旧实现均返回200；预期403
+|输入RED |11失败、0错误 |错误接受、错误HTTP或错误稳定码；不是基础设施失败
+|最终C组合回归 |78通过、0失败/错误/跳过 |structured角色/DAG21；DDD图18、领域17、上界3、输入14、管理员3、并发/回滚2
+|独立HTTP/SQL |两版各14场景 |两风险、三上界入口、跨系统、非法ID、并发方向、真实审计INSERT故障、边界、乐观冲突、五表清理
+|编译/打包 |两模块及contract依赖通过 |仅C涉及后端；不编译gateway、不跑前端/课程全套
+|合同与辅助工具 |生成器check及OpenAPI语义通过；绘图器19项通过；责任索引通过 |后两类不是产品行为测试
+|===
+
+关键数据库后置条件已经实际核对：
+
+* 被拒绝的继承边不存在；权限/状态/部门保持请求前事实；全局授权版本和SUCCESS审计不增加。
+* 并发A→B和B→A返回200/409，胜方可以不同；最终恰好一条边，方向必须与本轮200请求一致，版本与SUCCESS各只推进一次。
+* 专用库审计BEFORE INSERT触发器抛错时HTTP503；新边为0，授权版本和SUCCESS计数不变；触发器在finally删除。
+* 删除角色后，sys_role、sys_role_permission、sys_user_role、sys_department_allowed_role、sys_role_hierarchy五表相关行均为0。
+* 合法64字符角色码、0/1/1000原始权限项、范围内重复值去重仍被接受；1001项在HTTP边界拒绝。
+
+最终组合命令（凭据通过运行时环境注入，不展示值）：
+
+[source,shell]
+----
+mvn -o -B -pl rbac-structured,rbac-ddd -am "-Dtest=RoleHierarchyTest,DomainRulesTest,RoleGrantUpperBoundIntegrationTest,RoleInputBoundaryIntegrationTest,Rbac1IntegrationTest#dag*+activationCannotRestoreCapabilitiesAboveActor+nonSuperCannotModifyGrantOrInheritAnEmptySuperAdmin+nonSuperCannotPlantDisabledSuperAdministratorPath+rolePatchRejectsWhitespaceNameWithoutWriting+realAuditInsertFailureRollsBackBusinessAndVersion+localMutationAndAuditRollbackTogether,DddSecurityIntegrationTest#lastAdministratorCannotLoseRootManagementScope+lastAdministratorCanMoveWhenAnotherRootAdministratorRemains+nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability,DddPersistenceIntegrationTest#concurrentInverseEdgesCannotCommitCycle+appFailureRollsBackRoleVersionAndSuccessAudit" "-Dsurefire.failIfNoSpecifiedTests=false" --fail-at-end test
+mvn -o -B -pl rbac-structured,rbac-ddd -am -DskipTests package
+python tools/generate-rbac1-contract.py --check
+python tools/render-rbac1-design.test.py
+python tools/review-history.py check
+----
+
+未执行全仓JUnit、全工程verify/覆盖率门槛、全量共享HTTP、前端/课程/Swarm验收、最终COMMIT失败注入或持续压力测试。历史验收报告与JAR摘要未改写为本轮通过。运行时临时密钥仅用于dev隔离实例，没有复制原配置凭据。
+
+== C负责的7张UML
+
+[cols="3,3,3",options="header"]
+|===
+|图 |PNG |本轮处理
+|S01 structured类图 |link:../design/S01-structured-class.png[S01-structured-class.png] |职责与签名复核，图保持不变
+|S01 structured顺序图 |link:../design/S01-structured-sequence.png[S01-structured-sequence.png] |补停用路径特殊能力检查说明，重生成
+|S01 DDD类图 |link:../design/S01-ddd-class.png[S01-ddd-class.png] |现有选取的方法/关系仍成立，图保持不变
+|S01 DDD顺序图 |link:../design/S01-ddd-sequence.png[S01-ddd-sequence.png] |显示requireAffectedGrants、affectedBy与所有上级循环，重生成
+|角色状态图 |link:../design/role-state.png[role-state.png] |仍为状态赋值和应用守卫；无新增状态/事件，图保持不变
+|S06 structured顺序图 |link:../design/S06-structured-sequence.png[S06-structured-sequence.png] |补特殊能力守卫说明，重生成
+|S06 DDD顺序图 |link:../design/S06-ddd-sequence.png[S06-ddd-sequence.png] |同步上界循环与根部门/准入完整性事实，重生成
+|===
+
+四张更新的顺序图沿用现有Sequence生成器与PlantUML1.2025.2，只渲染C目标；共84处C方法引用核对本轮编译符号，15份源码摘要固定，已检查调用顺序和执行条平衡并实际打开PNG。C局部摘要覆盖7图；旧全量source-index.json保持历史身份，不声称当前全工程严格核验。类图为关键职责投影，并非罗列所有私有辅助方法。
+
+== 人工审核入口与提交边界
+
+. 先看I1/I2提交和对应新增用例，复述拒绝前置事实及SQL后置条件。
+. 看I3的三类入口，确认保守上界合同是否符合课程口径。
+. 看I4的实际DTO、原始数组校验顺序与OAS，避免误读未被使用的内嵌record。
+. 对照上述7图、link:review-card.adoc[审查卡]与B/D/F交接，填写你自己的结论和追问。
+
+分支：`codex/c-role-safety`。按I1–I5分别保留提交及附注Git标签，只推送此分支和本轮标签，不合并main、不触发main上的全量push流程。原有package-lock.json、工作期间出现的architecture-ddd.adoc改动及未跟踪资料均不纳入本轮提交。

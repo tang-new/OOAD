@@ -155,6 +155,17 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
     }
 
     @Override
+    public List<Permission> permissions(Set<Long> ids) {
+        if (ids.isEmpty()) return List.of();
+        return em.createQuery("from PermissionEntity where id in :ids order by id", PermissionEntity.class)
+                .setParameter("ids", ids).getResultList().stream()
+                .map(e -> new Permission(e.getId(), em.find(SystemEntity.class, e.getSystemId()).getCode(),
+                        e.getCode(), e.getName(), Permission.Kind.valueOf(e.getKind()),
+                        e.getStatus().equals("ENABLED")))
+                .toList();
+    }
+
+    @Override
     public Set<Long> assignments(long user, String code) {
         return new HashSet<>(
                 em.createQuery(

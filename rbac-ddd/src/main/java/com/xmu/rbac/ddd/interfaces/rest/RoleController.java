@@ -13,6 +13,7 @@ import java.util.*;
 
 /** 角色 HTTP 边界；普通修改与状态、权限、继承分别建模。 */
 @RestController
+@org.springframework.validation.annotation.Validated
 @RequestMapping("/api/v1")
 public class RoleController {
     private final RestSupport rest;
@@ -40,7 +41,7 @@ public class RoleController {
 
     public record Status(@NotBlank @Pattern(regexp = "ENABLED|DISABLED") String status) {}
 
-    public record Permissions(@NotNull Set<@Positive Long> permissionIds) {}
+    public record Permissions(@NotNull @Size(max = 1000) List<@NotNull @Positive Long> permissionIds) {}
 
     @GetMapping("/roles")
     public Map<String, Object> list(
@@ -79,17 +80,17 @@ public class RoleController {
     @GetMapping("/roles/{id}")
     public Map<String, Object> get(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id) {
+            @PathVariable @Positive long id) {
         return RestSupport.ok(RestSupport.role(roles.get(rest.principal(bearer), id)));
     }
 
     @PatchMapping("/roles/{id}")
     public Map<String, Object> patch(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id,
+            @PathVariable @Positive long id,
             @Valid @RequestBody com.xmu.rbac.ddd.interfaces.rest.dto.RoleUpdateRequest input) {
         DomainException.require(
-                !input.provided("name") || input.getName() != null, 400, "INVALID_ROLE_NAME");
+                !input.provided("name") || input.getName() != null, 400, "INVALID_REQUEST");
         return RestSupport.ok(
                 RestSupport.role(
                         roles.rename(
@@ -103,7 +104,7 @@ public class RoleController {
     @PutMapping("/roles/{id}/status")
     public Map<String, Object> status(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id,
+            @PathVariable @Positive long id,
             @Valid @RequestBody Status input) {
         return RestSupport.ok(
                 RestSupport.role(
@@ -114,7 +115,7 @@ public class RoleController {
     @GetMapping("/roles/{id}/permissions")
     public Map<String, Object> permissions(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id) {
+            @PathVariable @Positive long id) {
         Role role = roles.get(rest.principal(bearer), id);
         return RestSupport.ok(
                 repository.permissions(role.systemCode()).stream()
@@ -126,16 +127,16 @@ public class RoleController {
     @PutMapping("/roles/{id}/permissions")
     public Map<String, Object> permissions(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id,
+            @PathVariable @Positive long id,
             @Valid @RequestBody Permissions input) {
-        roles.permissions(rest.principal(bearer), id, input.permissionIds());
+        roles.permissions(rest.principal(bearer), id, new LinkedHashSet<>(input.permissionIds()));
         return RestSupport.ok(null);
     }
 
     @GetMapping("/roles/{id}/effective-permissions")
     public Map<String, Object> effective(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long id) {
+            @PathVariable @Positive long id) {
         return RestSupport.ok(RestSupport.effective(roles.effective(rest.principal(bearer), id)));
     }
 
@@ -155,8 +156,8 @@ public class RoleController {
     @PostMapping("/roles/{seniorId}/inherits/{juniorId}")
     public Map<String, Object> link(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long seniorId,
-            @PathVariable long juniorId) {
+            @PathVariable @Positive long seniorId,
+            @PathVariable @Positive long juniorId) {
         roles.link(rest.principal(bearer), seniorId, juniorId, true);
         return RestSupport.ok(null);
     }
@@ -164,8 +165,8 @@ public class RoleController {
     @DeleteMapping("/roles/{seniorId}/inherits/{juniorId}")
     public Map<String, Object> unlink(
             @RequestHeader(value = "Authorization", required = false) String bearer,
-            @PathVariable long seniorId,
-            @PathVariable long juniorId) {
+            @PathVariable @Positive long seniorId,
+            @PathVariable @Positive long juniorId) {
         roles.link(rest.principal(bearer), seniorId, juniorId, false);
         return RestSupport.ok(null);
     }

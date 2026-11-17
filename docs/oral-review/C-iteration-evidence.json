@@ -1,0 +1,1021 @@
+{
+  "scope": "C role management only, including necessary B/D/F handoffs",
+  "baseline": "ce4ea832789abaa4470045839c52835098c37aba",
+  "productCommit": "0857b71e4502dcb79f85f70b5219c0c5e29c5da8",
+  "branch": "codex/c-role-safety",
+  "commits": {
+    "c-role-i1-20261117": "85eede097d066cfe83d8cd2a3da0c4250412021a",
+    "c-role-i2-20261117": "1e7406205b8485e2b9f08d12a3d78b01a468a18e",
+    "c-role-i3-20261117": "a9b3a64d393143b99257e4bbe9d6711f118e3287",
+    "c-role-i4-20261117": "0857b71e4502dcb79f85f70b5219c0c5e29c5da8"
+  },
+  "red": [
+    {
+      "job": "01-red-risks",
+      "args": [
+        "-pl",
+        "rbac-structured,rbac-ddd",
+        "-am",
+        "-Dtest=Rbac1IntegrationTest#nonSuperCannotPlantDisabledSuperAdministratorPath,DddSecurityIntegrationTest#lastAdministratorCannotLoseRootManagementScope",
+        "-Dsurefire.failIfNoSpecifiedTests=false",
+        "--fail-at-end",
+        "test"
+      ],
+      "exitCode": 1,
+      "suites": [
+        {
+          "name": "com.xmu.rbac.structured.integration.Rbac1IntegrationTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "cases": [
+            {
+              "name": "nonSuperCannotPlantDisabledSuperAdministratorPath",
+              "failure": "\nexpected: 403\n but was: 200"
+            }
+          ]
+        },
+        {
+          "name": "com.xmu.rbac.ddd.DddSecurityIntegrationTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "cases": [
+            {
+              "name": "lastAdministratorCannotLoseRootManagementScope",
+              "failure": "\nexpected: 409 CONFLICT\n but was: 200 OK"
+            }
+          ]
+        }
+      ],
+      "seconds": 115.1
+    },
+    {
+      "job": "04-red-upper-bound",
+      "args": [
+        "-pl",
+        "rbac-ddd",
+        "-am",
+        "-Dtest=RoleGrantUpperBoundIntegrationTest",
+        "-Dsurefire.failIfNoSpecifiedTests=false",
+        "test"
+      ],
+      "exitCode": 1,
+      "suites": [
+        {
+          "name": "com.xmu.rbac.ddd.RoleGrantUpperBoundIntegrationTest",
+          "tests": "3",
+          "failures": "3",
+          "errors": "0",
+          "skipped": "0",
+          "cases": [
+            {
+              "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[1]",
+              "failure": "\nexpected: 403 FORBIDDEN\n but was: 200 OK"
+            },
+            {
+              "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[2]",
+              "failure": "\nexpected: 403 FORBIDDEN\n but was: 200 OK"
+            },
+            {
+              "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[3]",
+              "failure": "\nexpected: 403 FORBIDDEN\n but was: 200 OK"
+            }
+          ]
+        }
+      ],
+      "seconds": 66.4
+    },
+    {
+      "job": "05-red-inputs",
+      "args": [
+        "-pl",
+        "rbac-structured,rbac-ddd",
+        "-am",
+        "-Dtest=RoleInputBoundaryIntegrationTest,Rbac1IntegrationTest#rolePatchRejectsWhitespaceNameWithoutWriting",
+        "-Dsurefire.failIfNoSpecifiedTests=false",
+        "--fail-at-end",
+        "test"
+      ],
+      "exitCode": 1,
+      "suites": [
+        {
+          "name": "com.xmu.rbac.structured.integration.Rbac1IntegrationTest",
+          "tests": "1",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0",
+          "cases": [
+            {
+              "name": "rolePatchRejectsWhitespaceNameWithoutWriting",
+              "failure": "\nexpected: 400\n but was: 200"
+            }
+          ]
+        },
+        {
+          "name": "com.xmu.rbac.ddd.RoleInputBoundaryIntegrationTest",
+          "tests": "10",
+          "failures": "10",
+          "errors": "0",
+          "skipped": "0",
+          "cases": [
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[1]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 409 CONFLICT"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[2]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 404 NOT_FOUND"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[3]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 200 OK"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[4]",
+              "failure": "\nexpected: \"VALIDATION_ERROR\"\n but was: \"INVALID_ROLE_NAME\""
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[5]",
+              "failure": "\nexpected: \"VALIDATION_ERROR\"\n but was: \"INVALID_ROLE_NAME\""
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[6]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 409 CONFLICT"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[7]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 404 NOT_FOUND"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[8]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 404 NOT_FOUND"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[9]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 404 NOT_FOUND"
+            },
+            {
+              "name": "invalidRoleInputIsRejectedWithoutMutation(String)[10]",
+              "failure": "\nexpected: 400 BAD_REQUEST\n but was: 404 NOT_FOUND"
+            }
+          ]
+        }
+      ],
+      "seconds": 110.0
+    }
+  ],
+  "targetedRegression": {
+    "job": "08-c-regression",
+    "args": [
+      "-pl",
+      "rbac-structured,rbac-ddd",
+      "-am",
+      "-Dtest=RoleHierarchyTest,DomainRulesTest,RoleGrantUpperBoundIntegrationTest,RoleInputBoundaryIntegrationTest,Rbac1IntegrationTest#dag*+activationCannotRestoreCapabilitiesAboveActor+nonSuperCannotModifyGrantOrInheritAnEmptySuperAdmin+nonSuperCannotPlantDisabledSuperAdministratorPath+rolePatchRejectsWhitespaceNameWithoutWriting+realAuditInsertFailureRollsBackBusinessAndVersion+localMutationAndAuditRollbackTogether,DddSecurityIntegrationTest#lastAdministratorCannotLoseRootManagementScope+lastAdministratorCanMoveWhenAnotherRootAdministratorRemains+nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability,DddPersistenceIntegrationTest#concurrentInverseEdgesCannotCommitCycle+appFailureRollsBackRoleVersionAndSuccessAudit",
+      "-Dsurefire.failIfNoSpecifiedTests=false",
+      "--fail-at-end",
+      "test"
+    ],
+    "exitCode": 0,
+    "suites": [
+      {
+        "name": "com.xmu.rbac.structured.integration.Rbac1IntegrationTest",
+        "tests": "21",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "nonSuperCannotModifyGrantOrInheritAnEmptySuperAdmin",
+            "failure": null
+          },
+          {
+            "name": "dag05DuplicateEdge",
+            "failure": null
+          },
+          {
+            "name": "dag04DiamondDeduplicatesWithBothPaths",
+            "failure": null
+          },
+          {
+            "name": "dag14TwoInstancesAndCacheFailure",
+            "failure": null
+          },
+          {
+            "name": "dag15DirectAndInheritedSources",
+            "failure": null
+          },
+          {
+            "name": "dag03Transitive",
+            "failure": null
+          },
+          {
+            "name": "rolePatchRejectsWhitespaceNameWithoutWriting",
+            "failure": null
+          },
+          {
+            "name": "dag11ConcurrentOpposingEdgesCannotBothCommit",
+            "failure": null
+          },
+          {
+            "name": "dag08CrossSystemRejected",
+            "failure": null
+          },
+          {
+            "name": "localMutationAndAuditRollbackTogether",
+            "failure": null
+          },
+          {
+            "name": "nonSuperCannotPlantDisabledSuperAdministratorPath",
+            "failure": null
+          },
+          {
+            "name": "dag01DirectOnly",
+            "failure": null
+          },
+          {
+            "name": "dag09DisabledNodeCutsPathAndRestores",
+            "failure": null
+          },
+          {
+            "name": "dag02SingleInheritance",
+            "failure": null
+          },
+          {
+            "name": "dag06SelfCycle",
+            "failure": null
+          },
+          {
+            "name": "dag10AlternatePathSurvivesEdgeDeletion",
+            "failure": null
+          },
+          {
+            "name": "dag13RetirementCleansReferencesAndPreservesHistory",
+            "failure": null
+          },
+          {
+            "name": "realAuditInsertFailureRollsBackBusinessAndVersion",
+            "failure": null
+          },
+          {
+            "name": "dag12MultipleDirectRolesUnion",
+            "failure": null
+          },
+          {
+            "name": "activationCannotRestoreCapabilitiesAboveActor",
+            "failure": null
+          },
+          {
+            "name": "dag07CycleRollsBack",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.DddSecurityIntegrationTest",
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability",
+            "failure": null
+          },
+          {
+            "name": "lastAdministratorCannotLoseRootManagementScope",
+            "failure": null
+          },
+          {
+            "name": "lastAdministratorCanMoveWhenAnotherRootAdministratorRemains",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.RoleInputBoundaryIntegrationTest",
+        "tests": "14",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[1]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[2]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[3]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[4]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[5]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[6]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[7]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[8]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[9]",
+            "failure": null
+          },
+          {
+            "name": "invalidRoleInputIsRejectedWithoutMutation(String)[10]",
+            "failure": null
+          },
+          {
+            "name": "permissionArraysWithinLimitRemainAcceptedAndDeduplicated(int, int)[1]",
+            "failure": null
+          },
+          {
+            "name": "permissionArraysWithinLimitRemainAcceptedAndDeduplicated(int, int)[2]",
+            "failure": null
+          },
+          {
+            "name": "permissionArraysWithinLimitRemainAcceptedAndDeduplicated(int, int)[3]",
+            "failure": null
+          },
+          {
+            "name": "roleCodeAt64CharacterLimitIsAccepted",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.domain.DomainRulesTest",
+        "tests": "17",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "courseCopyOnlyRequiresTeacherGlobally",
+            "failure": null
+          },
+          {
+            "name": "protectedWithoutConditionDenies",
+            "failure": null
+          },
+          {
+            "name": "upperBoundAllowsSubset",
+            "failure": null
+          },
+          {
+            "name": "roleOwnsDirectPermissionInvariant",
+            "failure": null
+          },
+          {
+            "name": "duplicateAssignmentAndDisabledRoleRejected",
+            "failure": null
+          },
+          {
+            "name": "departmentChecksDirectEligibility",
+            "failure": null
+          },
+          {
+            "name": "auditReplayCannotCrossSystemOrSubject",
+            "failure": null
+          },
+          {
+            "name": "disableRemovesAllEffectiveGrants",
+            "failure": null
+          },
+          {
+            "name": "statusRevokesTokenAndDeletedCannotReactivate",
+            "failure": null
+          },
+          {
+            "name": "upperBoundIncludesPermission",
+            "failure": null
+          },
+          {
+            "name": "superAdminCanGrantBeyondOwnTargetSystem",
+            "failure": null
+          },
+          {
+            "name": "uiDoesNotGrantApi",
+            "failure": null
+          },
+          {
+            "name": "userTransferOnlyDropsOwnAssignments",
+            "failure": null
+          },
+          {
+            "name": "unknownOrDisabledOperationDenies",
+            "failure": null
+          },
+          {
+            "name": "upperBoundIncludesIdentity",
+            "failure": null
+          },
+          {
+            "name": "departmentPathIsSegmentSafe",
+            "failure": null
+          },
+          {
+            "name": "roleRejectsUnknownIdentity",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.DddPersistenceIntegrationTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "appFailureRollsBackRoleVersionAndSuccessAudit",
+            "failure": null
+          },
+          {
+            "name": "concurrentInverseEdgesCannotCommitCycle",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.RoleGrantUpperBoundIntegrationTest",
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[1]",
+            "failure": null
+          },
+          {
+            "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[2]",
+            "failure": null
+          },
+          {
+            "name": "affectedSeniorClosureMustRemainWithinActorUpperBound(String)[3]",
+            "failure": null
+          }
+        ]
+      },
+      {
+        "name": "com.xmu.rbac.ddd.domain.RoleHierarchyTest",
+        "tests": "18",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "cases": [
+          {
+            "name": "transitive",
+            "failure": null
+          },
+          {
+            "name": "inverseAfterFirstLink",
+            "failure": null
+          },
+          {
+            "name": "crossSystem",
+            "failure": null
+          },
+          {
+            "name": "direct",
+            "failure": null
+          },
+          {
+            "name": "oneEdge",
+            "failure": null
+          },
+          {
+            "name": "corruptedRestoredGraphCannotCrossSystems",
+            "failure": null
+          },
+          {
+            "name": "corruptedRestoredGraphCannotAuthorizeACycle",
+            "failure": null
+          },
+          {
+            "name": "alternatePath",
+            "failure": null
+          },
+          {
+            "name": "multipleDirectRoles",
+            "failure": null
+          },
+          {
+            "name": "cycle",
+            "failure": null
+          },
+          {
+            "name": "disabledCutsPath",
+            "failure": null
+          },
+          {
+            "name": "disabledDirectRole",
+            "failure": null
+          },
+          {
+            "name": "directAndInheritedSources",
+            "failure": null
+          },
+          {
+            "name": "selfLoop",
+            "failure": null
+          },
+          {
+            "name": "duplicate",
+            "failure": null
+          },
+          {
+            "name": "missingRole",
+            "failure": null
+          },
+          {
+            "name": "removeMissingEdgeDoesNotChangeGraph",
+            "failure": null
+          },
+          {
+            "name": "diamond",
+            "failure": null
+          }
+        ]
+      }
+    ],
+    "seconds": 125.5
+  },
+  "package": {
+    "job": "09-package",
+    "args": [
+      "-pl",
+      "rbac-structured,rbac-ddd",
+      "-am",
+      "-DskipTests",
+      "package"
+    ],
+    "exitCode": 0,
+    "suites": [],
+    "seconds": 59.2
+  },
+  "httpSql": {
+    "job": "10-c-http",
+    "args": [],
+    "probes": {
+      "structured": [
+        {
+          "case": "ancestor-permissions-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 2,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 2,
+            "successAudits": 3
+          },
+          "database": "0"
+        },
+        {
+          "case": "ancestor-link-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 3,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 3,
+            "successAudits": 3
+          },
+          "database": "0"
+        },
+        {
+          "case": "ancestor-activation-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 4,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 4,
+            "successAudits": 3
+          },
+          "database": "DISABLED"
+        },
+        {
+          "case": "disabled-path-special-capability",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 5,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 5,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "cross-system-permission",
+          "status": 400,
+          "code": "CROSS_SYSTEM_PERMISSION",
+          "before": {
+            "grantVersion": 6,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 6,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "invalid-role-id",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 6,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 6,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "concurrent-opposing-edges",
+          "statuses": [
+            200,
+            409
+          ],
+          "before": {
+            "grantVersion": 6,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 4
+          },
+          "savedEdges": "9106\t9107"
+        },
+        {
+          "case": "audit-insert-failure-rolls-back-edge",
+          "status": 503,
+          "code": "SERVICE_UNAVAILABLE",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "database": "0"
+        },
+        {
+          "case": "role-code-65",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 8,
+            "successAudits": 4
+          }
+        },
+        {
+          "case": "permission-array-1001",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 8,
+            "successAudits": 4
+          }
+        },
+        {
+          "case": "patch-whitespace-name",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 8,
+            "successAudits": 4
+          }
+        },
+        {
+          "case": "stale-nonnegative-version",
+          "status": 409,
+          "code": "VERSION_CONFLICT",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 8,
+            "successAudits": 4
+          }
+        },
+        {
+          "case": "retirement-cleans-five-tables",
+          "status": 200,
+          "code": "OK",
+          "before": {
+            "grantVersion": 9,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 10,
+            "successAudits": 5
+          },
+          "database": {
+            "sys_role": "0",
+            "sys_role_permission": "0",
+            "sys_user_role": "0",
+            "sys_department_allowed_role": "0",
+            "sys_role_hierarchy": "0"
+          }
+        },
+        {
+          "case": "last-root-admin-transfer-to-child",
+          "status": 409,
+          "code": "LAST_SUPER_ADMIN",
+          "before": {
+            "grantVersion": 11,
+            "successAudits": 5
+          },
+          "after": {
+            "grantVersion": 11,
+            "successAudits": 5
+          },
+          "database": "1"
+        }
+      ],
+      "ddd": [
+        {
+          "case": "ancestor-permissions-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 1,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 1,
+            "successAudits": 2
+          },
+          "database": "0"
+        },
+        {
+          "case": "ancestor-link-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 2,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 2,
+            "successAudits": 2
+          },
+          "database": "0"
+        },
+        {
+          "case": "ancestor-activation-upper-bound",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 3,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 3,
+            "successAudits": 2
+          },
+          "database": "DISABLED"
+        },
+        {
+          "case": "disabled-path-special-capability",
+          "status": 403,
+          "code": "PRIVILEGE_ESCALATION",
+          "before": {
+            "grantVersion": 4,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 4,
+            "successAudits": 2
+          }
+        },
+        {
+          "case": "cross-system-permission",
+          "status": 400,
+          "code": "CROSS_SYSTEM_PERMISSION",
+          "before": {
+            "grantVersion": 5,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 5,
+            "successAudits": 2
+          }
+        },
+        {
+          "case": "invalid-role-id",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 5,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 5,
+            "successAudits": 2
+          }
+        },
+        {
+          "case": "concurrent-opposing-edges",
+          "statuses": [
+            409,
+            200
+          ],
+          "before": {
+            "grantVersion": 5,
+            "successAudits": 2
+          },
+          "after": {
+            "grantVersion": 6,
+            "successAudits": 3
+          },
+          "savedEdges": "9107\t9106"
+        },
+        {
+          "case": "audit-insert-failure-rolls-back-edge",
+          "status": 503,
+          "code": "SERVICE_UNAVAILABLE",
+          "before": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "database": "0"
+        },
+        {
+          "case": "role-code-65",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "permission-array-1001",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "patch-whitespace-name",
+          "status": 400,
+          "code": "VALIDATION_ERROR",
+          "before": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "stale-nonnegative-version",
+          "status": 409,
+          "code": "VERSION_CONFLICT",
+          "before": {
+            "grantVersion": 7,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 7,
+            "successAudits": 3
+          }
+        },
+        {
+          "case": "retirement-cleans-five-tables",
+          "status": 200,
+          "code": "OK",
+          "before": {
+            "grantVersion": 8,
+            "successAudits": 3
+          },
+          "after": {
+            "grantVersion": 9,
+            "successAudits": 4
+          },
+          "database": {
+            "sys_role": "0",
+            "sys_role_permission": "0",
+            "sys_user_role": "0",
+            "sys_department_allowed_role": "0",
+            "sys_role_hierarchy": "0"
+          }
+        },
+        {
+          "case": "last-root-admin-transfer-to-child",
+          "status": 409,
+          "code": "LAST_SUPER_ADMIN_PROTECTED",
+          "before": {
+            "grantVersion": 10,
+            "successAudits": 4
+          },
+          "after": {
+            "grantVersion": 10,
+            "successAudits": 4
+          },
+          "database": "1"
+        }
+      ]
+    },
+    "seconds": 73.2
+  },
+  "httpSqlAssertions": "PASS",
+  "checks": {
+    "contractGenerator": "PASS",
+    "openApiSemanticValidation": "PASS (temporary isolated Python dependencies)",
+    "rendererUnitTests": "19 PASS",
+    "sourceOwnershipIndex": "PASS (394 files / 64 operations / 15 tables)"
+  },
+  "artifacts": {
+    "structured": "811da96f1f57243d334420b34ce26e8bc165d247135914181dc15a497571f493",
+    "ddd": "b77fa113bcdee145e87cd270b783e3a7042ff351563a675e5c0c77b857cedce4"
+  },
+  "cleanup": [
+    {
+      "container": "c-fix-026f8304-maven",
+      "removed": true
+    },
+    {
+      "container": "c-fix-026f8304-redis",
+      "removed": true
+    },
+    {
+      "container": "c-fix-026f8304-mysql",
+      "removed": true
+    }
+  ],
+  "originalPackageLockUnchanged": true,
+  "retainedExternalChanges": [
+    "docs/architecture-ddd.adoc",
+    "rbac-web/package-lock.json",
+    "untracked local documents and assets"
+  ],
+  "notExecuted": [
+    "all-repository JUnit",
+    "full verify / coverage gates",
+    "full shared HTTP acceptance",
+    "frontend tests",
+    "course business acceptance",
+    "Swarm",
+    "COMMIT failure injection",
+    "sustained concurrency stress"
+  ],
+  "manualStatus": "USER_REVIEW_PENDING; NOT_SIGNED"
+}

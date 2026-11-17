@@ -1,0 +1,1343 @@
+{
+  "scope": "C only: 4 sequence diagrams regenerated; 2 class diagrams and role-state retained and symbols rechecked",
+  "baseline": "0857b71",
+  "status": "C_SCOPED_COMPILED_SYMBOLS_AND_SOURCE_ORDER_CHECKED",
+  "runtimeAcceptance": "NOT_FULL_ACCEPTANCE",
+  "tool": {
+    "plantumlVersion": "1.2025.2",
+    "jarSha256": "1cd5997e353fc23bf9ddcf78d57ba846c1aa8a33dc4e3787872c8dec34fd35ce",
+    "java": "C:\\Users\\admin\\.jdks\\ms-21.0.11\\bin\\java.exe"
+  },
+  "sources": {
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java": "d1ee421197b5ec88abd0ddb4188d9868bc3bc2993149df7ae372a554ca7fb59c",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java": "1d34af810aaba944e1159fe78409fca2599de83d78894e5a117041458c2dbc05",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java": "f24553221767918f0b219a7b7e3e25fa7b2751dc05f967b1754b3012bdcbddca",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java": "2f1e3d295cd57793d8ee725ced986c00016069ebbb09bf0bdc9d918836d83056",
+    "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java": "4b47367dae393055357d0a6ced0d64462058e14ccb8e74649ba7b89223a90684",
+    "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+    "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+    "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+    "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+    "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java": "c1fb3a44c09f4b699974cfd85584439beef6e5c09e1d905f4dcf71cc4db3a56e"
+  },
+  "references": [
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.interfaces.rest.RoleController",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java",
+      "sourceSha256": "d1ee421197b5ec88abd0ddb4188d9868bc3bc2993149df7ae372a554ca7fb59c",
+      "bytecode": "COMPILED",
+      "signature": "public java.util.Map<java.lang.String, java.lang.Object> link(java.lang.String, long, long)",
+      "compiledSignatureCandidates": [
+        "public java.util.Map<java.lang.String, java.lang.Object> link(java.lang.String, long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "public void link(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, long, boolean)",
+      "compiledSignatureCandidates": [
+        "public void link(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, long, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "lockGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void lockGrants()",
+      "compiledSignatureCandidates": [
+        "public abstract void lockGrants()"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "require",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity require(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, java.lang.String, boolean)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity require(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, java.lang.String, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "role",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.Role role(long)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.Role role(long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "role",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.Role role(long)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.Role role(long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireRoleManagement",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)",
+      "compiledSignatureCandidates": [
+        "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireRoleManagement",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)",
+      "compiledSignatureCandidates": [
+        "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "hierarchy",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public void link(long, long)",
+      "compiledSignatureCandidates": [
+        "public void link(long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public void link(long, long)",
+      "compiledSignatureCandidates": [
+        "public void link(long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "requireAffectedGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "private void requireAffectedGrants(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, com.xmu.rbac.ddd.domain.Role, java.util.List<com.xmu.rbac.ddd.domain.Permission>)",
+      "compiledSignatureCandidates": [
+        "private void requireAffectedGrants(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, com.xmu.rbac.ddd.domain.Role, java.util.List<com.xmu.rbac.ddd.domain.Permission>)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "affectedBy",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public java.util.Set<java.lang.Long> affectedBy(long)",
+      "compiledSignatureCandidates": [
+        "public java.util.Set<java.lang.Long> affectedBy(long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireGraphGrant",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)",
+      "compiledSignatureCandidates": [
+        "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "upperBound",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)",
+      "compiledSignatureCandidates": [
+        "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "saveEdges",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)",
+      "compiledSignatureCandidates": [
+        "public abstract void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.GrantIntegrityService",
+      "method": "requireAdministrator",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java",
+      "sourceSha256": "1d34af810aaba944e1159fe78409fca2599de83d78894e5a117041458c2dbc05",
+      "bytecode": "COMPILED",
+      "signature": "public void requireAdministrator()",
+      "compiledSignatureCandidates": [
+        "public void requireAdministrator()"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "advanceVersion",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void advanceVersion()",
+      "compiledSignatureCandidates": [
+        "public abstract void advanceVersion()"
+      ]
+    },
+    {
+      "figure": "S01-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+      "method": "local",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+      "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.interfaces.rest.RoleController",
+      "method": "status",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java",
+      "sourceSha256": "d1ee421197b5ec88abd0ddb4188d9868bc3bc2993149df7ae372a554ca7fb59c",
+      "bytecode": "COMPILED",
+      "signature": "public java.util.Map<java.lang.String, java.lang.Object> status(java.lang.String, long, com.xmu.rbac.ddd.interfaces.rest.RoleController$Status)",
+      "compiledSignatureCandidates": [
+        "public java.util.Map<java.lang.String, java.lang.Object> status(java.lang.String, long, com.xmu.rbac.ddd.interfaces.rest.RoleController$Status)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "status",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.Role status(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, boolean)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.Role status(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, boolean)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "lockGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void lockGrants()",
+      "compiledSignatureCandidates": [
+        "public abstract void lockGrants()"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "require",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity require(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, java.lang.String, boolean)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity require(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, java.lang.String, boolean)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "role",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.Role role(long)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.Role role(long)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireRoleManagement",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)",
+      "compiledSignatureCandidates": [
+        "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.Role",
+      "method": "changeStatus",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java",
+      "sourceSha256": "f24553221767918f0b219a7b7e3e25fa7b2751dc05f967b1754b3012bdcbddca",
+      "bytecode": "COMPILED",
+      "signature": "public void changeStatus(boolean)",
+      "compiledSignatureCandidates": [
+        "public void changeStatus(boolean)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "requireAffectedGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "private void requireAffectedGrants(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, com.xmu.rbac.ddd.domain.Role, java.util.List<com.xmu.rbac.ddd.domain.Permission>)",
+      "compiledSignatureCandidates": [
+        "private void requireAffectedGrants(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, com.xmu.rbac.ddd.domain.Role, java.util.List<com.xmu.rbac.ddd.domain.Permission>)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "affectedBy",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public java.util.Set<java.lang.Long> affectedBy(long)",
+      "compiledSignatureCandidates": [
+        "public java.util.Set<java.lang.Long> affectedBy(long)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireGraphGrant",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)",
+      "compiledSignatureCandidates": [
+        "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "upperBound",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)",
+      "compiledSignatureCandidates": [
+        "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "saveRole",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.Role saveRole(com.xmu.rbac.ddd.domain.Role)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.Role saveRole(com.xmu.rbac.ddd.domain.Role)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.GrantIntegrityService",
+      "method": "requireAdministrator",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java",
+      "sourceSha256": "1d34af810aaba944e1159fe78409fca2599de83d78894e5a117041458c2dbc05",
+      "bytecode": "COMPILED",
+      "signature": "public void requireAdministrator()",
+      "compiledSignatureCandidates": [
+        "public void requireAdministrator()"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "advanceVersion",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void advanceVersion()",
+      "compiledSignatureCandidates": [
+        "public abstract void advanceVersion()"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+      "method": "local",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+      "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuditRepository",
+      "method": "append",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java",
+      "sourceSha256": "2f1e3d295cd57793d8ee725ced986c00016069ebbb09bf0bdc9d918836d83056",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.AuditFact append(com.xmu.rbac.ddd.domain.AuditFact)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.AuditFact append(com.xmu.rbac.ddd.domain.AuditFact)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+      "method": "local",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+      "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.AuditFact local(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-ddd-sequence",
+      "class": "com.xmu.rbac.ddd.domain.port.AuditRepository",
+      "method": "append",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuditRepository.java",
+      "sourceSha256": "2f1e3d295cd57793d8ee725ced986c00016069ebbb09bf0bdc9d918836d83056",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.AuditFact append(com.xmu.rbac.ddd.domain.AuditFact)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.AuditFact append(com.xmu.rbac.ddd.domain.AuditFact)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.controller.ManagementController",
+      "method": "addRoleInheritance",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java",
+      "sourceSha256": "4b47367dae393055357d0a6ced0d64462058e14ccb8e74649ba7b89223a90684",
+      "bytecode": "COMPILED",
+      "signature": "public java.lang.Object addRoleInheritance(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long)",
+      "compiledSignatureCandidates": [
+        "public java.lang.Object addRoleInheritance(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "inherit",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bytecode": "COMPILED",
+      "signature": "public void inherit(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long, boolean)",
+      "compiledSignatureCandidates": [
+        "public void inherit(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "lock",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.structured.entity.GrantVersion lock()",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.structured.entity.GrantVersion lock()"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "center",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void center(com.xmu.rbac.structured.dto.Actor, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void center(com.xmu.rbac.structured.dto.Actor, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "root",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void root(com.xmu.rbac.structured.dto.Actor)",
+      "compiledSignatureCandidates": [
+        "public void root(com.xmu.rbac.structured.dto.Actor)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "captureUpper",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void captureUpper(com.xmu.rbac.structured.dto.Actor)",
+      "compiledSignatureCandidates": [
+        "public void captureUpper(com.xmu.rbac.structured.dto.Actor)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "protectRole",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)",
+      "compiledSignatureCandidates": [
+        "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "protectRole",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)",
+      "compiledSignatureCandidates": [
+        "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "one",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T one(java.lang.Class<T>, java.lang.String, java.lang.Object...)",
+      "compiledSignatureCandidates": [
+        "public <T> T one(java.lang.Class<T>, java.lang.String, java.lang.Object...)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "save",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T save(T)",
+      "compiledSignatureCandidates": [
+        "public <T> T save(T)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "changedUpper",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bytecode": "COMPILED",
+      "signature": "private void changedUpper(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)",
+      "compiledSignatureCandidates": [
+        "private void changedUpper(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)"
+      ]
+    },
+    {
+      "figure": "S01-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuditService",
+      "method": "success",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+      "bytecode": "COMPILED",
+      "signature": "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.controller.ManagementController",
+      "method": "setRoleStatus",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java",
+      "sourceSha256": "4b47367dae393055357d0a6ced0d64462058e14ccb8e74649ba7b89223a90684",
+      "bytecode": "COMPILED",
+      "signature": "public java.lang.Object setRoleStatus(com.xmu.rbac.structured.dto.Actor, java.lang.Long, com.xmu.rbac.structured.dto.Inputs$State)",
+      "compiledSignatureCandidates": [
+        "public java.lang.Object setRoleStatus(com.xmu.rbac.structured.dto.Actor, java.lang.Long, com.xmu.rbac.structured.dto.Inputs$State)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "roleStatus",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bytecode": "COMPILED",
+      "signature": "public java.lang.Object roleStatus(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public java.lang.Object roleStatus(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "lock",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.structured.entity.GrantVersion lock()",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.structured.entity.GrantVersion lock()"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuthorizationService",
+      "method": "protectRole",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java",
+      "sourceSha256": "0828fbd73282425878dcad5c2b9add6b5e9c0d5eef76979f0d8c0d7637776797",
+      "bytecode": "COMPILED",
+      "signature": "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)",
+      "compiledSignatureCandidates": [
+        "public void protectRole(com.xmu.rbac.structured.dto.Actor, com.xmu.rbac.structured.entity.Role)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuditService",
+      "method": "success",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+      "bytecode": "COMPILED",
+      "signature": "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "save",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T save(T)",
+      "compiledSignatureCandidates": [
+        "public <T> T save(T)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.service.AuditService",
+      "method": "success",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+      "bytecode": "COMPILED",
+      "signature": "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S06-structured-sequence",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "save",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T save(T)",
+      "compiledSignatureCandidates": [
+        "public <T> T save(T)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "inherit",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bytecode": "COMPILED",
+      "signature": "public void inherit(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long, boolean)",
+      "compiledSignatureCandidates": [
+        "public void inherit(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "reachable",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bytecode": "COMPILED",
+      "signature": "private boolean reachable(java.lang.Long, java.lang.Long)",
+      "compiledSignatureCandidates": [
+        "private boolean reachable(java.lang.Long, java.lang.Long)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "save",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T save(T)",
+      "compiledSignatureCandidates": [
+        "public <T> T save(T)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "where",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> java.util.List<T> where(java.lang.Class<T>, java.lang.String, java.lang.Object...)",
+      "compiledSignatureCandidates": [
+        "public <T> java.util.List<T> where(java.lang.Class<T>, java.lang.String, java.lang.Object...)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.mapper.Store",
+      "method": "lock",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java",
+      "sourceSha256": "287dbc4da349353bd2ccea8fba6df7c8e36f3d9cd6efc6b2ebdb01180eb02269",
+      "bytecode": "COMPILED",
+      "signature": "public <T> T lock(java.lang.Class<T>, java.lang.Object)",
+      "compiledSignatureCandidates": [
+        "public <T> T lock(java.lang.Class<T>, java.lang.Object)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.controller.ManagementController",
+      "method": "addRoleInheritance",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/controller/ManagementController.java",
+      "sourceSha256": "4b47367dae393055357d0a6ced0d64462058e14ccb8e74649ba7b89223a90684",
+      "bytecode": "COMPILED",
+      "signature": "public java.lang.Object addRoleInheritance(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long)",
+      "compiledSignatureCandidates": [
+        "public java.lang.Object addRoleInheritance(com.xmu.rbac.structured.dto.Actor, java.lang.Long, java.lang.Long)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.service.AuditService",
+      "method": "success",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+      "bytecode": "COMPILED",
+      "signature": "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void success(com.xmu.rbac.structured.dto.Actor, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-structured-class",
+      "class": "com.xmu.rbac.structured.service.AuditService",
+      "method": "denied",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuditService.java",
+      "sourceSha256": "225ba983589262c80180e43f26b616bc31e1e38d98a9eb0db1189a77537d8955",
+      "bytecode": "COMPILED",
+      "signature": "public void denied(com.xmu.rbac.structured.dto.Actor, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public void denied(com.xmu.rbac.structured.dto.Actor, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "public void link(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, long, boolean)",
+      "compiledSignatureCandidates": [
+        "public void link(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, long, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "complete",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "private void complete(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "private void complete(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "lockGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void lockGrants()",
+      "compiledSignatureCandidates": [
+        "public abstract void lockGrants()"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "hierarchy",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public abstract com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.port.AuthorizationRepository",
+      "method": "saveEdges",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/AuthorizationRepository.java",
+      "sourceSha256": "df643b466b6056f77822116a91c6b9b607eaa738f8b5e8c390f91b45e45d19c3",
+      "bytecode": "COMPILED",
+      "signature": "public abstract void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)",
+      "compiledSignatureCandidates": [
+        "public abstract void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public void link(long, long)",
+      "compiledSignatureCandidates": [
+        "public void link(long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "unlink",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public void unlink(long, long)",
+      "compiledSignatureCandidates": [
+        "public void unlink(long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.RoleHierarchy",
+      "method": "requireGrantable",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java",
+      "sourceSha256": "142bec442ded9b56753d150d019652031a98d1b9f4b836f7bc277a26e42039bc",
+      "bytecode": "COMPILED",
+      "signature": "public void requireGrantable(java.util.Set<java.lang.Long>, boolean)",
+      "compiledSignatureCandidates": [
+        "public void requireGrantable(java.util.Set<java.lang.Long>, boolean)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.infrastructure.persistence.JpaAuthorizationRepositoryAdapter",
+      "method": "hierarchy",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "sourceSha256": "c1fb3a44c09f4b699974cfd85584439beef6e5c09e1d905f4dcf71cc4db3a56e",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.RoleHierarchy hierarchy(java.lang.String)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.infrastructure.persistence.JpaAuthorizationRepositoryAdapter",
+      "method": "saveEdges",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java",
+      "sourceSha256": "c1fb3a44c09f4b699974cfd85584439beef6e5c09e1d905f4dcf71cc4db3a56e",
+      "bytecode": "COMPILED",
+      "signature": "public void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)",
+      "compiledSignatureCandidates": [
+        "public void saveEdges(java.lang.String, java.util.Set<com.xmu.rbac.ddd.domain.RoleHierarchy$Edge>)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.interfaces.rest.RoleController",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java",
+      "sourceSha256": "d1ee421197b5ec88abd0ddb4188d9868bc3bc2993149df7ae372a554ca7fb59c",
+      "bytecode": "COMPILED",
+      "signature": "public java.util.Map<java.lang.String, java.lang.Object> link(java.lang.String, long, long)",
+      "compiledSignatureCandidates": [
+        "public java.util.Map<java.lang.String, java.lang.Object> link(java.lang.String, long, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireRoleManagement",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)",
+      "compiledSignatureCandidates": [
+        "public void requireRoleManagement(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.Role)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "requireGraphGrant",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)",
+      "compiledSignatureCandidates": [
+        "public void requireGraphGrant(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, com.xmu.rbac.ddd.domain.RoleHierarchy, long)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "upperBound",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bytecode": "COMPILED",
+      "signature": "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)",
+      "compiledSignatureCandidates": [
+        "public void upperBound(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, com.xmu.rbac.ddd.domain.AuthorizationPolicy$Effective)"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.Role",
+      "method": "superAdministratorCapability",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java",
+      "sourceSha256": "f24553221767918f0b219a7b7e3e25fa7b2751dc05f967b1754b3012bdcbddca",
+      "bytecode": "COMPILED",
+      "signature": "public boolean superAdministratorCapability()",
+      "compiledSignatureCandidates": [
+        "public boolean superAdministratorCapability()"
+      ]
+    },
+    {
+      "figure": "S01-ddd-class",
+      "class": "com.xmu.rbac.ddd.domain.Role",
+      "method": "requireManageable",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java",
+      "sourceSha256": "f24553221767918f0b219a7b7e3e25fa7b2751dc05f967b1754b3012bdcbddca",
+      "bytecode": "COMPILED",
+      "signature": "public void requireManageable(boolean)",
+      "compiledSignatureCandidates": [
+        "public void requireManageable(boolean)"
+      ]
+    },
+    {
+      "figure": "role-state",
+      "class": "com.xmu.rbac.ddd.domain.Role",
+      "method": "changeStatus",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java",
+      "sourceSha256": "f24553221767918f0b219a7b7e3e25fa7b2751dc05f967b1754b3012bdcbddca",
+      "bytecode": "COMPILED",
+      "signature": "public void changeStatus(boolean)",
+      "compiledSignatureCandidates": [
+        "public void changeStatus(boolean)"
+      ]
+    },
+    {
+      "figure": "role-state",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "status",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "public com.xmu.rbac.ddd.domain.Role status(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, boolean)",
+      "compiledSignatureCandidates": [
+        "public com.xmu.rbac.ddd.domain.Role status(com.xmu.rbac.ddd.domain.port.TokenProvider$Principal, long, boolean)"
+      ]
+    },
+    {
+      "figure": "role-state",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "complete",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bytecode": "COMPILED",
+      "signature": "private void complete(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String)",
+      "compiledSignatureCandidates": [
+        "private void complete(com.xmu.rbac.ddd.domain.port.AuthorizationRepository$Identity, java.lang.String, java.lang.String, java.lang.String)"
+      ]
+    }
+  ],
+  "callChains": [
+    {
+      "scenario": "S01",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "link",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bodySha256": "2911b82e03c427ac802d30601580ad20d07418648619241b9085bb2b7f52ccbd",
+      "orderedTokens": [
+        "repository.lockGrants()",
+        "authorization.require(",
+        "repository.role(senior)",
+        "repository.role(junior)",
+        "authorization.requireRoleManagement(actor,role)",
+        "authorization.requireRoleManagement(actor,other)",
+        "repository.hierarchy(",
+        "graph.link(",
+        "requireAffectedGrants(",
+        "repository.saveEdges(",
+        "complete("
+      ],
+      "normalizedOffsets": [
+        0,
+        62,
+        126,
+        160,
+        184,
+        232,
+        394,
+        441,
+        506,
+        588,
+        642
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01/S06",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "requireAffectedGrants",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bodySha256": "459c09f340b8400768978f5030c062db3845f34bb04d4b791ab6830b4526b73b",
+      "orderedTokens": [
+        "graph.affectedBy(",
+        "authorization.requireGraphGrant(",
+        "authorization.upperBound(",
+        "policy.calculate("
+      ],
+      "normalizedOffsets": [
+        11,
+        43,
+        91,
+        143
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01/S06",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "complete",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bodySha256": "e9a4185300fcbf086d42d21f88d9ceff04bf23d32abdd90fc8e17b589f63210f",
+      "orderedTokens": [
+        "integrity.requireAdministrator()",
+        "repository.advanceVersion()",
+        "audits.local("
+      ],
+      "normalizedOffsets": [
+        0,
+        33,
+        61
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01/S02",
+      "class": "com.xmu.rbac.ddd.application.AuthorizationApplicationService",
+      "method": "upperBound",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java",
+      "sourceSha256": "f76c19307d7572976152601cee66838b8d15e67b916ce564e8e6b67ccf24dbca",
+      "bodySha256": "7b807cb95a3d1aa86310a327a6aa413931408e6a00e3113918e7f01152e173cd",
+      "orderedTokens": [
+        "effective(actor.id(),\"rbac-center\")",
+        "repository.hierarchy(system).requireGrantable(",
+        "policy.requireWithin("
+      ],
+      "normalizedOffsets": [
+        18,
+        184,
+        249
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S06",
+      "class": "com.xmu.rbac.ddd.application.RoleApplicationService",
+      "method": "status",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java",
+      "sourceSha256": "a3b927540f7e678f817724f44cdea4859511e9564e60a8568cedb6b0f3b827c1",
+      "bodySha256": "bf62f38a04f1c85c5c2f2372c5c52b020ede9f8346c08b2699867a4f06acd5ea",
+      "orderedTokens": [
+        "repository.lockGrants()",
+        "authorization.require(",
+        "repository.role(id)",
+        "authorization.requireRoleManagement(",
+        "role.changeStatus(",
+        "requireAffectedGrants(",
+        "repository.saveRole(",
+        "complete("
+      ],
+      "normalizedOffsets": [
+        0,
+        62,
+        126,
+        146,
+        194,
+        396,
+        526,
+        552
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S06",
+      "class": "com.xmu.rbac.ddd.application.AuditApplicationService",
+      "method": "local",
+      "path": "rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuditApplicationService.java",
+      "sourceSha256": "b9dd4e45994012604b1e22a2961c9c4288be047d7bf1c5fe4dcb51584f0d29d4",
+      "bodySha256": "d5859432fc6ab16c7b6c4c0a17dfb793bbeed34458417d2dfe9567c8dc74e086",
+      "orderedTokens": [
+        "grants.systemEnabled(",
+        "grants.assignments(",
+        "grants.hierarchy(",
+        "grants.permissions(",
+        "newAuditFact(",
+        "repository.append(fact)"
+      ],
+      "normalizedOffsets": [
+        84,
+        195,
+        233,
+        258,
+        425,
+        705
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01/S02/S06",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "begin",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bodySha256": "5263a407d6bfbd7fd5313a1f86ce6036daee6c44f4acd5b3656fa0dd1940e7b6",
+      "orderedTokens": [
+        "az.lock()",
+        "az.center(",
+        "az.root(",
+        "az.captureUpper("
+      ],
+      "normalizedOffsets": [
+        20,
+        30,
+        64,
+        75
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01/S02/S06",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "finish",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bodySha256": "865810436bca8b9b93e29d76aa68d420a054654a595f2fc1cad58a8108f6600e",
+      "orderedTokens": [
+        "db.flush()",
+        "az.preserveAdministrator()",
+        "g.version++",
+        "audit.success("
+      ],
+      "normalizedOffsets": [
+        0,
+        11,
+        38,
+        50
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S01",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "inherit",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bodySha256": "98bc71c073bb6ffcc31dbbf4c84b515364796d47310db2ce8e42d1d4354963c6",
+      "orderedTokens": [
+        "begin(",
+        "az.protectRole(a,s)",
+        "az.protectRole(a,j)",
+        "db.one(",
+        "reachable(junior,senior)",
+        "db.save(edge)",
+        "changedUpper(",
+        "finish("
+      ],
+      "normalizedOffsets": [
+        14,
+        113,
+        133,
+        248,
+        402,
+        542,
+        556,
+        660
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    },
+    {
+      "scenario": "S06",
+      "class": "com.xmu.rbac.structured.service.ManagementService",
+      "method": "roleStatus",
+      "path": "rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java",
+      "sourceSha256": "61c17687230539f60149deba4d7e00aff745b407465d1de4806abac7c762af69",
+      "bodySha256": "8f6a04d6bff50bbbdcef20765bf91991085ffae2d2b8018dda86bce17708e307",
+      "orderedTokens": [
+        "begin(",
+        "az.protectRole(",
+        "r.status=status",
+        "changedUpper(",
+        "finish("
+      ],
+      "normalizedOffsets": [
+        14,
+        93,
+        113,
+        157,
+        175
+      ],
+      "status": "ORDERED_SOURCE_CHECKED",
+      "limit": "Lexical callsite order + manual branch review; not runtime/behavior proof"
+    }
+  ],
+  "artifacts": {
+    "S01-ddd-class.svg": "adc708f0e12935578939754b106aee7d069d31435f4aa825e58b4324f0d7ab56",
+    "S01-ddd-class.png": "6a8ac3c1594b8f8555387094eda429ccdadf83bfe398ac6d47494a98ffdbbaa2",
+    "S01-ddd-class.dot": "8c330c57da5702ae625a616a9224b0e80c99fb2e4c47ea82683e942fe3415af0",
+    "S01-ddd-sequence.svg": "5e529f3da82d88b4eb8fc483518648a7cce0059a6220144dfe6d6a88857db8c5",
+    "S01-ddd-sequence.png": "d572c8851a4aab927f02dc7f56141f420862acc51e9774456cb3899fb495be81",
+    "S01-ddd-sequence.puml": "82e8ec70f2aabd0d7b21c067140110a5bce8eb69d07089cd815e2bd5768e63a2",
+    "S01-structured-class.svg": "16e4bf7ea727cd2dcc0114dd8241cf20f39c10c104dd01c079570981db47d139",
+    "S01-structured-class.png": "047621e1ef5d90db5fddf5c9c7a4e2432361c5392a4ca5afb4efde1044104705",
+    "S01-structured-class.dot": "a910c4681e52078330a023d72acc869d10faa72ed8f00bfa29485cb0a9407537",
+    "S01-structured-sequence.svg": "898bc91cc67f76d1b83d044724b548568597295fee085641b37ffc1143608280",
+    "S01-structured-sequence.png": "bbd1c8f642cd7aac63f120a62eed98a94efdd1502442c9be0a99985dcdf9910a",
+    "S01-structured-sequence.puml": "cea2b7bedb11d4de6bcdb18dffcb1eadd63d9e12981bcbdbcc2bf9e3bed59e1a",
+    "S06-ddd-sequence.svg": "86b9e36bda6844afd2f1adfa07722440f7716ecf47af6a822cc7024840e310a2",
+    "S06-ddd-sequence.png": "5f308563eb1796d9c49510e03031d3489cb4346c7131d67a87b62132a1835437",
+    "S06-ddd-sequence.puml": "abc4c4efe6c209bf165ab40c63bbf6befb806cf2d0544851b0cb40222666a529",
+    "S06-structured-sequence.svg": "bdcfcbe9439a079b7ea097c161c7311256f89f8c6e02dda2876bdb38a3919655",
+    "S06-structured-sequence.png": "0b56a2525d0770bc10e400f01cd335b8129b18871cb53a4db08423f45a78e154",
+    "S06-structured-sequence.puml": "80affcb3d1ac97aaf6d6c55e25f1403bab72e0defc7cf1947efeaa7ff4c05797",
+    "role-state.svg": "b42e1fecf9826c2ad36c924e9c492af8d2be9d0deca3c2c05663f697809f0c2f",
+    "role-state.png": "b3d4a1ec8f577c4e492206ca426f9e9841716207bfc8f75211cb70801e76419f",
+    "role-state.puml": "228ac226431243d1e9b1dc304538f0010009d830cce5b32f10672159a01f3288"
+  },
+  "pngVisualInspection": "AGENT_VIEWED_7_PNG; USER_REVIEW_PENDING",
+  "globalSourceIndex": "retained historical baseline; this scoped record supersedes C figures only",
+  "generators": {
+    "tools/render-rbac1-design.py": "d16b29b089e4556ff4208b86f330d8ea7c21e058d1a365b89f4b7275000a7651",
+    "tools/render-rbac1-design.scenarios.py": "20119e6a4bd70b5723b3eeaac62def9662ea860155bf643578c9b2db5671edf9"
+  },
+  "hashRules": {
+    "algorithm": "SHA-256",
+    "textNormalization": "CRLF bytes -> LF only for Java, Python, DOT, PUML, SVG; no trimming or BOM removal",
+    "binaryRule": "PNG and class bytes unchanged"
+  },
+  "compiledClassSha256": {
+    "com.xmu.rbac.ddd.interfaces.rest.RoleController": "8e0a1db96c53c1fa2b6965a4761f55500ae0f2358021210d6fa88c9e6db8e370",
+    "com.xmu.rbac.ddd.application.RoleApplicationService": "72871d572a3e8fa2afd640ad776568a36ea62e78d1da1bc900b7ad5dcab63d37",
+    "com.xmu.rbac.ddd.domain.port.AuthorizationRepository": "e81034c4d1c7ee37bcd6f11e75cf0583b098415f327fa21b66474d880e17c4c3",
+    "com.xmu.rbac.ddd.application.AuthorizationApplicationService": "0038fac33c53846a513bb20e5d0cfbfb2d005352322155faaf13535f344c5e09",
+    "com.xmu.rbac.ddd.domain.RoleHierarchy": "d33f88f6e039edf4b94efbd3b161ba1f58606415f5bcee284ed51127f820c830",
+    "com.xmu.rbac.ddd.application.GrantIntegrityService": "63b1bcf8fcd67205c13a880a10d97cf4d1ab0ac4c47947344a0a0ed2a98dce45",
+    "com.xmu.rbac.ddd.application.AuditApplicationService": "54280445eb67a47f51043c9ecf482e5e88b06df43b77970f8d28908f3e4ec572",
+    "com.xmu.rbac.ddd.domain.Role": "b8ad1e5d8b6e4853c2f3e660c3994ba051944d9fbad9ec361777d116f03652c0",
+    "com.xmu.rbac.ddd.domain.port.AuditRepository": "dbdd2eec69018b14378a02302efea72b63a5a4be66fed8e115a75567c5db68fe",
+    "com.xmu.rbac.structured.controller.ManagementController": "ae5699f7a9b219afb7e599835b09411597eb675c4cfc1b695c4fbd3c103fae43",
+    "com.xmu.rbac.structured.service.ManagementService": "1a4756f64d2ccc11e987bc43c0dcf059531a2cec3663f8393dc3ec71056dd0c4",
+    "com.xmu.rbac.structured.service.AuthorizationService": "e8ed0bcae9c2d31db8daad959982370310d5f6681ca0ef2fc636271e09098d81",
+    "com.xmu.rbac.structured.mapper.Store": "cf8863fa3383ded390d5183b84d638fa74cb529d1c254576b01f790299c5101f",
+    "com.xmu.rbac.structured.service.AuditService": "c7190325e773bda8a1d235513e167616decfb96509a05e4abc79817ff1b74417",
+    "com.xmu.rbac.ddd.infrastructure.persistence.JpaAuthorizationRepositoryAdapter": "64385e312c6d55a517800b99bbd0745d0262372c21c9fcd4bda3e1ac1329eb12"
+  }
+}

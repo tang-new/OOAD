@@ -10,12 +10,14 @@ public class RoleUpdateRequest {
         return provided.contains(field);
     }
 
-    @jakarta.validation.constraints.Size(max = 128)
+    @jakarta.validation.constraints.Size(min = 1, max = 128)
+    @jakarta.validation.constraints.Pattern(regexp = "(?s).*\\S.*")
     private String name;
 
     @jakarta.validation.constraints.Size(max = 500)
     private String description;
 
+    @jakarta.validation.constraints.PositiveOrZero
     private Long version;
 
     public String getName() {

@@ -4,11 +4,11 @@ package com.xmu.rbac.ddd.interfaces.rest.dto;
 @cn.edu.xmu.clonefactory.CopyTo(com.xmu.rbac.ddd.application.RoleCommand.class)
 public class CreateRoleRequest {
     @jakarta.validation.constraints.NotBlank
-    @jakarta.validation.constraints.Size(max = 128)
+    @jakarta.validation.constraints.Size(max = 64)
     private String systemCode;
 
     @jakarta.validation.constraints.NotBlank
-    @jakarta.validation.constraints.Size(max = 128)
+    @jakarta.validation.constraints.Size(max = 64)
     private String code;
 
     @jakarta.validation.constraints.NotBlank

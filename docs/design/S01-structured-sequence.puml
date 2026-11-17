@@ -52,8 +52,9 @@ svc -> svc: 11. changedUpper(actor, seniorRole)
 activate svc
 deactivate svc
 note over auth
-upper compares captured pre-mutation actor snapshot,
-not the newly modified self grants.
+upper compares captured pre-mutation actor snapshot.
+Special-capability traversal includes disabled nodes;
+a latent SUPER_ADMIN path is rejected and rolled back.
 end note
 else invalid graph
 svc --> obj: BizException; rollback
