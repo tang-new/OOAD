@@ -1,5 +1,7 @@
 = 最后同步：图、哈希规则与本地 m21 核验
 
+2026-11-17 的 C 局部更新以 link:../oral-review/C-diagrams-verification.json[C局部图核验] 和 link:../oral-review/C-iterations.adoc[C迭代记录] 为准。下文为此前的全量归档，本轮未执行全量图册/业务/部署验收，也未改写历史JAR或验收摘要。
+
 当前图生成状态为 STRICT_COMPILED_CHECKED；精确生成时间、源码与 class 摘要、javap 签名、25 组方法体调用顺序与图摘要以 link:source-index.json[源索引] 为准。此状态不代替业务测试；本地 m21 与最终本地 Swarm 已分别有真实归档；外部部署未执行。
 
 == 本任务实际运行

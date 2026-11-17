@@ -2237,6 +2237,29 @@
       "reviewState": "NOT_STARTED"
     },
     {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleGrantUpperBoundIntegrationTest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
+      "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleInputBoundaryIntegrationTest.java",
+      "lead": "C",
+      "owners": [
+        "C",
+        "B",
+        "D",
+        "E"
+      ],
+      "depth": "core",
+      "reviewState": "NOT_STARTED"
+    },
+    {
       "path": "rbac-ddd/src/test/java/com/xmu/rbac/ddd/SkeletonHttpTest.java",
       "lead": "A",
       "owners": [
@@ -4623,7 +4646,8 @@
         "hierarchy",
         "saveRole",
         "saveEdges",
-        "roles"
+        "roles",
+        "permissions"
       ],
       "boundary": "RoleState/领域恢复与图/关联保存"
     },
@@ -4703,7 +4727,8 @@
         "reachable",
         "paths",
         "visit",
-        "requireGrantable"
+        "requireGrantable",
+        "affectedBy"
       ],
       "boundary": "C写入不变量/特殊能力；D有效路径遍历"
     }

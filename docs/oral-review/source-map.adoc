@@ -31,14 +31,14 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |E |`systems`, `system`, `saveSystem` |系统持久化
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |B |`department`, `departments`, `saveDepartment`, `departmentOccupied`, `deleteDepartment`, `user`, `saveUser`, `users`, `assignments`, `assign`, `removeAssignment`, `allowed`, `replaceEligibility` |组织/用户/准入/指派
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |A |`username`, `lockLogin`, `saveLoginState`, `revoked`, `revoke`, `password` |凭据、失败计数和持久注销
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |C |`restore`, `role`, `hierarchy`, `saveRole`, `saveEdges`, `roles` |RoleState/领域恢复与图/关联保存
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |C |`restore`, `role`, `hierarchy`, `saveRole`, `saveEdges`, `roles`, `permissions(Set<Long>)` |RoleState/领域恢复与图/关联保存、直接授权按ID读取
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |D |`freshenRead`, `lockGrants`, `version`, `advanceVersion`, `systemEnabled`, `identity`, `assignments`, `permissions`, `operation` |权威状态/事实读取，操作目录与E交接
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |A |`login`, `logout`, `jwks`, `me`, `password` |身份/本人输出
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |D |`permission`, `api` |UI/API授权
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |F |`auditActor`, `audit`, `auditLogs` |受信审计入口
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |C |`deleteRole` |角色删除
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java[RestSupport.java] |A/C/D/F |`principal`, `role`, `effective`, `audit` |A主体验证，C角色VO，D有效权限投影，F审计投影
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |C/D |`link`, `unlink`, `required`, `reachable`, `paths`, `visit`, `requireGrantable` |C写入不变量/特殊能力；D有效路径遍历
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |C/D |`link`, `unlink`, `required`, `reachable`, `paths`, `visit`, `requireGrantable`, `affectedBy` |C写入不变量/特殊能力/受影响上级；D有效路径遍历
 |===
 
 == 15表责任
@@ -196,7 +196,7 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-web/tests/user-workspace.spec.ts[rbac-web/tests/user-workspace.spec.ts] |C |auxiliary
 |===
 
-== C主责定位（27文件）
+== C主责定位（29文件）
 
 [cols="6,1,2",options="header"]
 |===
@@ -219,6 +219,8 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleUpdateRequest.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleUpdateRequest.java] |A |core
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleView.java[rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/dto/RoleView.java] |A |core
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java] |B/D/E/F |shared-methods
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleGrantUpperBoundIntegrationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleGrantUpperBoundIntegrationTest.java] |B/D |core
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleInputBoundaryIntegrationTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleInputBoundaryIntegrationTest.java] |B/D/E |core
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java[rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/RoleHierarchyTest.java] |D |core
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Role.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/Role.java] |B/D |core
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RoleHierarchy.java[rbac-structured/src/main/java/com/xmu/rbac/structured/entity/RoleHierarchy.java] |B/D |core

@@ -55,27 +55,39 @@ else valid edge
 svc -> graph: 11. link(senior, junior)
 activate graph
 deactivate graph
-svc -> auth: 12. requireGraphGrant(actor, graph, senior)
+svc -> svc: 12. requireAffectedGrants(actor, graph, changedRole, permissions)
+activate svc
+svc -> graph: 13. affectedBy(changedRole.id())
+activate graph
+deactivate graph
+loop changed role and every affected senior
+svc -> auth: 14. requireGraphGrant(actor, graph, affectedId)
 activate auth
 deactivate auth
-svc -> auth: 13. upperBound(actor, systemCode, proposed)
+svc -> auth: 15. upperBound(actor, systemCode, proposedClosure)
 activate auth
 deactivate auth
+end
+note over auth
+All checks precede saveRole/saveEdges; actor facts still precede mutation.
+Special-capability traversal includes disabled nodes.
+end note
+deactivate svc
 note over auth
 requireGrantable traverses even disabled nodes:
 no pre-planted path to SUPER_ADMIN; permission-set inclusion alone is insufficient.
 end note
-svc -> repo: 14. saveEdges(systemCode, graph.edges())
+svc -> repo: 16. saveEdges(systemCode, graph.edges())
 activate repo
 deactivate repo
 end
-svc -> integrity: 15. requireAdministrator()
+svc -> integrity: 17. requireAdministrator()
 activate integrity
 deactivate integrity
-svc -> repo: 16. advanceVersion()
+svc -> repo: 18. advanceVersion()
 activate repo
 deactivate repo
-svc -> audit: 17. local(actor, system, type, target, SUCCESS, null)
+svc -> audit: 19. local(actor, system, type, target, SUCCESS, null)
 activate audit
 deactivate audit
 end

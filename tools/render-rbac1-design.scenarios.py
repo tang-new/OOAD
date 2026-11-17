@@ -12,6 +12,15 @@ def local_completion(q, d, audit_args, repository='repo'):
         q.raw('note over svc: finish: Store.flush → preserveAdministrator → g.version++')
     q.call('svc','audit','local' if d else 'success',audit_args)
 
+def affected_grants(q):
+    q.open('svc','svc','requireAffectedGrants','actor, graph, changedRole, permissions')
+    q.call('svc','graph','affectedBy','changedRole.id()')
+    q.raw('loop changed role and every affected senior')
+    q.call('svc','auth','requireGraphGrant','actor, graph, affectedId')
+    q.call('svc','auth','upperBound','actor, systemCode, proposedClosure')
+    q.raw('end\nnote over auth: All checks precede saveRole/saveEdges; actor facts still precede mutation.\nSpecial-capability traversal includes disabled nodes.')
+    q.close('svc','svc')
+
 def build_sequences():
     for mode in ['ddd','structured']:
         d=mode=='ddd'
@@ -38,8 +47,7 @@ def build_sequences():
             q.raw('alt self / cycle / duplicate')
             q.open('svc','graph','link','senior, junior');q.raw('graph --> obj: DomainException; abort / rollback');q.close('graph','svc')
             q.raw('else valid edge');q.call('svc','graph','link','senior, junior')
-            q.call('svc','auth','requireGraphGrant','actor, graph, senior')
-            q.call('svc','auth','upperBound','actor, systemCode, proposed')
+            affected_grants(q)
             q.raw('note over auth: requireGrantable traverses even disabled nodes:\nno pre-planted path to SUPER_ADMIN; permission-set inclusion alone is insufficient.')
             q.call('svc','repo','saveEdges','systemCode, graph.edges()');q.raw('end')
         else:
@@ -48,7 +56,7 @@ def build_sequences():
             q.call('svc','repo','one','RoleHierarchy.class, predicate, senior, junior')
             q.raw('note over svc: reachable(junior, senior): DFS queries outgoing edges.\nSelf / cross-system / duplicate / cycle throws BizException and aborts interaction.')
             q.raw('alt legal new edge');q.call('svc','repo','save','edge');q.call('svc','svc','changedUpper','actor, seniorRole')
-            q.raw('note over auth: upper compares captured pre-mutation actor snapshot,\nnot the newly modified self grants.\nelse invalid graph\nsvc --> obj: BizException; rollback\nend')
+            q.raw('note over auth: upper compares captured pre-mutation actor snapshot.\nSpecial-capability traversal includes disabled nodes;\na latent SUPER_ADMIN path is rejected and rolled back.\nelse invalid graph\nsvc --> obj: BizException; rollback\nend')
         local_completion(q,d,'actor, system, type, target, SUCCESS, null' if d else 'actor, operation, target')
         q.raw('end\nnote over svc: Transaction proxy commits only normal return.\nAny exception aborts: no edge/version/SUCCESS fact persists.')
         end_use_case(q)
@@ -157,6 +165,7 @@ def build_sequences():
            'auth':'AuthorizationApplicationService' if d else 'AuthorizationService','role':'Role',
            'repo':'AuthorizationRepository' if d else 'Store','audit':'AuditApplicationService' if d else 'AuditService'}
         if d:p.update({'integrity':'GrantIntegrityService','auditRepo':'AuditRepository'})
+        if d:p['graph']='RoleHierarchy'
         q=Sequence('S06-'+mode+'-sequence',mode,p,'ctl','status' if d else handler(mode,'roleStatus'),'bearer, id, input' if d else 'actor, id, input')
         q.open('ctl','svc','status' if d else 'roleStatus','principal, id, enabled' if d else 'actor, id, status')
         q.raw('group same local transaction: business + integrity + version + SUCCESS audit')
@@ -164,14 +173,14 @@ def build_sequences():
         if d:
             q.call('svc','auth','require','principal, rbac:role:edit, true');q.call('svc','repo','role','id')
             q.call('svc','auth','requireRoleManagement','actor, role');q.call('svc','role','changeStatus','enabled')
-            q.raw('opt enabling');q.call('svc','auth','upperBound','actor, systemCode, proposed');q.raw('end')
+            q.raw('opt enabling');affected_grants(q);q.raw('end')
             q.call('svc','repo','saveRole','role');q.call('svc','integrity','requireAdministrator')
-            q.raw('note over integrity: active identities + current graph/permissions → LastAdministratorPolicy.\nNo effective SUPER_ADMIN → 409; outer transaction rolls back.')
+            q.raw('note over integrity: active identities + root department + role eligibility\n+ current graph/permissions → LastAdministratorPolicy.\nNo qualified effective SUPER_ADMIN → 409; outer transaction rolls back.')
             q.call('svc','repo','advanceVersion')
         else:
             q.raw('note over svc,auth: begin: center/root authorization → captureUpper before mutation')
             q.call('svc','auth','protectRole','actor, role')
-            q.raw('note over svc,role: managed Role.status = status; enable → changedUpper\nfinish flushes → preserveAdministrator → increments GrantVersion\nGrantVersion Java Long id maps physical TINYINT, not BIGINT.')
+            q.raw('note over svc,role: managed Role.status = status; enable → changedUpper\nupper checks latent capability paths even across disabled nodes.\nfinish flushes → preserveAdministrator → increments GrantVersion\nGrantVersion Java Long id maps physical TINYINT, not BIGINT.')
         q.raw('alt audit persistence throws')
         q.open('svc','audit','local' if d else 'success','actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null' if d else 'actor, ROLE_STATUS, target')
         q.open('audit','auditRepo' if d else 'repo','append' if d else 'save','fact' if d else 'log')

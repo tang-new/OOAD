@@ -31,6 +31,7 @@ activate auth
 deactivate auth
 note over svc,role
 managed Role.status = status; enable → changedUpper
+upper checks latent capability paths even across disabled nodes.
 finish flushes → preserveAdministrator → increments GrantVersion
 GrantVersion Java Long id maps physical TINYINT, not BIGINT.
 end note

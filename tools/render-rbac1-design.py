@@ -105,7 +105,8 @@ def verify_call_chains():
     CURRENT_FIGURE='call-chain-review'
     # Ordered lexical callsites plus manual branch review. Not a Java call-graph or behavioral test.
     specs=[
-      ('S01','ddd','RoleApplicationService','link',['repository.lockGrants()','authorization.require(','repository.role(senior)','repository.role(junior)','authorization.requireRoleManagement(actor,role)','authorization.requireRoleManagement(actor,other)','repository.hierarchy(','graph.link(','authorization.requireGraphGrant(','authorization.upperBound(','repository.saveEdges(','complete(']),
+      ('S01','ddd','RoleApplicationService','link',['repository.lockGrants()','authorization.require(','repository.role(senior)','repository.role(junior)','authorization.requireRoleManagement(actor,role)','authorization.requireRoleManagement(actor,other)','repository.hierarchy(','graph.link(','requireAffectedGrants(','repository.saveEdges(','complete(']),
+      ('S01/S06','ddd','RoleApplicationService','requireAffectedGrants',['graph.affectedBy(','authorization.requireGraphGrant(','authorization.upperBound(','policy.calculate(']),
       ('S01/S06','ddd','RoleApplicationService','complete',['integrity.requireAdministrator()','repository.advanceVersion()','audits.local(']),
       ('S02','ddd','DirectoryApplicationService','assign',['grants.lockGrants()','actor(','directory.user(id,true)','managed(','grants.role(roleId)','authorization.upperBound(','aggregate(profile).assign(','directory.assign(','done(']),
       ('S02','ddd','DirectoryApplicationService','done',['integrity.requireAdministrator()','grants.advanceVersion()','audits.local(']),
@@ -116,7 +117,7 @@ def verify_call_chains():
       ('S03','ddd','AuthorizationApplicationService','stableEffective',['repository.freshenRead()','repository.version()','repository.systemEnabled(','repository.identity(userId)','cache.get(','policy.calculate(','repository.version()','cache.put(','repository.version()']),
       ('S04','ddd','AuthorizationApplicationService','stableApi',['repository.freshenRead()','repository.version()','repository.operation(','repository.identity(user)','effective(user,system)','repository.identity(user)','policy.allows(','repository.version()']),
       ('S01/S02','ddd','AuthorizationApplicationService','upperBound',['effective(actor.id(),"rbac-center")','repository.hierarchy(system).requireGrantable(','policy.requireWithin(']),
-      ('S06','ddd','RoleApplicationService','status',['repository.lockGrants()','authorization.require(','repository.role(id)','authorization.requireRoleManagement(','role.changeStatus(','authorization.upperBound(','repository.saveRole(','complete(']),
+      ('S06','ddd','RoleApplicationService','status',['repository.lockGrants()','authorization.require(','repository.role(id)','authorization.requireRoleManagement(','role.changeStatus(','requireAffectedGrants(','repository.saveRole(','complete(']),
       ('S05','ddd','AuditApplicationService','external',['canonical(before)','canonical(after)','newAuditFact(','fresh.execute(','repository.find(requestId)','existing.requireReplay(fact)','repository.append(fact)','catch(DataIntegrityViolationException','fresh.execute(','repository.find(requestId)','existing.requireReplay(fact)']),
       ('S06','ddd','AuditApplicationService','local',['grants.systemEnabled(','grants.assignments(','grants.hierarchy(','grants.permissions(','newAuditFact(','repository.append(fact)']),
       ('LOGIN','ddd','IdentityApplicationService','login',['loginAttempts.attempt(','DomainException.require(token!=null','returntoken']),

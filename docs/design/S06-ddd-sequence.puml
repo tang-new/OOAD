@@ -16,6 +16,7 @@ participant "repo: AuthorizationRepository" as repo
 participant "audit: AuditApplicationService" as audit
 participant "integrity: GrantIntegrityService" as integrity
 participant "auditRepo: AuditRepository" as auditRepo
+participant "graph: RoleHierarchy" as graph
 activate obj
 obj -> ctl: 1. status(bearer, id, input)
 activate ctl
@@ -38,35 +39,51 @@ svc -> role: 7. changeStatus(enabled)
 activate role
 deactivate role
 opt enabling
-svc -> auth: 8. upperBound(actor, systemCode, proposed)
+svc -> svc: 8. requireAffectedGrants(actor, graph, changedRole, permissions)
+activate svc
+svc -> graph: 9. affectedBy(changedRole.id())
+activate graph
+deactivate graph
+loop changed role and every affected senior
+svc -> auth: 10. requireGraphGrant(actor, graph, affectedId)
+activate auth
+deactivate auth
+svc -> auth: 11. upperBound(actor, systemCode, proposedClosure)
 activate auth
 deactivate auth
 end
-svc -> repo: 9. saveRole(role)
+note over auth
+All checks precede saveRole/saveEdges; actor facts still precede mutation.
+Special-capability traversal includes disabled nodes.
+end note
+deactivate svc
+end
+svc -> repo: 12. saveRole(role)
 activate repo
 deactivate repo
-svc -> integrity: 10. requireAdministrator()
+svc -> integrity: 13. requireAdministrator()
 activate integrity
 deactivate integrity
 note over integrity
-active identities + current graph/permissions → LastAdministratorPolicy.
-No effective SUPER_ADMIN → 409; outer transaction rolls back.
+active identities + root department + role eligibility
++ current graph/permissions → LastAdministratorPolicy.
+No qualified effective SUPER_ADMIN → 409; outer transaction rolls back.
 end note
-svc -> repo: 11. advanceVersion()
+svc -> repo: 14. advanceVersion()
 activate repo
 deactivate repo
 alt audit persistence throws
-svc -> audit: 12. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
+svc -> audit: 15. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
 activate audit
-audit -> auditRepo: 13. append(fact)
+audit -> auditRepo: 16. append(fact)
 activate auditRepo
 auditRepo --> obj: persistence failure; rollback, no business success
 deactivate auditRepo
 deactivate audit
 else persisted in caller transaction
-svc -> audit: 14. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
+svc -> audit: 17. local(actor, system, ROLE_STATUS_CHANGED, target, SUCCESS, null)
 activate audit
-audit -> auditRepo: 15. append(fact)
+audit -> auditRepo: 18. append(fact)
 activate auditRepo
 deactivate auditRepo
 deactivate audit

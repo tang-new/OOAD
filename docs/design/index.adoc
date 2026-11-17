@@ -1,5 +1,7 @@
 = 当前源码图索引
 
+2026-11-17：C 的7张图现行局部核验见 link:../oral-review/C-iterations.adoc[C迭代记录] 和 link:../oral-review/C-diagrams-verification.json[编译符号/源码调用顺序/图摘要]。其中4张顺序图已重生成；原全量 source-index.json 保留历史基线，不代表本轮全工程核验。
+
 自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。
 
 == LOGIN-ddd-class

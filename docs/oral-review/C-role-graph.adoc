@@ -3,6 +3,8 @@
 
 link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：B；初始人工状态：NOT_STARTED。
 
+2026-11-17 的 C 局部修复、红绿证据与带标签提交见 link:C-iterations.adoc[C迭代记录]；该记录不代替人工互审签字。
+
 == 需求与范围
 
 ROLE-01/02/03/04/07、NFR-04，UML-S01及S06业务入口；有效权限读取和缓存由D负责。
@@ -31,7 +33,7 @@ ROLE-01/02/03/04/07、NFR-04，UML-S01及S06业务入口；有效权限读取和
 
 structured加边：inherit → begin(锁/入口/root/冻结上界) → 读角色与现有边 → reachable(junior, senior) → save/changedUpper → finish。
 
-DDD加边：RoleController.link → RoleApplicationService.link → lockGrants/角色与图 → RoleHierarchy.link → requireGraphGrant/upperBound → saveEdges → complete。
+DDD加边：RoleController.link → RoleApplicationService.link → lockGrants/角色与图 → RoleHierarchy.link → requireAffectedGrants（affectedBy/requireGraphGrant/upperBound）→ saveEdges → complete。
 
 角色状态/删除：普通编辑与启停分离；删除同时追DirectoryApplicationService.deleteRole与Adapter；完成环节先完整性检查，再推进版本和本地SUCCESS审计。
 
@@ -62,6 +64,8 @@ GRASP对照：结构化事务脚本集中规则；DDD图是Information Expert，
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[DomainRulesTest.java] |roleOwnsDirectPermissionInvariant、upperBoundIncludesPermission/Identity、protectedWithoutConditionDenies
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |concurrentInverseEdgesCannotCommitCycle、appFailureRollsBackRoleVersionAndSuccessAudit
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddSecurityIntegrationTest.java[DddSecurityIntegrationTest.java] |nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleGrantUpperBoundIntegrationTest.java[RoleGrantUpperBoundIntegrationTest.java] |三类入口检查全部受影响上级闭包，拒绝后版本/关联/SUCCESS不变
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/RoleInputBoundaryIntegrationTest.java[RoleInputBoundaryIntegrationTest.java] |长度、原始数组大小、PATCH、非正ID与跨系统权限；合法边界及拒绝后DB不变
 |link:../../tools/acceptance/suite.mjs[suite.mjs] |ROLE-03并发反向边、ROLE upper bound、最终SQL无孤儿/无跨系统事实
 |link:../../rbac-web/src/views/RoleWorkspace.vue[RoleWorkspace.vue] |直接/有效权限、DAG多父及独立状态；辅助页面核对
 |===
