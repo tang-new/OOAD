@@ -23,13 +23,18 @@ public class GrantIntegrityService {
         List<AuthorizationPolicy.Effective> users = new ArrayList<>();
         AuthorizationPolicy policy = new AuthorizationPolicy();
         for (AuthorizationRepository.Identity identity : grants.activeIdentities()) {
+            if (!"/1/".equals(grants.departmentPath(identity.departmentId()))) continue;
+            Set<Long> eligible = grants.eligibility(identity.departmentId()).allowedRoleIds();
             AuthorizationPolicy.Effective effective =
                     policy.calculate(
                             "rbac-center",
                             grants.assignments(identity.id(), "rbac-center"),
                             graph,
                             permissions);
-            if (effective.superAdministrator()) {
+            if (effective.superAdministrator()
+                    && effective.effectiveRoles().stream()
+                            .anyMatch(role -> role.superAdministratorCapability()
+                                    && eligible.contains(role.id()))) {
                 users.add(effective);
                 break;
             }

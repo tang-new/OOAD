@@ -175,6 +175,61 @@ class DddSecurityIntegrationTest extends DddHttpTestSupport {
         }
     }
 
+    /** 有效SUPER_ADMIN迁出根部门后无法执行共享授权写，必须在原事务中拒绝。 */
+    @Test
+    void lastAdministratorCannotLoseRootManagementScope() {
+        String root = login("root", "rbac-center");
+        allow(root, 2, 1);
+        long version = grants.version();
+        long success = jdbc.queryForObject(
+                "select count(*) from sys_audit_log where result='SUCCESS'", Long.class);
+        try {
+            assertThat(call(HttpMethod.PUT, "/api/v1/users/1/department", root,
+                            values("departmentId", 2)).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT);
+            assertThat(jdbc.queryForObject(
+                            "select department_id from sys_user where id=1", Long.class))
+                    .isEqualTo(1L);
+            assertThat(jdbc.queryForObject(
+                            "select count(*) from sys_user_role where user_id=1 and role_id=1",
+                            Long.class)).isEqualTo(1L);
+            assertThat(grants.version()).isEqualTo(version);
+            assertThat(jdbc.queryForObject(
+                            "select count(*) from sys_audit_log where result='SUCCESS'", Long.class))
+                    .isEqualTo(success);
+        } finally {
+            if (jdbc.update("update sys_user set department_id=1 where id=1 and department_id<>1") > 0)
+                jdbc.update("update sys_grant_version set version=version+1 where id=1");
+        }
+    }
+
+    @Test
+    void lastAdministratorCanMoveWhenAnotherRootAdministratorRemains() {
+        String root = login("root", "rbac-center");
+        allow(root, 2, 1);
+        String username = code();
+        long backup = user(root, username, 1);
+        successful(HttpMethod.POST, "/api/v1/users/" + backup + "/role-assignments", root,
+                values("roleId", 1));
+        try {
+            successful(HttpMethod.PUT, "/api/v1/users/1/department", root,
+                    values("departmentId", 2));
+            String backupToken = login(username, "rbac-center");
+            long role = successful(HttpMethod.POST, "/api/v1/roles", backupToken,
+                    values("systemCode", "rbac-center", "code", code(), "name", "备份管理员可写"))
+                    .path("id").asLong();
+            successful(HttpMethod.DELETE, "/api/v1/roles/" + role, backupToken, null);
+            assertThat(jdbc.queryForObject(
+                            "select department_id from sys_user where id=1", Long.class))
+                    .isEqualTo(2L);
+        } finally {
+            jdbc.update("update sys_user set department_id=1 where id=1");
+            jdbc.update("delete from sys_user_role where user_id=?", backup);
+            jdbc.update("update sys_user set status='DELETED',token_version=token_version+1 where id=?", backup);
+            jdbc.update("update sys_grant_version set version=version+1 where id=1");
+        }
+    }
+
     @Test
     void inactiveTargetCannotUseAuthenticatedApiThroughCheckOrExplain() {
         String root = login("root", "rbac-center");
