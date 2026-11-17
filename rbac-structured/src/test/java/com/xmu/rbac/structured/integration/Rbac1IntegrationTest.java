@@ -1240,6 +1240,48 @@ class Rbac1IntegrationTest {
             .isZero();
     }
 
+    /** 停用节点不能隐藏可恢复的超级管理员能力；拒绝后业务、版本与成功审计均不变。 */
+    @Test
+    void nonSuperCannotPlantDisabledSuperAdministratorPath() throws Exception {
+        long guard = ok("POST", "/roles",
+            Map.of("systemCode", "rbac-center", "code", "DORMANT_GUARD", "name", "角色管理员"))
+                         .path("id").asLong();
+        long dormant = ok("POST", "/roles",
+            Map.of("systemCode", "rbac-center", "code", "DORMANT_BRIDGE", "name", "停用继承桥"))
+                           .path("id").asLong();
+        long edit = jdbc.queryForObject(
+            "select id from sys_permission where system_id=1 and kind='API' and code='rbac:role:edit'",
+            Long.class);
+        grants(guard, edit);
+        grants(1);
+        edge(dormant, 1);
+        ok("PUT", "/roles/" + dormant + "/status", Map.of("status", "DISABLED"));
+        long u = user("dormantroleguard", 1);
+        allow(1, 1, guard);
+        assign(u, guard);
+        String ordinary = login("dormantroleguard", "rbac-center");
+        long version = jdbc.queryForObject(
+            "select version from sys_grant_version where id=1", Long.class);
+        long success = jdbc.queryForObject(
+            "select count(*) from sys_audit_log where result='SUCCESS'", Long.class);
+
+        assertThat(call("POST", "/api/v1/roles/" + guard + "/inherits/" + dormant,
+                       ordinary, null).status).isEqualTo(403);
+        assertThat(jdbc.queryForObject(
+                       "select count(*) from sys_role_hierarchy where senior_role_id=? and junior_role_id=?",
+                       Long.class, guard, dormant)).isZero();
+        assertThat(jdbc.queryForObject(
+                       "select version from sys_grant_version where id=1", Long.class))
+            .isEqualTo(version);
+        assertThat(jdbc.queryForObject(
+                       "select count(*) from sys_audit_log where result='SUCCESS'", Long.class))
+            .isEqualTo(success);
+        ok("PUT", "/roles/" + dormant + "/status", Map.of("status", "ENABLED"));
+        assertThat(ok("GET", "/users/" + u + "/systems/rbac-center/permissions", null)
+                       .path("effectiveRoles").findValuesAsText("code"))
+            .doesNotContain("SUPER_ADMIN");
+    }
+
     /** SUPER_ADMIN的能力标记独立于权限集合，清空直接权限也不能授权普通管理员触碰。 */
     @Test
     void nonSuperCannotModifyGrantOrInheritAnEmptySuperAdmin() throws Exception {
