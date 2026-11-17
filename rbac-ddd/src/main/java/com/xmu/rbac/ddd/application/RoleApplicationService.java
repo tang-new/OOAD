@@ -136,7 +136,7 @@ public class RoleApplicationService {
         Role role = repository.role(id);
         authorization.requireRoleManagement(actor, role);
         List<Permission> all = repository.permissions(role.systemCode());
-        List<Permission> selected = all.stream().filter(p -> ids.contains(p.id())).toList();
+        List<Permission> selected = repository.permissions(ids);
         DomainException.require(selected.size() == ids.size(), 404, "PERMISSION_NOT_FOUND");
         role.replacePermissions(selected);
         RoleHierarchy graph = repository.hierarchy(role.systemCode());

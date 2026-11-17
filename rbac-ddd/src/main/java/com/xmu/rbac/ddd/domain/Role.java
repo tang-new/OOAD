@@ -61,7 +61,7 @@ public final class Role {
         Set<Long> ids = new HashSet<>();
         for (Permission p : permissions) {
             DomainException.require(
-                    systemCode.equals(p.systemCode()), 409, "CROSS_SYSTEM_PERMISSION");
+                    systemCode.equals(p.systemCode()), 400, "CROSS_SYSTEM_PERMISSION");
             ids.add(p.id());
         }
         permissionIds = Set.copyOf(ids);

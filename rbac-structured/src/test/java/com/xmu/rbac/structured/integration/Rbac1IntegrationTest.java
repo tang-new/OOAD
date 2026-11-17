@@ -1240,6 +1240,22 @@ class Rbac1IntegrationTest {
             .isZero();
     }
 
+    @Test
+    void rolePatchRejectsWhitespaceNameWithoutWriting() throws Exception {
+        long target = role("ROLE_INPUT_BOUNDARY");
+        long version = jdbc.queryForObject("select version from sys_grant_version where id=1", Long.class);
+        long success = jdbc.queryForObject("select count(*) from sys_audit_log where result='SUCCESS'", Long.class);
+        Response response = call("PATCH", "/api/v1/roles/" + target, root, Map.of("name", "   "));
+        assertThat(response.status).isEqualTo(400);
+        assertThat(response.body.path("code").asText()).isEqualTo("VALIDATION_ERROR");
+        assertThat(jdbc.queryForObject("select name from sys_role where id=?", String.class, target))
+            .isEqualTo("ROLE_INPUT_BOUNDARY");
+        assertThat(jdbc.queryForObject("select version from sys_grant_version where id=1", Long.class))
+            .isEqualTo(version);
+        assertThat(jdbc.queryForObject("select count(*) from sys_audit_log where result='SUCCESS'", Long.class))
+            .isEqualTo(success);
+    }
+
     /** 停用节点不能隐藏可恢复的超级管理员能力；拒绝后业务、版本与成功审计均不变。 */
     @Test
     void nonSuperCannotPlantDisabledSuperAdministratorPath() throws Exception {

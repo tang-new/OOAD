@@ -14,6 +14,7 @@ import java.util.*;
 
 /** 人员、单一部门和系统管理的独立接口。 */
 @RestController
+@org.springframework.validation.annotation.Validated
 @RequestMapping("/api/v1")
 public class DirectoryController {
     private final DirectoryApplicationService directory;
@@ -285,7 +286,7 @@ public class DirectoryController {
     @DeleteMapping("/roles/{id}")
     public Object deleteRole(
             @RequestHeader(value = "Authorization", required = false) String b,
-            @PathVariable long id) {
+            @PathVariable @Positive long id) {
         directory.deleteRole(rest.principal(b), id);
         return RestSupport.ok(null);
     }
