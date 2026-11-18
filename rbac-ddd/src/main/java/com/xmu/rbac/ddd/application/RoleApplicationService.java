@@ -110,7 +110,7 @@ public class RoleApplicationService {
     public Role status(TokenProvider.Principal principal, long id, boolean enabled) {
         repository.lockGrants();
         AuthorizationRepository.Identity actor =
-                authorization.require(principal, "rbac:role:edit", true);
+                authorization.require(principal, "rbac:role:status", true);
         Role role = repository.role(id);
         authorization.requireRoleManagement(actor, role);
         role.changeStatus(enabled);

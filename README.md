@@ -26,7 +26,7 @@
 ## 工程
 
 ```text
-rbac-contract/      唯一 OpenAPI、V1/V2、课程80操作目录；不含共享业务实现
+rbac-contract/      唯一 OpenAPI、V1–V3、课程80操作目录；不含共享业务实现
 rbac-structured/    Controller → 无状态 Service → Spring Data/JPA/Redis Mapper
 rbac-ddd/           独立纯JDK领域、应用编排、端口、JPA/Redis适配器及REST
 rbac-gateway/       JWT/JWKS、逐请求中心决策、真实路由匹配和固定课程上游
@@ -47,7 +47,7 @@ tools/             合同生成、CloneFactory、共享真库验收和设计核�
 
 要求 **显式 JDK21**、Node22+、Python3、Docker；wrapper提供 Maven3.9.9。绘图另需 Graphviz。
 
-**只可使用专用 loopback 测试实例，绝不能指向生产。新V1/V2只能用于空开发库，禁止覆写生产旧迁移历史。**
+**下列命令使用专用 loopback 测试实例。V1/V2 用于初始化空库，V3 可升级已执行当前 V1/V2 的 RBAC1 库。**
 先检查13306/16379及容器名称没有被其它用途占用；下列命令不用于重建已有实例：
 
 ```bash

@@ -91,6 +91,7 @@ Windows的SIGTERM实际上终止进程、不执行Java shutdown hook，因此使
 . 操作者变更前上界冻结；空权限SUPER_ADMIN仍是特殊能力，非超管不能编辑/指派/继承；最后有效管理员不可间接锁死。
 . RS256/issuer/aud/kid/iat/exp/签名/轮换、单aud无角色claim、状态/tokenVersion、跨JVM注销及Redis清理后仍拒绝。
 . UI/API独立、映射不赋权、同system/kind引用缺失404且不得写入非法元数据，未知路由默认拒绝。
+. 角色启停与资料编辑使用不同 API 权限。双后端以仅有编辑权限及仅有启停权限的操作者分别验证成功和拒绝，拒绝后核对角色资料和状态。V3 迁移测试验证 V2 自定义编辑角色未获新权限。
 . 模拟/解释验证UI/API、错误组合、停用目标200 false USER_DISABLED且有效管理员不被踢出。
 . 七个教师裸/auth操作、两私有投影最小字段与双凭据、网关可信路由/固定上游/拒绝身份头和URL伪造；中心非200不得进入课程。
 . 审计UUID/四事件/前缀/500字/安全JSON；同键串行并发同id、跨主体/系统异体拒绝；业务与SUCCESS同事务、trigger故障真实回滚，DENIED独立。

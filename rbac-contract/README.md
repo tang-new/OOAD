@@ -12,9 +12,9 @@ python tools/generate-rbac1-contract.py --check
 python tools/generate-rbac1-contract-test.py
 ```
 
-The last command **drops and recreates only `rbac1_schema_contract_test`**, after verifying container `rbac-phase2-test-mysql` is bound to loopback port 13306. It uses real cached Flyway 10.10.0 and MySQL JDBC jars, migrates V1/V2, validates checksums, repeats migration (zero executions), checks all 15 physical column lists against the frozen document, checks catalogs/grants/mappings and negative database constraints. MySQL queries run through `docker exec`; credentials are neither printed nor passed as CLI arguments. It never connects to or modifies `rbac_test`, production or application test schemas. Static generation/check has no database access.
+The last command **drops and recreates only `rbac1_schema_contract_test`** after verifying that `rbac-phase2-test-mysql` is bound to loopback port 13306. It applies V1/V2, adds a custom edit-only role, upgrades to V3, validates checksums and checks that a second migration runs zero scripts. It checks the effective catalogs, grants, mappings, table columns and database constraints. MySQL queries run through `docker exec` with credentials kept in the container. Static generation/check uses local files.
 
-`target/` may contain stale resources from the previous build: run a **clean** Maven build before integrating the jar. Flyway has exactly `V1__rbac1_schema.sql` and `V2__rbac1_seed.sql`; old V1–V4 remain only in Git history. No baseline-on-migrate for existing schemas.
+`target/` may contain stale resources from the previous build. Run a **clean** Maven build before integrating the jar. Flyway applies V1/V2 for the RBAC1 baseline and V3 for the dedicated role status capability. V3 also applies to RBAC1 databases already on V2. The RBAC0 migration history remains in Git.
 
 ## Source and catalogs
 

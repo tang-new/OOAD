@@ -400,7 +400,7 @@ public class ManagementService {
     /** 执行roleStatus操作，保持服务到持久化层的单向依赖。 */
     @Transactional
     public Object roleStatus(Actor a, Long id, String status) {
-        GrantVersion g = begin(a, "rbac:role:edit", true);
+        GrantVersion g = begin(a, "rbac:role:status", true);
         enabled(status);
         Role r = az.require(Role.class, id);
         az.protectRole(a, r);

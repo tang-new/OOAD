@@ -24,7 +24,8 @@ svc -> auth: 3. lock()
 activate auth
 deactivate auth
 note over svc,auth
-begin: center/root authorization → captureUpper before mutation
+begin: rbac:role:status + root department
+→ captureUpper before mutation
 end note
 svc -> auth: 4. protectRole(actor, role)
 activate auth

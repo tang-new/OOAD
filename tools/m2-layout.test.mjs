@@ -110,9 +110,9 @@ test('RBAC1: 64项OAS登记唯一且包含根身份与两个私有投影', () =>
   assert.doesNotMatch(oas, /^  \/api\/v1\/auth\/(?:login|logout|me):/m)
 })
 
-test('RBAC1: 开发基线仅V1/V2与15表，禁止恢复一期模型或公开root口令', () => {
+test('RBAC1: V1–V3与15表，禁止恢复一期模型或公开root口令', () => {
   const directory = 'rbac-contract/src/main/resources/db/migration/'
-  assert.deepEqual(readdirSync(new URL(directory, root)).filter((name) => /^V.*\.sql$/.test(name)).sort(), ['V1__rbac1_schema.sql', 'V2__rbac1_seed.sql'])
+  assert.deepEqual(readdirSync(new URL(directory, root)).filter((name) => /^V.*\.sql$/.test(name)).sort(), ['V1__rbac1_schema.sql', 'V2__rbac1_seed.sql', 'V3__role_status_permission.sql'])
   const ddl = text(directory + 'V1__rbac1_schema.sql'), seed = text(directory + 'V2__rbac1_seed.sql')
   const tables = [...ddl.matchAll(/^CREATE TABLE (sys_\w+) \(/gm)].map((match) => match[1]).sort()
   assert.deepEqual(tables, ['sys_system', 'sys_department', 'sys_user', 'sys_role', 'sys_permission', 'sys_role_permission', 'sys_user_role', 'sys_department_allowed_role', 'sys_role_hierarchy', 'sys_ui_resource', 'sys_api_operation', 'sys_ui_api_mapping', 'sys_token_revocation', 'sys_grant_version', 'sys_audit_log'].sort())

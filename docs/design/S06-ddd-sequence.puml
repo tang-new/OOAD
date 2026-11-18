@@ -26,7 +26,7 @@ group same local transaction: business + integrity + version + SUCCESS audit
 svc -> repo: 3. lockGrants()
 activate repo
 deactivate repo
-svc -> auth: 4. require(principal, rbac:role:edit, true)
+svc -> auth: 4. require(principal, rbac:role:status, true)
 activate auth
 deactivate auth
 svc -> repo: 5. role(id)

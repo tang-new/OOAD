@@ -24,6 +24,8 @@ def sql(query, expect_failure=False):
 def main():
     run([sys.executable,str(ROOT/'tools/generate-rbac1-contract.py'),'--check'])
     doc=yaml.safe_load((RES/'openapi/rbac-api.yaml').read_text(encoding='utf8'));validate_spec(doc)
+    assert doc['paths']['/api/v1/roles/{id}']['patch']['x-required-permission']=='rbac:role:edit'
+    assert doc['paths']['/api/v1/roles/{id}/status']['put']['x-required-permission']=='rbac:role:status', 'Role status API must require its own capability'
     print('OpenAPI semantic/$ref/operationId validation PASS')
     java=str(Path(os.environ['JAVA_HOME'])/'bin/java') if os.environ.get('JAVA_HOME') else 'java'
     version=subprocess.check_output([java,'-version'],stderr=subprocess.STDOUT,text=True,encoding='utf8',errors='replace')
@@ -46,12 +48,21 @@ def main():
         # Prefer one recent cached version, never mix all versions of a dependency.
         jars.append(sorted(candidates,key=lambda p:tuple(int(v) if v.isdigit() else v for v in p.parent.name.split('.')))[-1])
     source='''import org.flywaydb.core.Flyway;
+import java.sql.DriverManager;
 class ContractMigrationTest {
- public static void main(String[] args) {
-  Flyway f=Flyway.configure().dataSource("jdbc:mysql://127.0.0.1:13306/rbac1_schema_contract_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC", "root", System.getenv("RBAC_CONTRACT_TEST_PASSWORD")).locations("filesystem:"+args[0]).cleanDisabled(true).load();
-  var first=f.migrate(); if(first.migrationsExecuted!=2) throw new AssertionError("Expected exactly V1/V2");
+ public static void main(String[] args) throws Exception {
+  String url="jdbc:mysql://127.0.0.1:13306/rbac1_schema_contract_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+  String password=System.getenv("RBAC_CONTRACT_TEST_PASSWORD");
+  var config=Flyway.configure().dataSource(url,"root",password).locations("filesystem:"+args[0]).cleanDisabled(true);
+  if(config.target("2").load().migrate().migrationsExecuted!=2) throw new AssertionError("Expected V1/V2 baseline");
+  try(var connection=DriverManager.getConnection(url,"root",password); var stmt=connection.createStatement()) {
+   stmt.executeUpdate("INSERT INTO sys_role(system_id,code,name,status) VALUES(1,'FIX_EDIT_ONLY','Edit only','ENABLED')");
+   stmt.executeUpdate("INSERT INTO sys_role_permission(role_id,permission_id) SELECT r.id,p.id FROM sys_role r JOIN sys_permission p ON p.system_id=r.system_id WHERE r.code='FIX_EDIT_ONLY' AND p.kind='API' AND p.code='rbac:role:edit'");
+  }
+  Flyway f=config.target("latest").load();
+  if(f.migrate().migrationsExecuted!=1) throw new AssertionError("Expected V3 upgrade only");
   f.validate();var second=f.migrate();if(second.migrationsExecuted!=0)throw new AssertionError("Repeat migration not idempotent");
-  System.out.println("Flyway migrate V1/V2, validate, repeat migrate PASS");
+  System.out.println("Flyway migrate V1/V2, upgrade V3, validate, repeat migrate PASS");
  }
 }'''
     with tempfile.TemporaryDirectory(prefix='rbac1-contract-') as temp:
@@ -60,6 +71,10 @@ class ContractMigrationTest {
     assert sql('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name LIKE \'sys_%\';')=='15'
     assert sql("SELECT password_hash FROM sys_user WHERE id=1;")=='UNINITIALIZED'
     assert sql('SELECT COUNT(*) FROM sys_user_role;')=='1'
+    assert sql("SELECT p.code FROM sys_api_operation a JOIN sys_permission p ON p.id=a.permission_id WHERE a.system_id=1 AND a.operation_id='setRoleStatus';")=='rbac:role:status'
+    assert sql("SELECT p.code FROM sys_api_operation a JOIN sys_permission p ON p.id=a.permission_id WHERE a.system_id=1 AND a.operation_id='updateRole';")=='rbac:role:edit'
+    assert sql("SELECT r.code FROM sys_role_permission rp JOIN sys_role r ON r.id=rp.role_id JOIN sys_permission p ON p.id=rp.permission_id WHERE p.system_id=1 AND p.kind='API' AND p.code='rbac:role:status' ORDER BY r.code;")=='RBAC_ADMIN\nSUPER_ADMIN'
+    assert sql('SELECT version FROM sys_grant_version WHERE id=1;')=='1'
     assert sql('SELECT COUNT(*) FROM sys_api_operation WHERE system_id=2;')=='80'
     assert sql("SELECT required_role FROM sys_api_operation WHERE system_id=2 AND operation_id='copyCourse';")=='teacher'
     assert sql("SELECT COUNT(*) FROM sys_api_operation WHERE system_id=2 AND access_policy<>'PROTECTED';")=='0'
@@ -90,6 +105,6 @@ class ContractMigrationTest {
     for query in invalid:sql(query,expect_failure=True)
     sql('START TRANSACTION; INSERT INTO sys_user(subject,username,password_hash,name,department_id,status) VALUES(\'test-reservation\',\'test-reservation\',\'UNINITIALIZED\',\'Test\',1,\'ACTIVE\'); SELECT LAST_INSERT_ID(); ROLLBACK;')
     assert int(sql("SELECT AUTO_INCREMENT FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='sys_user';"))>=10000
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1;')=='2'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1;')=='3'
     print(f'MySQL {DATABASE}: 15 exact-column tables, all catalogs/grants/mappings, root placeholder, ID reservation and {len(invalid)} negative constraint tests PASS')
 if __name__=='__main__':main()

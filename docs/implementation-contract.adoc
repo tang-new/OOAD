@@ -83,7 +83,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 |POST /roles |{systemCode,code,name,description?,identityRole?}→RoleVO |rbac:role:edit
 |GET /roles/{id} |RoleVO |rbac:role:view
 |PATCH /roles/{id} |{name?,description?,version?}，禁止status→RoleVO |rbac:role:edit
-|PUT /roles/{id}/status |{status}→RoleVO |rbac:role:edit
+|PUT /roles/{id}/status |{status}→RoleVO |rbac:role:status
 |DELETE /roles/{id} |受控退役/清指派、边、权限、准入，保护最后有效超级管理员 |rbac:role:edit
 |GET /roles/{id}/permissions |PermissionVO[]（直接） |rbac:role:view
 |PUT /roles/{id}/permissions |{permissionIds:Long[]}原子替换，仅同系统 |rbac:role:edit
@@ -117,6 +117,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 == 不变量与安全决策
 
 . 组织管理范围：中心管理权限 + actor当前部门子树；总部根部门覆盖全部。权限计算不再带部门数据scope。
+. 角色启停要求 API 权限 `rbac:role:status`，角色资料修改仍要求 `rbac:role:edit`。按钮保留独立 UI 权限 `rbac:ui:setRoleStatus`。
 . 直接指派必须在目标用户当前部门的DepartmentAllowedRole清单内，即使超级管理员也要满足；引导root的SUPER_ADMIN准入在种子中明确建立。
 . 非超级管理员不能赋予或改出自己在目标系统没有的有效权限及identityRole标记，改继承前按完整新闭包检验提升。中心管理入口资格与目标系统授权上界分开读取。系统级共享定义（系统/角色/权限/继承/UI/API）的写操作还要求操作者所属根部门；部门管理员只管理子树人员、准入和指派，不能借共享角色影响范围外人员。
 角色直接权限替换、加继承边及重新启用均检查自身与全部受影响上级的最终闭包，操作者上界取保存前事实。特殊SUPER_ADMIN可达性检查不因停用节点切断，避免预埋恢复能力。

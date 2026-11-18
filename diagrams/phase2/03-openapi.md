@@ -128,7 +128,7 @@
 | GET | `/api/v1/roles/{id}` | `getRole` | rbac:role:view | RoleVO |
 | PATCH | `/api/v1/roles/{id}` | `updateRole` | rbac:role:edit | {name?,description?,version?}，禁止status |
 | DELETE | `/api/v1/roles/{id}` | `deleteRole` | rbac:role:edit | 受控退役/清指派、边、权限、准入，保护最后有效超级管理员 |
-| PUT | `/api/v1/roles/{id}/status` | `setRoleStatus` | rbac:role:edit | {status} |
+| PUT | `/api/v1/roles/{id}/status` | `setRoleStatus` | rbac:role:status | {status} |
 | GET | `/api/v1/roles/{id}/permissions` | `getRolePermissions` | rbac:role:view | PermissionVO[]（直接） |
 | PUT | `/api/v1/roles/{id}/permissions` | `replaceRolePermissions` | rbac:role:edit | {permissionIds:Long[]}原子替换，仅同系统 |
 | GET | `/api/v1/roles/{id}/effective-permissions` | `getRoleEffectivePermissions` | rbac:role:view | EffectiveVO（以该角色为直接角色） |

@@ -1558,7 +1558,7 @@ paths:
     put:
       operationId: setRoleStatus
       summary: '{status}'
-      x-required-permission: rbac:role:edit
+      x-required-permission: rbac:role:status
       x-required-audience: rbac-center
       responses:
         '200':

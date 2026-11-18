@@ -171,14 +171,14 @@ def build_sequences():
         q.raw('group same local transaction: business + integrity + version + SUCCESS audit')
         q.call('svc','repo' if d else 'auth','lockGrants' if d else 'lock')
         if d:
-            q.call('svc','auth','require','principal, rbac:role:edit, true');q.call('svc','repo','role','id')
+            q.call('svc','auth','require','principal, rbac:role:status, true');q.call('svc','repo','role','id')
             q.call('svc','auth','requireRoleManagement','actor, role');q.call('svc','role','changeStatus','enabled')
             q.raw('opt enabling');affected_grants(q);q.raw('end')
             q.call('svc','repo','saveRole','role');q.call('svc','integrity','requireAdministrator')
             q.raw('note over integrity: active identities + root department + role eligibility\n+ current graph/permissions → LastAdministratorPolicy.\nNo qualified effective SUPER_ADMIN → 409; outer transaction rolls back.')
             q.call('svc','repo','advanceVersion')
         else:
-            q.raw('note over svc,auth: begin: center/root authorization → captureUpper before mutation')
+            q.raw('note over svc,auth: begin: rbac:role:status + root department\n→ captureUpper before mutation')
             q.call('svc','auth','protectRole','actor, role')
             q.raw('note over svc,role: managed Role.status = status; enable → changedUpper\nupper checks latent capability paths even across disabled nodes.\nfinish flushes → preserveAdministrator → increments GrantVersion\nGrantVersion Java Long id maps physical TINYINT, not BIGINT.')
         q.raw('alt audit persistence throws')

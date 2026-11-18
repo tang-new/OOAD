@@ -265,7 +265,9 @@ def seed(document, course, manifest):
         for method,op in methods.items():
             if method not in METHODS:continue
             code=op['x-required-permission'];policy='PUBLIC' if code=='PUBLIC' else 'AUTHENTICATED' if code=='@authenticated' else 'PROTECTED'
-            pid=None if policy!='PROTECTED' else permission(1,'API',code)
+            # Keep the already applied V2 byte-for-byte stable. V3 upgrades this operation.
+            seed_code='rbac:role:edit' if op['operationId']=='setRoleStatus' else code
+            pid=None if policy!='PROTECTED' else permission(1,'API',seed_code)
             aid=len(apis)+1;apis[(1,op['operationId'])]=aid
             add('sys_api_operation',id=aid,system_id=1,operation_id=op['operationId'],method=method.upper(),path_template=path,permission_id=pid,required_role=None,access_policy=policy,enabled=True,version=0)
             center.append((aid,op['operationId'],code,method,path))
@@ -331,7 +333,40 @@ def seed(document, course, manifest):
     sample_ids=['listTerms','createTerm','copyCourse','importRoster','createGroupJoinRequest','submitMaterials','createMilestone','bookOralSlot','getMyGrades','downloadFile']
     samples=[dict(byid[oid],category=next(g for g,ids in GROUPS.items() if oid in ids)) for oid in sample_ids]
     emit('catalog/coverage-samples.json',json.dumps({'source':SOURCE,'commit':COMMIT,'sha256':manifest['sha256'],'samples':samples},ensure_ascii=False,indent=2)+'\n')
-    return {'tables':15,'centerOperations':len(center),'courseOperations':len(course),'centerPages':len(pages),'permissions':len(permissions),'uiResources':len(uis),'mappings':len(mapping),'rolePermissionGrants':len(grants)}
+    return {'tables':15,'centerOperations':len(center),'courseOperations':len(course),'centerPages':len(pages),'permissions':len(permissions)+1,'uiResources':len(uis),'mappings':len(mapping),'rolePermissionGrants':len(grants)+2}
+
+def split_role_status_permission(document):
+    code=q(document['paths']['/api/v1/roles/{id}/status']['put']['x-required-permission'])
+    emit('db/migration/V3__role_status_permission.sql',f"""-- Separate role status from the role edit capability without changing V1/V2.
+START TRANSACTION;
+
+UPDATE sys_grant_version SET version=version+1 WHERE id=1;
+
+INSERT INTO sys_permission (system_id, code, name, kind, status)
+SELECT id, {code}, '启停角色', 'API', 'ENABLED'
+FROM sys_system WHERE code='rbac-center';
+
+UPDATE sys_api_operation a
+JOIN sys_system s ON s.id=a.system_id AND s.code='rbac-center'
+JOIN sys_permission p ON p.system_id=s.id AND p.kind='API' AND p.code={code}
+SET a.permission_id=p.id, a.version=a.version+1
+WHERE a.operation_id='setRoleStatus';
+
+-- Keep the existing built-in administrators authorized when they had the old capability.
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, new_permission.id
+FROM sys_role r
+JOIN sys_system s ON s.id=r.system_id AND s.code='rbac-center'
+JOIN sys_role_permission rp ON rp.role_id=r.id
+JOIN sys_permission old_permission ON old_permission.id=rp.permission_id
+    AND old_permission.system_id=s.id AND old_permission.kind='API'
+    AND old_permission.code='rbac:role:edit' AND old_permission.status='ENABLED'
+JOIN sys_permission new_permission ON new_permission.system_id=s.id
+    AND new_permission.kind='API' AND new_permission.code={code}
+WHERE r.builtin=TRUE AND r.code IN ('SUPER_ADMIN','RBAC_ADMIN');
+
+COMMIT;
+""")
 
 def validate(document):
     ids=set();count=0
@@ -359,6 +394,7 @@ def validate(document):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');args=parser.parse_args()
     ddl();document=oas();course,manifest=course_catalog();counts=seed(document,course,manifest);counts['validatedOasOperations']=validate(document)
+    split_role_status_permission(document)
     old=list((RES/'db/migration').glob('V*.sql'))
     expected={p for p in OUTPUTS if p.suffix=='.sql'}
     if args.check:

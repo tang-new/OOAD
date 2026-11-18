@@ -12,9 +12,10 @@ link:schema-contract.adoc[冻结物理列合同]规定15张业务表的精确列
 |现行迁移 |职责
 |link:../rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql[V1 RBAC1 schema] |创建15表、FK、联合唯一、CHECK和查询索引；用户自增起点10000。
 |link:../rbac-contract/src/main/resources/db/migration/V2__rbac1_seed.sql[V2 RBAC1 seed] |总部/Finance/Engineering、两系统、六角色、准入、root占位哈希、UI/API目录、显式角色权限及UI↔API映射、全局授权版本行。
+|link:../rbac-contract/src/main/resources/db/migration/V3__role_status_permission.sql[V3 角色启停权限] |登记 `rbac:role:status`，改绑启停 API 并推进授权版本。原有直接授权仍有效的内置管理员延续启停权限，自定义角色需显式授予。
 |===
 
-旧V1–V4只保留在Git历史，不再作为当前classpath迁移。*仅允许新空开发/测试库执行此V1/V2*，不是旧生产库升级方案。
+RBAC0 的旧 V1–V4 保留在 Git 历史。当前 RBAC1 的 V1/V2 初始化空库，V3 也可用于已执行当前 V1/V2 的 RBAC1 库。
 禁止将新基线连接生产或已有一期库、篡改其Flyway历史/checksum、clean生产、用baseline-on-migrate掩盖冲突。
 已有旧库应继续使用匹配的一期镜像/schema；需要升级时另行制定备份、兼容迁移与恢复方案，本轮不操作旧库。
 打包前clean构建，避免target/classes残留旧脚本进入jar。

@@ -1311,7 +1311,7 @@ class Rbac1IntegrationTest {
                           .asLong();
         List<Long> rights =
             jdbc.queryForList("select id from sys_permission where system_id=1 and kind='API' and "
-                              + "code in ('rbac:role:edit','rbac:assignment:edit')",
+                              + "code in ('rbac:role:edit','rbac:role:status','rbac:assignment:edit')",
                 Long.class);
         grants(guard, rights.stream().mapToLong(Long::longValue).toArray());
         long u = user("ordinaryroleguard", 1);

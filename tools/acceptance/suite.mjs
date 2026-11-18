@@ -227,6 +227,33 @@ export async function runSuite(f, record) {
     status(await request('PATCH',`/api/v1/users/${outsider.id}`,{name:'forbidden sibling'},t),403);
     status(await request('PUT',`/api/v1/users/${outsider.id}/department`,{departmentId:department.id},t),403);
   });
+  await scenario('ROLE status and profile changes require separate API permissions',async()=>{
+    const [[hq]]=await f.db.query('SELECT id FROM sys_department WHERE parent_id IS NULL ORDER BY id LIMIT 1');
+    const operatorRole=await makeRole('FX_ROLE_OPERATOR',B);
+    const target=await makeRole('FX_ROLE_STATUS_TARGET',B);
+    const editPermission=await makePermission('rbac:role:edit','API',B);
+    await grant(operatorRole,[editPermission]);
+    const existing=await ok('GET',`/departments/${hq.id}/assignable-roles`);
+    await eligible(hq,[...existing,operatorRole]);
+    try {
+      const operator=await createUser('fixture_role_operator',hq);
+      await assign(operator,operatorRole);
+      const opToken=await freshLogin(operator.username,fixturePassword,B);
+
+      assert.equal((await ok('PATCH',`/roles/${target.id}`,{name:'Renamed role'},opToken)).name,'Renamed role');
+      status(await request('PUT',`/api/v1/roles/${target.id}/status`,{status:'DISABLED'},opToken),403);
+      assert.equal((await ok('GET',`/roles/${target.id}`)).status,'ENABLED');
+
+      const statusPermission=await makePermission('rbac:role:status','API',B);
+      await grant(operatorRole,[statusPermission]);
+      assert.equal((await ok('PUT',`/roles/${target.id}/status`,{status:'DISABLED'},opToken)).status,'DISABLED');
+      assert.equal((await ok('PUT',`/roles/${target.id}/status`,{status:'ENABLED'},opToken)).status,'ENABLED');
+      status(await request('PATCH',`/api/v1/roles/${target.id}`,{name:'Unexpected rename'},opToken),403);
+      assert.equal((await ok('GET',`/roles/${target.id}`)).name,'Renamed role');
+    } finally {
+      await eligible(hq,existing);
+    }
+  });
   await scenario('ROLE upper bound / enable and inheritance cannot elevate root-department non-super admin',async()=>{
     const [[hq]]=await f.db.query('SELECT id FROM sys_department WHERE parent_id IS NULL ORDER BY id LIMIT 1');
     const roles=await ok('GET',`/roles?systemCode=${B}&pageSize=100`),admin=roles.items.find(r=>r.code==='RBAC_ADMIN');assert.ok(admin);

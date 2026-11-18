@@ -26,7 +26,7 @@ systemId,operationId,method,path,permissionCode,requiredRole,category,uiResource
 1,getRole,GET,/api/v1/roles/{id},rbac:role:view,,中心管理,19,29
 1,updateRole,PATCH,/api/v1/roles/{id},rbac:role:edit,,中心管理,21,30
 1,deleteRole,DELETE,/api/v1/roles/{id},rbac:role:edit,,中心管理,22,31
-1,setRoleStatus,PUT,/api/v1/roles/{id}/status,rbac:role:edit,,中心管理,23,32
+1,setRoleStatus,PUT,/api/v1/roles/{id}/status,rbac:role:status,,中心管理,23,32
 1,getRolePermissions,GET,/api/v1/roles/{id}/permissions,rbac:role:view,,中心管理,19,33
 1,replaceRolePermissions,PUT,/api/v1/roles/{id}/permissions,rbac:role:edit,,中心管理,24,34
 1,getRoleEffectivePermissions,GET,/api/v1/roles/{id}/effective-permissions,rbac:role:view,,中心管理,19,35
