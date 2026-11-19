@@ -96,13 +96,17 @@ test('M2: 前端业务调用不绑定具体后端实现', () => {
   assert.match(text('rbac-web/vite.config.ts'), /process\.env\.RBAC_API/)
 })
 
-test('RBAC1: 64项OAS登记唯一且包含根身份与两个私有投影', () => {
+test('RBAC1: 67项OAS操作唯一且包含8个鉴权接口与两个私有投影', () => {
   const oas = text('rbac-contract/src/main/resources/openapi/rbac-api.yaml')
   const operationIds = [...oas.matchAll(/^      operationId: (\S+)$/gm)].map((match) => match[1])
-  assert.equal(operationIds.length, 64)
-  assert.equal(new Set(operationIds).size, 64)
+  assert.equal(operationIds.length, 67)
+  assert.equal(new Set(operationIds).size, operationIds.length)
   assert.equal([...oas.matchAll(/^      x-required-permission:/gm)].length, operationIds.length)
-  for (const path of ['/auth/login', '/auth/logout', '/auth/me', '/auth/audit-logs', '/auth/permissions/{permission}', '/auth/api-permissions/{operationId}', '/integration/authorities', '/identity/users/{userId}', '/.well-known/jwks.json']) {
+  for (const path of [
+    '/auth/login', '/auth/logout', '/auth/me', '/auth/permissions/{permission}', '/auth/api-permissions/{operationId}',
+    '/auth/departments', '/auth/departments/{departmentId}/users', '/auth/users/{userId}', '/auth/audit-logs',
+    '/integration/authorities', '/identity/users/{userId}', '/.well-known/jwks.json',
+  ]) {
     assert.ok(oas.includes(`  ${path}:`), path)
   }
   assert.match(oas, /- url: http:\/\/localhost:8081\n/)
@@ -110,9 +114,11 @@ test('RBAC1: 64项OAS登记唯一且包含根身份与两个私有投影', () =>
   assert.doesNotMatch(oas, /^  \/api\/v1\/auth\/(?:login|logout|me):/m)
 })
 
-test('RBAC1: V1–V3与15表，禁止恢复一期模型或公开root口令', () => {
+test('RBAC1: V1–V4与15表，禁止恢复一期模型或公开root口令', () => {
   const directory = 'rbac-contract/src/main/resources/db/migration/'
-  assert.deepEqual(readdirSync(new URL(directory, root)).filter((name) => /^V.*\.sql$/.test(name)).sort(), ['V1__rbac1_schema.sql', 'V2__rbac1_seed.sql', 'V3__role_status_permission.sql'])
+  assert.deepEqual(readdirSync(new URL(directory, root)).filter((name) => /^V.*\.sql$/.test(name)).sort(), [
+    'V1__rbac1_schema.sql', 'V2__rbac1_seed.sql', 'V3__role_status_permission.sql', 'V4__course_identity_directory.sql',
+  ])
   const ddl = text(directory + 'V1__rbac1_schema.sql'), seed = text(directory + 'V2__rbac1_seed.sql')
   const tables = [...ddl.matchAll(/^CREATE TABLE (sys_\w+) \(/gm)].map((match) => match[1]).sort()
   assert.deepEqual(tables, ['sys_system', 'sys_department', 'sys_user', 'sys_role', 'sys_permission', 'sys_role_permission', 'sys_user_role', 'sys_department_allowed_role', 'sys_role_hierarchy', 'sys_ui_resource', 'sys_api_operation', 'sys_ui_api_mapping', 'sys_token_revocation', 'sys_grant_version', 'sys_audit_log'].sort())
