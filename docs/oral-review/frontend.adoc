@@ -1,0 +1,76 @@
+= 前端审核：A–F 页面、组件与交接
+:toc: left
+
+link:README.adoc[总览] / link:source-map.adoc[源码索引] / link:review-card.adoc[审查卡]。
+
+2026-11-19追加分工，保留六人的后端主审范围、A↔F/B↔C/D↔E互审及F迭代复现职责。每人从自己的页面追到请求，再定位structured和DDD两版入口；两版共用同一套前端，不按后端另分前端负责人。
+审核深度仍为辅助：功能、请求协议、权限效果、状态与异常反馈、相关测试断言；不开展样式重构、课程中心前端全面审查或自动修复。下列新增任务均为NOT_STARTED，不是已验证的产品行为。
+
+== 页面与主责总表
+
+[cols="1,2,3,4",options="header"]
+|===
+|成员 |路由 |页面/组件入口 |检查重点
+|link:A-identity.adoc[A] |`/login`、`/me` |link:../../rbac-web/src/views/LoginView.vue[LoginView]、link:../../rbac-web/src/views/MeView.vue[MeView]；布局身份与退出 |登录、会话恢复/清理、三路身份刷新、改密后重新登录、失败反馈与口令清理；Me内有效权限呈现与D交接
+|link:B-directory.adoc[B] |`/users`、`/departments` |link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace]、CatalogWorkspace部门分支 |检索/分页、创建/资料/状态/迁移分离、真实准入选项、指派/回收、准入替换保留其他系统；表单及有效权限使用点
+|link:C-role-graph.adoc[C] |`/roles`、`/hierarchy` |link:../../rbac-web/src/views/RoleWorkspace.vue[RoleWorkspace]、link:../../rbac-web/src/components/RoleDag.vue[RoleDag] |编辑/独立启停/删除、直接权限跨页选择、边增删、成环反馈；DAG方向/多父/菱形/状态展示，直接与继承权限区分
+|link:D-authorization.adoc[D] |`/authorization`；各页有效权限区 |CatalogWorkspace鉴权分支；link:../../rbac-web/src/components/EffectivePermissions.vue[EffectivePermissions]、link:../../rbac-web/src/components/PermissionCode.vue[PermissionCode] |UI/API检查与来源解释、本人/指定用户、正常拒绝与故障区分；角色/权限/多条来源路径呈现，路由/按钮权限与刷新
+|link:E-resources.adoc[E] |`/dashboard`、`/systems`、`/permissions`、`/ui-resources`、`/api-operations`、`/mappings`；`/403`和未知路径 |link:../../rbac-web/src/views/ResourceWorkspace.vue[ResourceWorkspace]、CatalogWorkspace对应分支；link:../../rbac-web/src/views/ManagementView.vue[ManagementView]、link:../../rbac-web/src/views/StatusView.vue[StatusView] |统计、系统/权限登记与启停、菜单/API/映射和覆盖报告；导航、目标系统、页面分发、状态页、构建与代理配置、完整演示汇总
+|link:F-audit.adoc[F] |`/audit` |CatalogWorkspace审计分支、format的toInstant |系统/操作者/目标/时间过滤、分页/空结果/详情、已删除操作者、本地时间转UTC、切系统清理旧详情；内部查询与外部同步审计区分
+|===
+
+F只审审计页面及相关公共逻辑使用，不接管全局前端框架、全部测试或全部技术日志，继续按减负目标安排。
+
+== 共享文件按分支与职责划界
+
+文件级lead负责汇总定位，owners表示协作关注，不意味着每人重复通读整个文件。机器清单仍使用原有sourceFiles结构；以下分支/断言说明补足文件级粒度，不混入只支持Java方法声明的sharedMethods。
+
+[cols="3,1,4",options="header"]
+|===
+|入口 |主责/协作 |具体边界
+|link:../../rbac-web/src/views/CatalogWorkspace.vue[CatalogWorkspace.vue] |E汇总；B/D/F |E：reload中dashboard/systems/permissions、systemForm/systemState/permissionForm/permissionState及对应模板；B：departments、departmentForm/eligibility及准入保存；D：check及authorization模板；F：audit请求参数/列表/详情/翻页。watch(targetSystem)由各人核对自己的清理/重载，不能由E包办所有分支
+|link:../../rbac-web/src/stores/auth.ts[stores/auth.ts] |A；D |A：readToken/setToken/clear/login/logout/refresh会话生命周期、存储失败降级；D：has精确匹配、refresh替换权限/菜单、loadedAt与targetSystem。F仅理解审计页使用的会话协议
+|link:../../rbac-web/src/api/http.ts[api/http.ts]、link:../../rbac-web/src/api/index.ts[api/index.ts] |A；D |A：双客户端baseURL、Bearer、raw裸响应与request包装、204、401及认证API；D：403钩子与allowed:false不是异常；每人核对自己请求的方法、URL、参数/响应和错误
+|link:../../rbac-web/src/main.ts[main.ts] |E；A/D |E：Vue/Pinia/Router/指令装配；A：getToken、401清会话与登录跳转；D：403标记刷新与权限指令注册
+|link:../../rbac-web/src/router/index.ts[router/index.ts]、link:../../rbac-web/src/router/routes.ts[routes.ts] |D；A/E |D：菜单permissionCode/静态meta、精确守卫、刷新失败不放行；A：未登录深链、登录回跳实际行为、刷新时间窗口；E：全部页面登记、默认/未知路由、标题、菜单展开与可见项。不要把redirect查询参数的存在说成已实现登录后恢复原路径
+|link:../../rbac-web/src/layouts/AppLayout.vue[AppLayout.vue] |E；A/D |E：系统列表、targetSystem、菜单导航及RouterView按path重建；A：身份展示、refresh与logout；D：visibleMenus/has效果。切目标系统只是管理过滤，不切换token audience
+|link:../../rbac-web/src/components/RecordForm.vue[RecordForm.vue] |E；A/B/C |E：fields白名单、number/checkbox、缺省/null、busy/提交失败/关闭；A：密码输入清理；B/C/E：各自fields/initial/submit及version。不能把浏览器required当服务端授权或完整业务校验
+|link:../../rbac-web/src/views/workspace.ts[workspace.ts] |D；B/C/E |D：allowed及mutate顺序action→auth.refresh→reload；E：load/run/errorText、加载/错误/成功反馈；B/C/E：调用点与刷新失败后业务可能已提交的提示语义。ROLE_CYCLE是后端拒绝，不是前端验环证明
+|EffectivePermissions、PermissionCode |D；A/B/C |D审公共呈现；A审Me使用，B审用户详情，C审角色详情：传入结果、空集、kind、来源和路径，不把继承权限当直接勾选值
+|link:../../rbac-web/src/directives/perm.ts[perm.ts] |D；E |禁用/隐藏/恢复、嵌套按钮和原生disabled；各人另查自己模板的allowed/disabled，不能假定所有按钮均通过指令
+|link:../../rbac-web/src/api/types.ts[types.ts] |E汇总；全员 |A：IdentityVO/MeVO身份字段；B：User/Department/Assignment；C：Role/Hierarchy；D：Effective与来源；E：System/Permission/UI/API/Mapping/Coverage；F：Audit与分页使用。共享Page/Envelope按各请求复核，不更改产品类型
+|link:../../rbac-web/src/utils/format.ts[format.ts] |D/F |D：splitPermissionCode完整展示；F：toInstant空值/时区/非法日期及查询调用点
+|link:../../rbac-web/src/utils/password.ts[password.ts] |A |核对meetsPolicy实际调用点及与表单/两后端策略差异；工具函数存在和单测通过不代表页面已调用
+|App.vue、index.html、env.d.ts、styles.css及构建配置 |E；A/D |E汇总入口、基础可用性、package/lock、TS/Vite、Nginx/Docker与Playwright配置；A协助认证代理路径，D协助测试配置。不逐项审美评价或改部署
+|===
+
+== 测试断言分工与证据限制
+
+以下均为阅读入口。已有用例只证明其实际断言，场景缺少测试时记录缺口，不将新增检查任务写成既有覆盖。
+
+[cols="3,1,4",options="header"]
+|===
+|测试入口 |负责 |阅读/检查范围
+|link:../../rbac-web/tests/auth.spec.ts[auth.spec.ts] |A；D |A：登录三入口、失败不制造会话、退出失败清理、存储降级；D：默认无权、admin不通配、刷新替换而非并集
+|link:../../rbac-web/tests/http.spec.ts[http.spec.ts]、link:../../rbac-web/tests/protocol.spec.ts[protocol.spec.ts] |A；D |A：根认证路径、单aud、裸响应/管理包装、Bearer/204/错误/网络；D：正常拒绝语义及403协议衔接，检查真实断言而不凭注释认定覆盖
+|link:../../rbac-web/tests/user-workspace.spec.ts[user-workspace.spec.ts] |B；C |部门选项未返回时禁止创建快照表单、返回后的真实选项及可访问名称；C交叉理解指派入口。不声称该用例覆盖全部用户/迁移流程
+|link:../../rbac-web/tests/components.spec.ts[components.spec.ts] |E汇总；A/C/D |A：密码策略参数化断言与表单密码清理证据是否充分；C：DAG节点/多父边数量；D：权限指令禁用/恢复/隐藏；E：表单白名单、number/checkbox/提交断言。测试名不能替代实际断言
+|link:../../rbac-web/tests/router.spec.ts[router.spec.ts] |D；A/E |D：精确权限、父菜单不赋子按钮、刷新失败拒绝；A：未登录深链与登录公开；E：403/404及页面入口
+|link:../../rbac-web/tests/safety.spec.ts[safety.spec.ts] |E汇总；D/F |E：专用E2E环境拒绝规则；D：权限码split断言；F：toInstant空值、带时区输入、非法日期。该混合用例按断言分，不要求F审环境隔离
+|link:../../rbac-web/tests/sandbox.spec.ts[sandbox.spec.ts]、link:../../rbac-web/tests/setup.ts[setup.ts] |E；A/D |E：环境净化、自建配置、进程句柄、重定向拒绝和测试装配；A/D协助理解凭据与双后端测试边界；F不承担平台代码
+|link:../../rbac-web/e2e/console.spec.ts[console.spec.ts] |E汇总；全员 |A：browserLogin/browserLogout及跨aud；B：准入、指派、浏览器创建/编辑/状态、迁移回收；C：继承、多父、环/跨系统拒绝、角色独立状态；D：继承来源、旧token撤权、菜单刷新/403和正常allowed:false；E：系统/资源/映射、首页、导航、手机与404；F：审计筛选、真实记录断言和audit页面。前置HTTP操作不等于由页面完成
+|link:../../rbac-web/e2e/http.ts[e2e/http.ts] |A；D/E |认证/请求协议与不跟随重定向；不是F整份主审范围
+|link:../../rbac-web/e2e/environment.ts[environment.ts]、link:../../rbac-web/e2e/global-setup.ts[global-setup.ts]、link:../../rbac-web/e2e/sandbox.ts[sandbox.ts] |E；A/D |专用数据库/Redis、安全夹具与双后端装配；这里只审核配置及证据，不执行部署或复用业务库
+|===
+
+每人至少登记一条正常与一条异常/边界场景：A登录失败/刷新/退出/改密；B选项等待/分页/迁移/跨系统准入保留；C多父/成环/跨页选择/删除；D深链/刷新替换/多来源/故障；E切系统/映射/表单null与缺省/状态页；F时区/过滤/分页空集/详情重置。
+以上是待审核任务，不是新生成的测试结果。没有现成断言的场景标待核对；本轮不自动新增产品测试。
+
+== 个人交付与共同验收
+
+. 每人用link:review-card.adoc[审查卡]记录“路由→组件/分支→事件/请求→UI权限→structured/DDD入口→正常/异常反馈→测试→互审”；确认请求body、目标系统、version及响应协议。
+. 主审追踪一次真实调用；伙伴无需提示定位自己的交叉页面和两版入口。审查中发现前端隐藏/禁用，仍需说明服务端如何拒绝直接HTTP请求，不能把界面效果等同安全边界。
+. 修改权限/部门/角色后，解释前端刷新、失败反馈与后端已提交事实；旧页面状态或陈旧菜单不能代表权威授权。
+. 只读源码标READ_ONLY；引用归档报告标ARCHIVED；实际运行才标RUN_VERIFIED并记录环境、命令、日期、基线和断言范围。E汇总证据，各成员保留原始责任。
+
+三组互审及跨组场景见link:cross-review.adoc[交叉覆盖]。本次分工调整不覆盖C既有迭代和验证记录，前端新增项的未开始状态与历史后端证据分别记账。

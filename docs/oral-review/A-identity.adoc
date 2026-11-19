@@ -54,7 +54,7 @@ DDD：IdentityController.login → IdentityApplicationService.login → LoginAtt
 
 sys_user的凭据/subject/token_version/失败计数、sys_token_revocation；用户组织字段归B，sys_grant_version及缓存归D协作。
 
-前端只追auth API/http、Pinia身份刷新、Login/Me与退出；构建说明包括Maven reactor、Annotation Processor、生成源码clean和ArchUnit依赖边界。
+前端具体页面、共享逻辑和检查项见本卡新增前端范围；构建说明包括Maven reactor、Annotation Processor、生成源码clean和ArchUnit依赖边界。
 
 == 测试阅读入口
 
@@ -92,3 +92,23 @@ sys_user的凭据/subject/token_version/失败计数、sys_token_revocation；�
 同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
 每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
 本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。
+
+== 新增前端审核范围（2026-11-19，NOT_STARTED）
+
+保留本卡原有后端职责与历史证据。完整交接见link:frontend.adoc[前端总表]；本节为追加任务，尚未人工审查。
+
+页面/组件：`/login`、`/me`；LoginView、MeView及AppLayout身份展示/退出。
+
+link:../../rbac-web/src/views/LoginView.vue[LoginView]、link:../../rbac-web/src/views/MeView.vue[MeView]、link:../../rbac-web/src/stores/auth.ts[auth Store]、link:../../rbac-web/src/api/http.ts[HTTP]、link:../../rbac-web/src/api/index.ts[认证API]、link:../../rbac-web/src/utils/password.ts[password]。
+
+* [ ] 追踪LoginView提交→authApi.login→setToken→refresh的三个请求；核对裸响应、rbac-center单aud、密码finally清理及登录失败反馈。
+* [ ] 核对Store会话恢复、存储不可用降级、logout网络失败仍clear、main中401清理与跳转；与D共审刷新替换权限、403及路由登录分支。
+* [ ] 核对Me改密请求、两后端入口、成功清会话、输入清理；Me中的EffectivePermissions公共呈现交D，A检查传入数据。
+* [ ] 阅读password工具的实际调用点、表单minlength与后端策略差异；不能因meetsPolicy存在就声称页面调用。
+* [ ] 与E共审RecordForm密码清理、AppLayout刷新/退出；不接管其他业务表单。
+
+测试与场景：auth.spec、http.spec、protocol.spec；router.spec的未登录分支、components.spec的密码策略/表单断言；console.spec中的登录/退出/跨aud。补充正常登录及登录失败、刷新失败、退出网络失败、改密场景，未覆盖项登记缺口。
+
+互审：F接替说明登录到审计查询的Bearer/401/双协议流程；D复核权限刷新，E复核布局集成。
+
+按link:review-card.adoc[前端补充记录]填写“路由→组件/分支→事件/请求→UI权限→两版入口→反馈→测试→互审”；只读、归档和本次运行分别标记。不自动修复产品或补写验收结论。

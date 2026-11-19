@@ -97,3 +97,22 @@ sys_audit_log，无业务FK、不随用户/角色删除；request_id唯一、pay
 同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
 每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
 本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。
+
+== 新增前端审核范围（2026-11-19，NOT_STARTED）
+
+保留本卡原有后端职责与历史证据。完整交接见link:frontend.adoc[前端总表]；本节为追加任务，尚未人工审查。
+
+页面/组件：`/audit`；CatalogWorkspace审计分支、format.toInstant。
+
+link:../../rbac-web/src/views/CatalogWorkspace.vue[CatalogWorkspace]（audit重载/模板、watch切换详情清理）、link:../../rbac-web/src/utils/format.ts[format.toInstant]。
+
+* [ ] 追踪GET /api/v1/audit-logs的systemCode、actor/actorId、target、from/to与分页参数，核对内部管理包装；不误称外部/auth/audit-logs消费接口。
+* [ ] 核对本地datetime-local转UTC、空日期及非法输入反馈、查询重置页码、空结果/翻页/详情/已删除操作者和before/after展示。
+* [ ] 核对切目标系统清理旧详情、加载和查询失败；只检查相关Store/HTTP协议使用，不接管全局基础设施。
+* [ ] 区分页面可查询事实、SUCCESS同事务和跨系统同步写入，查询页不证明分布式原子提交；本链路审计调用点仍由各负责人先审。
+
+测试与场景：safety.spec只认领toInstant的空值/带时区输入/非法日期断言；console.spec只认领审计查询/筛选/页面步骤。补充时间过滤、分页空集、详情和系统切换，无现成断言标待核对；不承担全套E2E。
+
+互审：A接替讲审计查询页的会话/HTTP协议和失败反馈；F备份A的身份协议流程，继续保持约三分之二源码主审量目标。
+
+按link:review-card.adoc[前端补充记录]填写“路由→组件/分支→事件/请求→UI权限→两版入口→反馈→测试→互审”；只读、归档和本次运行分别标记。不自动修复产品或补写验收结论。

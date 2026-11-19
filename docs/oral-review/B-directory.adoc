@@ -88,3 +88,22 @@ GRASP：User掌握自己的状态/部门/直接角色，Eligibility掌握允许�
 同时阅读相关DTO/Command/Result/Views、Entity、Port、Adapter和配置；上述入口不是只读几个Service即可完成的最小文件清单。
 每项标符合/偏离/不适用/待核对；场景和测试名仅是阅读入口，需检查断言和DB后置条件。归档证据不当本次运行。
 本卡初始状态NOT_STARTED。准备5分钟主讲、伙伴链路和至少3个追问；源码差异只登记参考，不在本轮自动修复。
+
+== 新增前端审核范围（2026-11-19，NOT_STARTED）
+
+保留本卡原有后端职责与历史证据。完整交接见link:frontend.adoc[前端总表]；本节为追加任务，尚未人工审查。
+
+页面/组件：`/users`、`/departments`；UserWorkspace和CatalogWorkspace部门分支。
+
+link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace]、link:../../rbac-web/src/views/CatalogWorkspace.vue[CatalogWorkspace]（departmentForm/eligibility、departments重载及模板）。
+
+* [ ] 追踪用户筛选/数据库分页、创建前等待部门选项、资料编辑不夹带状态/部门、version及状态/迁移独立请求。
+* [ ] 选用户→当前真实部门准入→指派/回收；核对请求不伪造部门、assignment路径与刷新后的列表/有效权限。
+* [ ] 核对部门树、编辑/删除、准入替换：过滤当前系统展示仍保留其他系统roleIds，取消准入与共享角色权限分开。
+* [ ] 核对目标系统变化、旧选择与详情刷新、加载/空结果/错误反馈；RecordForm使用点归B，机制归E，EffectivePermissions机制归D。
+
+测试与场景：user-workspace.spec中选项未返回/返回断言；console.spec中准入、指派、浏览器创建/编辑/状态、迁移与回收。补充分页、迁移回收、跨系统准入保留和请求失败；没有断言则记录待核对。
+
+互审：C接替讲用户指派/部门准入；B接替讲角色定义/DAG修改，均指出正常与异常/边界请求及两后端入口。
+
+按link:review-card.adoc[前端补充记录]填写“路由→组件/分支→事件/请求→UI权限→两版入口→反馈→测试→互审”；只读、归档和本次运行分别标记。不自动修复产品或补写验收结论。

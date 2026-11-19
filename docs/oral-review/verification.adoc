@@ -19,3 +19,21 @@ link:README.adoc[工作包入口]。本页记录文档/索引/辅助工具的实
 新增指纹测试首轮因Windows夹具自动写入CRLF导致预期哈希不一致；修正为夹具明确LF后8项全部通过，保留原始资料逐字节SHA-256比较，没有改成忽略换行。
 人工任务卡状态仍为NOT_STARTED；产品API/数据库/业务代码/部署配方未改，没有重新跑JUnit/共享HTTP/课程/浏览器/Swarm产品验收。
 后续源码/合同/分工改变应重跑check；本次结果仅覆盖此工作包的索引与工具。
+
+== 前端分工追加核验：2026-11-19
+
+本轮开始时HEAD为 `da266ff71a22e2008ddfac8bcdb59757ffa79abb`；已有 `.codeartsdoer/cache.properties` 修改未触碰。原有2026-11-16结果及C的迭代/图验证证据保留原样，本节只记录追加文档的检查。
+
+[cols="3,4",options="header"]
+|===
+|本次检查 |实际结果和限制
+|新增页面/组件分工 |link:frontend.adoc[前端总表]覆盖12条管理页面路由、login/me、403/未知路径、共享组件/工具、全部前端测试及配置定位；六张卡均追加NOT_STARTED任务、场景和互审要求
+|责任一致性对照 |与编辑前coverage逐字段比较：49个rbac-web文件均有归属；所有前端以外sourceFiles行、members、operations、tables、sharedMethods、baseline及人工状态保持不变。源码索引394条均恰好出现一次且位于正确lead区段；共享分支/测试断言由前端总表细化
+|既有记录保护 |B/C/D/F卡片原文完整保留为前缀；A/E只澄清前端范围/汇总责任的旧句并追加章节。C-iterations及两个C验证JSON无修改；未将前端任务标为已审查
+|`python tools/review-history.py check` |编辑前后均退出1，唯一错误均为未分配 `rbac-contract/src/main/resources/db/migration/V3__role_status_permission.sql`。本次不改后端职责，未补分该文件；不能宣称全量索引通过。394项现有分工、64操作/15表、共享方法和本包链接未产生新增报错
+|`python tools/review-history.test.py` |8项全部通过，退出0；仅审查辅助工具回归
+|`node --test tools/project-layout.test.mjs` |5项全部通过，0失败/跳过；包含当前adoc本地链接检查
+|文档结构/差异 |所有工作包adoc的表格/代码块闭合；六卡各有一个新增前端章节；`git diff --check`通过。Git换行提示不作为业务验证
+|===
+
+本轮没有运行前端Vitest、Playwright、构建或后端产品测试，没有进行部署、commit或push。新增检查项只是审核任务；前端现有测试的断言范围在总表中标明，未覆盖场景明确保留待核对。

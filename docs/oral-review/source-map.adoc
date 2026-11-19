@@ -3,8 +3,11 @@
 
 link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage.json[机器清单]。
 
-基线 `84685b722c2117f1944e780b69f217d10e99f158`；共392个源码/测试/配置/SQL/工具/补丁文件。由Git跟踪及未忽略新文件清点，不读取target/node_modules或教师完整缓存；diagrams中的图源/工具单列historical/coordination，docs/design生成业务图按个人卡片核对。
+基线 `84685b722c2117f1944e780b69f217d10e99f158`；最初清点392个源码/测试/配置/SQL/工具/补丁文件；当前清单收录394个，新增前端分工不改变后端责任。由Git跟踪及未忽略新文件清点，不读取target/node_modules或教师完整缓存；diagrams中的图源/工具单列historical/coordination，docs/design生成业务图按个人卡片核对。
 所有人工状态NOT_STARTED。主责表示汇总和定位责任，多人文件按下面方法表分工；人数/文件数不是工时度量。auxiliary为网关/前端/课程/部署辅助，coordination为F组织图版本，不要求F独自审全部图。
+
+前端新增分工见link:frontend.adoc[页面/共享分支/测试断言总表]；以下文件级负责人用于汇总，实际按总表分支划界，不能整文件排他分配。
+前端shared-methods表示按职责/分支或断言交接，仍采用辅助审查深度。当前全量清点另有V3迁移文件尚未分配，详见link:verification.adoc[2026-11-19核验记录]；本次未调整后端归属。
 
 == 共享大文件：按方法分工
 
@@ -65,7 +68,7 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 
 源为link:../../rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql[当前V1]及link:../schema-contract.adoc[物理合同]。所有成员都能讲核心RBAC关联；当前有15表，不从旧归档SQL推导二期事实。
 
-== A主责定位（86文件）
+== A主责定位（87文件）
 
 [cols="6,1,2",options="header"]
 |===
@@ -138,15 +141,6 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/Rbac1ProtocolRedTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/Rbac1ProtocolRedTest.java] |F |core
 |link:../../rbac-structured/src/test/resources/application-test.yml[rbac-structured/src/test/resources/application-test.yml] |F |core
 |link:../../rbac-structured/stage-reactor.py[rbac-structured/stage-reactor.py] |E |support
-|link:../../rbac-web/e2e/http.ts[rbac-web/e2e/http.ts] |D/F |auxiliary
-|link:../../rbac-web/src/api/http.ts[rbac-web/src/api/http.ts] |D/F |auxiliary
-|link:../../rbac-web/src/stores/auth.ts[rbac-web/src/stores/auth.ts] |D/F |auxiliary
-|link:../../rbac-web/src/utils/password.ts[rbac-web/src/utils/password.ts] |D/F |auxiliary
-|link:../../rbac-web/src/views/LoginView.vue[rbac-web/src/views/LoginView.vue] |D/F |auxiliary
-|link:../../rbac-web/src/views/MeView.vue[rbac-web/src/views/MeView.vue] |D/F |auxiliary
-|link:../../rbac-web/tests/auth.spec.ts[rbac-web/tests/auth.spec.ts] |D/F |auxiliary
-|link:../../rbac-web/tests/http.spec.ts[rbac-web/tests/http.spec.ts] |D/F |auxiliary
-|link:../../rbac-web/tests/protocol.spec.ts[rbac-web/tests/protocol.spec.ts] |D/F |auxiliary
 |link:../../tools/clonefactory-smoke/pom.xml[tools/clonefactory-smoke/pom.xml] |F |support
 |link:../../tools/clonefactory-smoke/settings.xml[tools/clonefactory-smoke/settings.xml] |F |support
 |link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/Domain.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/Domain.java] |F |support
@@ -156,6 +150,16 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/StoredBean.java[tools/clonefactory-smoke/src/main/java/com/xmu/tools/clonefactory/StoredBean.java] |F |support
 |link:../../tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java[tools/clonefactory-smoke/src/test/java/com/xmu/tools/clonefactory/CloneFactoryTest.java] |F |support
 |link:../../tools/install-clonefactory.sh[tools/install-clonefactory.sh] |F |support
+|link:../../rbac-web/e2e/http.ts[rbac-web/e2e/http.ts] |D/E |auxiliary
+|link:../../rbac-web/src/api/http.ts[rbac-web/src/api/http.ts] |D |shared-methods
+|link:../../rbac-web/src/api/index.ts[rbac-web/src/api/index.ts] |D |auxiliary
+|link:../../rbac-web/src/stores/auth.ts[rbac-web/src/stores/auth.ts] |D |shared-methods
+|link:../../rbac-web/src/utils/password.ts[rbac-web/src/utils/password.ts] |— |auxiliary
+|link:../../rbac-web/src/views/LoginView.vue[rbac-web/src/views/LoginView.vue] |D |auxiliary
+|link:../../rbac-web/src/views/MeView.vue[rbac-web/src/views/MeView.vue] |D |auxiliary
+|link:../../rbac-web/tests/auth.spec.ts[rbac-web/tests/auth.spec.ts] |D |auxiliary
+|link:../../rbac-web/tests/http.spec.ts[rbac-web/tests/http.spec.ts] |D |auxiliary
+|link:../../rbac-web/tests/protocol.spec.ts[rbac-web/tests/protocol.spec.ts] |D |auxiliary
 |===
 
 == B主责定位（31文件）
@@ -232,7 +236,7 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-web/src/views/RoleWorkspace.vue[rbac-web/src/views/RoleWorkspace.vue] |B/D |auxiliary
 |===
 
-== D主责定位（39文件）
+== D主责定位（46文件）
 
 [cols="6,1,2",options="header"]
 |===
@@ -262,7 +266,6 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BizException.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/BizException.java] |A/F |boundary
 |link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/AuthorizationNamespaceTest.java] |E |core
 |link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java] |A/B/C/E/F |shared-methods
-|link:../../rbac-web/src/components/EffectivePermissions.vue[rbac-web/src/components/EffectivePermissions.vue] |B/C |auxiliary
 |link:../../tools/acceptance/environment.mjs[tools/acceptance/environment.mjs] |A/E |support
 |link:../../tools/acceptance/environment.test.mjs[tools/acceptance/environment.test.mjs] |A/E |support
 |link:../../tools/acceptance/equivalence.mjs[tools/acceptance/equivalence.mjs] |A/E |support
@@ -276,9 +279,17 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../tools/acceptance/run.mjs[tools/acceptance/run.mjs] |A/E |support
 |link:../../tools/acceptance/static.test.mjs[tools/acceptance/static.test.mjs] |A/E |support
 |link:../../tools/acceptance/suite.mjs[tools/acceptance/suite.mjs] |A/B/C/E/F |shared-methods
+|link:../../rbac-web/src/components/EffectivePermissions.vue[rbac-web/src/components/EffectivePermissions.vue] |A/B/C |auxiliary
+|link:../../rbac-web/src/components/PermissionCode.vue[rbac-web/src/components/PermissionCode.vue] |E |auxiliary
+|link:../../rbac-web/src/directives/perm.ts[rbac-web/src/directives/perm.ts] |E |auxiliary
+|link:../../rbac-web/src/router/index.ts[rbac-web/src/router/index.ts] |A/E |shared-methods
+|link:../../rbac-web/src/router/routes.ts[rbac-web/src/router/routes.ts] |A/E |shared-methods
+|link:../../rbac-web/src/utils/format.ts[rbac-web/src/utils/format.ts] |F |shared-methods
+|link:../../rbac-web/src/views/workspace.ts[rbac-web/src/views/workspace.ts] |B/C/E |shared-methods
+|link:../../rbac-web/tests/router.spec.ts[rbac-web/tests/router.spec.ts] |A/E |shared-methods
 |===
 
-== E主责定位（167文件）
+== E主责定位（159文件）
 
 [cols="6,1,2",options="header"]
 |===
@@ -406,41 +417,6 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/IntegrationIdentityService.java] |A/D |core
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java] |D |shared-methods
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java[rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java] |D |core
-|link:../../rbac-web/.dockerignore[rbac-web/.dockerignore] |D |support
-|link:../../rbac-web/Dockerfile[rbac-web/Dockerfile] |A/D |auxiliary
-|link:../../rbac-web/e2e/console.spec.ts[rbac-web/e2e/console.spec.ts] |A/D |auxiliary
-|link:../../rbac-web/e2e/environment.ts[rbac-web/e2e/environment.ts] |A/D |auxiliary
-|link:../../rbac-web/e2e/global-setup.ts[rbac-web/e2e/global-setup.ts] |A/D |auxiliary
-|link:../../rbac-web/e2e/sandbox.ts[rbac-web/e2e/sandbox.ts] |A/D |auxiliary
-|link:../../rbac-web/index.html[rbac-web/index.html] |A/D |auxiliary
-|link:../../rbac-web/nginx.conf[rbac-web/nginx.conf] |A/D |auxiliary
-|link:../../rbac-web/package.json[rbac-web/package.json] |A/D |auxiliary
-|link:../../rbac-web/playwright.config.ts[rbac-web/playwright.config.ts] |A/D |auxiliary
-|link:../../rbac-web/src/App.vue[rbac-web/src/App.vue] |A/D |auxiliary
-|link:../../rbac-web/src/api/index.ts[rbac-web/src/api/index.ts] |A/D |auxiliary
-|link:../../rbac-web/src/api/types.ts[rbac-web/src/api/types.ts] |A/D |auxiliary
-|link:../../rbac-web/src/components/PermissionCode.vue[rbac-web/src/components/PermissionCode.vue] |A/D |auxiliary
-|link:../../rbac-web/src/components/RecordForm.vue[rbac-web/src/components/RecordForm.vue] |A/D |auxiliary
-|link:../../rbac-web/src/directives/perm.ts[rbac-web/src/directives/perm.ts] |A/D |auxiliary
-|link:../../rbac-web/src/env.d.ts[rbac-web/src/env.d.ts] |A/D |auxiliary
-|link:../../rbac-web/src/layouts/AppLayout.vue[rbac-web/src/layouts/AppLayout.vue] |A/D |auxiliary
-|link:../../rbac-web/src/main.ts[rbac-web/src/main.ts] |A/D |auxiliary
-|link:../../rbac-web/src/router/index.ts[rbac-web/src/router/index.ts] |A/D |auxiliary
-|link:../../rbac-web/src/router/routes.ts[rbac-web/src/router/routes.ts] |A/D |auxiliary
-|link:../../rbac-web/src/styles.css[rbac-web/src/styles.css] |A/D |auxiliary
-|link:../../rbac-web/src/utils/format.ts[rbac-web/src/utils/format.ts] |A/D |auxiliary
-|link:../../rbac-web/src/views/CatalogWorkspace.vue[rbac-web/src/views/CatalogWorkspace.vue] |B/D/F |shared-methods
-|link:../../rbac-web/src/views/ManagementView.vue[rbac-web/src/views/ManagementView.vue] |A/D |auxiliary
-|link:../../rbac-web/src/views/ResourceWorkspace.vue[rbac-web/src/views/ResourceWorkspace.vue] |A/D |auxiliary
-|link:../../rbac-web/src/views/StatusView.vue[rbac-web/src/views/StatusView.vue] |A/D |auxiliary
-|link:../../rbac-web/src/views/workspace.ts[rbac-web/src/views/workspace.ts] |A/D |auxiliary
-|link:../../rbac-web/tests/components.spec.ts[rbac-web/tests/components.spec.ts] |A/D |auxiliary
-|link:../../rbac-web/tests/router.spec.ts[rbac-web/tests/router.spec.ts] |A/D |auxiliary
-|link:../../rbac-web/tests/safety.spec.ts[rbac-web/tests/safety.spec.ts] |A/D |auxiliary
-|link:../../rbac-web/tests/sandbox.spec.ts[rbac-web/tests/sandbox.spec.ts] |A/D |auxiliary
-|link:../../rbac-web/tests/setup.ts[rbac-web/tests/setup.ts] |A/D |auxiliary
-|link:../../rbac-web/tsconfig.json[rbac-web/tsconfig.json] |A/D |auxiliary
-|link:../../rbac-web/vite.config.ts[rbac-web/vite.config.ts] |A/D |auxiliary
 |link:../../tools/backend-scripts.test.mjs[tools/backend-scripts.test.mjs] |A/D/F |support
 |link:../../tools/collect-acceptance-evidence.py[tools/collect-acceptance-evidence.py] |A/D/F |support
 |link:../../tools/collect-acceptance-evidence.test.py[tools/collect-acceptance-evidence.test.py] |A/D/F |support
@@ -450,6 +426,33 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../tools/prepare-course.sh[tools/prepare-course.sh] |D |auxiliary
 |link:../../tools/prepare-course.test.mjs[tools/prepare-course.test.mjs] |D |auxiliary
 |link:../../tools/project-layout.test.mjs[tools/project-layout.test.mjs] |A/D/F |support
+|link:../../rbac-web/.dockerignore[rbac-web/.dockerignore] |D |support
+|link:../../rbac-web/Dockerfile[rbac-web/Dockerfile] |A/D |auxiliary
+|link:../../rbac-web/e2e/console.spec.ts[rbac-web/e2e/console.spec.ts] |A/B/C/D/F |shared-methods
+|link:../../rbac-web/e2e/environment.ts[rbac-web/e2e/environment.ts] |A/D |auxiliary
+|link:../../rbac-web/e2e/global-setup.ts[rbac-web/e2e/global-setup.ts] |A/D |auxiliary
+|link:../../rbac-web/e2e/sandbox.ts[rbac-web/e2e/sandbox.ts] |A/D |auxiliary
+|link:../../rbac-web/index.html[rbac-web/index.html] |A/D |auxiliary
+|link:../../rbac-web/nginx.conf[rbac-web/nginx.conf] |A/D |auxiliary
+|link:../../rbac-web/package.json[rbac-web/package.json] |A/D |auxiliary
+|link:../../rbac-web/playwright.config.ts[rbac-web/playwright.config.ts] |A/D |auxiliary
+|link:../../rbac-web/src/App.vue[rbac-web/src/App.vue] |A/D |auxiliary
+|link:../../rbac-web/src/api/types.ts[rbac-web/src/api/types.ts] |A/B/C/D/F |shared-methods
+|link:../../rbac-web/src/components/RecordForm.vue[rbac-web/src/components/RecordForm.vue] |A/B/C |shared-methods
+|link:../../rbac-web/src/env.d.ts[rbac-web/src/env.d.ts] |A/D |auxiliary
+|link:../../rbac-web/src/layouts/AppLayout.vue[rbac-web/src/layouts/AppLayout.vue] |A/D |shared-methods
+|link:../../rbac-web/src/main.ts[rbac-web/src/main.ts] |A/D |shared-methods
+|link:../../rbac-web/src/styles.css[rbac-web/src/styles.css] |A/D |auxiliary
+|link:../../rbac-web/src/views/CatalogWorkspace.vue[rbac-web/src/views/CatalogWorkspace.vue] |B/D/F |shared-methods
+|link:../../rbac-web/src/views/ManagementView.vue[rbac-web/src/views/ManagementView.vue] |A/D |auxiliary
+|link:../../rbac-web/src/views/ResourceWorkspace.vue[rbac-web/src/views/ResourceWorkspace.vue] |D |auxiliary
+|link:../../rbac-web/src/views/StatusView.vue[rbac-web/src/views/StatusView.vue] |A/D |auxiliary
+|link:../../rbac-web/tests/components.spec.ts[rbac-web/tests/components.spec.ts] |A/C/D |shared-methods
+|link:../../rbac-web/tests/safety.spec.ts[rbac-web/tests/safety.spec.ts] |D/F |shared-methods
+|link:../../rbac-web/tests/sandbox.spec.ts[rbac-web/tests/sandbox.spec.ts] |A/D |auxiliary
+|link:../../rbac-web/tests/setup.ts[rbac-web/tests/setup.ts] |A/D |auxiliary
+|link:../../rbac-web/tsconfig.json[rbac-web/tsconfig.json] |A/D |auxiliary
+|link:../../rbac-web/vite.config.ts[rbac-web/vite.config.ts] |A/D |auxiliary
 |===
 
 == F主责定位（42文件）

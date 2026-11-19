@@ -3461,9 +3461,12 @@
       "owners": [
         "E",
         "A",
-        "D"
+        "B",
+        "C",
+        "D",
+        "F"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3494,7 +3497,7 @@
       "owners": [
         "A",
         "D",
-        "F"
+        "E"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3570,17 +3573,15 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
       "path": "rbac-web/src/api/index.ts",
-      "lead": "E",
+      "lead": "A",
       "owners": [
-        "E",
         "A",
         "D"
       ],
@@ -3593,9 +3594,12 @@
       "owners": [
         "E",
         "A",
-        "D"
+        "B",
+        "C",
+        "D",
+        "F"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3603,6 +3607,7 @@
       "lead": "D",
       "owners": [
         "D",
+        "A",
         "B",
         "C"
       ],
@@ -3611,11 +3616,10 @@
     },
     {
       "path": "rbac-web/src/components/PermissionCode.vue",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
-        "A",
-        "D"
+        "D",
+        "E"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3626,9 +3630,10 @@
       "owners": [
         "E",
         "A",
-        "D"
+        "B",
+        "C"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3644,11 +3649,10 @@
     },
     {
       "path": "rbac-web/src/directives/perm.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
-        "A",
-        "D"
+        "D",
+        "E"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3672,7 +3676,7 @@
         "A",
         "D"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3683,29 +3687,29 @@
         "A",
         "D"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
       "path": "rbac-web/src/router/index.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
+        "D",
         "A",
-        "D"
+        "E"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
       "path": "rbac-web/src/router/routes.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
+        "D",
         "A",
-        "D"
+        "E"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3713,10 +3717,9 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3732,22 +3735,19 @@
     },
     {
       "path": "rbac-web/src/utils/format.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
-        "A",
-        "D"
+        "D",
+        "F"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
       "path": "rbac-web/src/utils/password.ts",
       "lead": "A",
       "owners": [
-        "A",
-        "D",
-        "F"
+        "A"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3769,8 +3769,7 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3791,8 +3790,7 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3802,7 +3800,6 @@
       "lead": "E",
       "owners": [
         "E",
-        "A",
         "D"
       ],
       "depth": "auxiliary",
@@ -3842,13 +3839,14 @@
     },
     {
       "path": "rbac-web/src/views/workspace.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
-        "A",
-        "D"
+        "D",
+        "B",
+        "C",
+        "E"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3856,8 +3854,7 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3868,9 +3865,10 @@
       "owners": [
         "E",
         "A",
+        "C",
         "D"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3878,8 +3876,7 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
@@ -3889,21 +3886,20 @@
       "lead": "A",
       "owners": [
         "A",
-        "D",
-        "F"
+        "D"
       ],
       "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
     },
     {
       "path": "rbac-web/tests/router.spec.ts",
-      "lead": "E",
+      "lead": "D",
       "owners": [
-        "E",
+        "D",
         "A",
-        "D"
+        "E"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
@@ -3911,10 +3907,10 @@
       "lead": "E",
       "owners": [
         "E",
-        "A",
-        "D"
+        "D",
+        "F"
       ],
-      "depth": "auxiliary",
+      "depth": "shared-methods",
       "reviewState": "NOT_STARTED"
     },
     {
