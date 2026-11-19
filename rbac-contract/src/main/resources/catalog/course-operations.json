@@ -1,7 +1,7 @@
 {
   "source": "course-project-mgt-reference/api/openapi.yaml",
-  "commit": "fde08d5dd417abc543145aff33ca8378deb9ca36",
-  "sha256": "4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c",
+  "commit": "7f27e605f37f540253c3f2ff73227424250a4ec8",
+  "sha256": "8a309b5a475b9e24b2146f4ae112b8d0a9f291f48e4556b121758ada440b2d84",
   "snapshot": "course-openapi.source.yaml",
   "excludedProviderOperations": [
     {
@@ -22,6 +22,20 @@
       "operationId": "getIdentityCurrentUser",
       "method": "GET",
       "path": "/auth/me",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "listIdentityDepartments",
+      "method": "GET",
+      "path": "/auth/departments",
+      "x-required-permission": null,
+      "x-required-role": null
+    },
+    {
+      "operationId": "listIdentityDepartmentUsers",
+      "method": "GET",
+      "path": "/auth/departments/{departmentId}/users",
       "x-required-permission": null,
       "x-required-role": null
     },
@@ -52,9 +66,26 @@
       "path": "/auth/api-permissions/{operationId}",
       "x-required-permission": null,
       "x-required-role": null
+    },
+    {
+      "operationId": "lookupIdentityUser",
+      "method": "GET",
+      "path": "/auth/users/{userId}",
+      "x-required-permission": "TEC",
+      "x-required-role": "admin"
     }
   ],
   "operations": [
+    {
+      "operationId": "courseLogin",
+      "method": "POST",
+      "path": "/login",
+      "x-required-permission": null,
+      "x-required-role": null,
+      "permissionCode": null,
+      "requiredRole": null,
+      "accessPolicy": "PUBLIC"
+    },
     {
       "operationId": "getCurrentUser",
       "method": "GET",
@@ -773,16 +804,6 @@
       "x-required-role": null,
       "permissionCode": "course:access",
       "requiredRole": null,
-      "accessPolicy": "PROTECTED"
-    },
-    {
-      "operationId": "lookupIdentityUser",
-      "method": "GET",
-      "path": "/identity/users/{userId}",
-      "x-required-permission": "TEC",
-      "x-required-role": "admin",
-      "permissionCode": "TEC",
-      "requiredRole": "admin",
       "accessPolicy": "PROTECTED"
     },
     {

@@ -83,6 +83,57 @@ public class JpaDirectoryRepositoryAdapter implements DirectoryRepository {
         return department(required(DepartmentEntity.class, id));
     }
 
+    /** 在存储端计算每个部门的展开标记，同时保持分页顺序稳定。 */
+    @Override
+    public AuthorizationRepository.Page<IdentityDepartment> identityDepartments(
+            Long parentId, String keyword, int page, int size) {
+        String from = """
+                 from DepartmentEntity d where d.status='ENABLED'
+                 and ((:parent is null and d.parentId is null) or d.parentId=:parent)
+                 and (lower(d.name) like lower(:keyword) escape '!' or lower(d.code) like lower(:keyword) escape '!')
+                """;
+        TypedQuery<Long> count = em.createQuery("select count(d)" + from, Long.class);
+        TypedQuery<IdentityDepartment> items = em.createQuery("""
+                select new com.xmu.rbac.ddd.domain.port.DirectoryRepository$IdentityDepartment(
+                    d.id, d.code, d.name, d.parentId,
+                    case when exists (select 1 from DepartmentEntity c where c.parentId=d.id and c.status='ENABLED')
+                         then true else false end)
+                """ + from + " order by d.id", IdentityDepartment.class);
+        return directoryPage(count.setParameter("parent", parentId), items.setParameter("parent", parentId),
+                keyword, page, size);
+    }
+
+    /** 直接读取所需字段，避免将整条用户记录载入目录查询。 */
+    @Override
+    public AuthorizationRepository.Page<IdentityDepartmentUser> identityDepartmentUsers(
+            long departmentId, String keyword, int page, int size) {
+        String from = """
+                 from UserEntity u, DepartmentEntity d where u.departmentId=d.id
+                 and u.departmentId=:department and u.status='ACTIVE'
+                 and (lower(u.name) like lower(:keyword) escape '!' or lower(u.no) like lower(:keyword) escape '!')
+                """;
+        TypedQuery<Long> count = em.createQuery("select count(u)" + from, Long.class);
+        TypedQuery<IdentityDepartmentUser> items = em.createQuery("""
+                select new com.xmu.rbac.ddd.domain.port.DirectoryRepository$IdentityDepartmentUser(
+                    u.subject, coalesce(u.no, ''), u.name, d.id, d.name)
+                """ + from + " order by u.id", IdentityDepartmentUser.class);
+        return directoryPage(count.setParameter("department", departmentId),
+                items.setParameter("department", departmentId), keyword, page, size);
+    }
+
+    /** 对超出 JPA 偏移量上限的页只返回总数。 */
+    private static <T> AuthorizationRepository.Page<T> directoryPage(
+            TypedQuery<Long> count, TypedQuery<T> items, String keyword, int page, int size) {
+        String pattern = keyword == null ? "%" : "%" + keyword.strip()
+                .replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        long total = count.setParameter("keyword", pattern).getSingleResult();
+        long offset = (long) (page - 1) * size;
+        List<T> content = offset >= total || offset > Integer.MAX_VALUE ? List.of()
+                : items.setParameter("keyword", pattern).setFirstResult((int) offset)
+                        .setMaxResults(size).getResultList();
+        return new AuthorizationRepository.Page<>(page, size, total, content);
+    }
+
     public Department saveDepartment(Department d) {
         DepartmentEntity e =
                 d.id() == null ? new DepartmentEntity() : required(DepartmentEntity.class, d.id());

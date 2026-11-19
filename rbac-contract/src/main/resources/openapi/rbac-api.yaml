@@ -117,6 +117,141 @@ paths:
                 code: IDENTITY_SERVICE_UNAVAILABLE
                 message: 统一身份认证暂时不可用，请稍后重试。
       x-required-permission: '@authenticated'
+  /auth/departments:
+    get:
+      tags:
+      - 统一身份鉴权
+      summary: 查询统一身份部门列表（逐层展开）
+      description: 由学校统一身份认证提供。按层级查询组织架构：不传 parentId 返回根部门，传入 parentId 只返回该部门的直接子部门。界面可结合
+        hasChildren 逐层展开。
+      operationId: listIdentityDepartments
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: 按部门名称或部门编码模糊查询
+      - name: parentId
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        description: 上级部门标识；不传时查询根部门，传入时查询该部门的直接子部门
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 部门分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageIdentityDepartment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 当前用户无权读取统一身份组织架构
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查询统一身份部门的权限。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+        '404':
+          $ref: '#/components/responses/NotFound'
+      x-required-permission: '@authenticated'
+      x-required-audience: course-project-management
+      x-required-role: admin
+      x-course-permission: TEC
+  /auth/departments/{departmentId}/users:
+    parameters:
+    - name: departmentId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: 统一身份认证系统中的部门标识
+    get:
+      tags:
+      - 统一身份鉴权
+      summary: 查询部门下的用户
+      description: 由学校统一身份认证提供。按工号、学号或姓名分页查询指定部门下的统一身份用户，不返回电话、邮箱等联系方式。
+      operationId: listIdentityDepartmentUsers
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: keyword
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: 按姓名、工号或学号模糊查询
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 部门用户分页列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageIdentityDepartmentUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 当前用户无权读取该部门用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查询该部门用户的权限。
+        '404':
+          description: 部门不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_DEPARTMENT_NOT_FOUND
+                message: 统一身份认证系统中没有找到该部门。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+      x-required-permission: '@authenticated'
+      x-required-audience: course-project-management
+      x-required-role: admin
+      x-course-permission: TEC
   /auth/audit-logs:
     get:
       tags:
@@ -347,6 +482,56 @@ paths:
                 code: IDENTITY_SERVICE_UNAVAILABLE
                 message: 统一身份认证暂时不可用，请稍后重试。
       x-required-permission: '@authenticated'
+  /auth/users/{userId}:
+    parameters:
+    - name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 学校统一身份认证系统中的用户标识
+    get:
+      tags:
+      - 统一身份鉴权
+      summary: 查询统一身份用户
+      description: 添加教师时调用学校统一身份认证系统，按外部用户标识获取姓名与工号；姓名和工号不在本系统手工录入。
+      operationId: lookupIdentityUser
+      x-required-role: admin
+      x-required-permission: '@authenticated'
+      responses:
+        '200':
+          description: 统一身份用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+        '403':
+          description: 当前管理员没有添加教师的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有添加教师的权限。
+        '404':
+          description: 统一身份系统中不存在该用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_USER_NOT_FOUND
+                message: 统一身份认证系统中没有找到该用户。
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+      - bearerAuth: []
+      x-required-audience: course-project-management
+      x-course-permission: TEC
   /api/v1/me:
     get:
       operationId: getMe
@@ -3475,6 +3660,92 @@ components:
           type: object
           additionalProperties: true
       additionalProperties: false
+    IdentityDepartment:
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - hasChildren
+      - parentId
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          description: 统一身份认证系统中的部门标识
+          example: 1
+        code:
+          type: string
+          maxLength: 64
+          description: 部门编码
+          example: CS
+        name:
+          type: string
+          maxLength: 200
+          description: 部门名称
+          example: 计算机学院
+        parentId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: 上级部门标识；根部门为 null
+          nullable: true
+        hasChildren:
+          type: boolean
+          description: 是否存在直接子部门，用于决定界面是否显示展开箭头
+          example: true
+      additionalProperties: false
+    IdentityDepartmentUser:
+      type: object
+      required:
+      - userId
+      - 'no'
+      - name
+      - departmentId
+      - departmentName
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1008
+        'no':
+          type: string
+          description: 工号或学号
+          example: T1008
+        name:
+          type: string
+          description: 姓名
+          example: 孙晨
+        departmentId:
+          type: integer
+          minimum: 1
+          description: 所属部门标识
+          example: 1
+        departmentName:
+          type: string
+          description: 所属部门名称
+          example: 计算机学院
+      additionalProperties: false
+    IdentityUser:
+      type: object
+      required:
+      - userId
+      - 'no'
+      - name
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1008
+        'no':
+          type: string
+          description: 工号
+          example: T1008
+        name:
+          type: string
+          description: 姓名
+          example: 孙晨
+      additionalProperties: false
     AuditVO:
       type: object
       additionalProperties: false
@@ -3923,6 +4194,54 @@ components:
       required:
       - roles
       - edges
+    PageIdentityDepartment:
+      type: object
+      additionalProperties: false
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          format: int64
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityDepartment'
+      required:
+      - page
+      - pageSize
+      - total
+      - items
+    PageIdentityDepartmentUser:
+      type: object
+      additionalProperties: false
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          format: int64
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityDepartmentUser'
+      required:
+      - page
+      - pageSize
+      - total
+      - items
     PasswordInput:
       type: object
       additionalProperties: false

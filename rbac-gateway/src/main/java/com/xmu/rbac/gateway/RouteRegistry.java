@@ -25,6 +25,11 @@ public final class RouteRegistry {
         }
     }
 
+    /** 仅允许固定课程契约中的课程登录匿名进入。 */
+    public static boolean isCourseLogin(String method, String path) {
+        return "POST".equals(method) && "/login".equals(path);
+    }
+
     static List<Route> load(JsonNode operations) {
         List<Route> result = new ArrayList<>();
         Set<String> ids = new HashSet<>();
@@ -35,6 +40,11 @@ public final class RouteRegistry {
             if (!id.matches("[A-Za-z][A-Za-z0-9_]*") || !ids.add(id)
                     || !method.matches("GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS") || !path.startsWith("/")) {
                 throw new IllegalStateException("课程清单非法");
+            }
+            boolean publicRoute = "PUBLIC".equals(operation.path("accessPolicy").asText());
+            boolean login = isCourseLogin(method, path);
+            if (publicRoute != login || "courseLogin".equals(id) != login) {
+                throw new IllegalStateException("课程公开路由与契约不符");
             }
             Route route = new Route(method, path, id);
             for (Route existing : result) {

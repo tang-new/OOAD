@@ -7,7 +7,7 @@ import java.time.Instant;
 import org.springframework.http.*;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-/** 教师七接口：无内部成功包装，actor仅来自验证令牌。 */
+/** 教师身份会话、权限判定和审计入口使用裸响应，actor 取自验证令牌。 */
 @RestController
 @Validated
 public class AuthController {

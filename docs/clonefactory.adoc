@@ -1,150 +1,45 @@
-= 教师 CloneFactory：固定源码安装与独立验证
+= CloneFactory 0.0.2
 :toc:
 
-== 范围与来源
+== 固定源码安装
 
-只新增工具与本说明，不修改父 POM、业务模块或 Spring Boot 版本；独立 smoke 项目不加入 reactor。
-实际坐标是 `cn.edu.xmu:clonefactory:0.0.1-SNAPSHOT`，不是其他 groupId。
+本项目使用教师提供的编译期注解处理器 `cn.edu.xmu:clonefactory:0.0.2`。
+根 POM 的 `clonefactory.version` 同时控制结构化和 DDD 模块依赖及注解处理器路径。独立 smoke 项目也使用 0.0.2。
+固定的上游提交是 `e0c2b1e54b29207f13088b80eb7e49c22152fdcf`，`clonefactory` 子树是 `1a5158cb19357df59068af279875052bae1917d0`。
+link:https://gitee.com/mingqcn/spring-fundamentals/tree/e0c2b1e54b29207f13088b80eb7e49c22152fdcf/clonefactory[教师源码]
 
-* 上游：https://gitee.com/mingqcn/spring-fundamentals.git
-* 固定提交：`854d0e09e250bc5462267f63ecacdcff32161104`
-* `clonefactory` Git tree：`47f7cd9d170f37421962ff26d187cc880b29c44e`
-* 已核对的参考目录：`C:/Users/vintces/Downloads/rbac1-context-extracted/spring-fundamentals-reference/clonefactory`
-* JDK：21；本次使用 `D:/Software/Eclipse Adoptium/jdk-21.0.7.6-hotspot`。
-* Maven：根目录 Wrapper 固定的 3.9.9；Windows 下以下命令在 Git Bash 中运行，需要 Git、tar、Bash。
-
-== 安装
-
-从仓库根目录运行：
+配置 JDK 21 后在仓库根目录运行。Windows 使用 Git Bash。
 
 [source,bash]
 ----
-export JAVA_HOME='D:/Software/Eclipse Adoptium/jdk-21.0.7.6-hotspot'
-export PATH="$JAVA_HOME/bin:$PATH"
-LOG_DIR='C:/Users/vintces/Downloads/rbac1-context-extracted'
-mkdir -p "$LOG_DIR"
-bash tools/install-clonefactory.sh > "$LOG_DIR/clonefactory-install.log" 2>&1
-----
-
-默认克隆到仓库外 `$HOME/.cache/ooad-clonefactory/reference`，检出固定提交；
-`CLONEFACTORY_CACHE` 可以指定其他仓库外缓存目录。缓存提交不匹配时失败，不自动覆盖或修复工作区。
-首次需要访问 Gitee 和 Maven Central；复用匹配缓存时不再拉取 Git。
-
-已有匹配参考源码时，可在安装前设置（目录可为仓库根目录或其中的 clonefactory 子目录）：
-
-[source,bash]
-----
-export CLONEFACTORY_SOURCE='C:/Users/vintces/Downloads/rbac1-context-extracted/spring-fundamentals-reference/clonefactory'
-bash tools/install-clonefactory.sh > "$LOG_DIR/clonefactory-install.log" 2>&1
-# 恢复默认克隆模式：unset CLONEFACTORY_SOURCE
-----
-
-脚本核验 HEAD、clonefactory tree hash，并拒绝 clonefactory 下相对固定提交的已跟踪修改。
-仅用 `git archive` 导出该提交的 clonefactory 跟踪文件至仓库外临时目录；不复制参考仓库的
-用户配置、凭据、`.git`、未跟踪文件或已有 target，也不在参考目录编译。
-构建完成或失败都会清理临时导出目录。脚本没有 push 操作。
-
-使用根 Wrapper 对导出的原始 POM 执行 `clean install`，安装至默认本地 `~/.m2/repository`；
-可以追加 Maven 参数，例如 `-Dmaven.repo.local=...`（smoke 必须使用同一个本地仓库）。
-脚本生成无凭据 Maven settings，同时传入 `-s` 和 `-gs`，屏蔽原 POM 的 Spring milestone/
-HTTP 镜像并统一走 HTTPS Maven Central，不读取/复制其他项目的 settings。
-下载代理需求应通过自己的执行环境处理，勿把凭据加入本仓库。
-
-注意：固定的是源码提交及工具链，非上游 SNAPSHOT 的远程发布保证。安装会替换本地同坐标 SNAPSHOT。
-上游 POM 未固定 compiler/Boot 插件版本，Maven 会警告；本次 Maven 3.9.9 选择 compiler 3.13.0，
-Boot 插件没有绑定到生命周期，不执行 repackage，也不需要升级本项目 Boot。
-未改写上游 POM，不声称产物 ZIP 时间戳或字节级 hash 可重复。
-
-== 独立编译与 JUnit 验证
-
-安装成功后运行：
-
-[source,bash]
-----
-bash mvnw -B -ntp \
-  -s tools/clonefactory-smoke/settings.xml \
+bash tools/install-clonefactory.sh
+bash mvnw -B -ntp -s tools/clonefactory-smoke/settings.xml \
   -gs tools/clonefactory-smoke/settings.xml \
-  -f tools/clonefactory-smoke/pom.xml clean verify \
-  > "$LOG_DIR/clonefactory-smoke.log" 2>&1
+  -f tools/clonefactory-smoke/pom.xml clean test
+bash mvnw -B -ntp -pl rbac-structured,rbac-ddd -am clean test
 ----
 
-`settings.xml` 是本工具公开的无凭据 Central 镜像配置，不是用户配置的副本。
-smoke POM 无 parent，Java release 21，compiler 3.13.0、Surefire 3.5.2、JUnit Jupiter 5.11.4；
-依赖采用 `provided`，处理器路径显式声明，不依赖隐式 classpath 扫描：
+脚本默认将固定提交保存到仓库外的 `$HOME/.cache/ooad-clonefactory-0.0.2/reference`。
+可以通过 `CLONEFACTORY_CACHE` 更改仓库外缓存路径，或以 `CLONEFACTORY_SOURCE` 指向 HEAD 在固定提交的干净参考仓库。
+脚本校验 Git 子树并仅导出该模块的跟踪文件，使用原始 POM 在临时目录执行 `clean install`。
+依赖从 HTTPS Maven Central 解析。若使用 `-Dmaven.repo.local`，安装、smoke 和业务编译应使用同一 Maven 仓库。
 
-[source,xml]
-----
-<dependency>
-  <groupId>cn.edu.xmu</groupId>
-  <artifactId>clonefactory</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <scope>provided</scope>
-</dependency>
-<!-- maven-compiler-plugin/configuration 内 -->
-<release>21</release>
-<annotationProcessorPaths>
-  <path>
-    <groupId>cn.edu.xmu</groupId>
-    <artifactId>clonefactory</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </path>
-</annotationProcessorPaths>
-<annotationProcessors>
-  <annotationProcessor>cn.edu.xmu.clonefactory.CopyProcessor</annotationProcessor>
-</annotationProcessors>
-----
+== 业务映射
 
-测试直接导入真实生成的 `cn.edu.xmu.clonefactory.util.CloneFactory`。
-没有手写替代类，未提交生成源码。`clean` 会删除旧产物，处理器必须重新生成才能通过编译。
-所有 Bean 都有明确的同名私有字段及 public `getX/setX`，不使用 Lombok 或 record。
+* 结构化模块把 `DisplayName` record 复制到 `NameChange` record，保留模板中可信的 ID 和操作者。
+  五个创建入口用 record 访问器填充实体的公共字段，由服务解析系统、上级机构和部门并设置状态、口令哈希等可信字段。
+* DDD 的角色请求、角色及 UI 公开响应和持久化快照使用 record。UI 的 `children` 由 REST 边界组装。
+  系统标识、权限关联与默认值由持久化适配器补齐，角色聚合仍通过自己的构造器恢复。
+* 普通 `copy(target, source)` 会复制允许的空值。对可显式清空的 PATCH，DTO 记录字段存在性，再由用例应用相应语义。
+  `copyNotNull(target, source)` 用于省略空值表示保留模板的场景，零与 false 都是有效值。
+* record 目标通过规范构造器生成新实例，必须使用返回值。普通类的 `final` 目标要求合适的公共全参数构造器，参数名须能匹配属性。
+  公共字段和标准 JavaBean `getX()/setX()` 可参与映射。字段需要类型一致，派生或类型转换由调用方处理。
+* 使用目标形状和具体方向的字段排除约束复制范围。复制是浅赋值。注解处理器依赖 JavaPoet 和 AutoService，模块必须按 POM 保留传递依赖。
 
-6 个 JUnit 测试覆盖：
+== 验证生成结果
 
-. `CopyFrom` 同名字段复制、返回目标实例、请求 password 被 Exclude 后保留原值。
-. `CopyTo` 输出普通字段，敏感字段既不覆盖哨兵值，也不泄漏到新建 View。
-. `CopyNotNullFrom` 使用 Long/Integer/Boolean 包装类型；null 保留旧值，0/false 仍复制，敏感字段排除。
-. `CopyNotNullTo` 的 null 保留与 0/false 更新。
-. Domain -> StoredBean -> Domain roundtrip 保留所有字段，包括可信持久化 password；实例独立。
-. 普通 `copy` 会用 null 覆盖，区别于 `copyNotNull`。
-
-产物位置：
-
-* `tools/clonefactory-smoke/target/generated-sources/annotations/cn/edu/xmu/clonefactory/util/CloneFactory.java`
-* `tools/clonefactory-smoke/target/classes/cn/edu/xmu/clonefactory/util/CloneFactory.class`
-* `tools/clonefactory-smoke/target/surefire-reports/`
-
-== 已实测结果
-
-本次在先安装成功后执行 smoke；参考源码复用路径、默认真实 Git 克隆路径均安装成功。
-最终从默认克隆安装的依赖执行 `clean verify`：`Tests run: 6, Failures: 0, Errors: 0, Skipped: 0`，`BUILD SUCCESS`。
-另外验证 `bash -n`、错误 commit 拒绝、仓库内 cache 拒绝。
-检查安装 JAR 的处理器 service 为 `cn.edu.xmu.clonefactory.CopyProcessor`，
-JAR 本身没有 util.CloneFactory；检查生成源码有 6 个重载且对应 class 存在。
-因此测试调用的确为当前编译生成的类，而非依赖中的预置类。
-
-仓库外日志位于 `C:/Users/vintces/Downloads/rbac1-context-extracted/`：
-
-* `clonefactory-install.log`：复用参考源码安装。
-* `clonefactory-fetch-install.log`：默认从 Gitee 拉取并安装。
-* `clonefactory-smoke.log`：最终完整编译与 6 个单测。
-* `clonefactory-guards.log`：两项失败保护验证。
-* `clonefactory-artifacts.log`：service 与生成类检查及实际生成源码。
-
-== 使用限制
-
-* 上游直接依赖 `com.squareup:javapoet:1.13.0` 和 `com.google.auto.service:auto-service:1.1.1`；
-  Maven 从安装的原始 POM 解析其传递依赖，处理器路径也包含这些依赖。
-  JavaPoet 负责生成 Java 源码，AutoService 在构建处理器时生成 SPI 注册文件。
-  仅复制 JAR 却漏掉 POM/传递依赖，可能导致处理器加载失败。
-* 不支持 record accessor（`name()`）或 immutable record 构造映射；实现按 `getName()/setName()`
-  匹配，跳过 final/static 字段。Boolean 也使用 `getEnabled()`，不能假定识别 `isEnabled()`。
-* 请声明真实同名字段与可访问、签名兼容的 JavaBean 方法。只有方法没有字段的“虚拟字段”分支
-  存在方法名再拼 getter/setter 的风险，本验证不把它当成可靠接口；不支持任意字段改名或自动类型转换。
-* `copyNotNull` 对 getter 返回值生成 `null != ...`，因此用包装类型，不可直接用于基本类型属性；
-  它也无法表达“显式清空字段”，集合/嵌套对象是普通赋值，不是深拷贝。
-* Exclude 必须匹配具体复制方向与来源/目标类型；本例放在字段上。
-  上游方法注解合并逻辑主要读取 CopyFrom 系列，不应推断所有方向的方法级 Exclude 等价。
-* 生成方法是 `copy(target, source)` / `copyNotNull(target, source)`，目标对象由调用方创建。
-  源或目标为 null 没有自动防护，重复声明同一映射方向可能产生重复重载；不要同时在两端重复声明。
-* 每次编译输出固定 util.CloneFactory；不要跨编译批次拼接手写同名类。
-  本次只验证独立 Bean 场景，不代表已验证业务集成、Lombok 处理顺序或已有系统全部回归。
+`clean test` 会重新生成各模块下的
+`target/generated-sources/annotations/cn/edu/xmu/clonefactory/util/CloneFactory.java`。
+验收检查源码中的 record 访问器、构造器和公共字段访问，并验证字段值、身份和凭据排除、模板回退与 PATCH 空值语义。
+独立 smoke 还覆盖原 JavaBean 重载、`copyNotNull` 的 null/0/false 以及 `final` 目标。
+教师编码规范压缩包中的旧版 record 与 final 限制对应先前处理器，其字段白名单和 clean build 验证要求仍适用。

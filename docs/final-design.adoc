@@ -192,20 +192,20 @@ image::role-state.svg[真实 Role 状态图]
 |RoleController.create 使用 CloneFactory.copy(new RoleCommand(), CreateRoleRequest)
 |请求校验在 API，可信 principal 单独从 bearer 获取；命令没有 actor/password/token 字段可盲拷。
 |DDD 输出
-|RestSupport.role：Role → 显式 RoleResult → CloneFactory.copy(new RoleView(), result)
+|RestSupport.role：Role → RoleResult record → 由 CloneFactory 生成 RoleView record
 |enabled→status、领域读取、系统码等装配显式；不直接序列化 JPA Entity。
 |DDD 持久化
 |JpaAuthorizationRepositoryAdapter.restore/saveRole：RoleEntity ↔ RoleState 使用 CloneFactory；Role 由构造器恢复
 |systemId↔systemCode、权限集合查询、聚合构造不变量、版本检查和关联行必须显式实现；不是自动深拷 ORM 图。
 |结构化输入
-|ManagementController.name：DisplayName → CloneFactory.copy(new NameChange(), dto)
+|ManagementController.name：DisplayName record → 由 CloneFactory 生成 NameChange record
 |NameChange 的 id、actorId 标注 Exclude；URL/认证主体不由显示名称 DTO 覆盖。
 |结构化输出
 |Views、Map/list 投影为主
 |当前并非所有输出都有独立 VO 类，不能为满足规范在图里造出不存在的 UserVO/AuditVO。属于真实实现取舍/规范差距，需单独评估，不在文档里掩盖。
 |===
 
-最新代码还包含真实 PATCH 边界：RoleController.patch 的 RoleUpdateRequest → RoleUpdateCommand，DirectoryController.patchUser 的 UserUpdateRequest → UserUpdateCommand，以及 ResourceController.ui/uiPatch 的 UiChangeRequest → UiChangeCommand，均用 copy；字段 presence 单独传入应用服务，区分“未提供”与“明确 null 清空”，不能换成全量 copyNotNull。ResourceViews.ui 使用 UiResult.from → UiResourceView 的 copy，再显式装配 children；JpaResourceRepositoryAdapter 使用 UiState ↔ UiResourceEntity 的复制，树规则不由复制器承担。
+最新代码还包含真实 PATCH 边界：RoleController.patch 的 RoleUpdateRequest → RoleUpdateCommand，DirectoryController.patchUser 的 UserUpdateRequest → UserUpdateCommand，以及 ResourceController.ui/uiPatch 的 UiChangeRequest → UiChangeCommand，均用 copy；字段 presence 单独传入应用服务，区分“未提供”与“明确 null 清空”，不能换成全量 copyNotNull。ResourceViews.ui 显式构造 children，并将它作为模板字段传给 UiResourceView 的 record 映射。JpaResourceRepositoryAdapter 通过 UiState 与 UiResourceEntity 之间的复制转移字段，树规则由业务用例处理。
 
 Controller 成功封装现在明确保留 `data:null`，不因 Map.of 禁止 null 而抛异常。共同的 rbac-contract.ApiErrors 只统一 HTTP status/code/中文 message 词汇，由 REST Advice/Handler 调用；它没有鉴权、图算法或事务，不是跨实现共享业务 Service，领域内部原因可保持独立。模拟目标的 USER_DISABLED 是返回结果的 reason，不应被普通认证错误封装替换。
 

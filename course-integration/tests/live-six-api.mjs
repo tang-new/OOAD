@@ -4,11 +4,16 @@ import {randomUUID} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 export async function runSix({origin,prefix='/api',tokens,subjects,record=async()=>{}}) {
  const rows=[];
- async function call(who,path,method='GET',body,status=200,requestId=randomUUID()) {
+ async function call(who,path,method='GET',body,status=200,requestId=randomUUID(),auditConfirmed=false) {
   const r=await fetch(origin+prefix+path,{redirect:'error',signal:AbortSignal.timeout(45000),method,headers:{Authorization:'Bearer '+tokens[who],'Content-Type':'application/json','X-Request-ID':requestId},...(body===undefined?{}:{body:JSON.stringify(body)})});
   let value;try{value=await r.json()}catch{value=null}
   const observation={method,path,status:r.status,code:value?.code??null};current.push(observation);
-  assert.equal(r.status,status,`${method} ${path}: expected ${status}, actual HTTP ${r.status}, code ${value?.code??'none'}`);return value;
+  assert.equal(r.status,status,`${method} ${path}: expected ${status}, actual HTTP ${r.status}, code ${value?.code??'none'}`);
+  if(auditConfirmed) {
+   assert.equal(r.headers.get('x-request-id'),requestId);
+   assert.equal(r.headers.get('x-audit-state'),'confirmed');
+  }
+  return value;
  }
  let current=[];async function scenario(name,fn) {current=[];const row={name,passed:false};try{row.result=await fn();row.passed=true}catch(e){row.error=e.name==='AssertionError'?e.message:'Execution/transport failed (secret-bearing exception withheld)'}row.http=current;rows.push(row);await record(row);}
  let term,course;
@@ -25,7 +30,7 @@ export async function runSix({origin,prefix='/api',tokens,subjects,record=async(
  });
  await scenario('student-leader-join-approval',async()=>{const me=await call('STUDENT_LEADER','/me');assert.equal(me.userId,subjects.STUDENT_LEADER);assert.equal(me.studentId,610001);const approved=await call('STUDENT_LEADER','/join-requests/610001','PATCH',{decision:'approved'});assert.equal(approved.state,2);return {studentId:me.studentId,state:approved.state}});
  await scenario('oral-score-audit-POST-GET',async()=>{
-  const requestId=randomUUID();await call('LEADER','/oral-records/610001','PATCH',{verdict:'passed',groupScore:88,personalScores:[{studentId:610001,score:89},{studentId:610002,score:87}]},200,requestId);
+  const requestId=randomUUID();await call('LEADER','/oral-records/610001','PATCH',{verdict:'passed',groupScore:88,personalScores:[{studentId:610001,score:89},{studentId:610002,score:87}]},200,requestId,true);
   const logs=await call('LEADER','/audit-logs');const event=logs.items.find(x=>x.type==='score_changed'&&x.target==='updateOralRecord'&&x.before?.score===70&&x.after?.score===88);
   assert(event,'Actual scoped audit GET must contain real 70->88 score event');return {auditId:event.id,auditRequestId:requestId,before:70,after:88};
  });

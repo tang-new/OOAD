@@ -31,11 +31,11 @@ entity：表记录；dto：输入/身份/输出边界；config：装配、trace�
 
 结构化规则在Service而不是实体行为中表达；Service字段为final依赖/缓存等，不用继承组织业务过程。
 ArchitectureTest约束Controller不能绕过Service访问Mapper、Service不依赖Controller/config、Mapper不反向依赖Service、实体只含数据及禁用MyBatis。本轮已真实执行；不能以规则存在代替其测试结果。
-CloneFactory用于受控Bean复制；不能把实体整体复制成HTTP输出或让PATCH越过字段白名单，映射安全由MappingSafetyTest等验证。
+CloneFactory 0.0.2 通过 record 访问器将五个创建 DTO 的同名同型字段复制到实体公共字段。重命名由 DisplayName record 生成 NameChange record，作用域、凭据、版本和 PATCH 字段存在性由各用例控制。MappingSafetyTest 验证复制值和受保护字段。
 
 == 授权与课程调用
 
-. RouteRegistry读取64项OAS；WebConfig与MVC路由双向核对，BootstrapService与中心sys_api_operation核对。未登记默认拒绝；中心受保护目录不可弱化成PUBLIC或换掉OAS要求。
+. RouteRegistry读取67项OAS；WebConfig与MVC路由双向核对，BootstrapService与中心sys_api_operation核对。未登记默认拒绝；中心受保护目录不可弱化成PUBLIC或换掉OAS要求。
 . TokenService验证RS256、kid/issuer/单aud、sub/iat/exp/jti/tokenVersion；实时读取用户/系统状态和MySQL撤销，先于超级管理员处理。JWT不携带角色或权限claim。
 . AuthorizationService先取当前系统启用直接角色，再遍历senior→junior；停用节点切断路径，权限去重、来源可多条；identityRole仅投影student/teacher/admin。
 . 中心管理同时要求中心API权限、当前组织管理子树及授权上界；系统共享定义写还要求根部门。部门只控制组织管理与直接准入，不是旧业务数据范围；SUPER_ADMIN也不能绕过目标用户部门准入。

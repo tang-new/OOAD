@@ -27,7 +27,7 @@ public class ManagementController {
         return Views.map("code", "OK", "message", "成功", "data", data, "timestamp", Instant.now());
     }
     private NameChange name(DisplayName dto) {
-        return cn.edu.xmu.clonefactory.util.CloneFactory.copy(new NameChange(), dto);
+        return cn.edu.xmu.clonefactory.util.CloneFactory.copy(new NameChange(null, null, null), dto);
     }
     @GetMapping("/me")
     public Object getMe(@RequestAttribute Actor actor) {

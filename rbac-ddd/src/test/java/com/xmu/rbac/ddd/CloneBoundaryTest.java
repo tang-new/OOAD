@@ -14,11 +14,11 @@ import org.junit.jupiter.api.Test;
 /** 真正的教师生成器边界，不拷贝 id、actor、密码或乐观锁版本。 */
 class CloneBoundaryTest {
     @Test
-    void requestToCommand() {
-        CreateRoleRequest input = new CreateRoleRequest();
-        input.setCode("TEACHER");
-        input.setName("教师");
-        input.setSystemCode("course-project-management");
+    void requestToCommand() throws Exception {
+        CreateRoleRequest input = new com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                """
+                {"systemCode":"course-project-management","code":"TEACHER","name":"教师"}
+                """, CreateRoleRequest.class);
         RoleCommand command = CloneFactory.copy(new RoleCommand(), input);
         assertThat(command.getCode()).isEqualTo("TEACHER");
         assertThat(command.getName()).isEqualTo("教师");
@@ -27,14 +27,13 @@ class CloneBoundaryTest {
 
     @Test
     void resultToVo() {
-        RoleResult result = new RoleResult();
-        result.setId(7L);
-        result.setName("安全角色");
-        result.setBuiltin(false);
-        RoleView view = CloneFactory.copy(new RoleView(), result);
-        assertThat(view.getId()).isEqualTo(7);
-        assertThat(view.getName()).isEqualTo("安全角色");
-        assertThat(view.getBuiltin()).isFalse();
+        RoleResult result = new RoleResult(7L, "course", "teacher", "安全角色",
+                null, "ENABLED", false, "teacher", 3L);
+        RoleView view = CloneFactory.copy(
+                new RoleView(null, null, null, null, null, null, null, null, null), result);
+        assertThat(view.id()).isEqualTo(7L);
+        assertThat(view.name()).isEqualTo("安全角色");
+        assertThat(view.builtin()).isFalse();
     }
 
     @Test
@@ -46,8 +45,11 @@ class CloneBoundaryTest {
         entity.setCode("teacher");
         entity.setStatus("ENABLED");
         entity.setBuiltin(true);
-        RoleState state = CloneFactory.copy(new RoleState(), entity);
-        state.setName("更新名称");
+        entity.setName("更新名称");
+        RoleState state = CloneFactory.copy(new RoleState(null, null, null, null, null, null), entity);
+        assertThat(state.name()).isEqualTo("更新名称");
+        assertThat(state.code()).isEqualTo("teacher");
+        entity.setName("旧名称");
         CloneFactory.copy(entity, state);
         assertThat(entity.getId()).isEqualTo(9L);
         assertThat(entity.getVersion()).isEqualTo(4L);

@@ -10,7 +10,15 @@ public interface CentralClient {
     record Decision(boolean allowed) {}
     record Authorities(List<String> authorities) {}
     @GetExchange("/auth/api-permissions/{operationId}")
-    Decision operation(@RequestHeader("Authorization") String bearer, @PathVariable("operationId") String operationId);
+    Decision operation(
+            @RequestHeader("Authorization")
+            String bearer,
+            @PathVariable("operationId")
+            String operationId
+    );
     @GetExchange("/integration/authorities")
-    Authorities authorities(@RequestHeader("Authorization") String bearer);
+    Authorities authorities(
+            @RequestHeader("Authorization")
+            String bearer
+    );
 }

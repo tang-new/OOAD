@@ -46,6 +46,7 @@ jobs:
           python-version: '3.12'
       - run: pip install PyYAML openapi-spec-validator
       - run: bash tools/install-clonefactory.sh
+      - run: bash mvnw -B -ntp -s tools/clonefactory-smoke/settings.xml -gs tools/clonefactory-smoke/settings.xml -f tools/clonefactory-smoke/pom.xml clean test
       - run: python tools/generate-rbac1-contract.py --check
       - run: python deploy/full-config-test.py
       - run: python tools/collect-acceptance-evidence.test.py
@@ -99,6 +100,7 @@ jobs:
           E2E_MODULE: rbac-ddd
       # Export first; only the next step starts the dedicated course DB and pins its datasource.
       - run: bash tools/prepare-course.sh
+      - run: python course-integration/tests/verify-prepared.py
       - name: Retain and execute all pinned upstream course tests
         run: bash course-integration/tests/run-domain-tests.sh
       - name: Build the actual course frontend

@@ -49,21 +49,21 @@ public class JpaResourceRepositoryAdapter implements ResourceRepository {
     }
 
     private Ui ui(UiResourceEntity e) {
-        UiState state = cn.edu.xmu.clonefactory.util.CloneFactory.copy(new UiState(), e);
+        UiState state = cn.edu.xmu.clonefactory.util.CloneFactory.copy(new UiState(null, null, null, null, null, null, null, null, null), e);
         return new Ui(
                 e.getId(),
                 code(e.getSystemId()),
-                state.getParentId(),
-                state.getType(),
-                state.getCode(),
-                state.getName(),
-                state.getRoute(),
-                state.getComponent(),
-                state.getSortOrder(),
-                state.getStatus(),
-                state.getPermissionId() == null
+                state.parentId(),
+                state.type(),
+                state.code(),
+                state.name(),
+                state.route(),
+                state.component(),
+                state.sortOrder(),
+                state.status(),
+                state.permissionId() == null
                         ? null
-                        : required(PermissionEntity.class, state.getPermissionId()).getCode());
+                        : required(PermissionEntity.class, state.permissionId()).getCode());
     }
 
     public List<Ui> ui(String system) {
@@ -85,16 +85,11 @@ public class JpaResourceRepositoryAdapter implements ResourceRepository {
     public Ui saveUi(Ui u) {
         UiResourceEntity e =
                 u.id() == null ? new UiResourceEntity() : required(UiResourceEntity.class, u.id());
-        UiState state = new UiState();
-        state.setParentId(u.parentId());
-        state.setType(u.type());
-        state.setCode(u.code());
-        state.setName(u.name());
-        state.setRoute(u.route());
-        state.setComponent(u.component());
-        state.setSortOrder(u.sortOrder() == null ? 0 : u.sortOrder());
-        state.setStatus(u.status() == null ? "ENABLED" : u.status());
-        state.setPermissionId(permission(u.systemCode(), u.permissionCode(), "UI"));
+        UiState state = cn.edu.xmu.clonefactory.util.CloneFactory.copy(
+                new UiState(null, null, null, null, null, null,
+                        u.sortOrder() == null ? 0 : u.sortOrder(),
+                        u.status() == null ? "ENABLED" : u.status(),
+                        permission(u.systemCode(), u.permissionCode(), "UI")), u);
         cn.edu.xmu.clonefactory.util.CloneFactory.copy(e, state);
         e.setSystemId(system(u.systemCode()));
         if (u.id() == null) em.persist(e);

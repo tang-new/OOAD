@@ -11,6 +11,8 @@ import net from 'node:net';
 import {hostEnvironment,runtimeEnvironment,guardDatabase} from './real-environment.mjs';
 import {provisionAccounts} from './real-provision.mjs';
 import {runSix} from './live-six-api.mjs';
+import {verifyIdentityAndLogin} from './identity-and-login.mjs';
+import {startCourseEdge,stopCourseEdge} from './real-course-edge.mjs';
 const ROOT=resolve(import.meta.dirname,'../..');
 const args=process.argv.slice(2);const selected=args.find(x=>x.startsWith('--module='))?.split('=')[1]||'both';
 assert(['both','structured','ddd'].includes(selected)&&args.every(x=>x.startsWith('--module=')),'Usage: node run-real-centers.mjs [--module=both|structured|ddd]');
@@ -20,7 +22,7 @@ const java=join(javaHome,'bin',process.platform==='win32'?'java.exe':'java');
 execFileSync(java,['-version'],{env:hostEnvironment(process.env),stdio:['ignore','pipe','pipe']});
 const passwords={center:process.env.REAL_CENTER_DB_PASSWORD,course:process.env.REAL_COURSE_DB_PASSWORD};
 assert(Object.values(passwords).every(x=>typeof x==='string'&&x.length),'Explicit dedicated center/course MySQL passwords required');
-const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-gateway-course-v1',startedAt:new Date().toISOString(),directory:output,upstream:'fde08d5dd417abc543145aff33ca8378deb9ca36',modules:{}};
+const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-gateway-course-v1',startedAt:new Date().toISOString(),directory:output,upstream:'7f27e605f37f540253c3f2ff73227424250a4ec8',modules:{}};
 let interrupted=false;for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>{interrupted=true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));const hash=b=>createHash('sha256').update(b).digest('hex');
 async function port(){return new Promise((ok,no)=>{const s=net.createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p))})})}
@@ -28,8 +30,8 @@ async function redis(args){return new Promise((ok,no)=>{const s=net.connect({hos
 async function cleanRedis(namespace){assert(/^m6_course_real_center_(structured|ddd)_\d{13}_[a-f0-9]{8}$/.test(namespace));let cursor='0';do{const data=await redis(['SCAN',cursor,'MATCH',namespace+':*','COUNT',200]);cursor=data[0];const keys=data[1];assert(keys.every(x=>x.startsWith(namespace+':')));if(keys.length)await redis(['DEL',...keys])}while(cursor!=='0')}
 async function run(module){
  const suffix=module+'_'+Date.now()+'_'+randomBytes(4).toString('hex');const names={center:'m6_course_real_center_'+suffix,course:'m6_course_real_course_'+suffix};
- const result={startedAt:new Date().toISOString(),databases:names,ports:{},jars:{},rows:[],cleanup:{children:false,databases:false,redis:false,secrets:false}};report.modules[module]=result;
- const children=[],streams=[],created=new Set(),admins={};let courseDb;const secretFiles=[];
+ const result={startedAt:new Date().toISOString(),databases:names,ports:{},jars:{},rows:[],cleanup:{children:false,databases:false,redis:false,secrets:false,edge:false}};report.modules[module]=result;
+ const children=[],streams=[],created=new Set(),admins={};let courseDb,edgeName;const secretFiles=[];
  async function snapshot(tag,path){const source=resolve(path),candidate=join(output,suffix+'-'+tag+'.jar');const before=hash(await readFile(source));await copyFile(source,candidate);const candidateHash=hash(await readFile(candidate));const after=hash(await readFile(source));assert(before===candidateHash&&after===before,'Jar changed while copying; retry after Maven publication');
   const jarTool=join(javaHome,'bin',process.platform==='win32'?'jar.exe':'jar');const entries=execFileSync(jarTool,['tf',candidate],{env:hostEnvironment(process.env),encoding:'utf8',maxBuffer:16*1024*1024});assert(entries.includes('BOOT-INF/classes/'),'Actual executable Spring Boot fat jar required: '+tag);result.jars[tag]={source,sourceSHA256:before,candidateSHA256:candidateHash};secretFiles.push(candidate);return candidate;
  }
@@ -56,7 +58,13 @@ async function run(module){
   for(const [synthetic,who]of Object.entries(map))fixture=fixture.replaceAll("'"+synthetic+"'",courseDb.escape(accounts.subjects[who]));await courseDb.query(fixture);
   const [teacher]=await courseDb.query('SELECT user_id,id FROM teacher WHERE user_id=?',[accounts.subjects.LEADER]);assert.equal(teacher.length,1);const [student]=await courseDb.query('SELECT user_id,id FROM student WHERE user_id=?',[accounts.subjects.STUDENT_LEADER]);assert.equal(Number(student[0].id),610001);result.subjectMappings={leader:{subject:teacher[0].user_id,teacherId:teacher[0].id},studentLeader:{subject:student[0].user_id,studentId:student[0].id}};
   const gatewayPort=await port();await start('gateway',jars.gateway,{kind:'gateway',port:gatewayPort,center,course,issuer});
-  result.rows=await runSix({origin:'http://127.0.0.1:'+gatewayPort,prefix:'',tokens:accounts.tokens,subjects:accounts.subjects,record:row=>console.log(module+' '+row.name+' '+(row.passed?'PASS':'FAIL '+row.error))});
+  const edgePort=await port();
+  edgeName='m6-course-edge-'+suffix.replaceAll('_','-');
+  const edge=await startCourseEdge({name:edgeName,directory:output,template:join(ROOT,'deploy/full-course-nginx.conf'),
+    centerPort,gatewayPort,port:edgePort,files:secretFiles});
+  result.ports.edge=edgePort;
+  result.identity=await verifyIdentityAndLogin({center,edge,accounts,serviceKey,courseDb});
+  result.rows=await runSix({origin:edge,prefix:'/api',tokens:accounts.tokens,subjects:accounts.subjects,record:row=>console.log(module+' '+row.name+' '+(row.passed?'PASS':'FAIL '+row.error))});
   if(result.rows.some(x=>!x.passed)) {
    result.diagnostics=[];
    async function diagnostic(origin,path,who,method='GET',body) {const r=await fetch(origin+path,{redirect:'error',signal:AbortSignal.timeout(30000),method,headers:{Authorization:'Bearer '+accounts.tokens[who],'X-Audit-Service-Key':serviceKey,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});let v;try{v=await r.json()}catch{}result.diagnostics.push({target:origin===center?'center':'course',method,path,status:r.status,code:v?.code??null,...(v?.allowed===undefined?{}:{allowed:v.allowed}),...(v?.authorities?{authorities:v.authorities}:{})});}
@@ -64,10 +72,21 @@ async function run(module){
    await diagnostic(course,'/terms','ADMIN','POST',{name:'M6 direct diagnostic '+Date.now(),startDate:'2026-01-01',endDate:'2036-12-31'});
    await diagnostic(center,'/auth/audit-logs','LEADER','POST',{requestId:randomUUID(),type:'score_changed',objectType:'oral_record',objectId:'cpm-oral_record-610001',target:'M6 failed transport schema diagnostic',before:{score:70},after:{operationId:'updateOralRecord',result:{score:88},courseId:'cpm-course-610001'}});
   }
+  const audit=result.rows.find(row=>row.name==='oral-score-audit-POST-GET'&&row.passed);
+  if(audit) {
+   const [[count]]=await admins.center.execute(
+    'SELECT COUNT(*) n, SUM(request_id=?) matching FROM '+guardDatabase('center',13306,names.center)
+      +'.sys_audit_log WHERE object_id=? AND event_type=?',
+    [audit.result.auditRequestId,'cpm-oral_record-610001','score_changed']);
+   assert.equal(Number(count.n),1,'One course mutation must emit exactly one center audit');
+   assert.equal(Number(count.matching),1,'The audit must use the request ID supplied through Nginx');
+  }
   const [[score]]=await courseDb.query('SELECT group_score FROM oral_assessment WHERE id=610001');const [[member]]=await courseDb.query('SELECT COUNT(*) n FROM group_membership WHERE group_id=610001 AND student_id=610002');result.persisted={score:Number(score.group_score),approvedMemberships:member.n};
   assert.equal(result.persisted.score,88);assert.equal(result.persisted.approvedMemberships,1);result.passed=result.rows.length===6&&result.rows.every(x=>x.passed);
  }catch(e){result.passed=false;result.error=e.name==='AssertionError'?e.message:'Real fixture/runtime failed; inspect external component logs (secret-bearing exception withheld)';console.log(module+' FAILED '+result.error);
  }finally{
+  try { if(edgeName) stopCourseEdge(edgeName); result.cleanup.edge=true; }
+  catch { result.cleanup.edge=false; }
   let allStopped=true;for(const child of children.reverse()){if(child.pid&&child.exitCode===null&&child.signalCode===null){const exited=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await Promise.race([exited,sleep(10000)]);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await Promise.race([exited,sleep(10000)]);}}if(child.pid&&child.exitCode===null&&child.signalCode===null)allStopped=false;}
   result.cleanup.children=allStopped;for(const stream of streams)stream.end();
   if(courseDb)await courseDb.end().catch(()=>{});

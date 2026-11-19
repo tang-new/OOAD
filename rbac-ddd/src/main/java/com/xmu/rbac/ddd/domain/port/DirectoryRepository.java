@@ -30,6 +30,12 @@ public interface DirectoryRepository {
             String passwordHash,
             Long tokenVersion) {}
 
+    /** 启用部门的层级浏览投影。 */
+    record IdentityDepartment(Long id, String code, String name, Long parentId, boolean hasChildren) {}
+
+    /** 只公开活跃成员的稳定标识、姓名、编号和直属部门。 */
+    record IdentityDepartmentUser(String userId, String no, String name, Long departmentId, String departmentName) {}
+
     record Assignment(
             Long id,
             Long userId,
@@ -49,6 +55,14 @@ public interface DirectoryRepository {
     List<Department> departments();
 
     Department department(long id);
+
+    /** 在一个层级内按部门名称或编码分页。 */
+    AuthorizationRepository.Page<IdentityDepartment> identityDepartments(
+            Long parentId, String keyword, int page, int size);
+
+    /** 按姓名、学号或工号分页读取活跃直属成员。 */
+    AuthorizationRepository.Page<IdentityDepartmentUser> identityDepartmentUsers(
+            long departmentId, String keyword, int page, int size);
 
     Department saveDepartment(Department department);
 

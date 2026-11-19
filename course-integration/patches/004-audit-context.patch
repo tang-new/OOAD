@@ -1,8 +1,25 @@
 diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
-index 2394093..ff64b4c 100644
 --- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
 +++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/HttpExchangeAuditGateway.java
-@@ -87,12 +87,19 @@ public class HttpExchangeAuditGateway implements AuditLogGateway {
+@@ -5,6 +5,7 @@
+ import cn.edu.xmu.projectmgt.infrastructure.audit.client.IdentityAuditLogResponse;
+ import cn.edu.xmu.projectmgt.infrastructure.audit.client.IdentityAuditWriteRequest;
+ import cn.edu.xmu.projectmgt.infrastructure.audit.client.UnifiedAuditClient;
++import cn.edu.xmu.projectmgt.integration.ConfirmedAuditFilter;
+ import cn.edu.xmu.projectmgt.service.ddd.domain.model.AuditLogActor;
+ import cn.edu.xmu.projectmgt.service.ddd.domain.model.AuditLogEntry;
+ import cn.edu.xmu.projectmgt.service.port.audit.AuditLogGateway;
+@@ -103,6 +104,9 @@
+      * 执行统一身份审计 HTTP 写入。
+      */
+     private void writeNow(AuditLogWriteCommand command) {
++        if (ConfirmedAuditFilter.capture(command)) {
++            return;
++        }
+         try {
+             IdentityAuditLogResponse response = unifiedAuditClient.writeLog(
+                     currentAuthorization(),
+@@ -138,10 +142,22 @@
                  response.target(),
                  response.before(),
                  response.after(),
@@ -13,15 +30,18 @@ index 2394093..ff64b4c 100644
 +                contextId(response.courseId(), response, "courseId"),
 +                contextId(response.classId(), response, "classId")
          );
-     }
- 
-+    private String contextId(String direct, IdentityAuditLogResponse response, String key) {
-+        if (direct != null) return direct;
-+        Object value = response.after() == null ? null : response.after().get(key);
-+        if (value == null && response.before() != null) value = response.before().get(key);
-+        return value instanceof String text ? text : null;
 +    }
 +
++    /** 从中心白名单快照读取旧版响应中独立传输的上下文标识。 */
++    private String contextId(String direct, IdentityAuditLogResponse response, String key) {
++        if (direct != null) {
++            return direct;
++        }
++        Object value = response.after() == null ? null : response.after().get(key);
++        if (value == null && response.before() != null) {
++            value = response.before().get(key);
++        }
++        return value instanceof String text ? text : null;
+     }
+ 
      /**
-      * 把统一身份日志操作人响应转换为应用层结果。
-      */

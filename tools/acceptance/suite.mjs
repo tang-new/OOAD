@@ -196,7 +196,7 @@ export async function runSuite(f, record) {
     const unknown=await request('GET','/api/v1/fixture-not-registered',undefined,t);assert.ok([403,404].includes(unknown.status));
   });
   await scenario('EXT-03 frozen real course operation metadata six classes / copyCourse teacher not CC',async()=>{
-    // Derived from teacher OAS snapshot fde08d5dd417abc543145aff33ca8378deb9ca36, not UI labels or names.
+    // Derived from teacher OAS snapshot 7f27e605f37f540253c3f2ff73227424250a4ec8, not UI labels or names.
     const samples=[['createTerm','POST','/terms','TC','admin'],['copyCourse','POST','/courses/copy','course:access','teacher'],['importRoster','POST','/classes/{classId}/roster/import','course:access',null],['createGroupJoinRequest','POST','/groups/{groupId}/join-requests','course:access','student'],['submitMaterials','POST','/groups/{groupId}/milestones/{milestoneId}/submissions','course:access','student'],['bookOralSlot','POST','/oral-slots/{slotId}/bookings','course:access',null]];
     for(const [operationId,method,pathTemplate,permissionCode,requiredRole] of samples) {const page=await ok('GET',`/systems/${C}/api-operations?keyword=${operationId}&pageSize=100`);const op=page.items.find(x=>x.operationId===operationId);assert.ok(op,`Missing teacher operation ${operationId}`);assert.deepEqual({method:op.method,pathTemplate:op.pathTemplate,permissionCode:op.permissionCode,requiredRole:op.requiredRole,accessPolicy:op.accessPolicy,enabled:op.enabled},{method,pathTemplate,permissionCode,requiredRole,accessPolicy:'PROTECTED',enabled:true});}
     const page=await ok('GET',`/permissions?systemCode=${C}&kind=API&keyword=course%3Aaccess&pageSize=100`),access=page.items.find(p=>p.code==='course:access'&&p.kind==='API');assert.ok(access);const before=await ok('GET',`/roles/${role.id}/permissions`);await grant(role,[...before,access]);assert.ok(!before.some(p=>p.code==='CC'),'teacher fixture has no CC');assert.equal(status(await request('GET','/auth/api-permissions/copyCourse',undefined,token),200).allowed,true);
@@ -217,6 +217,26 @@ export async function runSuite(f, record) {
     const lookup=status(await request('GET','/identity/users/'+encodeURIComponent(user.subject),undefined,adminToken,0,auditHeaders),200);
     keys(lookup,['userId','name','no']);assert.equal(lookup.userId,user.subject);assert.equal(lookup.name,user.name);
     status(await request('GET','/identity/users/missing-fixture-subject',undefined,adminToken,0,auditHeaders),404);
+    const lookupPath='/auth/users/'+encodeURIComponent(user.subject);
+    assert.deepEqual(status(await request('GET',lookupPath,undefined,adminToken),200),lookup);
+    status(await request('GET',lookupPath,undefined,token),403);
+    status(await request('GET',lookupPath,undefined,root),403);
+    status(await request('GET',lookupPath,undefined,null),401);
+    const departments=status(await request('GET','/auth/departments',undefined,adminToken),200);
+    keys(departments,['items','page','pageSize','total']);
+    const rootDepartment=departments.items.find(d=>d.id===department.parentId);
+    assert(rootDepartment?.hasChildren);
+    assert.equal(rootDepartment.parentId,null);
+    const children=status(await request('GET','/auth/departments?parentId='+rootDepartment.id+'&keyword=FX_DEPT&pageSize=1',undefined,adminToken),200);
+    assert.equal(children.total,1);
+    assert.equal(children.items[0].id,department.id);
+    const members=status(await request('GET','/auth/departments/'+department.id+'/users?keyword='+encodeURIComponent(user.name),undefined,adminToken),200);
+    assert.deepEqual(members.items.find(entry=>entry.userId===user.subject),
+      {userId:user.subject,no:user.no??'',name:user.name,departmentId:department.id,departmentName:department.name});
+    status(await request('GET','/auth/departments?page=0',undefined,adminToken),400);
+    status(await request('GET','/auth/departments/999999/users',undefined,adminToken),404);
+    const loginPage=await ok('GET','/systems/'+C+'/api-operations?keyword=courseLogin');
+    assert.equal(loginPage.items.find(item=>item.operationId==='courseLogin')?.accessPolicy,'PUBLIC');
   });
   await scenario('ROLE-06 nonroot department admin no shared writes or sibling management',async()=>{
     const centerRoles=await ok('GET',`/roles?systemCode=${B}&pageSize=100`),admin=centerRoles.items.find(r=>r.code==='RBAC_ADMIN');assert.ok(admin);

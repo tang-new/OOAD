@@ -1,4 +1,10 @@
 package com.xmu.rbac.structured.dto;
+import cn.edu.xmu.clonefactory.CopyTo;
+import com.xmu.rbac.structured.entity.Department;
+import com.xmu.rbac.structured.entity.Permission;
+import com.xmu.rbac.structured.entity.Role;
+import com.xmu.rbac.structured.entity.SoftwareSystem;
+import com.xmu.rbac.structured.entity.User;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,17 +20,54 @@ public final class Inputs {
         @NotNull @Size(min = 1, max = 1) List<@NotBlank String> systems) {}
     public record Password(
         @NotBlank String oldPassword, @NotBlank @Size(min = 8, max = 256) String newPassword) {}
+    /** 系统创建输入仅提供业务编码和显示名称。 */
+    @CopyTo(SoftwareSystem.class)
     public record SystemCreate(
-        @NotBlank @Size(max = 64) String code, @NotBlank @Size(max = 128) String name) {}
+        @NotBlank
+        @Size(max = 64)
+        String code,
+        @NotBlank
+        @Size(max = 128)
+        String name) {
+    }
     public record Name(@NotBlank @Size(max = 128) String name) {}
     public record
         State(@NotBlank @Pattern(regexp = "ENABLED|DISABLED|ACTIVE|DELETED") String status) {}
-    public record DepartmentCreate(@Positive Long parentId, @NotBlank @Size(max = 64) String code,
-        @NotBlank @Size(max = 128) String name) {}
-    public record UserCreate(@NotBlank @Size(max = 128) String username,
-        @NotBlank @Size(max = 128) String name, @Size(max = 64) String no,
-        @Size(max = 32) String phone, @NotNull @Positive Long departmentId,
-        @NotBlank @Size(min = 8, max = 256) String password) {}
+    /** 部门父节点经服务解析后赋值。 */
+    @CopyTo(Department.class)
+    public record DepartmentCreate(
+        @CopyTo.Exclude(Department.class)
+        @Positive
+        Long parentId,
+        @NotBlank
+        @Size(max = 64)
+        String code,
+        @NotBlank
+        @Size(max = 128)
+        String name) {
+    }
+    /** 部门由服务校验，初始密码只用于生成哈希。 */
+    @CopyTo(User.class)
+    public record UserCreate(
+        @NotBlank
+        @Size(max = 128)
+        String username,
+        @NotBlank
+        @Size(max = 128)
+        String name,
+        @Size(max = 64)
+        String no,
+        @Size(max = 32)
+        String phone,
+        @CopyTo.Exclude(User.class)
+        @NotNull
+        @Positive
+        Long departmentId,
+        @CopyTo.Exclude(User.class)
+        @NotBlank
+        @Size(min = 8, max = 256)
+        String password) {
+    }
     public static class UserPatch {
         private final java.util.Set<String> present = new java.util.HashSet<>();
         public boolean supplied(String field) {
@@ -67,10 +110,23 @@ public final class Inputs {
     }
 
     public record Move(@NotNull @Positive Long departmentId, @PositiveOrZero Long version) {}
-    public record RoleCreate(@NotBlank @Size(max = 64) String systemCode,
-        @NotBlank @Size(max = 64) String code, @NotBlank @Size(max = 128) String name,
-        @Size(max = 500) String description,
-        @Pattern(regexp = "student|teacher|admin") String identityRole) {}
+    /** 角色所属系统和默认状态由服务解析。 */
+    @CopyTo(Role.class)
+    public record RoleCreate(
+        @NotBlank
+        @Size(max = 64)
+        String systemCode,
+        @NotBlank
+        @Size(max = 64)
+        String code,
+        @NotBlank
+        @Size(max = 128)
+        String name,
+        @Size(max = 500)
+        String description,
+        @Pattern(regexp = "student|teacher|admin")
+        String identityRole) {
+    }
     public static class RolePatch {
         private final java.util.Set<String> present = new java.util.HashSet<>();
         public boolean supplied(String field) {
@@ -108,9 +164,22 @@ public final class Inputs {
     public record
         Permissions(@NotNull @Size(max = 1000) List<@NotNull @Positive Long> permissionIds) {}
     public record Assignment(@NotNull @Positive Long roleId) {}
-    public record PermissionCreate(@NotBlank @Size(max = 64) String systemCode,
-        @NotBlank @Size(max = 128) String code, @NotBlank @Size(max = 128) String name,
-        @NotBlank @Pattern(regexp = "UI|API") String kind) {}
+    /** 权限所属系统及启用状态由服务确定。 */
+    @CopyTo(Permission.class)
+    public record PermissionCreate(
+        @NotBlank
+        @Size(max = 64)
+        String systemCode,
+        @NotBlank
+        @Size(max = 128)
+        String code,
+        @NotBlank
+        @Size(max = 128)
+        String name,
+        @NotBlank
+        @Pattern(regexp = "UI|API")
+        String kind) {
+    }
     public record
         Ui(@Positive Long parentId, @NotBlank @Pattern(regexp = "MENU|BUTTON") String type,
             @NotBlank @Size(max = 128) String code, @NotBlank @Size(max = 128) String name,

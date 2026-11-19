@@ -5,7 +5,7 @@ info:
   description: |
     高校「学生在课程里分组完成项目」全流程接口：组队 → 里程碑提交与检查 → 教师评分。
     角色：学生 / 组长（学生子角色）/ 任课教师 / 教学组长（课程组长）/ 管理员。同一自然人可同时拥有教师和管理员角色，登录后使用合并的教师界面。
-    所有 `/auth/*` 接口均由学校统一身份认证系统提供，课程管理系统不实现、不代理这些接口；本系统只提供 `GET /me` 等课程业务接口。
+    所有 `/auth/*` 接口和 `GET /auth/users/{userId}` 查询接口均由学校统一身份认证系统提供，课程管理系统不实现、不代理这些接口；本系统只提供 `GET /me` 等课程业务接口。
 
     ## 通用约定
     - 所有时间用 ISO 8601（`2026-11-18T14:00:00+08:00`）；原型里的「今天」是 2026-11-16。
@@ -25,7 +25,7 @@ security:
   - bearerAuth: []
 tags:
   - name: 统一身份鉴权
-    description: 统一身份认证系统提供的外部 API。所有 `/auth/*` 接口均由统一身份认证系统实现，课程管理系统无需实现或代理；JWT 只用于身份认证，不包含权限。
+    description: 统一身份认证系统提供的外部 API，包括 `/auth/*` 和 `GET /auth/users/{userId}`。课程管理系统无需实现或代理；JWT 只用于身份认证，不包含权限。
   - name: 当前用户
     description: 本系统根据 JWT 的 sub 返回本地教师/学生业务身份、业务子角色、已校验权限与当前学期上下文。
   - name: 教师
@@ -135,6 +135,57 @@ paths:
               example:
                 code: IDENTITY_SERVICE_UNAVAILABLE
                 message: 统一身份认证暂时不可用，请稍后重试。
+  /login:
+    post:
+      tags:
+        - 统一身份鉴权
+      summary: 课程系统登录
+      description: 课程系统先按学号或工号校验本地学生、教师是否存在，再调用统一身份认证核对密码、获取访问令牌和权限。密码不落库、不记录日志。
+      operationId: courseLogin
+      x-apifox-folder: 统一身份鉴权
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseLoginInput'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseLoginVO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 密码错误或统一身份角色与登录入口不匹配
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: 账号或密码错误。
+        '404':
+          description: 本地学生或教师不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: LOGIN_ACCOUNT_NOT_FOUND
+                message: 该学号不在本系统学生名单中。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
   /auth/logout:
     post:
       tags:
@@ -180,6 +231,174 @@ paths:
                 $ref: '#/components/schemas/IdentityCurrentUserVO'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /auth/departments:
+    get:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 查询统一身份部门列表（逐层展开）
+      description: 由学校统一身份认证提供。按层级查询组织架构：不传 parentId 返回根部门，传入 parentId 只返回该部门的直接子部门。界面可结合 hasChildren 逐层展开。
+      operationId: listIdentityDepartments
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: 按部门名称或部门编码模糊查询
+        - name: parentId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: 上级部门标识；不传时查询根部门，传入时查询该部门的直接子部门
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 部门分页列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required:
+                      - items
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IdentityDepartment'
+              example:
+                page: 1
+                pageSize: 20
+                total: 1
+                items:
+                  - id: 1
+                    code: CS
+                    name: 计算机学院
+                    parentId: null
+                    hasChildren: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 当前用户无权读取统一身份组织架构
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查询统一身份部门的权限。
+        '503':
+          description: 统一身份认证服务不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_SERVICE_UNAVAILABLE
+                message: 统一身份认证暂时不可用，请稍后重试。
+  /auth/departments/{departmentId}/users:
+    parameters:
+      - name: departmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+        description: 统一身份认证系统中的部门标识
+    get:
+      tags:
+        - 统一身份鉴权
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      summary: 查询部门下的用户
+      description: 由学校统一身份认证提供。按工号、学号或姓名分页查询指定部门下的统一身份用户，不返回电话、邮箱等联系方式。
+      operationId: listIdentityDepartmentUsers
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: 按姓名、工号或学号模糊查询
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 部门用户分页列表
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required:
+                      - items
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IdentityDepartmentUser'
+              example:
+                page: 1
+                pageSize: 20
+                total: 1
+                items:
+                  - userId: sso-t1008
+                    'no': T1008
+                    name: 孙晨
+                    departmentId: 1
+                    departmentName: 计算机学院
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 当前用户无权读取该部门用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有查询该部门用户的权限。
+        '404':
+          description: 部门不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_DEPARTMENT_NOT_FOUND
+                message: 统一身份认证系统中没有找到该部门。
         '503':
           description: 统一身份认证服务不可用
           content:
@@ -526,15 +745,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Term'
-        '404':
-          description: 学期不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: TERM_NOT_FOUND
-                message: 学期不存在。
         '403':
           description: 当前管理员没有修改学期的权限
           content:
@@ -544,6 +754,15 @@ paths:
               example:
                 code: FORBIDDEN
                 message: 你没有修改学期的权限。
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
         '409':
           description: 当前学期不能编辑，或修改后的学期名称与其他学期重复
           content:
@@ -571,15 +790,6 @@ paths:
       responses:
         '204':
           description: 已删除
-        '404':
-          description: 学期不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: TERM_NOT_FOUND
-                message: 学期不存在。
         '403':
           description: 当前管理员没有删除学期的权限
           content:
@@ -589,6 +799,15 @@ paths:
               example:
                 code: FORBIDDEN
                 message: 你没有删除学期的权限。
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
         '409':
           description: 删不掉
           content:
@@ -2743,15 +2962,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubmissionReview'
-        '403':
-          description: 当前教师不是该提交所属教学班的任课教师
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: FORBIDDEN
-                message: 只有该提交所属教学班的任课教师可以批改。
         '400':
           description: 通过时没有给分，或分数超出满分
           content:
@@ -2761,6 +2971,15 @@ paths:
               example:
                 code: BAD_REQUEST
                 message: 通过请填写分数（分组制为小组分，个人制为个人分；满分以里程碑计分制为准）
+        '403':
+          description: 当前教师不是该提交所属教学班的任课教师
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 只有该提交所属教学班的任课教师可以批改。
   /classes/{classId}/milestones/{milestoneId}/oral-slots:
     parameters:
       - $ref: '#/components/parameters/ClassId'
@@ -3372,47 +3591,6 @@ paths:
               example:
                 code: FORBIDDEN
                 message: 你没有查看这些课程日志的权限。
-  /identity/users/{userId}:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-        description: 学校统一身份认证系统中的用户标识
-    get:
-      tags:
-        - 教师
-      summary: 查询统一身份用户
-      description: 添加教师时调用学校统一身份认证系统，按外部用户标识获取姓名与工号；姓名和工号不在本系统手工录入。
-      operationId: lookupIdentityUser
-      x-required-role: admin
-      x-required-permission: TEC
-      responses:
-        '200':
-          description: 统一身份用户
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IdentityUser'
-        '403':
-          description: 当前管理员没有添加教师的权限
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: FORBIDDEN
-                message: 你没有添加教师的权限。
-        '404':
-          description: 统一身份系统中不存在该用户
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: IDENTITY_USER_NOT_FOUND
-                message: 统一身份认证系统中没有找到该用户。
   /teachers:
     get:
       tags:
@@ -3532,15 +3710,6 @@ paths:
       responses:
         '204':
           description: 已删除
-        '404':
-          description: 学期不存在
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: TERM_NOT_FOUND
-                message: 学期不存在。
         '403':
           description: 当前管理员没有删除学期的权限
           content:
@@ -3550,6 +3719,15 @@ paths:
               example:
                 code: FORBIDDEN
                 message: 你没有删除学期的权限。
+        '404':
+          description: 学期不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: TERM_NOT_FOUND
+                message: 学期不存在。
         '409':
           description: 还在担任课程组长或任课教师
           content:
@@ -3657,6 +3835,55 @@ paths:
                   isCurrentTerm:
                     type: boolean
                     description: 当前查看的是不是当前学期
+  /auth/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 学校统一身份认证系统中的用户标识
+    get:
+      tags:
+        - 统一身份鉴权
+      summary: 查询统一身份用户
+      description: 添加教师时调用学校统一身份认证系统，按外部用户标识获取姓名与工号；姓名和工号不在本系统手工录入。
+      operationId: lookupIdentityUser
+      x-required-role: admin
+      x-required-permission: TEC
+      responses:
+        '200':
+          description: 统一身份用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityUser'
+        '403':
+          description: 当前管理员没有添加教师的权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: 你没有添加教师的权限。
+        '404':
+          description: 统一身份系统中不存在该用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: IDENTITY_USER_NOT_FOUND
+                message: 统一身份认证系统中没有找到该用户。
+      servers:
+        - url: https://identity.example.edu
+          description: 学校统一身份认证（外部服务）
+      x-apifox-folder: 统一身份鉴权
+      x-provider: unified-identity
+      x-provider-name: 统一身份认证系统
+      security:
+        - bearerAuth: []
 components:
   securitySchemes:
     bearerAuth:
@@ -4031,7 +4258,6 @@ components:
             - CV
             - CR
             - CE
-
     Term:
       type: object
       properties:
@@ -4121,25 +4347,6 @@ components:
         deletable:
           type: boolean
           description: 当前是否可删除；false 表示仍在任何课程中担任课程组长或任课教师，界面不显示删除入口。
-    IdentityUser:
-      type: object
-      required:
-        - userId
-        - 'no'
-        - name
-      properties:
-        userId:
-          type: string
-          description: 学校统一身份认证系统中的用户标识
-          example: sso-t1008
-        'no':
-          type: string
-          description: 工号
-          example: T1008
-        name:
-          type: string
-          description: 姓名
-          example: 孙晨
     TeacherCreateInput:
       type: object
       required:
@@ -5069,7 +5276,6 @@ components:
         memo:
           type: string
           description: 口试备忘录（仅教师可见）
-
         groupScore:
           type: number
           description: 分组制口试必填；个人制不传。
@@ -5344,9 +5550,8 @@ components:
           description: 被操作业务对象的类型
         objectId:
           type: string
-          pattern: '^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$'
+          pattern: ^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$
           description: 带系统和业务类型前缀的对象标识，例如 cpm-course-123；数据库主键仍是整数
-
         target:
           type: string
           minLength: 1
@@ -5504,7 +5709,6 @@ components:
           $ref: '#/components/schemas/CourseWorkMode'
         courseStatus:
           $ref: '#/components/schemas/CourseStatus'
-
         reviewComment:
           type: string
           nullable: true
@@ -5584,3 +5788,131 @@ components:
           maxLength: 200
           description: 新的教学班名称；班序号由系统维护，不可修改。
           example: 软工 2203 班
+    IdentityDepartment:
+      type: object
+      required:
+        - id
+        - code
+        - name
+        - hasChildren
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          description: 统一身份认证系统中的部门标识
+          example: 1
+        code:
+          type: string
+          maxLength: 64
+          description: 部门编码
+          example: CS
+        name:
+          type: string
+          maxLength: 200
+          description: 部门名称
+          example: 计算机学院
+        parentId:
+          oneOf:
+            - type: integer
+              minimum: 1
+            - type: 'null'
+          description: 上级部门标识；根部门为 null
+        hasChildren:
+          type: boolean
+          description: 是否存在直接子部门，用于决定界面是否显示展开箭头
+          example: true
+    IdentityDepartmentUser:
+      type: object
+      required:
+        - userId
+        - 'no'
+        - name
+        - departmentId
+        - departmentName
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1008
+        'no':
+          type: string
+          description: 工号或学号
+          example: T1008
+        name:
+          type: string
+          description: 姓名
+          example: 孙晨
+        departmentId:
+          type: integer
+          minimum: 1
+          description: 所属部门标识
+          example: 1
+        departmentName:
+          type: string
+          description: 所属部门名称
+          example: 计算机学院
+    IdentityUser:
+      type: object
+      required:
+        - userId
+        - 'no'
+        - name
+      properties:
+        userId:
+          type: string
+          description: 学校统一身份认证系统中的用户标识
+          example: sso-t1008
+        'no':
+          type: string
+          description: 工号
+          example: T1008
+        name:
+          type: string
+          description: 姓名
+          example: 孙晨
+    CourseLoginInput:
+      type: object
+      required:
+        - role
+        - account
+        - password
+      properties:
+        role:
+          type: string
+          enum:
+            - student
+            - teacher
+          description: 登录入口角色
+          example: student
+        account:
+          type: string
+          maxLength: 128
+          description: 学生学号或教师工号
+          example: '20260001'
+        password:
+          type: string
+          format: password
+          maxLength: 256
+          writeOnly: true
+          description: 统一身份认证密码；本系统只转发校验，不落库、不记录日志
+    CourseLoginVO:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: 统一身份认证签发的 JWT 访问令牌
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          minimum: 1
+          description: 令牌有效期，单位秒
+          example: 7200
+        user:
+          $ref: '#/components/schemas/CurrentUserVO'

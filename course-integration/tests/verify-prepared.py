@@ -5,7 +5,10 @@ import re
 import sys
 
 root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '.cache/course-source/prepared')
-assert (root / 'UPSTREAM_COMMIT').read_text().strip() == 'fde08d5dd417abc543145aff33ca8378deb9ca36'
+lock = pathlib.Path(__file__).resolve().parents[1] / 'UPSTREAM.lock'
+commit = next(line.removeprefix('commit=') for line in lock.read_text().splitlines() if line.startswith('commit='))
+assert (root / 'UPSTREAM_COMMIT').read_text().strip() == commit
+assert (root / 'deploy/stack.yml').is_file(), 'Teacher logging convention test requires the pinned stack configuration'
 assert 'MIT License' in (root / 'LICENSE').read_text(encoding='utf-8')
 assert not list(root.rglob('*.xlsx')), 'Personnel spreadsheets must never be exported'
 assert not list(root.rglob('.env*')), 'Local environment files must never be exported'

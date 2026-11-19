@@ -71,7 +71,7 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
     }
 
     private Role restore(RoleEntity entity, String code) {
-        RoleState state = CloneFactory.copy(new RoleState(), entity);
+        RoleState state = CloneFactory.copy(new RoleState(null, null, null, null, null, null), entity);
         Set<Long> permissions =
                 new HashSet<>(
                         em.createQuery(
@@ -83,12 +83,12 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
         return new Role(
                 entity.getId(),
                 code,
-                state.getCode(),
-                state.getName(),
-                state.getDescription(),
-                state.getStatus().equals("ENABLED"),
-                state.getBuiltin(),
-                state.getIdentityRole(),
+                state.code(),
+                state.name(),
+                state.description(),
+                state.status().equals("ENABLED"),
+                state.builtin(),
+                state.identityRole(),
                 entity.getVersion(),
                 permissions);
     }
@@ -183,13 +183,8 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
                 role.id() == 0 ? new RoleEntity() : em.find(RoleEntity.class, role.id());
         if (role.id() != 0)
             DomainException.require(entity.getVersion() == role.version(), 409, "VERSION_CONFLICT");
-        RoleState state = new RoleState();
-        state.setCode(role.code());
-        state.setName(role.name());
-        state.setDescription(role.description());
-        state.setStatus(role.enabled() ? "ENABLED" : "DISABLED");
-        state.setBuiltin(role.builtin());
-        state.setIdentityRole(role.identityRole());
+        RoleState state = new RoleState(role.code(), role.name(), role.description(),
+                role.enabled() ? "ENABLED" : "DISABLED", role.builtin(), role.identityRole());
         CloneFactory.copy(entity, state);
         entity.setSystemId(system(role.systemCode()).getId());
         roleRecords.saveAndFlush(entity);

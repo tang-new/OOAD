@@ -1,6 +1,10 @@
 package com.xmu.tools.clonefactory;
 
 import cn.edu.xmu.clonefactory.util.CloneFactory;
+import com.xmu.tools.clonefactory.ImmutableMappings.FinalSnapshot;
+import com.xmu.tools.clonefactory.ImmutableMappings.Profile;
+import com.xmu.tools.clonefactory.ImmutableMappings.PublicFields;
+import com.xmu.tools.clonefactory.ImmutableMappings.Snapshot;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,6 +105,42 @@ class CloneFactoryTest {
         assertNull(domain.getAge());
         assertNull(domain.getEnabled());
         assertNull(domain.getPassword());
+    }
+
+    /** record 来源可以通过访问器同时写入公共字段及不可变模板。 */
+    @Test
+    void recordSourceCopiesIntoPublicFieldsAndCanonicalConstructor() {
+        Profile source = new Profile("教师", 0, false);
+        PublicFields fields = new PublicFields();
+        assertSame(fields, CloneFactory.copy(fields, source));
+        assertEquals("教师", fields.name);
+        assertEquals(0, fields.age);
+        assertEquals(Boolean.FALSE, fields.enabled);
+
+        Snapshot template = new Snapshot(42L, "旧值", 21, true);
+        Snapshot snapshot = CloneFactory.copy(template, source);
+        assertNotSame(template, snapshot);
+        assertEquals(new Snapshot(42L, "教师", 0, false), snapshot);
+    }
+
+    /** copyNotNull 读取模板回退值，普通 copy 保留显式清空语义。 */
+    @Test
+    void recordCopyNotNullPreservesTemplateAndCopiesZeroAndFalse() {
+        Snapshot template = new Snapshot(42L, "旧值", 21, true);
+        Profile patch = new Profile(null, 0, false);
+        assertEquals(new Snapshot(42L, "旧值", 0, false), CloneFactory.copyNotNull(template, patch));
+        assertEquals(new Snapshot(42L, null, 0, false), CloneFactory.copy(template, patch));
+    }
+
+    /** final 字段通过构造器赋值，原模板保持原值。 */
+    @Test
+    void finalTargetUsesMatchingConstructor() {
+        FinalSnapshot template = new FinalSnapshot("旧值", 21);
+        FinalSnapshot result = CloneFactory.copy(template, new Profile("新值", 0, false));
+        assertNotSame(template, result);
+        assertEquals("旧值", template.name);
+        assertEquals("新值", result.name);
+        assertEquals(0, result.age);
     }
 
     private static Domain populatedDomain() {

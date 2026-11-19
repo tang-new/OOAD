@@ -1,4 +1,5 @@
 package com.xmu.rbac.structured.service;
+import cn.edu.xmu.clonefactory.util.CloneFactory;
 import static com.xmu.rbac.structured.service.Views.*;
 
 import com.xmu.rbac.structured.dto.*;
@@ -80,9 +81,7 @@ public class ManagementService {
     @Transactional
     public Object createSystem(Actor a, Inputs.SystemCreate input) {
         GrantVersion g = begin(a, "rbac:system:edit", true);
-        SoftwareSystem s = new SoftwareSystem();
-        s.code = input.code();
-        s.name = input.name();
+        SoftwareSystem s = CloneFactory.copy(new SoftwareSystem(), input);
         s.status = "ENABLED";
         db.save(s);
         finish(g, a, "SYSTEM_CREATED", s.code);
@@ -93,7 +92,7 @@ public class ManagementService {
     public Object renameSystem(Actor a, Long id, NameChange input) {
         GrantVersion g = begin(a, "rbac:system:edit", true);
         SoftwareSystem s = az.require(SoftwareSystem.class, id);
-        s.name = input.getName();
+        s.name = input.name();
         finish(g, a, "SYSTEM_UPDATED", id);
         return system(s);
     }
@@ -134,10 +133,8 @@ public class ManagementService {
         }
         az.scope(a, input.parentId());
         Department parent = az.require(Department.class, input.parentId());
-        Department d = new Department();
+        Department d = CloneFactory.copy(new Department(), input);
         d.parentId = parent.id;
-        d.code = input.code();
-        d.name = input.name();
         d.path = parent.path;
         d.status = "ENABLED";
         db.save(d);
@@ -152,7 +149,7 @@ public class ManagementService {
         GrantVersion g = begin(a, "rbac:department:edit", false);
         az.scope(a, id);
         Department d = az.require(Department.class, id);
-        d.name = input.getName();
+        d.name = input.name();
         finish(g, a, "DEPARTMENT_UPDATED", id);
         return department(d);
     }
@@ -247,13 +244,9 @@ public class ManagementService {
     public Object createUser(Actor a, Inputs.UserCreate input) {
         GrantVersion g = begin(a, "rbac:user:edit", false);
         az.scope(a, input.departmentId());
-        User u = new User();
+        User u = CloneFactory.copy(new User(), input);
         u.subject = "rbac-" + UUID.randomUUID();
-        u.username = input.username();
         u.passwordHash = passwords.encode(input.password());
-        u.name = input.name();
-        u.no = input.no();
-        u.phone = input.phone();
         u.departmentId = input.departmentId();
         u.status = "ACTIVE";
         u.tokenVersion = 0L;
@@ -354,12 +347,8 @@ public class ManagementService {
     @Transactional
     public Object createRole(Actor a, Inputs.RoleCreate input) {
         GrantVersion g = begin(a, "rbac:role:edit", true);
-        Role r = new Role();
+        Role r = CloneFactory.copy(new Role(), input);
         r.systemId = az.system(input.systemCode()).id;
-        r.code = input.code();
-        r.name = input.name();
-        r.description = input.description();
-        r.identityRole = input.identityRole();
         r.status = "ENABLED";
         r.builtin = false;
         db.save(r);
@@ -614,11 +603,8 @@ public class ManagementService {
         GrantVersion g = begin(a, "rbac:permission:edit", true);
         if (!az.superAdmin(a))
             throw BizException.forbidden("PRIVILEGE_ESCALATION");
-        Permission p = new Permission();
+        Permission p = CloneFactory.copy(new Permission(), input);
         p.systemId = az.system(input.systemCode()).id;
-        p.kind = input.kind();
-        p.code = input.code();
-        p.name = input.name();
         p.status = "ENABLED";
         db.save(p);
         finish(g, a, "PERMISSION_CREATED", p.code);

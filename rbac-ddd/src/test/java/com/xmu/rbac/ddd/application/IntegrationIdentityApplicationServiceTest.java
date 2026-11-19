@@ -15,6 +15,7 @@ import java.util.*;
 class IntegrationIdentityApplicationServiceTest {
     private final AuthorizationApplicationService authorization =
             mock(AuthorizationApplicationService.class);
+    private final DirectoryRepository directory = mock(DirectoryRepository.class);
     private final AuthorizationRepository repository = mock(AuthorizationRepository.class);
     private final TokenProvider.Principal principal =
             new TokenProvider.Principal(
@@ -28,7 +29,7 @@ class IntegrationIdentityApplicationServiceTest {
                     7, "subject", "user", "教师", "7", "unused", 2, "ACTIVE", 0);
     private final IntegrationIdentityApplicationService service =
             new IntegrationIdentityApplicationService(
-                    authorization, repository, "trusted-test-key");
+                    authorization, repository, directory, "trusted-test-key");
 
     private AuthorizationPolicy.Effective effective(String identity, boolean tec) {
         Role role =
@@ -101,7 +102,7 @@ class IntegrationIdentityApplicationServiceTest {
     @Test
     void emptyConfiguredServiceKeyIsNeverAccepted() {
         IntegrationIdentityApplicationService disabled =
-                new IntegrationIdentityApplicationService(authorization, repository, "");
+                new IntegrationIdentityApplicationService(authorization, repository, directory, "");
         assertThatThrownBy(() -> disabled.authorities(principal, ""))
                 .hasMessageContaining("AUDIT_SERVICE_REQUIRED");
     }

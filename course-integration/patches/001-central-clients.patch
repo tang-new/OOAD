@@ -1,44 +1,48 @@
 diff --git a/backend/pom.xml b/backend/pom.xml
-index 1371aca..2816611 100644
 --- a/backend/pom.xml
 +++ b/backend/pom.xml
-@@ -117,6 +117,7 @@
+@@ -118,6 +118,10 @@
  			<artifactId>spring-boot-starter-webmvc-test</artifactId>
  			<scope>test</scope>
  		</dependency>
-+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId></dependency>
++		<dependency>
++			<groupId>org.springframework.boot</groupId>
++			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
++		</dependency>
  	</dependencies>
  
  	<build>
 diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/client/AuditHttpClientConfiguration.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/client/AuditHttpClientConfiguration.java
-index bd442c7..0e107e1 100644
 --- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/client/AuditHttpClientConfiguration.java
 +++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/audit/client/AuditHttpClientConfiguration.java
-@@ -19,8 +19,9 @@ public class AuditHttpClientConfiguration {
-      * 创建基于 @HttpExchange 的统一身份审计客户端。
-      */
+@@ -26,9 +26,18 @@
      @Bean
--    public UnifiedAuditClient unifiedAuditClient(@Value("${app.identity.base-url}") String baseUrl) {
--        RestClient restClient = RestClient.builder().baseUrl(baseUrl).build();
-+    public UnifiedAuditClient unifiedAuditClient(@Value("${app.identity.base-url}") String baseUrl,
-+            @Value("${app.integration.service-key}") String serviceKey) {
-+        RestClient restClient = cn.edu.xmu.projectmgt.integration.CentralSecurity.client(baseUrl, serviceKey);
+     public UnifiedAuditClient unifiedAuditClient(
+             @Value("${app.identity.base-url}")
+-            String baseUrl
++            String baseUrl,
++            @Value("${app.integration.service-key:}")
++            String serviceKey,
++            org.springframework.core.env.Environment environment
+     ) {
+         RestClient restClient = restClientFactory.create(baseUrl);
++        if (environment.matchesProfiles("integration")) {
++            if (serviceKey.isBlank()) {
++                throw new IllegalArgumentException("课程集成必须配置审计服务密钥。");
++            }
++            restClient = restClient.mutate().defaultHeader("X-Audit-Service-Key", serviceKey).build();
++        }
          return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
                  .build()
                  .createClient(UnifiedAuditClient.class);
-diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/IdentityHttpClientConfiguration.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/IdentityHttpClientConfiguration.java
-index a70eeab..142afbe 100644
---- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/IdentityHttpClientConfiguration.java
-+++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/IdentityHttpClientConfiguration.java
-@@ -20,8 +20,9 @@ public class IdentityHttpClientConfiguration {
-      * 创建基于 @HttpExchange 的统一身份客户端代理。
-      */
-     @Bean
--    public UnifiedIdentityClient unifiedIdentityClient(@Value("${app.identity.base-url}") String baseUrl) {
--        RestClient restClient = RestClient.builder().baseUrl(baseUrl).build();
-+    public UnifiedIdentityClient unifiedIdentityClient(@Value("${app.identity.base-url}") String baseUrl,
-+            @Value("${app.integration.service-key}") String serviceKey) {
-+        RestClient restClient = cn.edu.xmu.projectmgt.integration.CentralSecurity.client(baseUrl, serviceKey);
-         return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
-                 .build()
-                 .createClient(UnifiedIdentityClient.class);
+diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/security/SecurityConfiguration.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/security/SecurityConfiguration.java
+--- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/security/SecurityConfiguration.java
++++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/security/SecurityConfiguration.java
+@@ -28,6 +28,7 @@
+  * 无状态 Bearer Token 安全配置，认证失败时保持项目统一错误响应格式。
+  */
+ @Configuration(proxyBeanMethods = false)
++@org.springframework.context.annotation.Profile("!integration")
+ @EnableWebSecurity
+ @RequiredArgsConstructor
+ public class SecurityConfiguration {

@@ -3,6 +3,8 @@
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SET_FIELDS = new Set(['permissions','directRoles','effectiveRoles','roles','sources','edges','mappings','permissionIds','roleIds','authorities']);
 const REF_FIELDS = {userId:'user',actorId:'user',assignedBy:'user',departmentId:'department',roleId:'role',seniorRoleId:'role',juniorRoleId:'role',permissionId:'permission',uiResourceId:'uiResource',apiOperationId:'apiOperation',systemId:'system'};
+const SUBJECT_LOOKUP = /^\/(?:identity|auth)\/users\/[^/]+$/;
+const DEPARTMENT_MEMBERS = /^\/auth\/departments\/[^/]+\/users$/;
 const UUID_FIELDS = new Set(['requestId','request_id','auditUUID','auditUuid']);
 function generatedField(key, value, type) {
   if(key==='traceId')return true;
@@ -32,7 +34,7 @@ function routeContext(path) {
   else if (/\/roles(?:\/\d+)?(?:\/status)?$/.test(url.pathname)) type='role';
   else if (/\/users(?:\/[^/]+)?(?:\/status|\/department)?$/.test(url.pathname)) type='user';
   else if (/\/systems(?:\/[^/]+)?(?:\/status)?$/.test(url.pathname)) type='system';
-  return {type,systemCode,subjectUserId:url.pathname.startsWith('/identity/users/')};
+  return {type,systemCode,subjectUserId:SUBJECT_LOOKUP.test(url.pathname)||DEPARTMENT_MEMBERS.test(url.pathname)};
 }
 function entityType(value, hint) {
   if (!value || typeof value!=='object' || Array.isArray(value)) return hint;
@@ -174,14 +176,18 @@ export function createNormalizer() {
   }
   function normalizePath(path) {
     const url=new URL(path,'http://fixture.invalid'),parts=url.pathname.split('/');
+    const subjectLookup=SUBJECT_LOOKUP.test(url.pathname);
     const preceding={users:'user',departments:'department',roles:'role',permissions:'permission',inherits:'role',uiResources:'uiResource','ui-resources':'uiResource','api-operations':'apiOperation','role-assignments':'assignment'};
     for(let i=1;i<parts.length;i++) {
       const prev=parts[i-1],part=decodeURIComponent(parts[i]);
-      if(prev==='users'&&parts[1]==='identity'){parts[i]=encodeURIComponent(ordered(subjectReference(part)));continue;}
+      if(prev==='users'&&subjectLookup){parts[i]=encodeURIComponent(ordered(subjectReference(part)));continue;}
       if((preceding[prev]||prev==='systems')&&/^\d+$/.test(part))parts[i]=encodeURIComponent(ordered(reference(preceding[prev]??'system',part)));
     }
     const query=[];
-    for(const [key,value] of url.searchParams)query.push([key,REF_FIELDS[key]?ordered(reference(REF_FIELDS[key],value)):UUID_FIELDS.has(key)?uuid(value):['from','to'].includes(key)?requestTime(value):value]);
+    for(const [key,value] of url.searchParams) {
+      const type=key==='parentId'&&url.pathname==='/auth/departments'?'department':REF_FIELDS[key];
+      query.push([key,type?ordered(reference(type,value)):UUID_FIELDS.has(key)?uuid(value):['from','to'].includes(key)?requestTime(value):value]);
+    }
     query.sort(([ak,av],[bk,bv])=>ak.localeCompare(bk)||av.localeCompare(bv));
     return parts.join('/')+(query.length?'?'+new URLSearchParams(query):'');
   }

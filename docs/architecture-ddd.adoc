@@ -50,7 +50,7 @@ BackendIsolationTest、DomainArchitectureTest包括生产类扫描及故意违�
 
 == 路由、缓存与安全配置
 
-OpenApiOperationContract读取中心64项OAS，RouteContractVerifier核对实际Controller及持久注册；受保护API元数据不能被管理入口弱化。
+OpenApiOperationContract读取中心67项OAS，RouteContractVerifier核对实际Controller及持久注册；受保护API元数据不能被管理入口弱化。
 HttpSecurityConfiguration关闭会话、表单和Basic；Bearer与细粒度授权由接入层/应用统一验证，不能将框架permitAll理解成匿名业务开放。
 根/auth七操作与两个私有投影已有Controller；私有端点即使公开代理阻断仍需有效Bearer和服务密钥，身份查询还需TEC与admin，不能接收客户端subject/system指定目标权限上下文。
 
@@ -62,7 +62,7 @@ LayerLoggingAspect覆盖interfaces/application及持久化/身份/缓存适配�
 
 == CloneFactory边界
 
-两后端POM已显式配置`cn.edu.xmu:clonefactory:0.0.1-SNAPSHOT`及CopyProcessor；当前DDD实际在创建/编辑边界Bean和RoleState/RoleEntity、RoleResult/RoleView间调用生成CloneFactory。
+两后端使用根 POM 固定的 CloneFactory 0.0.2。DDD 的角色创建 record 映射到命令；角色与 UI 的结果、响应及持久化快照通过生成器读写 record。适配器负责系统和权限关联，聚合构造器维护领域不变量。
 工具按getX/setX浅拷贝，不自动复制record accessor、boolean isX或转换类型。受控Bean采用包装类型及字段白名单；不复制密码、actor、系统归属或实体内部状态到外部VO。
 聚合构造与业务行为仍由领域负责；字段复制不等于领域规则，也不能把结构化实体借来伪装DDD模型。
 CloneBoundaryTest与架构测试需随实际构建验证，不能仅因处理器在POM就声称安全映射验收完成。

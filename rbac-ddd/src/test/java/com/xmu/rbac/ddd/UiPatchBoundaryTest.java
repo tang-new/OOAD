@@ -70,15 +70,17 @@ class UiPatchBoundaryTest {
 
     @Test
     void resultToViewUsesActualGeneratedCopy() {
-        UiResourceView view = CloneFactory.copy(new UiResourceView(), UiResult.from(old));
-        assertThat(view.getId()).isEqualTo(7);
-        assertThat(view.getName()).isEqualTo("菜单");
-        assertThat(view.getParentId()).isEqualTo(1);
-        assertThat(view.getSystemCode()).isEqualTo("s");
+        UiResourceView view = CloneFactory.copy(new UiResourceView(null, null, null, null,
+                null, null, null, null, null, null, null, List.of()), UiResult.from(old));
+        assertThat(view.children()).isEmpty();
+        assertThat(view.id()).isEqualTo(7);
+        assertThat(view.name()).isEqualTo("菜单");
+        assertThat(view.parentId()).isEqualTo(1);
+        assertThat(view.systemCode()).isEqualTo("s");
     }
 
     @Test
-    void persistenceSnapshotDoesNotOverwriteSensitiveIdentifiers() {
+    void persistenceSnapshotDoesNotOverwriteSensitiveIdentifiers() throws Exception {
         UiResourceEntity entity = new UiResourceEntity();
         entity.setId(7L);
         entity.setSystemId(2L);
@@ -86,8 +88,10 @@ class UiPatchBoundaryTest {
         entity.setName("菜单");
         entity.setParentId(1L);
         entity.setRoute("/old");
-        UiState state = CloneFactory.copy(new UiState(), entity);
-        state.setRoute(null);
+        UiState template = new UiState(null, null, null, null, null, null, null, null, null);
+        UiState snapshot = CloneFactory.copy(template, entity);
+        assertThat(snapshot.route()).isEqualTo("/old");
+        UiState state = CloneFactory.copy(template, apply("{\"route\":null}"));
         CloneFactory.copy(entity, state);
         assertThat(entity.getRoute()).isNull();
         assertThat(entity.getName()).isEqualTo("菜单");

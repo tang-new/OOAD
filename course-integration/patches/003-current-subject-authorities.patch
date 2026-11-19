@@ -1,18 +1,30 @@
 diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
-index 2fbf3e7..66ef568 100644
 --- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
 +++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/HttpExchangeUnifiedIdentityGateway.java
-@@ -36,6 +36,13 @@ public class HttpExchangeUnifiedIdentityGateway implements UnifiedIdentityGatewa
- 
+@@ -16,6 +16,10 @@
+ import jakarta.servlet.http.HttpServletRequest;
+ import lombok.RequiredArgsConstructor;
+ import org.springframework.http.HttpHeaders;
++import org.springframework.security.core.Authentication;
++import org.springframework.security.core.GrantedAuthority;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+ import org.springframework.stereotype.Component;
+ import org.springframework.web.client.HttpClientErrorException;
+ import org.springframework.web.client.RestClientException;
+@@ -43,6 +47,15 @@
+      */
      @Override
      public CurrentIdentity currentIdentity() {
-+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-+        if (authentication instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwt) {
-+            var authorities = jwt.getAuthorities().stream().map(item -> item.getAuthority()).toList();
-+            return new CurrentIdentity(jwt.getToken().getSubject(),
-+                    authorities.stream().filter(item -> item.startsWith("ROLE_")).map(item -> item.substring(5)).toList(),
-+                    authorities.stream().filter(item -> !item.startsWith("ROLE_")).toList());
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        if (authentication instanceof JwtAuthenticationToken jwt) {
++            List<String> authorities = jwt.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
++            return new CurrentIdentity(
++                    jwt.getToken().getSubject(),
++                    authorities.stream().filter(value -> value.startsWith("ROLE_")).map(value -> value.substring(5)).toList(),
++                    authorities.stream().filter(value -> !value.startsWith("ROLE_")).toList()
++            );
 +        }
-         try {
-             IdentityCurrentUserResponse response = unifiedIdentityClient.currentUser(currentAuthorization());
-             if (Objects.isNull(response) || Objects.isNull(response.subject()) || response.subject().isBlank()) {
+         return currentIdentity(currentAuthorization());
+     }
+ 

@@ -3,7 +3,7 @@
 
 == 权威入口与状态
 
-link:../rbac-contract/src/main/resources/openapi/rbac-api.yaml[现行 OpenAPI] 登记64个HTTP操作：52个内部操作、教师七个身份/审计操作、两个私有身份投影及JWKS/health/info三个PUBLIC操作。
+link:../rbac-contract/src/main/resources/openapi/rbac-api.yaml[现行 OpenAPI] 登记 67 个 HTTP 操作，含 52 个内部操作、教师 8 个统一身份鉴权与 2 个审计操作、两个私有身份投影及三个公钥或运维操作。
 精确字段、状态码和权限以该OAS及link:implementation-contract.adoc[实施合同]、link:course-integration-contract.adoc[课程集成补充合同]为准。
 两后端已有对应Controller、Service/应用服务与持久化代码；*存在源码或登记不等于最终验收通过*。双后端实际HTTP与课程联调仍在补验，不沿用一期或M2骨架通过结论。
 
@@ -18,9 +18,9 @@ server为根URL（本地默认http://localhost:8081）；内部路径显式带`/
 * 输入DTO禁止未知字段和越权字段；PATCH、状态变更、部门迁移是不同入口，不能用通用实体覆盖。输出仅白名单VO，不返回密码、哈希或JPA对象。
 * 用户状态ACTIVE/DISABLED/DELETED；系统、角色、权限和资源状态ENABLED/DISABLED。
 
-== 根路径身份七操作
+== 根路径统一身份鉴权与审计
 
-以下端点不带`/api/v1`、不套内部成功包装。教师固定来源为`fde08d5dd417abc543145aff33ca8378deb9ca36`。
+以下端点不带`/api/v1`、不套内部成功包装。教师固定来源为`7f27e605f37f540253c3f2ff73227424250a4ec8`。
 
 [cols="2,4"]
 |===
@@ -30,9 +30,14 @@ server为根URL（本地默认http://localhost:8081）；内部路径显式带`/
 |GET /auth/me |200 `{subject,roles,permissions,name,no}`；roles仅当前aud有效角色identityRole的student/teacher/admin投影，permissions仅UI；401/503。
 |GET /auth/permissions/{permission} |200 `{allowed:boolean}`；未知/无权false；400/401。不把UI许可推导成API资格。
 |GET /auth/api-permissions/{operationId} |200 `{operationId,allowed}`；已登记无权false，未知404 API_OPERATION_NOT_FOUND；401/503。只判系统级资格，不代替课程对象检查。
+|GET /auth/departments |课程管理员和有效 TEC API 权限。按 parentId 展开直属子部门，无 parentId 时查询根部门，支持名称或编码搜索与分页；只返回 id、code、name、parentId、hasChildren。
+|GET /auth/departments/{departmentId}/users |同一课程授权。按姓名、工号或学号搜索该部门的活跃直属成员。返回 userId、no、name、departmentId、departmentName。
+|GET /auth/users/{userId} |同一课程授权。按稳定 subject 查询活跃用户，返回 userId、name、no。
 |POST /auth/audit-logs |Bearer、可信服务密钥及audit:write缺一不可；独立插入事务提交后201。UUID requestId；同来源系统/主体/规范化载荷重试返回同id，异体400 AUDIT_DUPLICATE_CONFLICT。
 |GET /auth/audit-logs |Bearer、可信服务密钥及audit:read；actor、actorId、target、from、to、page、pageSize过滤。200裸分页；仅当前aud、origin=COURSE的四类事件；400/401/403/503。
 |===
+
+目录接口使用裸 JSON，缺少有效 Bearer 时返回 401，非课程令牌或缺少 admin/TEC 时返回 403，目标不存在时返回 404。
 
 审计type仅score_changed/group_changed/milestone_changed/roster_changed；objectType仅term/course/class/group/milestone/student/teacher/submission/oral_record。
 objectId匹配`^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$`且类型一致；target必填最长500；before/after是可选安全JSON对象。
@@ -59,11 +64,11 @@ PUBLIC为GET /.well-known/jwks.json及/api/v1/actuator/health、info；健康可
 == 路由登记、课程边界及验收
 
 结构化RouteRegistry/WebConfig/BootstrapService、DDD OpenApiOperationContract/RouteContractVerifier分别读取OAS、核验实际MVC路由及中心注册数据；未登记默认拒绝，受保护中心操作不能弱化元数据。
-64项是中心提供方目录，不是课程业务数量。link:../rbac-contract/src/main/resources/catalog/course-operations.json[课程目录]从固定教师OAS提取80个真实业务操作，排除七个provider操作；缺条件元数据的已核验业务至少要求course:access，不默认PUBLIC。
+link:../rbac-contract/src/main/resources/catalog/course-operations.json[课程目录]登记 80 个课程操作，其中 79 个要求授权。独立的 POST /login 由网关匿名转发到课程服务，先验证本地学号或工号，再使用统一身份认证。教师快照中 10 个提供方操作由权限中心实现。
 copyCourse登记requiredRole=teacher，不强制全局CC；真实CC及课程组长例外留在教师Service，通过私有authorities投影真实能力，不能从teacher资格或UI推导CC。
 
 课程资源服务器按RS256/issuer/aud验证、可信method/path解析operationId并检查全局资格，再保留教师原对象级规则；不信客户端operationId、X-Rbac或X-Forwarded身份头，不接收任意上游URL。
 JWT仅含稳定sub、单aud、iss、iat、exp、jti、kid、tokenVersion，无角色权限claim；撤销在MySQL持久化，生产密钥须可共享和轮换。
 
-最终须实际验证七接口、两个私有投影、跨aud、伪造头、停用/注销、严格DTO、同步审计幂等与失败回滚及真实课程对象拒绝。
+验收覆盖八个鉴权接口和两个审计接口、两个私有投影、跨aud、伪造头、停用/注销、严格DTO、同步审计幂等与失败回滚及真实课程对象拒绝。
 验证方案见link:test-plan.adoc[测试计划]；本文不宣称双后端、浏览器、课程联调或Swarm验收全通过。

@@ -131,6 +131,32 @@ class GatewayHttpTest {
                 () -> assertEquals(1, checks.get(), "必须真实请求一次中心"));
     }
 
+    /** 匿名课程登录使用唯一的公开路由，其他请求仍需认证。 */
+    @Test
+    void onlyExactCourseLoginBypassesCentralAuthorization() throws Exception {
+        assertEquals(200, send("/login", "POST", "{}", null, Map.of()).statusCode());
+        assertEquals("/login", lastPath);
+        assertEquals("{}", new String(lastBody, StandardCharsets.UTF_8));
+        assertEquals(401, send("/login", "GET", "", null, Map.of()).statusCode());
+        assertEquals(401, send("/login/", "POST", "{}", null, Map.of()).statusCode());
+        assertEquals(401, send("/api/login", "POST", "{}", null, Map.of()).statusCode());
+        assertEquals(404, send("/api/login", "POST", "{}", valid(), Map.of()).statusCode());
+        assertEquals(401, send("/me", "GET", "", null, Map.of()).statusCode());
+        assertEquals(1, calls.get());
+        assertEquals(0, checks.get());
+    }
+
+    /** 网关从原始 URI 去掉前端业务前缀，并以真实课程路径进行准入和转发。 */
+    @Test
+    void apiPrefixPreservesCourseRoutingAndAuthorization() throws Exception {
+        assertEquals(401, send("/api/terms", "GET", "", null, Map.of()).statusCode());
+        assertEquals(200, send("/api/terms?page=1", "GET", "", valid(), Map.of()).statusCode());
+        assertEquals("/terms?page=1", lastPath);
+        assertEquals("listTerms", checked);
+        assertEquals(1, checks.get());
+        assertEquals(1, calls.get());
+    }
+
     @Test void invalidTokensNeverReachEitherBoundary() throws Exception {
         assertEquals(401, send("/me", "GET", "", null, Map.of()).statusCode());
         for (String token : List.of(token(KEY,"wrong","test-issuer",Instant.now().plusSeconds(90)),

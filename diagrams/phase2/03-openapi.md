@@ -1,19 +1,19 @@
 # OpenAPI 功能解读与完整操作索引
 
-> 阅读基线：2026-11-16；Git HEAD：`3a14bb3897702072862cce1b7ee88de1747681bc`。本文来自当前源码、固定教师 API 和数据库迁移的静态分析。本次未运行业务测试或部署，接口存在不等于本轮验收通过。
+> 阅读基线：2026-11-19；Git HEAD：`560ed0d32aca4765b1a936a711bfdf0a8ad559b7`。本文来自当前源码、固定教师 API 和数据库迁移的静态分析。本次未运行业务测试或部署，接口存在不等于本轮验收通过。
 
 ## 先理解文件与计数
 
-- 中心：[rbac-contract/src/main/resources/openapi/rbac-api.yaml](../../rbac-contract/src/main/resources/openapi/rbac-api.yaml)，64 个操作、46 个路径、58 个 schema。
-- 教师：[rbac-contract/src/main/resources/catalog/course-openapi.source.yaml](../../rbac-contract/src/main/resources/catalog/course-openapi.source.yaml)，87 个操作，其中 80 个课程业务操作与七个统一身份提供方操作。
-- 七个提供方接口已包含在中心 64 个操作里，不能将它们重复算成新课程业务；两个系统合计 144 个不重复业务/技术操作标识。
-- 中心的 64 = 54 个 /api/v1 操作（含 health/info） + 7 个 /auth 操作 + 2 个私有投影 + 1 个 JWKS。按职责也可表述为 52 个中心管理/本人操作 + 7 + 2 + 3 个公钥/运行状态。
+- 中心：[rbac-contract/src/main/resources/openapi/rbac-api.yaml](../../rbac-contract/src/main/resources/openapi/rbac-api.yaml)，67 个操作、49 个路径、63 个 schema。
+- 教师：[rbac-contract/src/main/resources/catalog/course-openapi.source.yaml](../../rbac-contract/src/main/resources/catalog/course-openapi.source.yaml)，90 个操作，其中 80 个课程业务操作与 10 个提供方操作。
+- 提供方操作计入中心目录。两个系统合计 147 个操作标识，课程目录包含一个公开登录。
+- 中心目录包含 54 个 /api/v1 操作（含 health/info）、8 个统一身份鉴权操作、2 个审计操作、2 个私有投影和 1 个 JWKS。
 
 ## 功能分组
 
 | 能力 | 操作数 | 实现功能 |
 | --- | --- | --- |
-| 统一身份与鉴权 | 5 | 统一登录、持久注销；查询当前系统角色和前端权限；分别判断 UI 权限与 API 操作资格。 |
+| 统一身份与鉴权 | 8 | 统一登录、持久注销；查询当前系统角色和前端权限；分别判断 UI 权限与 API 操作资格。 |
 | 集中审计服务 | 2 | 课程后端携带用户令牌与服务密钥写入 / 查询审计；requestId 幂等，操作者从可信身份取得。 |
 | 本人资料、改密与首页 | 3 | 查看本人及有效权限、修改密码、查看用户/角色/系统基础计数。 |
 | 受管系统 | 4 | 登记、重命名、启停系统；不同系统角色和资源隔离。无系统删除接口。 |
@@ -48,7 +48,7 @@
 - 权限中心 OAS 继承了教师描述中的“本系统不持久化密码/令牌状态”，那段“本系统”原指课程中心；当前中心实际使用 password_hash 与 sys_token_revocation。不能据复制描述否定代码。
 - 不提供公司 CRUD、业务数据范围、RBAC2/3、热力图；当前权限定义没有完整 CRUD，系统也没有 DELETE API。
 
-## 统一身份与鉴权（5）
+## 统一身份与鉴权（8）
 
 统一登录、持久注销；查询当前系统角色和前端权限；分别判断 UI 权限与 API 操作资格。
 
@@ -57,8 +57,11 @@
 | POST | `/auth/login` | `login` | PUBLIC | 登录 |
 | POST | `/auth/logout` | `logout` | @authenticated | 退出登录 |
 | GET | `/auth/me` | `getIdentityCurrentUser` | @authenticated | 当前用户、角色与权限 |
+| GET | `/auth/departments` | `listIdentityDepartments` | TEC | 查询统一身份部门列表（逐层展开） |
+| GET | `/auth/departments/{departmentId}/users` | `listIdentityDepartmentUsers` | TEC | 查询部门下的用户 |
 | GET | `/auth/permissions/{permission}` | `checkIdentityPermission` | @authenticated | 校验当前用户是否具备指定前端权限 |
 | GET | `/auth/api-permissions/{operationId}` | `getApiAuthority` | @authenticated | 判断当前用户能否调用指定 API 接口 |
+| GET | `/auth/users/{userId}` | `lookupIdentityUser` | TEC | 查询统一身份用户 |
 
 ## 集中审计服务（2）
 
@@ -228,6 +231,12 @@ JWKS 用于签名验证；health/info 用于运行观察，不表示业务验收
 
 课程接口由教师后端实现；权限中心登记其操作和全局许可。UI 权限码、AuthorityCodes 与对象关系分别承担不同职责。
 
+### 统一身份鉴权（1）
+
+| 方法 | 路径 | operationId | 摘要 |
+| --- | --- | --- | --- |
+| POST | `/login` | courseLogin | 课程系统登录 |
+
 ### 当前用户（1）
 
 | 方法 | 路径 | operationId | 摘要 |
@@ -363,11 +372,10 @@ JWKS 用于签名验证；health/info 用于运行观察，不表示业务验收
 | GET | `/files/{fileId}` | downloadFile | 下载提交材料 |
 | GET | `/audit-logs` | listAuditLogs | 日志查询 |
 
-### 教师（5）
+### 教师（4）
 
 | 方法 | 路径 | operationId | 摘要 |
 | --- | --- | --- | --- |
-| GET | `/identity/users/{userId}` | lookupIdentityUser | 查询统一身份用户 |
 | GET | `/teachers` | listTeachers | 教师列表（管理员） |
 | POST | `/teachers` | createTeacher | 添加教师 |
 | PATCH | `/teachers/{teacherId}` | updateTeacher | 修改教师信息 |

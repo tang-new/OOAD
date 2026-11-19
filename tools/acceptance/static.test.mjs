@@ -94,11 +94,22 @@ test('reference registries are per run, typed, collision-safe, and unknown refer
   assert.throws(()=>a.register('role',2,['course','R']),/same business key/);
   a.register('assignment',1,['user-A','role-R']);a.register('assignment',2,['user-A','role-R']);assert.notDeepEqual(a.normalize({id:1,userId:10,roleId:20}),a.normalize({id:2,userId:10,roleId:20}));
 });
-test('private provider opaque userId resolves as subject without confusing numeric user PKs',()=>{
+test('identity projections normalize stable subjects without confusing numeric user IDs',()=>{
   const a=registry(),b=registry(1000);
-  const lookup=(x,subject)=>x.n.observeResponse(x.n.observeRequest('GET','/identity/users/'+encodeURIComponent(x.userA.subject)),{userId:subject,name:'Fixture',no:'FX'});
-  assert.deepEqual(lookup(a,a.userA.subject),lookup(b,b.userA.subject));
-  assert.notDeepEqual(lookup(a,a.userA.subject),lookup(a,a.userB.subject));
+  for (const base of ['/identity/users/','/auth/users/']) {
+    const path=x=>base+encodeURIComponent(x.userA.subject);
+    const lookup=(x,subject)=>x.n.observeResponse(x.n.observeRequest('GET',path(x)),{userId:subject,name:'Fixture',no:'FX'});
+    assert.equal(a.n.normalizePath(path(a)),b.n.normalizePath(path(b)));
+    assert.deepEqual(lookup(a,a.userA.subject),lookup(b,b.userA.subject));
+    assert.notDeepEqual(lookup(a,a.userA.subject),lookup(a,a.userB.subject));
+  }
+  a.n.register('department',1101,'directory');
+  b.n.register('department',1201,'directory');
+  const members=(x,id)=>x.n.observeResponse(
+      x.n.observeRequest('GET','/auth/departments/'+id+'/users'),
+      {items:[{userId:x.userA.subject,departmentId:id,name:'Fixture',no:'FX'}]});
+  assert.deepEqual(members(a,1101),members(b,1201));
+  assert.equal(a.n.normalizePath('/auth/departments?parentId=1101'),b.n.normalizePath('/auth/departments?parentId=1201'));
   a.n.registerSubject(String(a.ids.userA),'a-different-numeric-subject');
   assert.notDeepEqual(a.n.normalize({userId:String(a.ids.userA)}).userId,a.n.normalize({subject:String(a.ids.userA)}).subject);
 });

@@ -7,14 +7,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /** Captures real pre-change state only after the central operation gate has passed. */
-@Component @Profile("integration")
+@Component
+@Profile("integration")
 public class AuditSnapshots {
     public static final String ATTRIBUTE="course.audit.snapshot";
     public record Snapshot(String type,String objectType,String objectId,Map<String,Object> before,Map<String,Object> context) {}
     private final JdbcTemplate jdbc;
     public AuditSnapshots(JdbcTemplate jdbc) {this.jdbc=jdbc;}
     private Map<String,Object> one(String sql,Object... args) {
-        var rows=jdbc.queryForList(sql,args); return rows.isEmpty()?Map.of():rows.getFirst();
+        List<Map<String, Object>> rows = jdbc.queryForList(sql,args); return rows.isEmpty()?Map.of():rows.getFirst();
     }
     private void context(Map<String,Object> out,Map<String,Object> row) {
         for(String key:List.of("termId","courseId","classId")) {
@@ -24,22 +25,31 @@ public class AuditSnapshots {
     @SuppressWarnings("unchecked")
     public void prepare(HttpServletRequest request,String operation) {
         if(Set.of("GET","HEAD","OPTIONS").contains(request.getMethod())) return;
-        var vars=(Map<String,String>)request.getAttribute(org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+        Map<String, String> vars = (Map<String,String>)request.getAttribute(org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         if(vars==null)vars=Map.of();
-        String type=null,objectType=null,id=null; Map<String,Object> before=null;var ctx=new LinkedHashMap<String,Object>();
+        String type=null,objectType=null,id=null; Map<String,Object> before=null;Map<String, Object> ctx = new LinkedHashMap<String,Object>();
         if(operation.equals("updateOralRecord") || operation.equals("createGroupOralRecord") || operation.equals("createStudentOralRecord")) {
             type="score_changed";objectType="oral_record";id=vars.get("oralRecordId");
             if(id!=null) {
-                var row=one("select a.id, a.verdict as status, a.group_score as score, m.course_id as courseId,c.term_id as termId,g.responsible_class_id as classId from oral_assessment a join milestone m on m.id=a.milestone_id join course c on c.id=m.course_id left join project_group g on g.id=a.group_id where a.id=?",id);
+                Map<String, Object> row = one("select a.id, a.verdict as status, a.group_score as score, m.course_id as courseId,c.term_id as termId,g.responsible_class_id as classId from oral_assessment a join milestone m on m.id=a.milestone_id join course c on c.id=m.course_id left join project_group g on g.id=a.group_id where a.id=?",id);
                 context(ctx,row);before=new LinkedHashMap<>();before.put("status",row.get("status"));before.put("score",row.get("score"));
                 before.put("members",jdbc.queryForList("select student_id as studentId,score from oral_individual_score where assessment_id=? order by student_id",id));
             } else {
                 context(ctx,one("select m.course_id as courseId,c.term_id as termId from milestone m join course c on c.id=m.course_id where m.id=?",vars.get("milestoneId")));
             }
-        } else if(operation.toLowerCase().contains("group") && !operation.contains("GroupRule")) {
+        } else if (operation.equals("reviewSubmission")) {
+            type = "score_changed";
+            objectType = "submission";
+            id = vars.get("submissionId");
+            context(ctx, one("""
+                    select m.course_id as courseId, c.term_id as termId, g.responsible_class_id as classId
+                    from submission s join milestone m on m.id=s.milestone_id join course c on c.id=m.course_id
+                    left join project_group g on g.id=s.group_id where s.id=?
+                    """, id));
+        } else if(operation.toLowerCase(Locale.ROOT).contains("group") && !operation.contains("GroupRule")) {
             type="group_changed";objectType="group";id=vars.get("groupId");
             if(id==null && vars.containsKey("requestId")) {
-                var row=one("select group_id as groupId,state as status from group_join_request where id=?",vars.get("requestId"));
+                Map<String, Object> row = one("select group_id as groupId,state as status from group_join_request where id=?",vars.get("requestId"));
                 if(row.get("groupId")!=null)id=row.get("groupId").toString();before=new LinkedHashMap<>();before.put("status",row.get("status"));
             }
             if(id!=null)context(ctx,one("select g.course_id as courseId,g.responsible_class_id as classId,c.term_id as termId from project_group g join course c on c.id=g.course_id where g.id=?",id));
@@ -57,8 +67,8 @@ public class AuditSnapshots {
     /** Minimized audit representation, matching the central service's safe-field schema. */
     public static Object safe(Object value) {
         if(value instanceof Map<?,?> map) {
-            var out=new LinkedHashMap<String,Object>();
-            for(var e:map.entrySet()) {
+            Map<String, Object> out = new LinkedHashMap<String,Object>();
+            for (Map.Entry<?, ?> e : map.entrySet()) {
                 String key=e.getKey().toString();
                 key=switch(key) {case "verdict","state"->"status";case "groupScore"->"score";case "personalScores"->"members";default->key;};
                 if(Set.of("id","code","name","status","score","studentId","teacherId","groupId","classId","courseId","termId","milestoneId","oralRecordId","members","count").contains(key)) out.put(key,safe(e.getValue()));

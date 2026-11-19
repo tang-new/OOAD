@@ -4,6 +4,9 @@ import com.xmu.rbac.ddd.domain.AuthorizationPolicy;
 import com.xmu.rbac.ddd.domain.DomainException;
 import com.xmu.rbac.ddd.domain.Permission;
 import com.xmu.rbac.ddd.domain.port.AuthorizationRepository;
+import com.xmu.rbac.ddd.domain.port.DirectoryRepository;
+import com.xmu.rbac.ddd.domain.port.DirectoryRepository.IdentityDepartment;
+import com.xmu.rbac.ddd.domain.port.DirectoryRepository.IdentityDepartmentUser;
 import com.xmu.rbac.ddd.domain.port.TokenProvider;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,21 +19,24 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.TreeSet;
 
-/** 私有身份读用例：应用层编排领域授权与仓储端口，不接触JPA记录。 */
+/** 通过领域仓储端口执行课程目录查询和私有身份投影。 */
 @Service
 @Transactional(readOnly = true)
 public class IntegrationIdentityApplicationService {
     private final AuthorizationApplicationService authorization;
     private final AuthorizationRepository repository;
+    private final DirectoryRepository directory;
     private final byte[] serviceDigest;
     private final boolean configured;
 
     public IntegrationIdentityApplicationService(
             AuthorizationApplicationService authorization,
             AuthorizationRepository repository,
+            DirectoryRepository directory,
             @Value("${rbac.audit-service-key:}") String key) {
         this.authorization = authorization;
         this.repository = repository;
+        this.directory = directory;
         this.configured = !key.isBlank();
         this.serviceDigest = digest(key);
     }
@@ -71,19 +77,48 @@ public class IntegrationIdentityApplicationService {
     /** 受控最少身份字段查询，主体由稳定subject定位而非姓名猜测。 */
     public IdentityResult lookup(TokenProvider.Principal principal, String key, String subject) {
         requireService(key);
-        AuthorizationRepository.Identity actor = authorization.validate(principal);
-        AuthorizationPolicy.Effective effective =
-                authorization.effective(actor.id(), principal.systemCode());
-        DomainException.require(
-                effective.identities().contains("admin")
-                        && effective.has("TEC", Permission.Kind.API),
-                403,
-                "FORBIDDEN");
+        return lookup(principal, subject);
+    }
+
+    /** 使用当前课程管理员的有效能力查询稳定用户身份。 */
+    public IdentityResult lookup(TokenProvider.Principal principal, String subject) {
+        requireTeacherAdministration(principal);
         AuthorizationRepository.Identity target = repository.identity(subject);
         DomainException.require(
                 target != null && "ACTIVE".equals(target.status()), 404, "IDENTITY_USER_NOT_FOUND");
         return new IdentityResult(
                 target.subject(), target.name(), target.no() == null ? "" : target.no());
+    }
+
+    /** 按层级分页浏览启用部门。 */
+    public AuthorizationRepository.Page<IdentityDepartment> departments(
+            TokenProvider.Principal principal, Long parentId, String keyword, int page, int size) {
+        requireTeacherAdministration(principal);
+        if (parentId != null) {
+            requireDepartment(parentId);
+        }
+        return directory.identityDepartments(parentId, keyword, page, size);
+    }
+
+    /** 分页浏览启用部门的活跃直属成员。 */
+    public AuthorizationRepository.Page<IdentityDepartmentUser> departmentUsers(
+            TokenProvider.Principal principal, long departmentId, String keyword, int page, int size) {
+        requireTeacherAdministration(principal);
+        requireDepartment(departmentId);
+        return directory.identityDepartmentUsers(departmentId, keyword, page, size);
+    }
+
+    /** 目录仅允许课程管理员使用有效的 TEC API 权限。 */
+    private void requireTeacherAdministration(TokenProvider.Principal principal) {
+        AuthorizationRepository.Identity actor = authorization.validate(principal);
+        DomainException.require("course-project-management".equals(principal.systemCode()), 403, "FORBIDDEN");
+        AuthorizationPolicy.Effective effective = authorization.effective(actor.id(), principal.systemCode());
+        DomainException.require(effective.identities().contains("admin")
+                && effective.has("TEC", Permission.Kind.API), 403, "FORBIDDEN");
+    }
+
+    private void requireDepartment(long id) {
+        DomainException.require("ENABLED".equals(directory.department(id).status()), 404, "NOT_FOUND");
     }
 
     /** 应用结果不携带实体或凭据，接入层只需白名单序列化。 */

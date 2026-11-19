@@ -9,11 +9,18 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / 'rbac-contract/src/main/resources'
 CAT = RES / 'catalog'
-COMMIT = 'fde08d5dd417abc543145aff33ca8378deb9ca36'
+COMMIT = next(line.removeprefix('commit=') for line in
+              (ROOT / 'course-integration/UPSTREAM.lock').read_text(encoding='utf8').splitlines()
+              if line.startswith('commit='))
 SOURCE = 'course-project-mgt-reference/api/openapi.yaml'
-SOURCE_SHA256 = '4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c'
+SOURCE_SHA256 = '8a309b5a475b9e24b2146f4ae112b8d0a9f291f48e4556b121758ada440b2d84'
 METHODS = {'get','post','put','patch','delete','head','options'}
 OUTPUTS = {}
+DIRECTORY = {
+    '/auth/departments': ('listIdentityDepartments', 'IdentityDepartment'),
+    '/auth/departments/{departmentId}/users': ('listIdentityDepartmentUsers', 'IdentityDepartmentUser'),
+    '/auth/users/{userId}': ('lookupIdentityUser', None),
+}
 def emit(path, text): OUTPUTS[RES / path] = text
 
 def q(v):
@@ -59,7 +66,7 @@ def response(s, description='成功'): return {'description':description,'conten
 def oas():
     teacher=yaml.safe_load((CAT/'course-openapi.source.yaml').read_text(encoding='utf8'))
     schemas=copy.deepcopy(teacher['components']['schemas'])
-    # Retain only the transitive schemas of the seven provider operations.
+    # Retain only the transitive schemas of the identity and audit provider operations.
     external={p:copy.deepcopy(v) for p,v in teacher['paths'].items() if p.startswith('/auth/')}
     needed=set()
     def visit(x):
@@ -77,6 +84,10 @@ def oas():
     schemas['LoginInput']['properties']['username'].pop('example',None)
     schemas['IdentityCurrentUserVO']['required']=['subject','roles','permissions','name','no']
     schemas['AuditVO']=obj({'id':ID,'at':DATE,'actor':obj({'id':nullable(ID),'name':string(),'roles':arr(string()),'deleted':BOOL}),'type':string(),'target':string(500),'before':nullable({'type':'object','additionalProperties':True}),'after':nullable({'type':'object','additionalProperties':True}),'objectType':nullable(string()),'objectId':nullable(string())},['id','at','actor','type','target','before','after'])
+    # The pinned teacher file is OpenAPI 3.1; the center publishes 3.0 nullable schemas.
+    parent = schemas['IdentityDepartment']['properties']['parentId']
+    schemas['IdentityDepartment']['properties']['parentId'] = nullable(dict(ID, description=parent['description']))
+    schemas['IdentityDepartment']['required'].append('parentId')
     schemas['LoginVO']['properties']['tokenType']=enum('Bearer')
     schemas['IdentityAuditLog']=copy.deepcopy(schemas['AuditVO'])
     schemas['IdentityAuditLog']['properties']['type']=enum('score_changed','group_changed','milestone_changed','roster_changed')
@@ -109,6 +120,16 @@ def oas():
             if m not in METHODS:continue
             o.pop('servers',None)
             o['x-required-permission']='PUBLIC' if p=='/auth/login' else ('audit:write' if m=='post' and p=='/auth/audit-logs' else 'audit:read' if p=='/auth/audit-logs' else '@authenticated')
+            if p in DIRECTORY:
+                o.update({'x-required-audience': 'course-project-management',
+                          'x-required-role': 'admin', 'x-course-permission': 'TEC'})
+                _, item = DIRECTORY[p]
+                if item:
+                    output = 'Page' + item
+                    schemas[output] = page(item)
+                    o['responses']['200'] = response(ref(output), o['responses']['200']['description'])
+                o['responses'].setdefault('401', {'$ref': '#/components/responses/Unauthorized'})
+                o['responses'].setdefault('404', {'$ref': '#/components/responses/NotFound'})
             if p=='/auth/audit-logs':
                 o.setdefault('parameters',[]).append({'name':'X-Audit-Service-Key','in':'header','required':True,'schema':string(minLength=1),'description':'可信课程后端服务密钥；不得提供给浏览器。'})
                 if m=='get':o['responses']['200']=response(ref('PageIdentityAuditLog'))
@@ -166,7 +187,7 @@ def oas():
             op['parameters'] += [{'$ref':'#/components/parameters/Page'},{'$ref':'#/components/parameters/PageSize'}]
         for status in ['400','401','403','404','409','503']:op['responses'][status]={'$ref':'#/components/responses/'+{'400':'BadRequest','401':'Unauthorized','403':'Forbidden','404':'NotFound','409':'Conflict','503':'Unavailable'}[status]}
         paths.setdefault('/api/v1'+path,{})[method.lower()]=op
-    # Private service-to-service projections; these do not alter the teacher's seven provider operations.
+    # Private service-to-service projections remain separate from the teacher provider operations.
     schemas['IntegrationAuthoritiesVO']=obj({'authorities':arr(string())})
     schemas['IdentityUserLookupVO']=obj({'userId':string(128),'name':string(128),'no':string(64)})
     for path,oid,out in [('/integration/authorities','getIntegrationAuthorities','IntegrationAuthoritiesVO'),('/identity/users/{userId}','lookupUnifiedIdentityUser','IdentityUserLookupVO')]:
@@ -210,12 +231,18 @@ def course_catalog():
             if method not in METHODS:continue
             item={'operationId':op['operationId'],'method':method.upper(),'path':path,'x-required-permission':op.get('x-required-permission'),'x-required-role':op.get('x-required-role')}
             if op.get('x-provider')=='unified-identity' or path.startswith('/auth/'):excluded.append(item);continue
-            item.update(permissionCode=op.get('x-required-permission') or 'course:access',requiredRole=op.get('x-required-role'),accessPolicy='PROTECTED')
+            public = (method, path, op['operationId'], op.get('security')) == ('post', '/login', 'courseLogin', [])
+            item.update(permissionCode=None if public else op.get('x-required-permission') or 'course:access',
+                        requiredRole=op.get('x-required-role'), accessPolicy='PUBLIC' if public else 'PROTECTED')
             rows.append(item)
-    assert len(excluded)==7 and len(rows)==80
+    assert len(excluded)==10 and len(rows)==80
+    assert [r['operationId'] for r in rows if r['accessPolicy']=='PUBLIC'] == ['courseLogin']
     assert next(r for r in rows if r['operationId']=='copyCourse')['requiredRole']=='teacher'
     manifest={'source':SOURCE,'commit':COMMIT,'sha256':hashlib.sha256(raw).hexdigest(),'snapshot':'course-openapi.source.yaml','excludedProviderOperations':excluded,'operations':rows}
     emit('catalog/course-operations.json',json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+    routes = ROOT / 'course-integration/overlay/backend/src/main/resources/integration-routes.tsv'
+    OUTPUTS[routes] = ''.join(row['method'] + ' ' + re.sub(r'\{[^}]+}', '{}', row['path'])
+                              + '\t' + row['operationId'] + '\n' for row in rows)
     return rows, manifest
 
 # Course UI grouping is an explicit, reviewable operation-id mapping, not authorization inference.
@@ -328,7 +355,10 @@ def seed(document, course, manifest):
     for uid,aid in sorted(mapping):add('sys_ui_api_mapping',ui_resource_id=uid,api_operation_id=aid)
     text+='ALTER TABLE sys_user AUTO_INCREMENT=10000;\n'
     emit('db/migration/V2__rbac1_seed.sql',text)
-    buf=io.StringIO(newline='');writer=csv.writer(buf,lineterminator='\n');writer.writerow(['systemId','operationId','method','path','permissionCode','requiredRole','category','uiResourceId','apiOperationId']);writer.writerows(coverage)
+    buf=io.StringIO(newline='');writer=csv.writer(buf,lineterminator='\n');writer.writerow(['systemId','operationId','method','path','permissionCode','requiredRole','category','uiResourceId','apiOperationId']);writer.writerows(row for row in coverage if row[1] != 'lookupIdentityUser')
+    writer.writerows([1, oid, 'GET', path, 'TEC', 'admin', '统一身份鉴权', '', '']
+                     for path, (oid, _) in DIRECTORY.items())
+    writer.writerow([2, 'courseLogin', 'POST', '/login', 'PUBLIC', '', '课程登录', '', ''])
     emit('catalog/ui-api-coverage.csv',buf.getvalue())
     sample_ids=['listTerms','createTerm','copyCourse','importRoster','createGroupJoinRequest','submitMaterials','createMilestone','bookOralSlot','getMyGrades','downloadFile']
     samples=[dict(byid[oid],category=next(g for g,ids in GROUPS.items() if oid in ids)) for oid in sample_ids]
@@ -368,6 +398,34 @@ WHERE r.builtin=TRUE AND r.code IN ('SUPER_ADMIN','RBAC_ADMIN');
 COMMIT;
 """)
 
+def update_course_identity():
+    sql = '''-- Register the new identity provider queries and public course login.
+START TRANSACTION;
+
+DELETE m FROM sys_ui_api_mapping m
+JOIN sys_api_operation a ON a.id=m.api_operation_id
+JOIN sys_system s ON s.id=a.system_id AND s.code='course-project-management'
+WHERE a.operation_id='lookupIdentityUser' AND a.path_template='/identity/users/{userId}';
+
+DELETE a FROM sys_api_operation a
+JOIN sys_system s ON s.id=a.system_id AND s.code='course-project-management'
+WHERE a.operation_id='lookupIdentityUser' AND a.path_template='/identity/users/{userId}';
+
+'''
+    for path, (oid, _) in DIRECTORY.items():
+        sql += f'''INSERT INTO sys_api_operation (system_id, operation_id, method, path_template, required_role, access_policy)
+SELECT id, {q(oid)}, 'GET', {q(path)}, 'admin', 'AUTHENTICATED' FROM sys_system WHERE code='rbac-center';
+
+'''
+    sql += '''INSERT INTO sys_api_operation (system_id, operation_id, method, path_template, access_policy)
+SELECT id, 'courseLogin', 'POST', '/login', 'PUBLIC' FROM sys_system WHERE code='course-project-management';
+
+UPDATE sys_grant_version SET version=version+1 WHERE id=1;
+
+COMMIT;
+'''
+    emit('db/migration/V4__course_identity_directory.sql', sql)
+
 def validate(document):
     ids=set();count=0
     def walk(x):
@@ -393,8 +451,22 @@ def validate(document):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');args=parser.parse_args()
-    ddl();document=oas();course,manifest=course_catalog();counts=seed(document,course,manifest);counts['validatedOasOperations']=validate(document)
+    ddl()
+    document = oas()
+    course, manifest = course_catalog()
+    # V2 is an applied migration. Reconstruct the historical inputs while generating current coverage.
+    legacy_document = dict(document, paths={p: methods for p, methods in document['paths'].items()
+                                           if p not in DIRECTORY})
+    legacy_course = [r for r in course if r['operationId'] != 'courseLogin']
+    teacher_index = next(i for i, row in enumerate(legacy_course) if row['operationId'] == 'listTeachers')
+    legacy_course.insert(teacher_index, {'operationId': 'lookupIdentityUser', 'method': 'GET',
+                                         'path': '/identity/users/{userId}',
+                                         'permissionCode': 'TEC', 'requiredRole': 'admin'})
+    counts = seed(legacy_document, legacy_course, manifest)
+    counts['centerOperations'] = counts['validatedOasOperations'] = validate(document)
+    counts['mappings'] -= 1
     split_role_status_permission(document)
+    update_course_identity()
     old=list((RES/'db/migration').glob('V*.sql'))
     expected={p for p in OUTPUTS if p.suffix=='.sql'}
     if args.check:

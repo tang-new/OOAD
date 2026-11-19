@@ -2,7 +2,7 @@
 
 厦门大学 OOAD 课程设计：**结构化 + 独立 DDD 两套 RBAC1 后端**，共用严格契约和同一 Vue3 权限中心；真实教师课程系统经固定上游网关接入。
 
-> **本地交付验收已通过**：188项后端JUnit、双后端25+25及T21共51项真库验收、38项前端单测、PC/手机4例、教师原440项与真实课程12例。两轮七服务本地Swarm验证完成，最终DDD。完整范围、hash和未执行的外部事项见[最终验收](docs/final-acceptance.adoc)，不把本地通过冒充外部服务器或GitHub CI成功。
+> **此前版本的本地交付验收记录**：188项后端JUnit、双后端25+25及T21共51项真库验收、38项前端单测、PC/手机4例、教师原440项与真实课程12例。两轮七服务本地Swarm验证完成，最终DDD。完整范围、hash和未执行的外部事项见[最终验收](docs/final-acceptance.adoc)，不把本地通过冒充外部服务器或GitHub CI成功。
 
 **重构优先于迁移和兼容。** 单公司、用户唯一部门；部门用于组织管理和角色准入，不表示课程业务数据范围。同系统角色继承 DAG；UI/API 独立授权及显式映射；同步审计。课程对象级权限仍由真实课程 Service 执行，不做 RBAC2/3、热力图或旧协议兼容层。
 
@@ -19,14 +19,14 @@
 | [数据库](docs/database.adoc) / [API](docs/api.adoc) | 当前唯一契约、种子及安全边界 |
 | [最终验收](docs/final-acceptance.adoc) / [测试证据](docs/test-plan.adoc) / [共享验收](docs/acceptance-plan.adoc) | 真实结果、双实例、故障注入及行为等价 |
 | [浏览器截图](docs/acceptance/screenshots/README.adoc) | 两后端PC/手机真实已加载页面，不含真实人员或秘密 |
-| [课程验证](course-integration/VERIFICATION.md) | 固定教师源码、440项原测试、边界测试与真实联调状态 |
+| [课程接入](course-integration/README.md) / [CloneFactory](docs/clonefactory.adoc) | 固定源码、安装及本轮验收入口 |
 | [部署](docs/deployment.adoc) / [部署证据](deploy/deployment-evidence.json) | 隔离 Swarm、TLS、秘密、真实镜像与验收限制 |
 | [基线](docs/migration-baseline.adoc) / [迭代记录](docs/iteration-log.adoc) | 起始版本、保全备份及真实阶段结果 |
 
 ## 工程
 
 ```text
-rbac-contract/      唯一 OpenAPI、V1–V3、课程80操作目录；不含共享业务实现
+rbac-contract/      唯一 OpenAPI、V1–V4、课程 80 操作目录；不含共享业务实现
 rbac-structured/    Controller → 无状态 Service → Spring Data/JPA/Redis Mapper
 rbac-ddd/           独立纯JDK领域、应用编排、端口、JPA/Redis适配器及REST
 rbac-gateway/       JWT/JWKS、逐请求中心决策、真实路由匹配和固定课程上游
@@ -39,7 +39,7 @@ tools/             合同生成、CloneFactory、共享真库验收和设计核�
 ```
 
 权限中心均为 Java21 / Spring Boot3.3.5 / JPA / MySQL8 / Redis7。教师工程保留其固定版本和 MIT 许可，不伪装为我方重新实现的课程业务。
-共享契约目前为 **64个中心操作、80个课程操作、15张表**；两个额外私有身份投影不向浏览器开放。
+共享契约目前为 **67 个中心操作、80 个课程操作、15 张表**；两个额外私有身份投影不向浏览器开放。
 
 非RBAC导论实验已迁入独立私有仓库 [vintcessun/intro-spec-coding](https://github.com/vintcessun/intro-spec-coding)。原四条历史及1176个文件的初始 tree `29c24ee631060a8d208350ad65ac2b294b25ce95` 已与远端核验；后续提交 `381e498` 修正独立说明和凭据忽略规则。原目录退出主仓库，被忽略的私有资产保全在仓库外。
 
@@ -47,7 +47,7 @@ tools/             合同生成、CloneFactory、共享真库验收和设计核�
 
 要求 **显式 JDK21**、Node22+、Python3、Docker；wrapper提供 Maven3.9.9。绘图另需 Graphviz。
 
-**下列命令使用专用 loopback 测试实例。V1/V2 用于初始化空库，V3 可升级已执行当前 V1/V2 的 RBAC1 库。**
+**下列命令使用专用 loopback 测试实例。Flyway 会将 RBAC1 空库初始化到 V4，并按顺序升级已应用本项目较早迁移的库。**
 先检查13306/16379及容器名称没有被其它用途占用；下列命令不用于重建已有实例：
 
 ```bash

@@ -1,16 +1,16 @@
 # Real teacher course integration
 
-Latest real two-center/gateway/course verification and exact candidate hashes: [REAL-CENTERS-VERIFICATION.md](REAL-CENTERS-VERIFICATION.md).
+Archived verification for the previous pin: [REAL-CENTERS-VERIFICATION.md](REAL-CENTERS-VERIFICATION.md).
 
 ## Source / ownership
 
 Pinned MIT upstream: `https://gitee.com/mingqcn/course-project-mgt.git`, commit
-`fde08d5dd417abc543145aff33ca8378deb9ca36`. Original MIT notice is
+`7f27e605f37f540253c3f2ff73227424250a4ec8`. Original MIT notice is
 `LICENSE.upstream` and remains `LICENSE` in the prepared source/runtime image.
 The reference checkout is read-only. The prepare command archives approved tracked
 paths from the fixed commit, then applies reviewable patches and the overlay. It never
 archives the root or copies `选课名单.xlsx`; it removes every exported `.xlsx` and `.env*`.
-Only this directory and `tools/prepare-course.sh` belong to this integration task.
+
 
 ```bash
 export JAVA_HOME='/d/Software/Eclipse Adoptium/jdk-21.0.7.6-hotspot'
@@ -23,46 +23,29 @@ bash course-integration/tests/run-domain-tests.sh
 bash course-integration/build-images.sh
 ```
 
-The cache is `.cache/course-source/prepared`. Do not commit that cache. Build/test logs
-belong outside the repository. The root project POM and our RBAC backends remain
-unchanged. Upstream Boot **4.1.2**, Lombok **1.18.46**, its 449 original source files
-and CloneFactory compiled successfully on JDK21; no compatibility downgrade/upgrade
-was needed. This does **not** upgrade our Boot 3 parent. The scripts use explicit,
-credential-free Maven settings rather than reading user settings.
+The prepared tree is under .cache/course-source/prepared. The teacher build uses JDK 21,
+Spring Boot 4.1.2, Lombok 1.18.48, and CloneFactory 0.0.2.
+The RBAC modules use the root project dependency management. Maven settings route
+dependency resolution through credential-free Maven Central.
 
-## Actual upstream gaps repaired
+## Identity, course login, and audit
 
-* Upstream has Security*Authorization consumers, but no resource-server JWT chain or
-  authority loader. The integration profile verifies **RS256 only**, issuer, expiry,
-  and `aud=course-project-management` locally using configured JWKS.
-* An MVC interceptor maps the server's resolved route and HTTP verb to the pinned
-  OpenAPI operationId. Unknown routes fail closed. Incoming operationId headers are
-  irrelevant. Every business request first calls `/auth/api-permissions/{operationId}`;
-  false never reaches the business controller. No decisions are cached.
-* Only after permission succeeds does an `@HttpExchange` client call internal
-  `GET /integration/authorities` with the verified user bearer and backend service key.
-  Those current API authority codes and `ROLE_teacher/student/admin` replace the
-  SecurityContext authorities. JWT role/permission claims are ignored. Local Teacher
-  and Student IDs are resolved by the verified `sub`, not a claimed name or numeric ID.
-* Copy-course checks actual teacher qualification before any source/target lookup or
-  leader/CC authorization. An actual source leader can copy without CC; a nonleader
-  needs actual `CC`; allowed(operation)=true is never substituted for CC. A local
-  teacher record without a current central ROLE_teacher is not a teacher session.
-* Both existing Audit and Identity HTTP proxies use finite connect/read timeouts and
-  overwrite `X-Audit-Service-Key` with the configured backend secret. No incoming
-  service-key header is forwarded. No token/key/upstream error bodies are logged.
-* The upstream audit client had **no write callers**. The integration now synchronously
-  writes the teacher contract's `score_changed`, `group_changed`, `milestone_changed`,
-  `roster_changed` families after successful domain operations. Oral changes include
-  real pre-change DB scores and actual returned post-change scores. Audit snapshots
-  are minimized to the center's safe-field schema; oral memos are not leaked.
-* Central audit responses do not contain upstream's top-level course/term/class scope
-  IDs. The gateway extracts the trusted context IDs it previously wrote into `after`,
-  allowing actual existing teacher visibility filters to work for GET `/audit-logs`.
-* Two old test fixtures needed explicit identities: missing-source copy now supplies
-  a real Teacher before expecting 404; the class-teacher denial test now uses a token
-  without CTM rather than the default test token that grants every authority. Assertions
-  and all original tests are retained. No business service is replaced with a fake.
+- Both centers implement the eight teacher identity operations and two audit operations.
+  Directory queries require the course audience, the admin identity role, and API permission TEC.
+- The same-origin edge sends /auth paths to the center and the exact POST /login to the gateway.
+  The teacher service checks its local student or teacher roster before requesting a central token.
+  Other course requests use a verified JWT, current central operation decision, and local course
+  object authorization. /api is the browser business prefix.
+- The integration profile loads API capabilities and controlled identity roles from the private
+  center projection. A course leader can copy without CC, while a nonleader must have CC.
+- The six patches apply to the new teacher pin. The native after-commit audit callbacks feed the
+  integration confirmation filter, which combines them with scoped snapshots and sends a
+  single redacted write per request. The filter uses the same request ID for its bounded retry.
+- The live two-center runner uses the production Nginx routes and checks login, logout, directory access, department paging, the
+  teacher/student account binding, and the real course audit read and write path.
+
+The real runner requires Docker and Node 22.19 or newer for per-process TLS trust.
+Set REAL_OPENSSL to the OpenSSL executable path if it is outside PATH.
 
 ## Audit guarantees and the unavoidable window
 
@@ -126,14 +109,10 @@ TLS handshake termination. Production TLS policy is not downgraded by this setti
 `build-images.sh` emits `ooad/course-backend:m6` and `ooad/course-frontend:m6` (override
 `COURSE_IMAGE_PREFIX`). Backend Docker context includes only the built teacher jar
 and MIT license via `.dockerignore`. No roster or build tool enters the runtime image.
-Frontend is a small real login/role-menu/API client, not the upstream static-data
-prototype. It signs into central `/auth/login` requesting course audience; lists roles
-from central `/auth/me`; calls real `/api/me`, terms, role-specific course lists,
-and supports real JSON course requests. Menus do not grant server authority. Only the
+The frontend sends student and teacher login to `POST /login` and administrator login to the center `POST /auth/login` with the course audience. It reads roles from `/auth/me` and calls course operations under `/api/`. Menus do not grant server authority. Only the
 user bearer is stored in sessionStorage, never a service key. There is no fake dataset.
 
-The deployment gateway must route `/auth/*` and JWKS to center8081, `/api/*`
-(stripping `/api`) to course-backend8080, and `/course/*` page/assets to course-frontend80 (base path `/course/`).
+The full deployment edge forwards `/auth/*` and JWKS to the center. It forwards the exact `/login` path and the raw `/api/*` paths to the gateway. The gateway resolves the trusted course path and forwards to the course backend. The edge serves the Vite bundle under `/course/assets/`.
 `swarm-course.yaml` provides private-network service entries with no published course
 backend port. Attach to gateway network via COURSE_NETWORK and set actual issuer/JWK.
 Secrets `audit-service-key` and `course-db-password` mount via configtree. BaseURL,

@@ -1,3 +1,4 @@
+POST /login	courseLogin
 GET /me	getCurrentUser
 GET /terms	listTerms
 POST /terms	createTerm
@@ -70,7 +71,6 @@ POST /classes/{}/grades/export	exportClassGrades
 GET /me/courses/{}/grades	getMyGrades
 GET /files/{}	downloadFile
 GET /audit-logs	listAuditLogs
-GET /identity/users/{}	lookupIdentityUser
 GET /teachers	listTeachers
 POST /teachers	createTeacher
 PATCH /teachers/{}	updateTeacher

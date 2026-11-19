@@ -24,10 +24,19 @@ public final class GatewayController {
     @RequestMapping("/**")
     public ResponseEntity<byte[]> forward(HttpServletRequest request) throws IOException {
         String traceId = (String) request.getAttribute(TraceFilter.ATTRIBUTE);
-        String operationId = routes.resolve(request.getMethod(), request.getRequestURI());
-        auth.authorize(operationId, request.getHeader("Authorization"));
+        String rawPath = request.getRequestURI();
+        RouteRegistry.validatePath(rawPath);
+        String path = rawPath.startsWith("/api/") ? rawPath.substring("/api".length()) : rawPath;
+        String operationId = routes.resolve(request.getMethod(), path);
+        boolean login = RouteRegistry.isCourseLogin(request.getMethod(), rawPath);
+        if ("courseLogin".equals(operationId) && !login) {
+            throw new GatewayFailure(404, "COURSE_OPERATION_NOT_FOUND");
+        }
+        if (!login) {
+            auth.authorize(operationId, request.getHeader("Authorization"));
+        }
         byte[] bytes = BoundedBody.read(request.getInputStream(), properties.maxRequestBytes(), 413);
-        ProxyClient.Result result = proxy.forward(request, bytes, traceId);
+        ProxyClient.Result result = proxy.forward(request, path, bytes, traceId, login);
         HttpHeaders headers = new HttpHeaders();
         result.headers().forEach(headers::put);
         headers.set("X-Trace-Id", traceId);

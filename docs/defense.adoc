@@ -84,9 +84,9 @@
 == DTO/VO、CloneFactory：请指出真实一行代码
 
 . DDD `RoleController.create`：CreateRoleRequest → `CloneFactory.copy(new RoleCommand(), input)`。principal 单独验证，不从 DTO 拷。
-. DDD `RestSupport.role`：显式从 Role 构建 RoleResult，再复制为 RoleView；boolean enabled 到字符串 status 不是字段同名复制能代替的计算。
+. DDD `RestSupport.role` 先将领域状态转换为 RoleResult record。CloneFactory 0.0.2 读取 record 访问器，再调用 RoleView 的规范构造器。
 . DDD `JpaAuthorizationRepositoryAdapter.restore/saveRole`：RoleEntity ↔ RoleState 的同名字段复制；系统码、权限集合、关联写入与 Role 合法构造显式处理。
-. 结构化 `ManagementController.name`：DisplayName → NameChange；id、actorId 标注排除。当前响应主要是 Views/Map，不能捏造不存在的统一 VO 层。
+. 结构化 `ManagementController.name` 将 DisplayName record 映射为 NameChange record，保留模板的 id、actorId。创建用户等五个用例使用生成器填写实体公共字段。
 
 “CloneFactory 是不是 GoF Factory Method？”不是。它是注解处理器生成的复制重载，不存在抽象创建者按子类型决定产品的那个语义。
 “会不会绕过领域不变量？”因此不能把 ORM 图无脑复制成 Role；必须经合法恢复/构造路径，关联和安全字段手工控制，并执行 clean build 和 round-trip 测试。

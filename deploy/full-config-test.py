@@ -25,6 +25,12 @@ class Deployment(unittest.TestCase):
    self.assertIn('(integration|identity)',value);self.assertIn('return 403',value)
    self.assertIn('listen 443 ssl',value);self.assertNotIn('$http_host',value)
    self.assertIn('proxy_set_header X-Audit-Service-Key ""',value)
+ def test_course_proxy_sends_exact_login_and_raw_api_paths_to_gateway(self):
+  config=(ROOT/'deploy/full-course-nginx.conf').read_text(encoding='utf8')
+  for location in ['location = /login', 'location /api/']:
+   block=config.split(location+' {',1)[1].split('\n    }',1)[0]
+   self.assertIn('proxy_pass http://rbac-gateway:\${GATEWAY_PORT};'.replace('\\$', '$'),block)
+   self.assertIn('proxy_set_header X-Audit-Service-Key ""',block)
  def test_explicit_environment_precedes_dotenv_and_rejects_module(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=pathlib.Path(tmp);(root/'deploy').mkdir()

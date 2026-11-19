@@ -12,19 +12,19 @@ python tools/generate-rbac1-contract.py --check
 python tools/generate-rbac1-contract-test.py
 ```
 
-The last command **drops and recreates only `rbac1_schema_contract_test`** after verifying that `rbac-phase2-test-mysql` is bound to loopback port 13306. It applies V1/V2, adds a custom edit-only role, upgrades to V3, validates checksums and checks that a second migration runs zero scripts. It checks the effective catalogs, grants, mappings, table columns and database constraints. MySQL queries run through `docker exec` with credentials kept in the container. Static generation/check uses local files.
+The last command **drops and recreates only `rbac1_schema_contract_test`** after verifying that `rbac-phase2-test-mysql` is bound to loopback port 13306. It applies V1/V2, adds a custom edit-only role, upgrades through V3 and V4, validates checksums and checks that a second migration runs zero scripts. It checks the effective catalogs, grants, mappings, table columns and database constraints. MySQL queries run through `docker exec` with credentials kept in the container. Static generation/check uses local files.
 
-`target/` may contain stale resources from the previous build. Run a **clean** Maven build before integrating the jar. Flyway applies V1/V2 for the RBAC1 baseline and V3 for the dedicated role status capability. V3 also applies to RBAC1 databases already on V2. The RBAC0 migration history remains in Git.
+`target/` may contain stale resources from the previous build. Run a **clean** Maven build before integrating the jar. Flyway applies V1/V2 for the RBAC1 baseline, V3 for the dedicated role-status capability, and V4 for identity directory operations and public course login. The RBAC0 migration history remains in Git.
 
 ## Source and catalogs
 
-* `catalog/course-openapi.source.yaml`: byte-for-byte teacher OAS snapshot, repository commit `fde08d5dd417abc543145aff33ca8378deb9ca36`.
-* SHA-256: `4c944b94b0b18cbd20aa0091c20954927129bc586e97bb73dd79049f2814e40c` (pinned and checked by generator).
-* `catalog/course-operations.json`: all 80 real business operations, original method/path/operationId/metadata, effective registration policy and the seven explicitly excluded identity provider operations.
+* `catalog/course-openapi.source.yaml`: byte-for-byte teacher OAS snapshot, repository commit `7f27e605f37f540253c3f2ff73227424250a4ec8`.
+* SHA-256: `8a309b5a475b9e24b2146f4ae112b8d0a9f291f48e4556b121758ada440b2d84` (pinned and checked by generator).
+* `catalog/course-operations.json`: 80 course operations including public POST /login, with method, path, operationId, registration policy and ten excluded provider operations.
 * `catalog/ui-api-coverage.csv`: explicit seeded UI↔API links with operationId, method, path, permissionCode, requiredRole, category and resource/operation IDs. Multiple rows mean multiple UI mappings, not multiple registrations or implicit grants.
 * `catalog/coverage-samples.json`: ten real samples across terms/administration, courses, roster, groups, submissions, milestones, oral, grades and files.
 
-Center catalog registers all 62 OAS operations: 52 internal operations, seven external identity operations and three public JWKS/actuator operations. All 52 internal paths explicitly start `/api/v1`; the OAS server is a root URL. Every operation has `x-required-permission` (`PUBLIC`, `@authenticated`, or an API permission code). Course catalog excludes the seven provider endpoints. No missing metadata becomes PUBLIC: it receives `course:access`; explicit required roles are also retained. `copyCourse` uses `required_role=teacher`, never CC.
+The center catalog contains 67 operations, including eight external identity operations and two audit operations. The three directory queries require the course audience, admin role, and course API capability TEC. The course catalog contains 79 protected operations and the public POST /login. copyCourse retains its teacher requirement and applies the leader/CC rule in the course service.
 
 ## Seed and enforcement boundaries
 

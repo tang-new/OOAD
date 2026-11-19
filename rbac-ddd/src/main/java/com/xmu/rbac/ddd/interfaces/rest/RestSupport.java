@@ -47,19 +47,10 @@ public class RestSupport {
     }
 
     public static com.xmu.rbac.ddd.interfaces.rest.dto.RoleView role(Role r) {
-        com.xmu.rbac.ddd.application.RoleResult result =
-                new com.xmu.rbac.ddd.application.RoleResult();
-        result.setId(r.id());
-        result.setSystemCode(r.systemCode());
-        result.setCode(r.code());
-        result.setName(r.name());
-        result.setDescription(r.description());
-        result.setStatus(r.enabled() ? "ENABLED" : "DISABLED");
-        result.setBuiltin(r.builtin());
-        result.setIdentityRole(r.identityRole());
-        result.setVersion(r.version());
         return cn.edu.xmu.clonefactory.util.CloneFactory.copy(
-                new com.xmu.rbac.ddd.interfaces.rest.dto.RoleView(), result);
+                new com.xmu.rbac.ddd.interfaces.rest.dto.RoleView(null, null, null, null,
+                        null, null, null, null, null),
+                com.xmu.rbac.ddd.application.RoleResult.from(r));
     }
 
     public static Map<String, Object> permission(Permission p) {

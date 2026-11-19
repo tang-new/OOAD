@@ -19,16 +19,14 @@ public final class ResourceViews {
     }
 
     public static com.xmu.rbac.ddd.interfaces.rest.dto.UiResourceView ui(Ui u, List<Ui> values) {
-        com.xmu.rbac.ddd.interfaces.rest.dto.UiResourceView result =
-                cn.edu.xmu.clonefactory.util.CloneFactory.copy(
-                        new com.xmu.rbac.ddd.interfaces.rest.dto.UiResourceView(),
-                        com.xmu.rbac.ddd.application.UiResult.from(u));
-        result.setChildren(
-                values.stream()
-                        .filter(child -> u.id().equals(child.parentId()))
-                        .map(child -> ui(child, values))
-                        .toList());
-        return result;
+        List<com.xmu.rbac.ddd.interfaces.rest.dto.UiResourceView> children = values.stream()
+                .filter(child -> u.id().equals(child.parentId()))
+                .map(child -> ui(child, values))
+                .toList();
+        return cn.edu.xmu.clonefactory.util.CloneFactory.copy(
+                new com.xmu.rbac.ddd.interfaces.rest.dto.UiResourceView(null, null, null, null,
+                        null, null, null, null, null, null, null, children),
+                com.xmu.rbac.ddd.application.UiResult.from(u));
     }
 
     public static Map<String, Object> operation(ApiOperation o) {

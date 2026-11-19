@@ -132,7 +132,6 @@ systemId,operationId,method,path,permissionCode,requiredRole,category,uiResource
 2,createTerm,POST,/terms,TC,admin,administration,108,67
 2,updateTerm,PATCH,/terms/{termId},TE,admin,administration,109,68
 2,deleteTerm,DELETE,/terms/{termId},TD,admin,administration,110,69
-2,lookupIdentityUser,GET,/identity/users/{userId},TEC,admin,administration,107,137
 2,listTeachers,GET,/teachers,course:access,,administration,107,138
 2,createTeacher,POST,/teachers,TEC,admin,administration,111,139
 2,updateTeacher,PATCH,/teachers/{teacherId},TEE,admin,administration,112,140
@@ -221,3 +220,7 @@ systemId,operationId,method,path,permissionCode,requiredRole,category,uiResource
 2,cancelBooking,DELETE,/bookings/{bookingId},course:access,,oral,181,126
 2,getMyGrades,GET,/me/courses/{courseId}/grades,course:access,,grades,182,134
 2,downloadFile,GET,/files/{fileId},course:access,,files,183,135
+1,listIdentityDepartments,GET,/auth/departments,TEC,admin,统一身份鉴权,,
+1,listIdentityDepartmentUsers,GET,/auth/departments/{departmentId}/users,TEC,admin,统一身份鉴权,,
+1,lookupIdentityUser,GET,/auth/users/{userId},TEC,admin,统一身份鉴权,,
+2,courseLogin,POST,/login,PUBLIC,,课程登录,,

@@ -1,8 +1,7 @@
 diff --git a/backend/src/test/java/cn/edu/xmu/projectmgt/r2/R2CourseContractSupport.java b/backend/src/test/java/cn/edu/xmu/projectmgt/r2/R2CourseContractSupport.java
-index cbe517f..d129f17 100644
 --- a/backend/src/test/java/cn/edu/xmu/projectmgt/r2/R2CourseContractSupport.java
 +++ b/backend/src/test/java/cn/edu/xmu/projectmgt/r2/R2CourseContractSupport.java
-@@ -1179,6 +1179,7 @@ abstract class R2CourseContractSupport {
+@@ -1181,6 +1181,7 @@
      @Test
      @DisplayName("R2 源课程不存在时不能拷贝")
      void r2CannotCopyMissingSourceCourse() throws Exception {
@@ -10,15 +9,3 @@ index cbe517f..d129f17 100644
          TermEntity targetTerm = termJpaRepository.save(term(
                  "2053-2054 第一学期",
                  LocalDate.of(2053, 9, 1),
-diff --git a/backend/src/test/java/cn/edu/xmu/projectmgt/r3/R3ClassContractSupport.java b/backend/src/test/java/cn/edu/xmu/projectmgt/r3/R3ClassContractSupport.java
-index 221f35f..56a12cf 100644
---- a/backend/src/test/java/cn/edu/xmu/projectmgt/r3/R3ClassContractSupport.java
-+++ b/backend/src/test/java/cn/edu/xmu/projectmgt/r3/R3ClassContractSupport.java
-@@ -742,6 +742,7 @@ abstract class R3ClassContractSupport {
-         classTeacherAssignmentJpaRepository.save(classTeacherAssignment(teachingClass.getId(), classTeacher.getId()));
- 
-         mockMvc.perform(put(CLASS_TEACHERS_URL, teachingClass.getId())
-+                        .header("Authorization", cn.edu.xmu.projectmgt.shared.TestUnifiedIdentityClient.NO_PERMISSION_TOKEN)
-                         .contentType(MediaType.APPLICATION_JSON)
-                         .content("""
-                                 {"teacherIds": []}

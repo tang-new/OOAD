@@ -1,12 +1,12 @@
 diff --git a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/SecurityCurrentTeacherProvider.java b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/SecurityCurrentTeacherProvider.java
-index 9c6a26e..d3bf5cc 100644
 --- a/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/SecurityCurrentTeacherProvider.java
 +++ b/backend/src/main/java/cn/edu/xmu/projectmgt/infrastructure/identity/SecurityCurrentTeacherProvider.java
-@@ -37,6 +37,11 @@ public class SecurityCurrentTeacherProvider implements CurrentTeacherProvider {
+@@ -37,6 +37,12 @@
       */
      @Override
      public Optional<CurrentTeacherResult> findCurrentTeacher() {
-+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
++        org.springframework.security.core.Authentication authentication =
++                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
 +        if (authentication instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 +                && authentication.getAuthorities().stream().noneMatch(item -> item.getAuthority().equals("ROLE_teacher"))) {
 +            return Optional.empty();

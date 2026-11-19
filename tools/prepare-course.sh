@@ -2,7 +2,11 @@
 # Export only approved tracked directories; never export the upstream root roster.
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-HASH=fde08d5dd417abc543145aff33ca8378deb9ca36
+LOCK="$ROOT/course-integration/UPSTREAM.lock"
+HASH=$(sed -n 's/^commit=//p' "$LOCK")
+URL=$(sed -n 's/^url=//p' "$LOCK")
+[[ "$HASH" =~ ^[0-9a-f]{40}$ && "$URL" == https://gitee.com/mingqcn/course-project-mgt.git ]] ||
+ { echo 'Invalid course source lock' >&2; exit 1; }
 CACHE=${COURSE_CACHE:-$ROOT/.cache/course-source}
 mkdir -p "$CACHE"
 if [[ -n ${COURSE_SOURCE:-} ]]; then SOURCE=$COURSE_SOURCE; else
@@ -11,7 +15,7 @@ if [[ -n ${COURSE_SOURCE:-} ]]; then SOURCE=$COURSE_SOURCE; else
  # successful retrieval still must pass the exact commit check below.
  if [[ ! -d "$SOURCE/.git" ]]; then
   git init -q "$SOURCE"
-  git -C "$SOURCE" remote add origin https://gitee.com/mingqcn/course-project-mgt.git
+  git -C "$SOURCE" remote add origin "$URL"
  fi
  fetched=false
  for attempt in 1 2 3; do
@@ -27,7 +31,7 @@ git -C "$SOURCE" cat-file -e "$HASH^{commit}"
 BUILD="$CACHE/prepared"
 case "$BUILD/" in "$SOURCE/"*) echo 'Build cache must not modify the reference checkout' >&2; exit 1;; esac
 rm -rf "$BUILD"; mkdir -p "$BUILD"
-git -C "$SOURCE" archive "$HASH" backend api prototype LICENSE | tar -xf - -C "$BUILD"
+git -C "$SOURCE" archive "$HASH" backend api prototype deploy/stack.yml LICENSE | tar -xf - -C "$BUILD"
 # No roster, screenshot, uploaded fixture, local environment or upstream node_modules enters build context.
 rm -rf "$BUILD/prototype/screenshots" "$BUILD/prototype/node_modules" "$BUILD/prototype/dist"
 find "$BUILD" -type f \( -iname '*.xlsx' -o -name '.env*' \) -delete
