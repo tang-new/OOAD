@@ -77,9 +77,13 @@ jobs:
       - run: bash mvnw -B -ntp verify -DskipTests
         if: ${{ !cancelled() && steps.http-acceptance.outcome != 'skipped' }}
       - name: Verify actual compiled UML on this runner
+        env:
+          GRAPHVIZ_DOT: /usr/bin/dot
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y graphviz fonts-noto-cjk
+          "$GRAPHVIZ_DOT" -V
+          printf 'digraph { test [pos="0,0!"] }\n' | "$GRAPHVIZ_DOT" -Kneato -n2 -Tplain
           python tools/render-rbac1-design.test.py
           python tools/render-rbac1-design.py --strict-compiled --runtime-evidence=archived
           python tools/render-rbac1-design.py --check --runtime-evidence=archived

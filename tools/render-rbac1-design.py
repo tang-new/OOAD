@@ -8,6 +8,7 @@ import argparse, datetime, hashlib, html, json, os, re, shutil, subprocess, temp
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'docs/design'
 VERSION = '1.2025.2'
+GRAPHVIZ_DOT = os.environ.get('GRAPHVIZ_DOT') or 'dot'
 INDEX = {}; WARNINGS = []; FIGURES = []; REFS = []; CURRENT_FIGURE = None
 CALL_CHAINS = []; INPUTS = {}
 EXTRA_INPUTS = ['docs/final-acceptance.adoc', 'docs/acceptance/local-results.json', 'docs/acceptance/shared-http.json', 'tools/render-rbac1-design.test.py', 'rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java', 'pom.xml', '.gitattributes', 'tools/render-rbac1-design.scenarios.py', 'rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql', 'docker-compose.yml', 'deploy/full-stack.sh', 'rbac-web/nginx.conf', 'deploy/full-course-nginx.conf', 'deploy/deployment-evidence.json', 'course-integration/REAL-CENTERS-VERIFICATION.md']
@@ -150,7 +151,7 @@ def write(name,ext,content):
 def dot_render(name,body,engine='dot'):
     path=write(name,'dot',body)
     for fmt in ['svg','png']:
-        args=['dot','-K'+engine]
+        args=[GRAPHVIZ_DOT,'-K'+engine]
         if engine=='neato': args+=['-n2']
         run(args+['-T'+fmt,path,'-o',OUT/(name+'.'+fmt)])
     FIGURES.append(name)
@@ -204,7 +205,7 @@ def class_diagram(name,mode,nodes,edges):
     rows.extend(['"_top" [pos="0,480!",shape=point,width=0,height=0,style=invis,label=""];','"_bottom" [pos="0,-480!",shape=point,width=0,height=0,style=invis,label=""];'])
     body='digraph G { graph [overlap=true,splines=line,outputorder=edgesfirst,pad=0.3,bgcolor="white",label="'+name+' — current source snapshot",labelloc=t]; node [shape=plain,fontname="Microsoft YaHei",fontsize=15]; edge [color="#49627b",arrowsize=1.2,fontname="Microsoft YaHei"];\n'+'\n'.join(rows)+'\n}'
     dot_render(name,body,'neato')
-    plain=run(['dot','-Kneato','-n2','-Tplain',OUT/(name+'.dot')])
+    plain=run([GRAPHVIZ_DOT,'-Kneato','-n2','-Tplain',OUT/(name+'.dot')])
     boxes={}
     for line in plain.splitlines():
         fields=line.split()
