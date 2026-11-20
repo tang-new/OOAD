@@ -78,7 +78,7 @@ public class AuditApplicationService {
             String result,
             String reason) {
         List<String> roles = List.of();
-        if (actor != null && "ACTIVE".equals(actor.status())) {
+        if (actor != null && actor.status() == User.Status.ACTIVE) {
             try {
                 if (grants.systemEnabled(system)) {
                     AuthorizationPolicy.Effective effective =
@@ -277,6 +277,6 @@ public class AuditApplicationService {
     public boolean actorDeleted(AuditFact fact) {
         if (fact.actorSubject() == null) return false;
         AuthorizationRepository.Identity actor = grants.identity(fact.actorSubject());
-        return actor == null || actor.status().equals("DELETED");
+        return actor == null || actor.status() == User.Status.DELETED;
     }
 }

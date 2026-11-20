@@ -44,7 +44,7 @@ class AuditRoleSnapshotTest {
                         mock(PlatformTransactionManager.class));
         AuthorizationRepository.Identity actor =
                 new AuthorizationRepository.Identity(
-                        7, "u7", "u7", "用户", "7", "unused", 1, "ACTIVE", 0);
+                        7, "u7", "u7", "用户", "7", "unused", 1, User.Status.ACTIVE, 0);
         AuditFact success =
                 audits.local(actor, "course-project-management", "CHANGE", "目标", "SUCCESS", null);
         AuditFact denied =
@@ -86,7 +86,7 @@ class AuditRoleSnapshotTest {
                         mock(PlatformTransactionManager.class));
         AuthorizationRepository.Identity actor =
                 new AuthorizationRepository.Identity(
-                        7, "u7", "u7", "用户", "7", "unused", 1, "ACTIVE", 0);
+                        7, "u7", "u7", "用户", "7", "unused", 1, User.Status.ACTIVE, 0);
         when(grants.systemEnabled("missing"))
                 .thenThrow(new DomainException(404, "SYSTEM_NOT_FOUND"));
         assertThat(audits.local(actor, "missing", "DENY", "目标", "DENIED", null).actorRoles())
@@ -98,7 +98,7 @@ class AuditRoleSnapshotTest {
                 .hasMessageContaining("DB_UNAVAILABLE");
         AuthorizationRepository.Identity disabled =
                 new AuthorizationRepository.Identity(
-                        7, "u7", "u7", "用户", "7", "unused", 1, "DISABLED", 0);
+                        7, "u7", "u7", "用户", "7", "unused", 1, User.Status.DISABLED, 0);
         assertThat(audits.local(disabled, "offline", "DENY", "目标", "DENIED", null).actorRoles())
                 .isEmpty();
         assertThat(audits.local(null, "offline", "DENY", "目标", "DENIED", null).actorRoles())

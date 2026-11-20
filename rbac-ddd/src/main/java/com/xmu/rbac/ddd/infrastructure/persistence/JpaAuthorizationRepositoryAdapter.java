@@ -245,7 +245,7 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
                         e.getNo(),
                         e.getPasswordHash(),
                         e.getDepartmentId(),
-                        e.getStatus(),
+                        User.Status.valueOf(e.getStatus()),
                         e.getTokenVersion());
     }
 

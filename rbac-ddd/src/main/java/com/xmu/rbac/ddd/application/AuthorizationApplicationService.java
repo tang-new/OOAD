@@ -33,7 +33,7 @@ public class AuthorizationApplicationService {
         AuthorizationRepository.Identity user = repository.identity(principal.subject());
         DomainException.require(
                 user != null
-                        && user.status().equals("ACTIVE")
+                        && user.status() == User.Status.ACTIVE
                         && user.tokenVersion() == principal.tokenVersion()
                         && !repository.revoked(principal.jti()),
                 401,
@@ -55,7 +55,7 @@ public class AuthorizationApplicationService {
         boolean enabled = repository.systemEnabled(system);
         AuthorizationRepository.Identity target = repository.identity(userId);
         DomainException.require(target != null, 404, "USER_NOT_FOUND");
-        if (!"ACTIVE".equals(target.status())) return "USER_DISABLED";
+        if (target.status() != User.Status.ACTIVE) return "USER_DISABLED";
         return enabled ? null : "SYSTEM_DISABLED";
     }
 
@@ -77,7 +77,7 @@ public class AuthorizationApplicationService {
             DomainException.require(repository.systemEnabled(system), 401, "SYSTEM_DISABLED");
             AuthorizationRepository.Identity target = repository.identity(userId);
             DomainException.require(target != null, 404, "USER_NOT_FOUND");
-            boolean active = "ACTIVE".equals(target.status());
+            boolean active = target.status() == User.Status.ACTIVE;
             AuthorizationPolicy.Effective result =
                     active && !transaction ? cache.get(system, userId, version) : null;
             if (!active)
@@ -138,12 +138,12 @@ public class AuthorizationApplicationService {
             DomainException.require(registered != null, 404, "API_OPERATION_NOT_FOUND");
             AuthorizationRepository.Identity target = repository.identity(user);
             boolean allowed = false;
-            if (target != null && "ACTIVE".equals(target.status())) {
+            if (target != null && target.status() == User.Status.ACTIVE) {
                 AuthorizationPolicy.Effective effective = effective(user, system);
                 target = repository.identity(user);
                 allowed =
                         target != null
-                                && "ACTIVE".equals(target.status())
+                                && target.status() == User.Status.ACTIVE
                                 && policy.allows(registered, effective);
             }
             if (version == repository.version()) return allowed;

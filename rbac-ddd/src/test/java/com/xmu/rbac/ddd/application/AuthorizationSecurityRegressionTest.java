@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.*;
 
 /** 五项安全审查中的授权回归；latch 确定性安排撤权和缓存命中时序。 */
 class AuthorizationSecurityRegressionTest {
-    private AuthorizationRepository.Identity user(String status) {
+    private AuthorizationRepository.Identity user(User.Status status) {
         return new AuthorizationRepository.Identity(
                 7, "u7", "u7", "用户", "7", "unused", 1, status, 0);
     }
@@ -30,7 +30,7 @@ class AuthorizationSecurityRegressionTest {
     private AuthorizationRepository repository() {
         AuthorizationRepository r = mock(AuthorizationRepository.class);
         when(r.systemEnabled("s")).thenReturn(true);
-        when(r.identity(7L)).thenReturn(user("ACTIVE"));
+        when(r.identity(7L)).thenReturn(user(User.Status.ACTIVE));
         when(r.assignments(7, "s")).thenReturn(Set.of(2L));
         when(r.hierarchy("s")).thenReturn(new RoleHierarchy(List.of(role()), Set.of()));
         when(r.permissions("s")).thenReturn(List.of(permission()));
@@ -78,7 +78,7 @@ class AuthorizationSecurityRegressionTest {
         AuthorizationRepository r = repository();
         AuthorizationApplicationService service =
                 new AuthorizationApplicationService(r, mock(EffectiveCache.class));
-        for (String status : List.of("DISABLED", "DELETED")) {
+        for (User.Status status : List.of(User.Status.DISABLED, User.Status.DELETED)) {
             when(r.identity(7L)).thenReturn(user(status));
             assertThat(service.effective(7, "s").permissions()).isEmpty();
             when(r.operation("s", "publicOp"))

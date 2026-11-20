@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.xmu.rbac.ddd.domain.DomainException;
+import com.xmu.rbac.ddd.domain.User;
 import com.xmu.rbac.ddd.domain.port.AuthorizationRepository;
 import com.xmu.rbac.ddd.domain.port.EffectiveCache;
 import com.xmu.rbac.ddd.domain.port.TokenProvider;
@@ -34,7 +35,7 @@ class AuthorizationTokenAudienceTest {
                                 "FIX-1",
                                 "unused-fixture-hash",
                                 1,
-                                "ACTIVE",
+                                User.Status.ACTIVE,
                                 1));
     }
 
@@ -60,9 +61,9 @@ class AuthorizationTokenAudienceTest {
     @Test
     void simulationReportsTargetStateWithoutRejectingTheCaller() {
         when(repository.systemEnabled("course")).thenReturn(true);
-        when(repository.identity(7L)).thenReturn(new AuthorizationRepository.Identity(7, "fixture-subject", "fixture", "Fixture", "FIX-7", "unused", 1, "DISABLED", 0));
+        when(repository.identity(7L)).thenReturn(new AuthorizationRepository.Identity(7, "fixture-subject", "fixture", "Fixture", "FIX-7", "unused", 1, User.Status.DISABLED, 0));
         assertThat(application.unavailableReason(7L, "course")).isEqualTo("USER_DISABLED");
-        when(repository.identity(7L)).thenReturn(new AuthorizationRepository.Identity(7, "fixture-subject", "fixture", "Fixture", "FIX-7", "unused", 1, "ACTIVE", 0));
+        when(repository.identity(7L)).thenReturn(new AuthorizationRepository.Identity(7, "fixture-subject", "fixture", "Fixture", "FIX-7", "unused", 1, User.Status.ACTIVE, 0));
         assertThat(application.unavailableReason(7L, "course")).isNull();
         when(repository.systemEnabled("course")).thenReturn(false);
         assertThat(application.unavailableReason(7L, "course")).isEqualTo("SYSTEM_DISABLED");
