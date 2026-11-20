@@ -68,6 +68,6 @@ public interface AuthorizationRepository {
             String no,
             String passwordHash,
             long departmentId,
-            String status,
+            User.Status status,
             long tokenVersion) {}
 }

@@ -3,6 +3,7 @@ package com.xmu.rbac.ddd.application;
 import com.xmu.rbac.ddd.domain.AuthorizationPolicy;
 import com.xmu.rbac.ddd.domain.DomainException;
 import com.xmu.rbac.ddd.domain.Permission;
+import com.xmu.rbac.ddd.domain.User;
 import com.xmu.rbac.ddd.domain.port.AuthorizationRepository;
 import com.xmu.rbac.ddd.domain.port.DirectoryRepository;
 import com.xmu.rbac.ddd.domain.port.DirectoryRepository.IdentityDepartment;
@@ -85,7 +86,9 @@ public class IntegrationIdentityApplicationService {
         requireTeacherAdministration(principal);
         AuthorizationRepository.Identity target = repository.identity(subject);
         DomainException.require(
-                target != null && "ACTIVE".equals(target.status()), 404, "IDENTITY_USER_NOT_FOUND");
+                target != null && target.status() == User.Status.ACTIVE,
+                404,
+                "IDENTITY_USER_NOT_FOUND");
         return new IdentityResult(
                 target.subject(), target.name(), target.no() == null ? "" : target.no());
     }

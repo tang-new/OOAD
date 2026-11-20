@@ -26,7 +26,7 @@ class IntegrationIdentityApplicationServiceTest {
                     Instant.now().plusSeconds(300));
     private final AuthorizationRepository.Identity actor =
             new AuthorizationRepository.Identity(
-                    7, "subject", "user", "教师", "7", "unused", 2, "ACTIVE", 0);
+                    7, "subject", "user", "教师", "7", "unused", 2, User.Status.ACTIVE, 0);
     private final IntegrationIdentityApplicationService service =
             new IntegrationIdentityApplicationService(
                     authorization, repository, directory, "trusted-test-key");
@@ -133,7 +133,7 @@ class IntegrationIdentityApplicationServiceTest {
                                 null,
                                 "never-exposed",
                                 3,
-                                "ACTIVE",
+                                User.Status.ACTIVE,
                                 5));
         assertThat(service.lookup(principal, "trusted-test-key", "target"))
                 .isEqualTo(
@@ -150,7 +150,7 @@ class IntegrationIdentityApplicationServiceTest {
         when(repository.identity("deleted"))
                 .thenReturn(
                         new AuthorizationRepository.Identity(
-                                8, "deleted", "user", "姓名", "8", "unused", 3, "DELETED", 5));
+                                8, "deleted", "user", "姓名", "8", "unused", 3, User.Status.DELETED, 5));
         assertThatThrownBy(() -> service.lookup(principal, "trusted-test-key", "deleted"))
                 .hasMessageContaining("IDENTITY_USER_NOT_FOUND");
     }

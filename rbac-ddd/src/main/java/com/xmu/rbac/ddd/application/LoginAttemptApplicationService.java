@@ -34,7 +34,7 @@ public class LoginAttemptApplicationService {
         if (state == null) return null;
         AuthorizationRepository.Identity user = state.identity();
         Instant now = Instant.now();
-        boolean active = "ACTIVE".equals(user.status());
+        boolean active = user.status() == User.Status.ACTIVE;
         boolean matches =
                 active
                         && !policy.locked(state.lockedUntil(), now)
