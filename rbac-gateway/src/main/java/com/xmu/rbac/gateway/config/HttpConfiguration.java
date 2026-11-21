@@ -1,6 +1,11 @@
 package com.xmu.rbac.gateway.config;
 
 import com.xmu.rbac.gateway.IdentityClient;
+import com.xmu.rbac.gateway.CourseUpstream;
+import com.xmu.rbac.gateway.ProxyClient;
+import com.xmu.rbac.gateway.RouteRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +18,17 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 /** 所有出站连接固定可信配置、有限超时、无重定向。 */
 @Configuration
 public class HttpConfiguration {
+    @Bean
+    RouteRegistry routeRegistry(ObjectMapper mapper) throws IOException {
+        return new RouteRegistry(mapper);
+    }
+
+    @Bean
+    ProxyClient proxyClient(GatewayProperties properties, HttpClient client) {
+        return new ProxyClient(new CourseUpstream(properties.courseBaseUrl(), properties.timeoutMs(),
+                properties.maxRequestBytes(), properties.maxResponseBytes()), client);
+    }
+
     @Bean
     HttpClient httpClient(GatewayProperties properties) {
         return HttpClient.newBuilder().connectTimeout(Duration.ofMillis(properties.timeoutMs()))

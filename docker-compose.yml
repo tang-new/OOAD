@@ -38,6 +38,7 @@ services:
       args: {MODULE: '${MODULE:-rbac-structured}'}
     environment:
       SERVER_PORT: ${RBAC_PORT:-8081}
+      COURSE_UPSTREAM: "${COURSE_UPSTREAM:-http://course-backend:${COURSE_PORT:-8080}}"
       SPRING_CONFIG_IMPORT: configtree:/run/secrets/
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/rbac_center?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: rbac_center
@@ -76,24 +77,6 @@ services:
       rollback_config: {order: stop-first, parallelism: 1}
       restart_policy: {condition: on-failure, delay: 10s}
       resources: {limits: {memory: 1200M}}
-  rbac-gateway:
-    image: ${REGISTRY:-}rbac-gateway:${TAG:-local}
-    build:
-      context: .
-      args: {MODULE: rbac-gateway}
-    environment:
-      SERVER_PORT: ${GATEWAY_PORT:-8090}
-      IDENTITY_BASE_URL: http://rbac-backend:${RBAC_PORT:-8081}
-      COURSE_BASE_URL: http://course-backend:${COURSE_PORT:-8080}
-      GATEWAY_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
-      GATEWAY_JWK_SET_URI: http://rbac-backend:${RBAC_PORT:-8081}/.well-known/jwks.json
-      GATEWAY_ALLOW_HTTP: 'true'
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: ${SECURITY_LOG_LEVEL:-INFO}
-    networks: [private]
-    deploy:
-      replicas: 1
-      restart_policy: {condition: on-failure, delay: 10s}
-      resources: {limits: {memory: 768M}}
   rbac-web:
     image: ${REGISTRY:-}rbac-web:${TAG:-local}
     build: {context: ./rbac-web}
@@ -113,19 +96,13 @@ services:
   course-backend:
     image: ${REGISTRY:-}course-backend:${TAG:-local}
     build:
-      context: ${COURSE_BUILD:-.cache/course-source/prepared}/backend
+      context: ${COURSE_BUILD:-.cache/course-source/original}/backend
       dockerfile: ${COURSE_DOCKERFILE:-../../../../deploy/full-course-backend.Dockerfile}
     environment:
       SERVER_PORT: ${COURSE_PORT:-8080}
       SPRING_CONFIG_IMPORT: configtree:/run/secrets/
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/rbac_course?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: rbac_course
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      RBAC_JWT_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
-      SPRING_PROFILES_ACTIVE: integration
-      IDENTITY_ISSUER: ${JWT_ISSUER:-https://identity.rbac1.local}
-      IDENTITY_JWK_SET_URI: http://rbac-backend:${RBAC_PORT:-8081}/.well-known/jwks.json
       IDENTITY_BASE_URL: http://rbac-backend:${RBAC_PORT:-8081}
       DB_HOST: mysql
       DB_PORT: 3306
@@ -139,8 +116,6 @@ services:
     secrets:
       - source: course-db-password
         target: spring.datasource.password
-      - source: audit-service-key
-        target: app.integration.service-key
       - source: course-db-password
         target: DB_PASSWORD
     networks: [private]
@@ -155,7 +130,7 @@ services:
       dockerfile: deploy/full-course-web.Dockerfile
     environment:
       RBAC_PORT: ${RBAC_PORT:-8081}
-      GATEWAY_PORT: ${GATEWAY_PORT:-8090}
+      COURSE_PORT: ${COURSE_PORT:-8080}
     configs:
       - source: course-nginx
         target: /etc/nginx/templates/default.conf.template

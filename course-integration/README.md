@@ -5,7 +5,7 @@ Archived verification for the previous pin: [REAL-CENTERS-VERIFICATION.md](REAL-
 ## Source / ownership
 
 Pinned MIT upstream: `https://gitee.com/mingqcn/course-project-mgt.git`, commit
-`7f27e605f37f540253c3f2ff73227424250a4ec8`. Original MIT notice is
+`e9a6dff454cc6af23297458320f9c58d469850c9`. Original MIT notice is
 `LICENSE.upstream` and remains `LICENSE` in the prepared source/runtime image.
 The reference checkout is read-only. The prepare command archives approved tracked
 paths from the fixed commit, then applies reviewable patches and the overlay. It never

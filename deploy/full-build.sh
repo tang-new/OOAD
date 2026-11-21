@@ -22,15 +22,14 @@ if (( _http_status != 0 || _verify_status != 0 )); then
 fi
 (cd rbac-web && npm ci --no-audit --no-fund && npm run typecheck && npm run test:coverage && npm run build)
 (cd rbac-web && npx playwright install chromium && E2E_MODULE=rbac-structured npm run e2e && E2E_MODULE=rbac-ddd npm run e2e)
-bash tools/prepare-course.sh --build
+bash tools/prepare-course.sh --original --build
 # Course integration owns its frontend and backend artifact layout; fail rather than fabricate.
 [[ -f "$COURSE_BUILD/backend/pom.xml" && -f course-integration/frontend/package.json ]]
 docker build --build-arg MODULE="$MODULE" -t "${REGISTRY}${MODULE}:${TAG}" .
-docker build --build-arg MODULE=rbac-gateway -t "${REGISTRY}rbac-gateway:${TAG}" .
 docker build -t "${REGISTRY}rbac-web:${TAG}" rbac-web
 docker build -f deploy/full-course-backend.Dockerfile -t "${REGISTRY}course-backend:${TAG}" "$COURSE_BUILD/backend"
 docker build -f deploy/full-course-web.Dockerfile -t "${REGISTRY}course-web:${TAG}" .
 if [[ ${1:-} == push ]]; then
  [[ -n "$REGISTRY" ]] || { echo 'REGISTRY required for push' >&2; exit 1; }
- for image in "$MODULE" rbac-gateway rbac-web course-backend course-web; do docker push "${REGISTRY}${image}:${TAG}"; done
+ for image in "$MODULE" rbac-web course-backend course-web; do docker push "${REGISTRY}${image}:${TAG}"; done
 fi

@@ -5,15 +5,17 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 class Deployment(unittest.TestCase):
  def setUp(self):
   self.doc=yaml.safe_load((ROOT/'docker-compose.yml').read_text(encoding='utf8'))
- def test_seven_real_services_and_private_ports(self):
+ def test_six_services_and_private_ports(self):
   services=self.doc['services']
-  self.assertEqual(set(services),{'mysql','redis','rbac-backend','rbac-gateway','rbac-web','course-backend','course-web'})
+  self.assertEqual(set(services),{'mysql','redis','rbac-backend','rbac-web','course-backend','course-web'})
   for name,service in services.items():
    if name not in ('rbac-web','course-web'): self.assertNotIn('ports',service)
    self.assertEqual(service['deploy'].get('replicas',1),1)
   self.assertNotIn('mysql-root-password',str(services['rbac-backend']))
   self.assertNotIn('jwt-private',str(services['course-backend']))
-  self.assertNotIn('audit-service-key',str(services['rbac-gateway']))
+  self.assertIn('http://course-backend:',services['rbac-backend']['environment']['COURSE_UPSTREAM'])
+  self.assertNotIn('SPRING_PROFILES_ACTIVE',services['course-backend']['environment'])
+  self.assertIn('course-source/original',services['course-backend']['build']['context'])
  def test_secrets_are_file_backed_not_literals(self):
   for config in self.doc['secrets'].values(): self.assertIn('file',config)
   center=str(self.doc['services']['rbac-backend'])
@@ -25,12 +27,15 @@ class Deployment(unittest.TestCase):
    self.assertIn('(integration|identity)',value);self.assertIn('return 403',value)
    self.assertIn('listen 443 ssl',value);self.assertNotIn('$http_host',value)
    self.assertIn('proxy_set_header X-Audit-Service-Key ""',value)
- def test_course_proxy_sends_exact_login_and_raw_api_paths_to_gateway(self):
+ def test_course_proxy_routes_login_and_protected_business_separately(self):
   config=(ROOT/'deploy/full-course-nginx.conf').read_text(encoding='utf8')
-  for location in ['location = /login', 'location /api/']:
+  for location,upstream in [('location ~ ^/(api/)?login$', 'course-backend:${COURSE_PORT}'),
+                            ('location /api/', 'rbac-backend:${RBAC_PORT}')]:
    block=config.split(location+' {',1)[1].split('\n    }',1)[0]
-   self.assertIn('proxy_pass http://rbac-gateway:\${GATEWAY_PORT};'.replace('\\$', '$'),block)
+   self.assertIn('proxy_pass http://'+upstream+';',block)
    self.assertIn('proxy_set_header X-Audit-Service-Key ""',block)
+  self.assertIn('rewrite ^/api/login$ /login break;',config)
+  self.assertIn('location ^~ /api/v1/ { return 404; }',config)
  def test_explicit_environment_precedes_dotenv_and_rejects_module(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=pathlib.Path(tmp);(root/'deploy').mkdir()

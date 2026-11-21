@@ -16,5 +16,5 @@ JWT 仍使用身份与有效期声明，/auth/me.permissions 仅返回 UI 权限
 这样课程组长无CC仍能经过teacher全局准入后由Service判定，非组长没有真实CC不能凭全局teacher资格越权。
 服务密钥与用户身份缺一不可；客户端伪造X-Forwarded/X-Rbac/operationId头不得成为身份源。
 
-固定教师来源7f27e605f37f540253c3f2ff73227424250a4ec8，MIT许可与补丁保留，不将真实选课名单带入源码/镜像。
+固定教师来源e9a6dff454cc6af23297458320f9c58d469850c9，MIT许可与补丁保留，不将真实选课名单带入源码/镜像。
 业务事务提交后，课程集成过滤器用同一 requestId 同步写入脱敏审计。传输故障可重试一次，未确认时返回 HTTP 503 AUDIT_UNCONFIRMED。

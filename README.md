@@ -1,6 +1,6 @@
 # RBAC 统一身份与权限中心
 
-厦门大学 OOAD 课程设计：**结构化 + 独立 DDD 两套 RBAC1 后端**，共用严格契约和同一 Vue3 权限中心；真实教师课程系统经固定上游网关接入。
+厦门大学 OOAD 课程设计：**结构化 + 独立 DDD 两套 RBAC1 后端**，共用严格契约和同一 Vue3 权限中心。权限中心校验课程操作权限，再转发到老师原版课程后端。
 
 > **此前版本的本地交付验收记录**：188项后端JUnit、双后端25+25及T21共51项真库验收、38项前端单测、PC/手机4例、教师原440项与真实课程12例。两轮七服务本地Swarm验证完成，最终DDD。完整范围、hash和未执行的外部事项见[最终验收](docs/final-acceptance.adoc)，不把本地通过冒充外部服务器或GitHub CI成功。
 
@@ -29,11 +29,12 @@
 rbac-contract/      唯一 OpenAPI、V1–V4、课程 80 操作目录；不含共享业务实现
 rbac-structured/    Controller → 无状态 Service → Spring Data/JPA/Redis Mapper
 rbac-ddd/           独立纯JDK领域、应用编排、端口、JPA/Redis适配器及REST
-rbac-gateway/       JWT/JWKS、逐请求中心决策、真实路由匹配和固定课程上游
+rbac-course-proxy/  课程路由匹配、请求限额和固定上游转发
+rbac-gateway/       旧独立网关，供已有测试和兼容运行
 rbac-web/           同一 Vue3/TypeScript 权限中心，支持选择任一后端
 course-integration/ 固定教师源码的补丁/覆盖层、真实课程前端及测试
                                    （不复制完整上游仓库或真实人员名单）
-deploy/            同一服务名选择后端、七服务隔离部署和验证工具
+deploy/            同一服务名选择后端、六服务隔离部署和验证工具
 docs/design/       当前可维护图源、SVG/PNG与源码/方法索引
 tools/             合同生成、CloneFactory、共享真库验收和设计核验
 ```
@@ -83,7 +84,19 @@ shared HTTP 使用本次唯一新库、私有临时 jar 快照和自有 Redis na
 
 ## 部署与安全
 
-`MODULE=rbac-structured|rbac-ddd` 选择一个中心后端；前端经稳定服务名 `rbac-backend` 代理。七服务为中心前后端、课程前后端、网关、MySQL、Redis；只在两边缘发布TLS，数据库及业务后端不公开端口。
+`MODULE=rbac-structured|rbac-ddd` 选择一个中心后端。六服务包括中心前后端、课程前后端、MySQL 和 Redis。课程边缘将 `/api/*` 交给权限中心鉴权转发，课程登录直接交给课程后端。只在两边缘发布 TLS。
+
+本机从 IDEA 运行时，在权限中心的本地配置中设 `course.upstream=http://127.0.0.1:8084`，课程前端代理把业务 `/api/*` 指到权限中心（DDD 示例端口 `8083`）。课程后端的 `IDENTITY_BASE_URL` 指向同一个权限中心。Docker 构建使用 `tools/prepare-course.sh --original --build` 生成未应用接入补丁的课程后端。
+
+#### 服务器 DDD 与本机课程项目联调
+
+服务器单独部署权限中心时，使用 [DDD 服务器 Docker Compose](deploy/ddd-server.compose.yml)，配置和启动步骤见 [服务器部署手册](docs/ddd-server.md)。
+
+DDD 和老师原版课程后端都部署在服务器时，见 [双后端部署步骤及教师版本](部署.md)。
+
+- 在课程前端的 IDEA npm 运行配置或 `.env.development.local` 设置 `VITE_RBAC_PROXY_TARGET` 为服务器 DDD 的 HTTPS 入口。默认本机课程登录仍走 `http://127.0.0.1:8084`，可用 `VITE_COURSE_PROXY_TARGET` 覆盖。老师前端如果是新克隆的，需先配置本地 Vite 代理读取这两个变量，将 `/api/login` 改写为 `/login` 发给本地课程后端，其他 `/api/*` 和 `/auth/*` 交给 DDD。OOAD 自带工作台直接使用 `/login`。
+- 老师原版后端在本地运行，将 `IDENTITY_BASE_URL` 设为同一个服务器入口，并继续使用本地课程数据库。服务器权限中心数据库需创建与本地课程名单对应的学生和教师账号，分配课程角色并核对已有的 `subject` 绑定。
+- 服务器 DDD 的 `COURSE_UPSTREAM` 设为 **DDD 进程或容器可访问的本地课程后端地址**，例如通过 VPN 提供的私网地址。服务器与本地电脑之间需要双向可达。服务器上的 `127.0.0.1:8084` 指向服务器自己。
 
 运行密钥、数据库口令及首次bootstrap密码由被忽略的运行目录和Swarm secrets提供；没有固定公开root密码。bootstrap只用于未初始化root；应在首次使用前改密，改密会失效旧令牌。本地自签TLS不等于公网可信证书。
 

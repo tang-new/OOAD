@@ -40,7 +40,7 @@ test('M2: 同一部署定义默认结构化后端，并可选择独立DDD镜像'
   assert.match(backend, /SERVER_PORT: \$\{RBAC_PORT:-8081\}/)
   assert.match(web, /RBAC_PORT: \$\{RBAC_PORT:-8081\}/)
   // Swarm readiness is not guaranteed by depends_on; isolation is a real boundary.
-  for (const name of ['rbac-backend', 'rbac-gateway', 'course-backend', 'mysql', 'redis']) {
+  for (const name of ['rbac-backend', 'course-backend', 'mysql', 'redis']) {
     assert.ok(service(name), name)
     assert.doesNotMatch(service(name), /^    ports:/m, `${name} must not publish private ports`)
     assert.match(service(name), /networks: \[private\]/)

@@ -22,7 +22,7 @@ const java=join(javaHome,'bin',process.platform==='win32'?'java.exe':'java');
 execFileSync(java,['-version'],{env:hostEnvironment(process.env),stdio:['ignore','pipe','pipe']});
 const passwords={center:process.env.REAL_CENTER_DB_PASSWORD,course:process.env.REAL_COURSE_DB_PASSWORD};
 assert(Object.values(passwords).every(x=>typeof x==='string'&&x.length),'Explicit dedicated center/course MySQL passwords required');
-const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-gateway-course-v1',startedAt:new Date().toISOString(),directory:output,upstream:'7f27e605f37f540253c3f2ff73227424250a4ec8',modules:{}};
+const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-gateway-course-v1',startedAt:new Date().toISOString(),directory:output,upstream:'e9a6dff454cc6af23297458320f9c58d469850c9',modules:{}};
 let interrupted=false;for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>{interrupted=true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));const hash=b=>createHash('sha256').update(b).digest('hex');
 async function port(){return new Promise((ok,no)=>{const s=net.createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p))})})}

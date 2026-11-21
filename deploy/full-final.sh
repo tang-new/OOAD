@@ -14,11 +14,11 @@ mkdir -p "$FINAL_RUN_DIR"
 # This must succeed before any image is built or any service is changed.
 python deploy/full-final-gate.py --shared-report "$SHARED_REPORT" --reactor-log "$REACTOR_LOG" --output "$FINAL_RUN_DIR/prerequisites.json"
 # Every final-local tag is immutable: never silently overwrite a prior attempt's images.
-for image in rbac-structured rbac-ddd rbac-gateway rbac-web course-backend course-web; do
+for image in rbac-structured rbac-ddd rbac-web course-backend course-web; do
  if docker image inspect "${REGISTRY}${image}:${TAG}" >/dev/null 2>&1; then echo 'Final-local tag already exists; choose a fresh local-final-* tag' >&2; exit 1; fi
 done
 # Canonical Dockerfile selection is deliberately exact, not a wildcard.
-for module in rbac-structured rbac-ddd rbac-gateway; do
+for module in rbac-structured rbac-ddd; do
  docker build --build-arg MODULE="$module" -t "${REGISTRY}${module}:${TAG}" . > "$FINAL_RUN_DIR/$module-image.log" 2>&1
 done
 docker build -t "${REGISTRY}rbac-web:${TAG}" rbac-web > "$FINAL_RUN_DIR/rbac-web-image.log" 2>&1

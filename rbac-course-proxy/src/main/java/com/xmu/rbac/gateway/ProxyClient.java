@@ -1,8 +1,6 @@
 package com.xmu.rbac.gateway;
 
-import com.xmu.rbac.gateway.config.GatewayProperties;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -16,14 +14,13 @@ import java.util.Map;
 import java.util.Set;
 
 /** 只向固定课程 origin 转发；不跟随重定向，头部白名单阻断伪造的服务身份。 */
-@Component
 public final class ProxyClient {
     private static final Set<String> REQUEST_HEADERS = Set.of("authorization", "x-request-id", "content-type", "accept", "range", "if-range", "if-none-match", "if-modified-since");
     private static final Set<String> RESPONSE_HEADERS = Set.of("content-type", "content-range", "accept-ranges", "etag", "last-modified", "cache-control", "content-disposition", "x-request-id", "x-audit-state");
-    private final GatewayProperties properties;
+    private final CourseUpstream properties;
     private final HttpClient client;
 
-    public ProxyClient(GatewayProperties properties, HttpClient client) {
+    public ProxyClient(CourseUpstream properties, HttpClient client) {
         this.properties = properties;
         this.client = client;
     }
@@ -33,9 +30,9 @@ public final class ProxyClient {
         RouteRegistry.validatePath(path);
         URI target;
         try {
-            target = URI.create(properties.courseBaseUrl().toString().replaceAll("/$", "")
+            target = URI.create(properties.origin().toString().replaceAll("/$", "")
                     + path + (query == null ? "" : "?" + query));
-            if (!target.getHost().equals(properties.courseBaseUrl().getHost()) || target.getRawFragment() != null) {
+            if (!target.getHost().equals(properties.origin().getHost()) || target.getRawFragment() != null) {
                 throw new GatewayFailure(400, "INVALID_COURSE_QUERY");
             }
         } catch (IllegalArgumentException exception) { throw new GatewayFailure(400, "INVALID_COURSE_QUERY"); }
