@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-/** 使用真实权限中心、网关和课程服务验证教师鉴权协议和课程登录。 */
+/** 通过课程入口验证统一身份协议、课程登录和权限中心的课程代理。 */
 export async function verifyIdentityAndLogin({center, edge, accounts, serviceKey, courseDb}) {
   const observations = [];
   const {tokens, subjects, users, department, wrongAudience, coursePassword, localAccounts} = accounts;
@@ -25,6 +25,7 @@ export async function verifyIdentityAndLogin({center, edge, accounts, serviceKey
   }
 
   const admin = {token:tokens.ADMIN};
+  await request(edge, '/api/v1/actuator/health', 404);
   const roots = await request(edge, '/auth/departments', 200, admin);
   assert.deepEqual(Object.keys(roots).sort(), ['items','page','pageSize','total']);
   assert.equal(roots.page, 1);

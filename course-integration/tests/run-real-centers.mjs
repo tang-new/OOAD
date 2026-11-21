@@ -1,4 +1,4 @@
-// No center/gateway/course stubs; starts immutable private snapshots of the actual three fat jars.
+// Starts private snapshots of the actual center and course jars behind the course Nginx.
 import mysql from 'mysql2/promise';
 import assert from 'node:assert/strict';
 import {spawn,execFileSync} from 'node:child_process';
@@ -22,7 +22,7 @@ const java=join(javaHome,'bin',process.platform==='win32'?'java.exe':'java');
 execFileSync(java,['-version'],{env:hostEnvironment(process.env),stdio:['ignore','pipe','pipe']});
 const passwords={center:process.env.REAL_CENTER_DB_PASSWORD,course:process.env.REAL_COURSE_DB_PASSWORD};
 assert(Object.values(passwords).every(x=>typeof x==='string'&&x.length),'Explicit dedicated center/course MySQL passwords required');
-const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-gateway-course-v1',startedAt:new Date().toISOString(),directory:output,upstream:'e9a6dff454cc6af23297458320f9c58d469850c9',modules:{}};
+const output=await mkdtemp(join(tmpdir(),'m6-course-real-'));const report={format:'m6-real-centers-course-proxy-v1',startedAt:new Date().toISOString(),directory:output,upstream:'e9a6dff454cc6af23297458320f9c58d469850c9',modules:{}};
 let interrupted=false;for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>{interrupted=true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));const hash=b=>createHash('sha256').update(b).digest('hex');
 async function port(){return new Promise((ok,no)=>{const s=net.createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>ok(p))})})}
@@ -36,32 +36,31 @@ async function run(module){
   const jarTool=join(javaHome,'bin',process.platform==='win32'?'jar.exe':'jar');const entries=execFileSync(jarTool,['tf',candidate],{env:hostEnvironment(process.env),encoding:'utf8',maxBuffer:16*1024*1024});assert(entries.includes('BOOT-INF/classes/'),'Actual executable Spring Boot fat jar required: '+tag);result.jars[tag]={source,sourceSHA256:before,candidateSHA256:candidateHash};secretFiles.push(candidate);return candidate;
  }
  async function start(tag,jar,config){const logPath=join(output,suffix+'-'+tag+'.log');const stream=createWriteStream(logPath,{mode:0o600});streams.push(stream);const child=spawn(java,['-Xms64m','-Xmx384m','-jar',jar,'--spring.config.location=classpath:/'],{cwd:output,env:runtimeEnvironment(process.env,{javaHome,...config}),stdio:['ignore','pipe','pipe']});children.push(child);child.stdout.pipe(stream);child.stderr.pipe(stream);let spawnFailed=false;child.on('error',()=>{spawnFailed=true});result.ports[tag]=config.port;
-  const endpoint=config.kind==='course'?'/actuator/health':config.kind==='center'?'/api/v1/actuator/health/readiness':'/api/v1/actuator/health';const until=Date.now()+240000;
+  const endpoint=config.kind==='course'?'/actuator/health':'/api/v1/actuator/health/readiness';const until=Date.now()+240000;
   while(Date.now()<until){assert(!interrupted,'Interrupted');if(spawnFailed||child.exitCode!==null)throw Error('Owned '+tag+' startup failed; inspect external log');try{const r=await fetch('http://127.0.0.1:'+config.port+endpoint,{redirect:'error',signal:AbortSignal.timeout(2000)});if(r.ok)return;}catch{}await sleep(500)}throw Error('Owned '+tag+' readiness timeout; inspect external log');
  }
  try{
-  const jars={center:await snapshot('center',process.env[module==='structured'?'REAL_STRUCTURED_JAR':'REAL_DDD_JAR']||join(ROOT,`rbac-${module}/target/rbac-${module}.jar`)),gateway:await snapshot('gateway',process.env.REAL_GATEWAY_JAR||join(ROOT,'rbac-gateway/target/rbac-gateway.jar')),course:await snapshot('course',process.env.REAL_COURSE_JAR||join(ROOT,'.cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar'))};
+  const jars={center:await snapshot('center',process.env[module==='structured'?'REAL_STRUCTURED_JAR':'REAL_DDD_JAR']||join(ROOT,`rbac-${module}/target/rbac-${module}.jar`)),course:await snapshot('course',process.env.REAL_COURSE_JAR||join(ROOT,'.cache/course-source/prepared/backend/target/course-project-backend-0.0.1-SNAPSHOT.jar'))};
   assert.equal(await redis(['PING']),'PONG');
   for(const kind of ['center','course']){const dbPort=kind==='center'?13306:13316;const quoted=guardDatabase(kind,dbPort,names[kind]);admins[kind]=await mysql.createConnection({host:'127.0.0.1',port:dbPort,user:'root',password:passwords[kind],timezone:'Z'});await admins[kind].query('CREATE DATABASE '+quoted+' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');created.add(kind);}
   const bootstrap='M6!'+randomBytes(20).toString('hex')+'a1',serviceKey=randomBytes(32).toString('hex'),issuer='urn:m6:real:'+suffix,kid='m6-'+randomBytes(8).toString('hex');
   const pair=generateKeyPairSync('rsa',{modulusLength:2048,privateKeyEncoding:{type:'pkcs8',format:'pem'},publicKeyEncoding:{type:'spki',format:'pem'}});const privateFile=join(output,suffix+'-private.pem'),publicFile=join(output,suffix+'-public.pem');secretFiles.push(privateFile,publicFile);await writeFile(privateFile,pair.privateKey,{mode:0o600});await writeFile(publicFile,pair.publicKey,{mode:0o600});
   const centerPort=await port(),center='http://127.0.0.1:'+centerPort;
+  const coursePort=await port(),course='http://127.0.0.1:'+coursePort;
   const jdbc=kind=>`jdbc:mysql://127.0.0.1:${kind==='center'?13306:13316}/${names[kind]}?serverTimezone=UTC&allowPublicKeyRetrieval=true&sslMode=DISABLED&connectTimeout=10000&socketTimeout=120000`;
-  await start('center',jars.center,{kind:'center',port:centerPort,url:jdbc('center'),dbUser:'root',dbPassword:passwords.center,namespace:names.center,privateFile,publicFile,bootstrap,serviceKey,kid,issuer,strategy:module});
+  await start('center',jars.center,{kind:'center',port:centerPort,url:jdbc('center'),dbUser:'root',dbPassword:passwords.center,namespace:names.center,privateFile,publicFile,bootstrap,serviceKey,kid,issuer,strategy:module,course});
   // Health can be UP before ApplicationRunner bootstrap completes. Read only this run's new schema.
   let bootstrapped=false;for(let n=0;n<180;n++){const [[row]]=await admins.center.query('SELECT password_hash<>? ready FROM '+guardDatabase('center',13306,names.center)+'.sys_user WHERE username=?',['UNINITIALIZED','root']);if(row?.ready){bootstrapped=true;break}await sleep(1000)}assert(bootstrapped,'Controlled root bootstrap did not complete');
   const accounts=await provisionAccounts(center,{bootstrap,serviceKey});result.authorities=accounts.authorityEvidence;result.provisionHTTP=accounts.http;
-  const coursePort=await port(),course='http://127.0.0.1:'+coursePort;
   await start('course',jars.course,{kind:'course',port:coursePort,url:jdbc('course'),dbUser:'root',dbPassword:passwords.course,center,issuer,serviceKey,strategy:module});
   courseDb=await mysql.createConnection({host:'127.0.0.1',port:13316,user:'root',password:passwords.course,database:names.course,timezone:'Z',multipleStatements:true});
   let fixture=await readFile(join(import.meta.dirname,'fixture.sql'),'utf8');const map={'m6-teacher-leader':'LEADER','m6-teacher-cc':'CC_TEACHER','m6-teacher-no-cc':'NO_CC_TEACHER','m6-student-leader':'STUDENT_LEADER','m6-student-applicant':'STUDENT_APPLICANT'};
   for(const [synthetic,who]of Object.entries(map))fixture=fixture.replaceAll("'"+synthetic+"'",courseDb.escape(accounts.subjects[who]));await courseDb.query(fixture);
   const [teacher]=await courseDb.query('SELECT user_id,id FROM teacher WHERE user_id=?',[accounts.subjects.LEADER]);assert.equal(teacher.length,1);const [student]=await courseDb.query('SELECT user_id,id FROM student WHERE user_id=?',[accounts.subjects.STUDENT_LEADER]);assert.equal(Number(student[0].id),610001);result.subjectMappings={leader:{subject:teacher[0].user_id,teacherId:teacher[0].id},studentLeader:{subject:student[0].user_id,studentId:student[0].id}};
-  const gatewayPort=await port();await start('gateway',jars.gateway,{kind:'gateway',port:gatewayPort,center,course,issuer});
   const edgePort=await port();
   edgeName='m6-course-edge-'+suffix.replaceAll('_','-');
   const edge=await startCourseEdge({name:edgeName,directory:output,template:join(ROOT,'deploy/full-course-nginx.conf'),
-    centerPort,gatewayPort,port:edgePort,files:secretFiles});
+    centerPort,coursePort,port:edgePort,files:secretFiles});
   result.ports.edge=edgePort;
   result.identity=await verifyIdentityAndLogin({center,edge,accounts,serviceKey,courseDb});
   result.rows=await runSix({origin:edge,prefix:'/api',tokens:accounts.tokens,subjects:accounts.subjects,record:row=>console.log(module+' '+row.name+' '+(row.passed?'PASS':'FAIL '+row.error))});

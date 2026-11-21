@@ -7,7 +7,7 @@ import {getCACertificates, setDefaultCACertificates} from 'node:tls';
 const docker = args => execFileSync('docker', args, {stdio:['ignore','pipe','pipe'], timeout:120000});
 
 /** 使用生产 Nginx 配置与临时 TLS 证书验证真实代理分流。 */
-export async function startCourseEdge({name, directory, template, centerPort, gatewayPort, port, files}) {
+export async function startCourseEdge({name, directory, template, centerPort, coursePort, port, files}) {
   assert.match(name, /^m6-course-edge-(structured|ddd)-[0-9]+-[a-f0-9]{8}$/);
   const config = join(directory,name+'.conf');
   const cert = join(directory,name+'.crt');
@@ -29,8 +29,8 @@ export async function startCourseEdge({name, directory, template, centerPort, ga
   const host = hostNetwork ? '127.0.0.1' : 'host-gateway';
   docker(['run','-d','--rm','--name',name,
     ...(hostNetwork ? ['--network','host'] : ['-p','127.0.0.1:'+port+':443']),
-    '--add-host','rbac-backend:'+host,'--add-host','rbac-gateway:'+host,
-    '-e','RBAC_PORT='+centerPort,'-e','GATEWAY_PORT='+gatewayPort,
+    '--add-host','rbac-backend:'+host,'--add-host','course-backend:'+host,
+    '-e','RBAC_PORT='+centerPort,'-e','COURSE_PORT='+coursePort,
     '-v',config+':/etc/nginx/templates/default.conf.template:ro',
     '-v',cert+':/run/secrets/tls.crt:ro','-v',key+':/run/secrets/tls.key:ro',
     'nginx:1.27-alpine']);
@@ -38,7 +38,7 @@ export async function startCourseEdge({name, directory, template, centerPort, ga
   const until = Date.now()+30000;
   while (Date.now()<until) {
     try {
-      const response = await fetch(origin+'/api/v1/actuator/health', {
+      const response = await fetch(origin+'/.well-known/jwks.json', {
         redirect:'error',signal:AbortSignal.timeout(2000),
       });
       await response.body?.cancel();
