@@ -5,7 +5,7 @@ Archived verification for the previous pin: [REAL-CENTERS-VERIFICATION.md](REAL-
 ## Source / ownership
 
 Pinned MIT upstream: `https://gitee.com/mingqcn/course-project-mgt.git`, commit
-`7f27e605f37f540253c3f2ff73227424250a4ec8`. Original MIT notice is
+`e9a6dff454cc6af23297458320f9c58d469850c9`. Original MIT notice is
 `LICENSE.upstream` and remains `LICENSE` in the prepared source/runtime image.
 The reference checkout is read-only. The prepare command archives approved tracked
 paths from the fixed commit, then applies reviewable patches and the overlay. It never
@@ -32,7 +32,7 @@ dependency resolution through credential-free Maven Central.
 
 - Both centers implement the eight teacher identity operations and two audit operations.
   Directory queries require the course audience, the admin identity role, and API permission TEC.
-- The same-origin edge sends /auth paths to the center and the exact POST /login to the gateway.
+- The same-origin edge sends `/auth/*` to the center and `POST /login` to the course backend.
   The teacher service checks its local student or teacher roster before requesting a central token.
   Other course requests use a verified JWT, current central operation decision, and local course
   object authorization. /api is the browser business prefix.
@@ -112,7 +112,10 @@ and MIT license via `.dockerignore`. No roster or build tool enters the runtime 
 The frontend sends student and teacher login to `POST /login` and administrator login to the center `POST /auth/login` with the course audience. It reads roles from `/auth/me` and calls course operations under `/api/`. Menus do not grant server authority. Only the
 user bearer is stored in sessionStorage, never a service key. There is no fake dataset.
 
-The full deployment edge forwards `/auth/*` and JWKS to the center. It forwards the exact `/login` path and the raw `/api/*` paths to the gateway. The gateway resolves the trusted course path and forwards to the course backend. The edge serves the Vite bundle under `/course/assets/`.
+The full deployment edge sends `/login` and `/api/login` to the course backend. It sends
+`/auth/*`, JWKS, and the other course `/api/*` requests to the center. The center checks
+operation permissions before forwarding the course API request. The edge serves the
+Vite bundle under `/course/assets/`.
 `swarm-course.yaml` provides private-network service entries with no published course
 backend port. Attach to gateway network via COURSE_NETWORK and set actual issuer/JWK.
 Secrets `audit-service-key` and `course-db-password` mount via configtree. BaseURL,

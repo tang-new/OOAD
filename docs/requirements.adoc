@@ -55,7 +55,7 @@ S指structured的service/controller，D指DDD的application/domain/interfaces。
 |RES-06 |菜单/按钮有效投影 |两侧menus及前端权限守卫 |T10，继承与停用传播
 |EXT-01 |五个/auth身份鉴权 |两侧Auth/IdentityController |API-C01–08/13，裸响应
 |EXT-02 |两个/auth审计操作 |两侧同步审计写/查询 |API-C09–12，服务密钥
-|EXT-03 |教师真实OAS注册 |固定7f27e605f37f540253c3f2ff73227424250a4ec8快照，排除 10 个提供方操作 |T11，全部80业务元数据及copyCourse
+|EXT-03 |教师真实OAS注册 |固定e9a6dff454cc6af23297458320f9c58d469850c9快照，排除 10 个提供方操作 |T11，全部80业务元数据及copyCourse
 |EXT-04 |可信课程网关 |rbac-gateway及固定上游配置 |T13/14，伪造头/operationId/URL拒绝
 |EXT-05 |教师对象规则/私有能力 |authorities及identity查询，课程Service不替换 |T12，组长例外/非组长CC
 |EXT-06 |两系统UI隔离 |aud下UI投影与独立UI种子 |SELF-04，API不混入/auth/me

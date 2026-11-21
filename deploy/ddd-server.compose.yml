@@ -1,0 +1,52 @@
+name: ooad-ddd-server
+
+services:
+  rbac-backend:
+    image: ${DDD_SERVER_IMAGE:-ooad/rbac-ddd:server}
+    build:
+      context: ..
+      args:
+        MODULE: rbac-ddd
+        BASE_IMAGE: ${BASE_IMAGE:-eclipse-temurin:21-jre}
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "8081"
+      JAVA_OPTS: "${APP_JAVA_OPTS:--Xms128m -Xmx512m}"
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_DATASOURCE_URL: ${DDD_SERVER_DB_URL:?Set the JDBC URL for the existing MySQL server}
+      SPRING_DATASOURCE_USERNAME: ${DDD_SERVER_DB_USER:?Set the existing MySQL user}
+      SPRING_DATA_REDIS_HOST: ${DDD_SERVER_REDIS_HOST:?Set the existing Redis hostname}
+      SPRING_DATA_REDIS_PORT: "${DDD_SERVER_REDIS_PORT:-6379}"
+      SPRING_DATA_REDIS_PASSWORD: "${DDD_SERVER_REDIS_PASSWORD:-}"
+      SPRING_DATA_REDIS_SSL_ENABLED: "${DDD_SERVER_REDIS_TLS:-false}"
+      RBAC_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt-private.pem
+      RBAC_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt-public.pem
+      RBAC_JWT_KID: ${DDD_SERVER_JWT_KID:-ddd-server-1}
+      RBAC_JWT_ISSUER: ${DDD_SERVER_ORIGIN:?Set DDD_SERVER_ORIGIN to the URL clients use}
+      COURSE_UPSTREAM: ${COURSE_UPSTREAM:?Set COURSE_UPSTREAM to the original course backend reachable from Docker}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_COMPONENTS: never
+    ports:
+      - "${DDD_SERVER_BIND_ADDRESS:-127.0.0.1}:${DDD_SERVER_HTTP_PORT:-8083}:8081"
+    secrets:
+      - source: center-db-password
+        target: spring.datasource.password
+      - source: bootstrap-password
+        target: RBAC_BOOTSTRAP_PASSWORD
+      - source: audit-service-key
+        target: rbac.audit-service-key
+      - jwt-private.pem
+      - jwt-public.pem
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --max-time, "3", http://127.0.0.1:8081/api/v1/actuator/health]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+      start_period: 20s
+
+secrets:
+  center-db-password: {file: "${DDD_SERVER_SECRETS_DIR:-../.runtime/ddd-server}/center-db-password"}
+  bootstrap-password: {file: "${DDD_SERVER_SECRETS_DIR:-../.runtime/ddd-server}/bootstrap-password"}
+  audit-service-key: {file: "${DDD_SERVER_SECRETS_DIR:-../.runtime/ddd-server}/audit-service-key"}
+  jwt-private.pem: {file: "${DDD_SERVER_SECRETS_DIR:-../.runtime/ddd-server}/jwt-private.pem"}
+  jwt-public.pem: {file: "${DDD_SERVER_SECRETS_DIR:-../.runtime/ddd-server}/jwt-public.pem"}

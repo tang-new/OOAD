@@ -13,6 +13,10 @@
     <description>独立领域驱动 RBAC1 实现</description>
     <properties><rbac.ddd.final-name>rbac-ddd</rbac.ddd.final-name></properties>
     <dependencies>
+        <dependency>
+            <groupId>com.xmu.rbac</groupId>
+            <artifactId>rbac-course-proxy</artifactId>
+        </dependency>
 <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
 <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
 <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>

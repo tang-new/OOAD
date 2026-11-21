@@ -9,5 +9,5 @@ RUN npm run build
 FROM ${NGINX_IMAGE}
 COPY --from=build /web/dist /usr/share/nginx/html
 COPY deploy/full-course-nginx.conf /etc/nginx/templates/default.conf.template
-ENV RBAC_PORT=8081 GATEWAY_PORT=8090
+ENV RBAC_PORT=8081 COURSE_PORT=8080
 EXPOSE 443

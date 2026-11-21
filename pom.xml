@@ -18,9 +18,10 @@
     <packaging>pom</packaging>
     <name>rbac-parent</name>
 
-    <!-- 双后端仅共享契约与迁移，不共享核心业务实现。 -->
+    <!-- 双后端共享契约、迁移与课程 HTTP 转发，核心授权独立实现。 -->
     <modules>
         <module>rbac-contract</module>
+        <module>rbac-course-proxy</module>
         <module>rbac-structured</module>
         <module>rbac-ddd</module>
         <module>rbac-gateway</module>
@@ -42,6 +43,11 @@
             <dependency>
                 <groupId>com.xmu.rbac</groupId>
                 <artifactId>rbac-contract</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.xmu.rbac</groupId>
+                <artifactId>rbac-course-proxy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

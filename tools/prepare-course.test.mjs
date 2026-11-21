@@ -59,7 +59,7 @@ test('course transport may recover but must verify the exact pinned commit befor
   const result = fixture(t)({ FAIL_COUNT: '2' })
   assert.equal(result.status, 0, result.stderr)
   assert.equal((result.calls.match(/fetch --depth=1/g) ?? []).length, 3)
-  assert.match(result.calls, /cat-file -e 7f27e605f37f540253c3f2ff73227424250a4ec8\^\{commit\}/)
+  assert.match(result.calls, /cat-file -e e9a6dff454cc6af23297458320f9c58d469850c9\^\{commit\}/)
   assert.ok(result.calls.indexOf('cat-file') < result.calls.indexOf('archive '))
   assert.doesNotMatch(result.calls, /sslVerify=false|sslverify=false/)
 })

@@ -24,7 +24,7 @@ case ${1:-} in
   [[ $(docker info --format '{{.Swarm.ControlAvailable}}') == true ]] || { echo 'Run full-stack.sh init on local Desktop first' >&2; exit 1; }
   [[ $(docker info --format '{{.Swarm.Nodes}}') == 1 ]] || { echo 'Only an isolated single-node local Swarm is authorized' >&2; exit 1; }
   # No partial deployment when build artifacts/images are not ready.
-  for image in "$MODULE" rbac-gateway rbac-web course-backend course-web; do
+  for image in "$MODULE" rbac-web course-backend course-web; do
    docker image inspect "${REGISTRY}${image}:${TAG}" >/dev/null 2>&1 || { echo "Missing tested image: ${REGISTRY}${image}:${TAG}; run full-build.sh first" >&2; exit 1; }
   done
   bash deploy/full-secrets.sh
@@ -40,14 +40,14 @@ case ${1:-} in
  switch)
   [[ ${CONFIRM_STOP_WRITES:-} == yes ]] || { echo 'Requires maintenance window: CONFIRM_STOP_WRITES=yes; no strict rolling single-writer claim' >&2; exit 1; }
   old_service_guard
-  for image in "$MODULE" rbac-gateway rbac-web course-backend course-web; do
+  for image in "$MODULE" rbac-web course-backend course-web; do
    docker image inspect "${REGISTRY}${image}:${TAG}" >/dev/null 2>&1 || { echo "Missing tested image: ${REGISTRY}${image}:${TAG}" >&2; exit 1; }
   done
   if [[ -n ${SWITCH_EVIDENCE_FILE:-} ]]; then python deploy/full-switch-evidence.py --phase before --file "$SWITCH_EVIDENCE_FILE"; fi
-  docker service scale "${STACK}_rbac-web=0" "${STACK}_course-web=0" "${STACK}_rbac-gateway=0" "${STACK}_course-backend=0" "${STACK}_rbac-backend=0"
+  docker service scale "${STACK}_rbac-web=0" "${STACK}_course-web=0" "${STACK}_course-backend=0" "${STACK}_rbac-backend=0"
   for ((i=0;i<90;i++)); do
    running=''
-   for service in rbac-web course-web rbac-gateway course-backend rbac-backend; do
+   for service in rbac-web course-web course-backend rbac-backend; do
     running+=$(docker ps -q --filter "label=com.docker.stack.namespace=$STACK" --filter "label=com.docker.swarm.service.name=${STACK}_${service}")
    done
    [[ -z "$running" ]] && break
@@ -55,7 +55,7 @@ case ${1:-} in
   done
   [[ -z "$running" ]] || { echo 'An old application/edge task did not stop; refusing switch' >&2; exit 1; }
   if [[ -n ${SWITCH_EVIDENCE_FILE:-} ]]; then python deploy/full-switch-evidence.py --phase stopped --file "$SWITCH_EVIDENCE_FILE"; fi
-  echo "Controlled stop-write barrier passed: all five old application/edge containers stopped; MySQL/Redis/volumes retained. Next MODULE=$MODULE TAG=$TAG"
+  echo "Controlled stop-write barrier passed: application/edge containers stopped; MySQL/Redis/volumes retained. Next MODULE=$MODULE TAG=$TAG"
   docker stack deploy --resolve-image never -c docker-compose.yml "$STACK"
   ;;
  ps)

@@ -1,6 +1,6 @@
 """Record only the isolated stack's controlled stop-write barrier; never read environments/secrets."""
 import argparse,datetime,json,os,pathlib,subprocess
-APPLICATIONS=['rbac-web','course-web','rbac-gateway','course-backend','rbac-backend']
+APPLICATIONS=['rbac-web','course-web','course-backend','rbac-backend']
 DATA=['mysql','redis']
 def run(*args):return subprocess.check_output(['docker',*args],text=True,encoding='utf-8',errors='replace',timeout=60).strip()
 def snapshot(stack):

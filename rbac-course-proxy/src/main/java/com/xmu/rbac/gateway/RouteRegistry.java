@@ -2,8 +2,6 @@ package com.xmu.rbac.gateway;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,13 +12,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /** 从契约清单构建唯一映射；静态段优先，启动拒绝同方法重复或歧义模板。 */
-@Component
 public final class RouteRegistry {
     private final List<Route> routes;
     private static final Pattern SAFE_PATH = Pattern.compile("/[A-Za-z0-9_~./-]*");
 
     public RouteRegistry(ObjectMapper mapper) throws IOException {
-        try (InputStream input = new ClassPathResource("catalog/course-operations.json").getInputStream()) {
+        try (InputStream input = RouteRegistry.class.getResourceAsStream("/catalog/course-operations.json")) {
+            if (input == null) throw new IOException("缺失课程路由清单");
             routes = load(mapper.readTree(input).required("operations"));
         }
     }

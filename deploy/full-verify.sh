@@ -8,8 +8,8 @@ import json,os,subprocess,time,urllib.request,urllib.error,ssl,socket,hashlib
 from pathlib import Path
 stack=os.environ['STACK']
 def run(*args): return subprocess.check_output(['docker',*args],text=True,encoding='utf-8',errors='replace',timeout=90).strip()
-names=['mysql','redis','rbac-backend','rbac-gateway','rbac-web','course-backend','course-web']
-report={'format':'rbac1-local-swarm-v1','module':os.environ['MODULE'],'stack':stack,'timestamp':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'tls':'self-signed local acceptance only; NOT public trust','stage':os.environ.get('DEPLOYMENT_STAGE','candidate'),'finalAcceptance':False,'verificationScope':'Seven-service runtime health, local TLS, private-route denial, published-port isolation and exact image identity; not final business acceptance','status':'failed','services':[],'probes':[]}
+names=['mysql','redis','rbac-backend','rbac-web','course-backend','course-web']
+report={'format':'rbac1-local-swarm-v1','module':os.environ['MODULE'],'stack':stack,'timestamp':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'tls':'self-signed local acceptance only; NOT public trust','stage':os.environ.get('DEPLOYMENT_STAGE','candidate'),'finalAcceptance':False,'verificationScope':'Six-service runtime health, local TLS, private-route denial, published-port isolation and exact image identity; not final business acceptance','status':'failed','services':[],'probes':[]}
 error=None
 try:
  report['docker']=json.loads(run('info','--format','{{json .Swarm}}'))
@@ -27,7 +27,7 @@ try:
   report['services']=rows
   if all(len(r['tasks'])==1 and r['tasks'][0]['CurrentState'].startswith('Running') for r in rows): break
   time.sleep(5)
- else: raise RuntimeError('All seven Swarm services did not converge')
+ else: raise RuntimeError('All six Swarm services did not converge')
  for r in rows:
   name=r['name'].split('_',1)[1]
   if name not in ('rbac-web','course-web') and r['ports']: raise RuntimeError('Internal service publishes ports')
@@ -53,7 +53,7 @@ try:
  # Probe real internal backends from the owned course edge task, never publish their ports.
  edge=run('ps','-q','--filter','label=com.docker.swarm.service.name='+stack+'_course-web').splitlines()
  if len(edge)!=1: raise RuntimeError('Expected one local owned course edge task')
- for url in ['http://course-backend:'+os.environ['COURSE_PORT']+'/actuator/health','http://rbac-gateway:'+os.environ['GATEWAY_PORT']+'/api/v1/actuator/health']:
+ for url in ['http://course-backend:'+os.environ['COURSE_PORT']+'/actuator/health','http://rbac-backend:'+os.environ['RBAC_PORT']+'/api/v1/actuator/health']:
   for attempt in range(90):
    probe=subprocess.run(['docker','exec',edge[0],'wget','-q','-O','-','--timeout=5',url],capture_output=True,text=True)
    try: healthy=probe.returncode==0 and json.loads(probe.stdout).get('status')=='UP'
@@ -63,7 +63,7 @@ try:
   report['probes'].append({'url':url,'via':'owned course-web overlay task','passed':healthy})
   if not healthy: raise RuntimeError('Internal health failed: '+url)
  # Direct overlay access still requires JWT; the course Service is not an unauthenticated bypass.
- direct_url='http://course-backend:'+os.environ['COURSE_PORT']+'/api/terms'
+ direct_url='http://course-backend:'+os.environ['COURSE_PORT']+'/terms'
  direct=subprocess.run(['docker','exec',edge[0],'wget','-S','-O','/dev/null','--timeout=5',direct_url],capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=20)
  import re
  direct_status=re.findall(r'HTTP/[0-9.]+\s+(\d{3})',direct.stderr)

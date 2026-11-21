@@ -111,7 +111,7 @@ jobs:
       - name: Build the actual course frontend
         working-directory: course-integration/frontend
         run: npm ci && npm run build
-      - name: Real two-center, gateway and course acceptance
+      - name: Real two-center and course proxy acceptance
         run: |
           npm ci --prefix course-integration/tests
           node course-integration/tests/run-real-centers.mjs --module=both
