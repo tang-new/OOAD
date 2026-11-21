@@ -92,7 +92,7 @@ shared HTTP 使用本次唯一新库、私有临时 jar 快照和自有 Redis na
 
 服务器单独部署权限中心时，使用 [DDD 服务器 Docker Compose](deploy/ddd-server.compose.yml)，配置和启动步骤见 [服务器部署手册](docs/ddd-server.md)。
 
-DDD 和老师原版课程后端都部署在服务器时，见 [双后端部署步骤及教师版本](部署.md)。
+在多节点集群部署权限前后端与教师课程中心时，见 [Swarm 部署指南](docs/swarm-deployment.md)。
 
 - 在课程前端的 IDEA npm 运行配置或 `.env.development.local` 设置 `VITE_RBAC_PROXY_TARGET` 为服务器 DDD 的 HTTPS 入口。默认本机课程登录仍走 `http://127.0.0.1:8084`，可用 `VITE_COURSE_PROXY_TARGET` 覆盖。老师前端如果是新克隆的，需先配置本地 Vite 代理读取这两个变量，将 `/api/login` 改写为 `/login` 发给本地课程后端，其他 `/api/*` 和 `/auth/*` 交给 DDD。OOAD 自带工作台直接使用 `/login`。
 - 老师原版后端在本地运行，将 `IDENTITY_BASE_URL` 设为同一个服务器入口，并继续使用本地课程数据库。服务器权限中心数据库需创建与本地课程名单对应的学生和教师账号，分配课程角色并核对已有的 `subject` 绑定。
