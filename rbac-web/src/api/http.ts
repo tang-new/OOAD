@@ -19,8 +19,10 @@ for (const client of [management, identity]) {
 export function handleError(error: unknown): ApiError {
   const err = error as AxiosError<{ code?: string; message?: string }>
   const status = err.response?.status ?? 0
-  if (status === 401) hooks.onUnauthenticated()
-  if (status === 403) hooks.onForbidden()
+  const bearer = err.config?.headers?.Authorization
+  const current = !bearer || bearer === `Bearer ${hooks.getToken()}`
+  if (current && status === 401 && err.config?.url !== '/auth/login') hooks.onUnauthenticated()
+  if (current && status === 403) hooks.onForbidden()
   return new ApiError(status, err.response?.data?.code ?? 'NETWORK_ERROR', err.response?.data?.message ?? (status ? `请求失败（HTTP ${status}）` : '无法连接权限中心'))
 }
 /** 不将 allowed:false 解释成网络异常，不将身份裸响应错误地解包。 */

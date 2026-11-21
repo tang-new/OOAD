@@ -1,4 +1,6 @@
-= 真实浏览器验收截图
+= RBAC1 改版前的历史浏览器截图
+
+当前桌面流程与截图见link:../frontend-redesign.adoc[桌面前端验收]。
 
 来自同一Vue3前端连接两套真实Java后端的Playwright端到端测试；只使用新建的合成fixture，不含真实员工、口令、服务密钥或JWT。
 不是静态Mock，也不把这些Vite代理截图冒称Swarm浏览器部署证明。

@@ -94,7 +94,7 @@ jobs:
         working-directory: rbac-web
       - run: npx playwright install --with-deps chromium
         working-directory: rbac-web
-      # Sequential; each suite owns a unique fixture DB. Both are real business backends.
+      # Desktop Chromium against each real backend, sequentially with a fresh database.
       - run: npm run e2e
         working-directory: rbac-web
         env:
@@ -135,6 +135,7 @@ jobs:
             rbac-web/coverage/
             rbac-web/playwright-report/
             rbac-web/test-results/**/*.png
+            rbac-web/test-results/logs/*.log
             docs/design/
             /tmp/m6-course-real-*/report.json
             ~/Downloads/rbac1-context-extracted/*e2e*

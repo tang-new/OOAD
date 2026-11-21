@@ -3,6 +3,8 @@
 
 link:README.adoc[总览] / link:source-map.adoc[源码索引] / link:review-card.adoc[审查卡]。
 
+以下分工记录采用本工作包的历史源码基线。桌面改版后的页面入口和测试见 link:../acceptance/frontend-redesign.adoc[桌面前端验收]。
+
 2026-11-19追加分工，保留六人的后端主审范围、A↔F/B↔C/D↔E互审及F迭代复现职责。每人从自己的页面追到请求，再定位structured和DDD两版入口；两版共用同一套前端，不按后端另分前端负责人。
 审核深度仍为辅助：功能、请求协议、权限效果、状态与异常反馈、相关测试断言；不开展样式重构、课程中心前端全面审查或自动修复。下列新增任务均为NOT_STARTED，不是已验证的产品行为。
 

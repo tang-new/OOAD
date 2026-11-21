@@ -46,16 +46,16 @@ export default async function globalSetup() {
     delete process.env.E2E_CREATED_DB
     stopped = true
   }
-  function start(command: string, args: string[], extra: NodeJS.ProcessEnv, label: string) {
+  function start(command: string, args: string[], extra: NodeJS.ProcessEnv, label: string, cwd = resolve('.')) {
     const fd = openSync(resolve(env.logDir, `m8-web-${env.module}-${runId}-${label}.log`), 'w'); handles.push(fd)
-    const owned = ownProcess(spawn(command, args, { cwd: resolve('.'), env: { ...base, ...extra }, stdio: ['ignore', fd, fd], windowsHide: true }))
+    const owned = ownProcess(spawn(command, args, { cwd, env: { ...base, ...extra }, stdio: ['ignore', fd, fd], windowsHide: true }))
     children.push(owned)
     return owned
   }
   async function wait(url: string, owned: OwnedProcess) {
     const deadline = Date.now() + 240000
     while (Date.now() < deadline) {
-      if (!alive(owned)) throw new Error('E2E 子进程启动失败，见仓库外 m8-web 日志')
+      if (!alive(owned)) throw new Error('E2E 子进程启动失败，见 test-results/logs')
       try { const result = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(2000) }); if (result.ok) return } catch { /* 等待健康状态，任何重定向都不跟随 */ }
       await new Promise(resolve => setTimeout(resolve, 500))
     }
@@ -72,6 +72,7 @@ export default async function globalSetup() {
     const after = statSync(sourceJar)
     if (before.size !== after.size || before.mtimeMs !== after.mtimeMs || statSync(jar).size !== before.size) throw new Error('后端 jar 正在发布，请发布完成后重新运行 E2E')
     await requireFreePort(env.apiPort); await requireFreePort(env.webPort)
+    if (env.baseline) await requireFreePort(5175)
     connection = await createConnection({ host: env.host, port: env.port, user: process.env.E2E_DB_USER ?? 'root', password: process.env.E2E_DB_PASSWORD ?? 'root' })
     await connection.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`); created = true
     process.env.E2E_BOOTSTRAP_PASSWORD = bootstrap
@@ -82,8 +83,14 @@ export default async function globalSetup() {
     // health 可在 ApplicationRunner（路由核验/口令引导）完成之前可达；必须等就绪事件。
     await wait(`${env.api}/api/v1/actuator/health/readiness`, backend)
     // Web 只得到回环代理地址，不继承后端 JSON、DB/JWT/审计密钥。
-    const web = start(process.execPath, [resolve('node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(env.webPort), '--strictPort'], { RBAC_API: env.api }, 'vite')
+    const web = start(process.execPath, [resolve('node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(env.webPort), '--strictPort'], {
+      RBAC_API: env.api, RBAC_VITE_CACHE_DIR: resolve('node_modules/.vite-rbac-e2e', env.module + '-' + runId),
+    }, 'vite')
     await wait(env.web, web)
+    if (env.baseline) {
+      const baseline = start(process.execPath, [resolve('node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', '5175', '--strictPort'], { RBAC_API: env.api }, 'baseline', resolve('../.tmp/rbac-web-redesign-baseline/rbac-web'))
+      await wait(env.baseline, baseline)
+    }
     return stop
   } catch (error) { await stop(); throw error }
 }

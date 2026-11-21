@@ -1,40 +1,221 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { NButton, NSelect, NTreeSelect, type TreeSelectOption } from 'naive-ui'
 import { get, post, patch, put, del } from '@/api'
 import type { Page, UserVO, DepartmentVO, RoleVO, AssignmentVO, EffectiveVO } from '@/api/types'
 import RecordForm, { type Field } from '@/components/RecordForm.vue'
 import EffectivePermissions from '@/components/EffectivePermissions.vue'
-import { useWorkspace, text, choices, flatten } from './workspace'
-const rows = ref<Page<UserVO>>({ page: 1, pageSize: 20, total: 0, items: [] }), keyword = ref(''), departmentId = ref(''), status = ref(''), page = ref(1)
-const departments = ref<DepartmentVO[]>([]), selected = ref<UserVO | null>(null), assignments = ref<AssignmentVO[]>([]), eligible = ref<RoleVO[]>([]), roleId = ref(''), effective = ref<EffectiveVO | null>(null)
-const { auth, error, loading, message, form, load, mutate, run, allowed } = useWorkspace(reload)
-const deptOptions = computed(() => flatten(departments.value).map(d => ({ value: d.id, label: d.name })))
-const departmentField = (): Field => ({ key: 'departmentId', label: '所属部门', type: 'select', required: true, options: deptOptions.value })
+import ConfirmAction from '@/components/ConfirmAction.vue'
+import DetailTabs from '@/components/DetailTabs.vue'
+import PageHeader from '@/components/PageHeader.vue'
+import Pager from '@/components/Pager.vue'
+import ReadState from '@/components/ReadState.vue'
+import StatusTag from '@/components/StatusTag.vue'
+import TechText from '@/components/TechText.vue'
+import WorkspaceFeedback from '@/components/WorkspaceFeedback.vue'
+import RowActions from '@/components/RowActions.vue'
+import { useWorkspace, useRead, text, choices, positiveId } from './workspace'
+
+const route = useRoute(), router = useRouter()
+const userId = computed(() => positiveId(route.query.userId))
+const tabs = ['profile', 'assignments', 'permissions']
+const tab = computed(() => tabs.includes(String(route.query.tab)) ? String(route.query.tab) : 'profile')
+const page = ref(1)
+const freshFilters = () => ({ keyword: '', departmentId: null as number | null, status: '' })
+const filters = reactive(freshFilters())
+const applied = ref(freshFilters())
+const list = useRead<Page<UserVO>>(() => ({ page: 1, pageSize: 20, total: 0, items: [] }))
+const directory = useRead<DepartmentVO[]>(() => [])
+const detail = useRead<UserVO | null>(() => null)
+const assignments = useRead<AssignmentVO[]>(() => [])
+const options = useRead<RoleVO[]>(() => [])
+const permissions = useRead<EffectiveVO | null>(() => null)
+const roleId = ref<number | null>(null)
+const { auth, error, message, stale, form, confirmation, busy, mutate, run, confirm, reset, refresh, allowed } = useWorkspace(reload, () => [auth.targetSystem, userId.value].join(':'))
+function treeOptions(departments: DepartmentVO[]): TreeSelectOption[] {
+  return departments.map(department => ({ key: department.id, label: department.name, children: treeOptions(department.children ?? []) }))
+}
+const departments = computed(() => treeOptions(directory.data.value))
+const eligible = computed(() => options.data.value.filter(role => role.status === 'ENABLED' && !assignments.data.value.some(link => link.roleId === role.id)))
+const departmentField = (): Field => ({ key: 'departmentId', label: '所属部门', type: 'tree', required: true, tree: departments.value })
+function loadDirectory() { return directory.read(() => get<DepartmentVO[]>('/departments/tree')) }
+function loadList() {
+  return list.read(() => get<Page<UserVO>>('/users', {
+    keyword: applied.value.keyword || undefined,
+    departmentId: applied.value.departmentId ?? undefined,
+    status: applied.value.status || undefined,
+    page: page.value, pageSize: 20,
+  }))
+}
+async function changePage(value: number) {
+  page.value = value
+  await loadList()
+}
+function search() {
+  applied.value = { ...filters, keyword: filters.keyword.trim() }
+  void changePage(1)
+}
+function clearFilters() {
+  Object.assign(filters, freshFilters())
+  search()
+}
+function openUser(id: number, panel = 'profile') {
+  void router.push({ path: '/users', query: { userId: id, tab: panel === 'profile' ? undefined : panel } })
+}
+function setTab(panel: string) {
+  void router.replace({ path: '/users', query: { userId: userId.value, tab: panel === 'profile' ? undefined : panel } })
+}
+function loadAssignments(id = userId.value) {
+  return id === null ? Promise.resolve(true) : assignments.read(() => get<AssignmentVO[]>(`/users/${id}/role-assignments`, { systemCode: auth.targetSystem }))
+}
+function loadOptions(user = detail.data.value) {
+  return !user ? Promise.resolve(true) : options.read(() => get<RoleVO[]>(`/departments/${user.departmentId}/assignable-roles`, { systemCode: auth.targetSystem }))
+}
+function loadPermissions(id = userId.value) {
+  return id === null ? Promise.resolve(true) : permissions.read(() => get<EffectiveVO>(`/users/${id}/systems/${encodeURIComponent(auth.targetSystem)}/permissions`))
+}
+async function loadDetail() {
+  const id = userId.value, system = auth.targetSystem
+  if (id === null) return true
+  const loaded = await detail.read(() => get<UserVO>(`/users/${id}`))
+  if (id !== userId.value || system !== auth.targetSystem) return true
+  if (!loaded || !detail.data.value) return false
+  const results = await Promise.all([loadAssignments(id), loadPermissions(id), allowed('createUserRoleAssignment') ? loadOptions() : true])
+  return results.every(Boolean)
+}
 async function reload() {
-  const result = await get<Page<UserVO>>('/users', { keyword: keyword.value || undefined, departmentId: departmentId.value || undefined, status: status.value || undefined, page: page.value, pageSize: 20 })
-  rows.value = result
-  if (selected.value) await selectUser(await get<UserVO>(`/users/${selected.value.id}`))
+  const results = await Promise.all([loadList(), userId.value ? loadDetail() : true])
+  const lastPage = Math.max(1, Math.ceil(list.data.value.total / list.data.value.pageSize))
+  if (results[0] && page.value > lastPage) await changePage(lastPage)
+  return results.every(Boolean)
 }
-async function selectUser(user: UserVO) {
-  selected.value = user; roleId.value = ''
-  const code = encodeURIComponent(auth.targetSystem)
-  const [links, result, options] = await Promise.all([get<AssignmentVO[]>(`/users/${user.id}/role-assignments`, { systemCode: auth.targetSystem }), get<EffectiveVO>(`/users/${user.id}/systems/${code}/permissions`), get<RoleVO[]>(`/departments/${user.departmentId}/assignable-roles`, { systemCode: auth.targetSystem })])
-  assignments.value = links; effective.value = result; eligible.value = options.filter(role => role.status === 'ENABLED')
+function create() {
+  form.value = {
+    title: '创建用户',
+    fields: [
+      { ...text('username', '账号'), maxLength: 128 }, { ...text('name', '姓名'), maxLength: 128 },
+      text('no', '学工号', false), text('phone', '电话', false), departmentField(),
+      { key: 'password', label: '初始密码', type: 'password', required: true, minLength: 12, maxLength: 256, hint: '至少 12 个字符，包含大小写字母、数字和特殊字符' },
+    ],
+    submit: data => mutate(() => post('/users', data)),
+  }
 }
-function create() { form.value = { title: '创建用户', fields: [text('username', '账号'), text('name', '姓名'), text('no', '学工号', false), text('phone', '电话', false), departmentField(), { key: 'password', label: '初始密码', type: 'password', required: true }], submit: data => mutate(() => post('/users', data)) } }
-function edit(user: UserVO) { form.value = { title: '编辑用户资料（不更改状态和部门）', initial: { name: user.name, no: user.no }, fields: [text('name', '姓名'), text('no', '学工号', false), text('phone', '新电话（留空不更改）', false)], submit: data => mutate(() => patch(`/users/${user.id}`, { ...data, version: user.version })) } }
-function changeStatus(user: UserVO) { form.value = { title: '独立用户状态操作', initial: { status: user.status }, fields: [choices('status', '状态', ['ACTIVE', 'DISABLED', 'DELETED'])], submit: data => mutate(() => put(`/users/${user.id}/status`, data)) } }
-function move(user: UserVO) { form.value = { title: '迁移部门：不准入的角色指派将被回收，共享角色权限不变', initial: { departmentId: user.departmentId }, fields: [departmentField()], submit: data => mutate(() => put(`/users/${user.id}/department`, { ...data, version: user.version })) } }
-function remove(user: UserVO) { if (confirm(`确认逻辑删除用户 ${user.name} 并清理角色指派？`)) void run(() => del(`/users/${user.id}`)) }
-function search() { page.value = 1; void load() }
-onMounted(async () => { await load(); try { departments.value = await get<DepartmentVO[]>('/departments/tree') } catch (e) { error.value = (e as Error).message } })
-watch(() => auth.targetSystem, () => { effective.value = null; assignments.value = []; eligible.value = []; void load() })
+function edit(user: UserVO) {
+  form.value = {
+    title: '编辑资料', description: user.name, initial: { name: user.name, no: user.no },
+    fields: [text('name', '姓名'), text('no', '学工号', false), { ...text('phone', '新电话', false), hint: '留空保留当前电话' }],
+    submit: data => mutate(() => patch(`/users/${user.id}`, { ...data, version: user.version })),
+  }
+}
+function changeStatus(user: UserVO) {
+  form.value = {
+    title: '变更用户状态', description: `${user.name} · ${user.username}。停用后该账号将无法登录。`,
+    initial: { status: user.status }, fields: [choices('status', '状态', ['ACTIVE', 'DISABLED'])],
+    submit: data => mutate(() => put(`/users/${user.id}/status`, data)),
+  }
+}
+function move(user: UserVO) {
+  form.value = {
+    title: '调动所属部门', description: `调动 ${user.name} 后，系统将回收新部门不准入的角色指派。`,
+    initial: { departmentId: user.departmentId }, fields: [departmentField()],
+    submit: data => mutate(() => put(`/users/${user.id}/department`, { ...data, version: user.version })),
+  }
+}
+function remove(user: UserVO) {
+  confirm('删除用户', `将删除 ${user.name}（${user.username}）并清理角色指派，历史审计保留。`, () => del(`/users/${user.id}`))
+}
+function actions(user: UserVO) {
+  if (user.status === 'DELETED') return []
+  return [
+    { key: 'edit', label: '编辑资料', show: allowed('updateUser') },
+    { key: 'status', label: '变更状态', show: allowed('setUserStatus') },
+    { key: 'move', label: '调动部门', show: allowed('changeUserDepartment'), disabled: !departments.value.length },
+    { key: 'delete', label: '删除用户', show: allowed('deleteUser') },
+  ].filter(action => action.show)
+}
+function rowAction(action: string | number, user: UserVO) {
+  if (action === 'edit') edit(user)
+  if (action === 'status') changeStatus(user)
+  if (action === 'move') move(user)
+  if (action === 'delete') remove(user)
+}
+async function assign() {
+  const id = userId.value, role = roleId.value
+  if (id === null || role === null) return
+  await run(async () => {
+    await post(`/users/${id}/role-assignments`, { roleId: role })
+    if (id === userId.value && role === roleId.value) roleId.value = null
+  })
+}
+function revoke(link: AssignmentVO) {
+  confirm('撤销角色指派', `将撤销 ${detail.data.value?.name ?? '该用户'} 的「${link.roleName}」直接指派。系统将重新计算有效权限。`, () => del(`/users/${link.userId}/role-assignments/${link.id}`))
+}
+watch([userId, () => auth.targetSystem], () => {
+  reset(); detail.reset(); assignments.reset(); options.reset(); permissions.reset()
+  roleId.value = null
+  void loadDetail()
+}, { immediate: true })
+onMounted(() => { void loadList(); void loadDirectory() })
+const user = detail.data, rows = list.data
 </script>
+
 <template>
-  <form class="toolbar" @submit.prevent="search"><label>姓名 / 账号<input v-model="keyword" /></label><label>部门<select v-model="departmentId"><option value="">全部</option><option v-for="d in deptOptions" :key="d.value" :value="d.value">{{ d.label }}</option></select></label><label>用户状态<select v-model="status"><option value="">全部</option><option>ACTIVE</option><option>DISABLED</option><option>DELETED</option></select></label><button>检索</button><button type="button" :disabled="!allowed('createUser') || !deptOptions.length" @click="create">创建用户</button></form>
-  <p v-if="loading" role="status">加载中…</p><p v-if="error" role="alert" class="error">{{ error }}</p><p role="status">{{ message }}</p>
-  <div class="table-scroll"><table><thead><tr><th>姓名</th><th>账号</th><th>部门</th><th>状态</th><th>操作</th></tr></thead><tbody><tr v-for="user in rows.items" :key="user.id"><td>{{ user.name }}</td><td>{{ user.username }}</td><td>{{ user.departmentName }}</td><td>{{ user.status }}</td><td class="actions"><button @click="selectUser(user).catch(e => error = e.message)">角色 / 有效权限</button><button :disabled="!allowed('updateUser')" @click="edit(user)">编辑</button><button :disabled="!allowed('setUserStatus')" @click="changeStatus(user)">状态</button><button :disabled="!allowed('changeUserDepartment') || !deptOptions.length" @click="move(user)">迁移部门</button><button :disabled="!allowed('deleteUser')" @click="remove(user)">删除</button></td></tr></tbody></table><p v-if="!loading && !rows.items.length">暂无用户</p></div>
-  <div class="pager"><button :disabled="page <= 1 || loading" @click="page--; load()">上一页</button><span>第 {{ rows.page }} 页 · 共 {{ rows.total }} 条</span><button :disabled="page * rows.pageSize >= rows.total || loading" @click="page++; load()">下一页</button></div>
-  <section v-if="selected" class="panel"><h3>{{ selected.name }} · {{ auth.targetSystem }} 的角色指派</h3><p class="hint">仅列出用户当前部门后端准入清单；请求不携带伪造部门或数据范围。</p><label>可指派角色<select v-model="roleId"><option value="">请选择</option><option v-for="role in eligible" :key="role.id" :value="role.id">{{ role.name }} ({{ role.code }})</option></select></label><button :disabled="!roleId || !allowed('createUserRoleAssignment')" @click="run(() => post(`/users/${selected!.id}/role-assignments`, { roleId: Number(roleId) }))">指派角色</button><ul><li v-for="link in assignments" :key="link.id">{{ link.roleName }} <button :disabled="!allowed('deleteUserRoleAssignment')" @click="run(() => del(`/users/${selected!.id}/role-assignments/${link.id}`))">回收</button></li></ul><EffectivePermissions v-if="effective" :value="effective" /></section>
+  <WorkspaceFeedback :error="error" :message="message" :stale="stale" @retry="refresh" />
+  <template v-if="!userId">
+    <PageHeader title="用户管理" description="查找组织内的用户，维护资料与角色指派。">
+      <template #actions><NButton v-if="allowed('createUser')" type="primary" :disabled="!departments.length" @click="create">创建用户</NButton></template>
+    </PageHeader>
+    <section class="surface">
+      <form class="toolbar" @submit.prevent="search">
+        <div class="field wide"><label for="user-keyword">姓名 / 账号</label><input id="user-keyword" v-model="filters.keyword" placeholder="输入姓名或账号" /></div>
+        <div class="field"><label for="user-department">部门</label><NTreeSelect id="user-department" v-model:value="filters.departmentId" aria-label="部门" :options="departments" :loading="directory.loading.value" filterable clearable placeholder="全部部门" /></div>
+        <div class="field"><label for="user-status">用户状态</label><select id="user-status" v-model="filters.status"><option value="">全部状态</option><option value="ACTIVE">正常</option><option value="DISABLED">停用</option><option value="DELETED">已删除</option></select></div>
+        <NButton type="primary" attr-type="submit">检索</NButton><NButton @click="clearFilters">重置</NButton>
+      </form>
+      <ReadState v-if="directory.error.value" :error="directory.error.value" @retry="loadDirectory" />
+      <div class="table-scroll" tabindex="0" aria-label="用户列表">
+        <table class="data-table"><thead><tr><th>姓名</th><th>账号</th><th>部门</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody><tr v-for="row in rows.items" :key="row.id">
+            <td><RouterLink class="row-title" :to="{ path: '/users', query: { userId: row.id } }">{{ row.name }}</RouterLink></td>
+            <td class="one-line"><TechText :value="row.username" /></td><td>{{ row.departmentName }}</td><td><StatusTag :value="row.status" /></td>
+            <td><div class="row-actions"><NButton text type="primary" @click="openUser(row.id, 'assignments')">角色指派</NButton><RowActions :options="actions(row)" :label="'更多操作 ' + row.name" @select="rowAction($event, row)" /></div></td>
+          </tr></tbody>
+        </table>
+      </div>
+      <ReadState :loading="list.loading.value" :error="list.error.value" :empty="!rows.items.length" description="未找到匹配的用户" @retry="loadList" />
+      <Pager :page="page" :page-size="rows.pageSize" :total="rows.total" :loading="list.loading.value" @change="changePage" />
+    </section>
+  </template>
+  <template v-else>
+    <PageHeader :title="user?.name ?? '用户详情'" :description="user?.username">
+      <template #before><RouterLink class="back-link" to="/users">← 返回用户列表</RouterLink></template>
+      <template #actions v-if="user"><StatusTag :value="user.status" /><RowActions :options="actions(user)" label="管理用户" text="管理用户" @select="rowAction($event, user!)" /></template>
+    </PageHeader>
+    <ReadState :loading="detail.loading.value" :error="detail.error.value" @retry="loadDetail" />
+    <section v-if="user" class="surface padded">
+      <DetailTabs :value="tab" :tabs="[{ key: 'profile', label: '基本资料' }, { key: 'assignments', label: '角色指派' }, { key: 'permissions', label: '有效权限' }]" label="用户详情" @change="setTab">
+        <template #profile>
+          <dl class="description-grid"><div><dt>姓名</dt><dd>{{ user.name }}</dd></div><div><dt>账号</dt><dd><TechText :value="user.username" /></dd></div><div><dt>所属部门</dt><dd>{{ user.departmentName }}</dd></div><div><dt>学工号</dt><dd>{{ user.no || '—' }}</dd></div><div><dt>电话</dt><dd>{{ user.phone || '—' }}</dd></div><div><dt>统一身份标识</dt><dd><TechText :value="user.subject" /></dd></div></dl>
+        </template>
+        <template #assignments>
+          <div class="section-heading"><h3>已指派角色</h3><TechText :value="auth.targetSystem" /></div>
+          <p class="help-text">角色选项由当前部门和目标系统的准入规则决定。</p>
+          <form v-if="allowed('createUserRoleAssignment') && user.status !== 'DELETED'" class="toolbar assignment-form" @submit.prevent="assign">
+            <div class="field wide"><label for="assign-role">可指派角色</label><NSelect id="assign-role" v-model:value="roleId" :options="eligible.map(role => ({ label: role.name + ' · ' + role.code, value: role.id }))" :loading="options.loading.value" aria-label="可指派角色" filterable placeholder="选择角色" /></div>
+            <NButton type="primary" attr-type="submit" :loading="busy" :disabled="roleId === null || assignments.loading.value">指派角色</NButton>
+          </form>
+          <ReadState v-if="options.error.value" :error="options.error.value" @retry="loadOptions()" />
+          <ReadState :loading="assignments.loading.value" :error="assignments.error.value" :empty="!assignments.data.value.length" description="当前系统暂无直接角色指派" @retry="loadAssignments()" />
+          <ul class="compact-list"><li v-for="link in assignments.data.value" :key="link.id"><span><strong>{{ link.roleName }}</strong><TechText :value="link.roleCode" /></span><NButton v-if="allowed('deleteUserRoleAssignment')" size="small" @click="revoke(link)">撤销指派</NButton></li></ul>
+        </template>
+        <template #permissions>
+          <ReadState :loading="permissions.loading.value" :error="permissions.error.value" @retry="loadPermissions()" />
+          <EffectivePermissions v-if="permissions.data.value" :value="permissions.data.value" />
+        </template>
+      </DetailTabs>
+    </section>
+  </template>
   <RecordForm v-if="form" v-bind="form" @close="form = null" />
+  <ConfirmAction v-if="confirmation" v-bind="confirmation" @close="confirmation = null" />
 </template>

@@ -45,7 +45,7 @@ export ACCEPTANCE_DB_PASSWORD='<专用测试实例凭据>'
 ./mvnw verify -DskipTests
 ----
 
-前端typecheck、38项逻辑单测、构建及两实现desktop/mobile要另外真实运行；教师原440测试和真实双中心六类12联调分别记录，不以HTTP stub替代。
+前端须运行 typecheck、Vitest 覆盖率、构建和两实现桌面 Chromium E2E。教师原440测试和真实双中心六类12联调分别记录。参见 link:acceptance/frontend-redesign.adoc[桌面前端验收]。
 当前精确canonical jar为各模块 `target/<module>.jar`，Dockerfile不再用通配符误装候选/旧包；课程使用固定上游的单一精确jar。
 
 == 可复现本地Swarm验收

@@ -16,4 +16,4 @@ export interface CoverageVO { mappings: MappingVO[]; unmappedUi: UiResourceVO[];
 export interface HierarchyVO { roles: RoleVO[]; edges: { seniorRoleId: number; juniorRoleId: number }[] }
 export interface IdentityVO { subject: string; roles: ('student' | 'teacher' | 'admin')[]; permissions: string[]; name: string; no: string }
 export interface MeVO { user: UserVO; effective: EffectiveVO }
-export interface AuditVO { id: number; at: string; actor: { id: number; name: string; roles: string[]; deleted: boolean }; type: string; target: string; before: unknown; after: unknown }
+export interface AuditVO { id: number; at: string; actor: { id: number | null; name: string; roles: string[]; deleted: boolean }; type: string; target: string; before: unknown; after: unknown; objectType?: string | null; objectId?: string | null }

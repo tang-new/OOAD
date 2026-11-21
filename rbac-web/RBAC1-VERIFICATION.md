@@ -1,4 +1,6 @@
-# RBAC1 前端与验收
+# RBAC1 改版前的前端验收记录
+
+当前页面、桌面 Chromium 流程和证据见 [桌面前端验收](../docs/acceptance/frontend-redesign.adoc)。以下内容记录改版前的实现与运行结果。
 
 ## 合同和页面
 

@@ -11,7 +11,7 @@
 |后端JUnit |188个不同测试通过，0失败/错误/跳过 |contract 2、structured 49、DDD 112、gateway 25；正常test阶段真实运行。健康标识更新另重跑2个健康单测与5个真实HTTP测试，不重复累计成新测试数。
 |共享HTTP |25+25+T21，共51 PASS |两侧每次各两真实JVM、MySQL/Redis；安全依赖修复后最终m21-shared-both，运行快照hash与canonical完全相同。
 |前端逻辑 |38/38 |typecheck/build通过；保留85%行、80%分支门槛，实测逻辑行/分支100%。
-|真实浏览器 |两后端各desktop/mobile，4/4 |最新m22-visual-structured-20261115-035110、m22-visual-ddd-20261115-035254；等待数据/节点/边/审计行后截图。
+|真实浏览器历史基线 |两后端各desktop/mobile，4/4 |m22-visual-structured-20261115-035110、m22-visual-ddd-20261115-035254。当前桌面测试见link:acceptance/frontend-redesign.adoc[改版验收]。
 |原教师测试 |440/440 |固定上游源码，保留原断言；仅两处身份fixture修正独立patch记录。
 |课程真实联调 |六类×两中心，12/12 |真实中心建号/授权/签token，真实gateway、课程JPA和同步审计；核对入组、成绩88与审计70→88，不是center stub。
 |合同与DDL |64中心、80课程操作；15表 |真实Flyway V1/V2、validate、重复迁移与9项负约束；OAS语义/$ref/operationId检查。
@@ -96,7 +96,7 @@ Windows的SIGTERM实际上终止进程、不执行Java shutdown hook，因此使
 . 七个教师裸/auth操作、两私有投影最小字段与双凭据、网关可信路由/固定上游/拒绝身份头和URL伪造；中心非200不得进入课程。
 . 审计UUID/四事件/前缀/500字/安全JSON；同键串行并发同id、跨主体/系统异体拒绝；业务与SUCCESS同事务、trigger故障真实回滚，DENIED独立。
 . 两实例预热L1/L2后撤权、确定交错版本重算/持续变化503、10,000合成用户数据库分页、日志无fixture秘密。
-. 同Vue真实两后端PC/手机、TLS/私网/secrets/镜像一致性与本地受控切换；不冒称外部部署或整机恢复。
+. 同一Vue前端连接两套真实后端进行桌面 Chromium 测试。TLS、私网、secrets、镜像一致性与本地受控切换分别验证。
 
 旧多公司/scope/selfOnly预期按link:requirements.adoc[映射]替换，仍适用的认证/越权/事务/缓存/保护/保密断言保留，不加skip伪绿。
 中心与课程跨库同步HTTP不是分布式事务；同UUID有限重试及未确认错误如实保留，不以Outbox/MQ掩盖。

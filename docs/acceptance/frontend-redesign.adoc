@@ -1,0 +1,83 @@
+= RBAC1 桌面前端改版验收
+:toc: left
+
+== 设计与用例
+
+改版恢复用户与角色的列表、详情和页签，将角色继承图移到独立工作区。深墨蓝导航、白色数据区和统一的状态标签用于层级和操作反馈。所有业务路由沿用当前 OpenAPI，切换管理目标系统仍使用 `rbac-center` 登录身份。
+
+Naive UI 负责主题、表格、树选、对话框、抽屉和分页。业务详情使用支持方向键及 Home/End 的共用页签。登录和外壳采用本地样式，各视图按路由加载。角色图使用 Vue Flow 管理视窗，通过独立 ELK Worker 计算左右分层正交连线。图中保留停用节点，标出经过停用节点中断的路径。有效权限以服务端计算结果为准。
+
+. 查找用户，打开角色指派页签，选择当前部门和目标系统准入的角色，刷新有效权限并核对来源。
+. 从角色详情定位继承图，选择起点和终点，分别检查菱形的全部路径及一条路径。尝试反向连接，观察服务端的成环拒绝与保留的两端选项。
+. 按主体和操作解释允许或拒绝。在审计中按目标过滤，打开记录查看前后变化及原始事件。
+
+工作台的「可管理用户」使用用户列表的服务端分页总数，两套后端都按当前部门子树统计。角色和系统计数按各自的 API 权限显示。受限账号仅看到获准内容，无首页菜单权限时进入本人资料。
+
+== 逐路由视觉检查
+
+[cols="2,5"]
+|===
+|页面 |核对内容
+|`/login` |登录字段和主按钮、失败提示、退出和改密后重新登录
+|`/dashboard`、`/me` |管理员和受限账号、计数范围、导航入口、资料页签
+|`/users` |筛选、分页、长账号、返回恢复、角色选择、有效权限和字段错误
+|`/departments` |树搜索、选中详情、角色准入和回收影响
+|`/roles` |列表与详情、直接权限编辑、有效权限来源及独立启停
+|`/hierarchy` |画布、缩放和路径、菱形两路、关系增删和成环反馈
+|`/systems`、`/permissions` |系统状态与目标筛选、UI/API 分类及操作层级
+|`/ui-resources`、`/api-operations` |父子层级、抽屉、方法/路径、长字段和访问策略
+|`/mappings` |按 UI 选择 API，增删差异、覆盖定位与保存
+|`/authorization`、`/audit` |允许、拒绝、403 和故障态，审计时区及字段对照
+|`/403`、未知地址 |菜单停用后深链与当前页面拒绝，未知地址导航可达
+|===
+
+== 浏览器截图对照
+
+原版使用 `d8ab99a`，与改版连接同一个隔离的 DDD 实例及同一批虚构业务数据。双视口截图已逐页实看。原版 Vite 将 `/api-operations` 和 `/authorization` 也当作 API 代理前缀，原版截图从侧栏进入这两页。改版使用完整路径段匹配，两个页面均以直接访问验收。
+
+[cols="2,1,1,4"]
+|===
+|场景 |改版前 |改版后 |复核结果
+|登录 |link:screenshots/desktop-redesign/before-1440-login.png[原版] |link:screenshots/desktop-redesign/after-1440-login.png[本版] |登录入口和凭据表单在桌面分区清晰，失败提示贴近提交按钮。
+|用户有效权限 |link:screenshots/desktop-redesign/before-1440-user-detail.png[原版] |link:screenshots/desktop-redesign/after-1440-user-detail.png[本版] |独立页签、来源与路径同行，多路径完整列出。
+|角色继承 |link:screenshots/desktop-redesign/before-1440-hierarchy.png[原版] |link:screenshots/desktop-redesign/after-1440-hierarchy.png[本版] |画布占据首屏，菱形节点按层对齐，箭头连接角色边缘。
+|受限账号工作台 |link:screenshots/desktop-redesign/before-1440-restricted-dashboard.png[原版] |link:screenshots/desktop-redesign/after-1440-restricted-dashboard.png[本版] |保留授权范围内的计数和本人资料入口，顶部展示账号。
+|宽表（1920×1080） |— |link:screenshots/desktop-redesign/after-1920-api-operations.png[本版] |方法、路径、访问策略和技术标识可横向扫读。
+|宽画布（1920×1080） |— |link:screenshots/desktop-redesign/after-1920-hierarchy.png[本版] |长中文名单行截断，选中详情显示完整名称。
+|===
+
+业务状态截图包括 link:screenshots/desktop-redesign/diamond-selected.png[菱形单路径]、link:screenshots/desktop-redesign/mapping-diff.png[映射待保存差异]、link:screenshots/desktop-redesign/decision-denied.png[正常鉴权拒绝]、link:screenshots/desktop-redesign/audit-detail.png[撤销角色审计详情] 和 link:screenshots/desktop-redesign/user-validation.png[字段校验]。
+
+== 本地运行结果
+
+2026-11-21 使用 Windows 的 Edge Chromium 157、Node 22、Java 21，以及 Docker 中隔离的 MySQL 8 和 Redis 7。
+
+[cols="2,2,3"]
+|===
+|检查 |结果 |证据
+|前端类型、单测及生产构建 |通过 |43 项单测，行覆盖率 91.87%，分支覆盖率 92.85%
+|structured 桌面 Chromium |2/2 通过 |运行 `desktop-verified`，真实管理流程及视觉用例；42 张逐路由和宽视口截图
+|DDD 桌面 Chromium |两项分别通过 |管理流程 `desktop-flow-confirmed`，视觉对照 `desktop-comparison`；80 张同批虚构数据的前后和宽视口截图
+|===
+
+浏览器流程覆盖创建用户、独立状态更新、指派与撤销、继承来源、目标系统切换、成环拒绝、映射保存、鉴权允许及拒绝、菜单停用后的当前页及深链拦截、日志详情、退出与改密。逐页验证还检查了可见焦点、收起侧栏、125% 缩放及 403/404。
+
+两套后端的 Logback 记录均核对了指派、撤销、鉴权解释和审计查询的 `traceId`，每个场景可关联三层技术日志。
+
+== 复现
+
+在仓库根目录按 link:../../README.md[本地验证] 生成两套 Java 21 后端 jar。Playwright 为每次运行创建独立测试库、Redis 命名空间、只读的 jar 临时快照，以及各自的运行日志。默认专用回环端口为 MySQL 13306、Redis 16379。
+
+[source,bash]
+----
+cd rbac-web
+npm ci
+npm run typecheck
+npm run test:coverage
+npm run build
+npx playwright install chromium
+E2E_MODULE=rbac-structured npm run e2e
+E2E_MODULE=rbac-ddd npm run e2e
+----
+
+默认项目使用桌面 Chromium。逐页采集覆盖 1366×768 和 1440×900，宽表与关系图另跑 1920×1080。明细、trace 与截图位于 `rbac-web/test-results`，Logback 位于 `rbac-web/test-results/logs`。对照模式将未改写的 `d8ab99a` 前端检出到 `.tmp/rbac-web-redesign-baseline/rbac-web` 并准备其依赖，设置 `E2E_VISUAL_BASELINE=1` 后，同一后端和虚构数据会分别服务原版和改版浏览器。历史移动端证据见link:screenshots/README.adoc[此前验收]。

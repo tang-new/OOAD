@@ -5,7 +5,7 @@ import { vPerm } from '@/directives/perm'
 import { useAuthStore } from '@/stores/auth'
 import { meetsPolicy } from '@/utils/password'
 import RecordForm from '@/components/RecordForm.vue'
-import RoleDag from '@/components/RoleDag.vue'
+import { inheritancePaths } from '@/views/hierarchy'
 import type { HierarchyVO } from '@/api/types'
 it('权限指令禁用、恢复、隐藏，处理子按钮及非按钮宿主', async () => {
   setActivePinia(createPinia()); const auth = useAuthStore()
@@ -21,11 +21,17 @@ it('权限指令禁用、恢复、隐藏，处理子按钮及非按钮宿主', a
 it.each([null, undefined, '', 'Ab1!', 'abcdefgh', 'ABCDEFGH', 'Abcdefgh', 'Abc12345', 'Abcd123!'])('密码强度边界 %s', password => { expect(meetsPolicy(password)).toBe(password === 'Abcd123!') })
 it('表单只发送字段白名单，number / checkbox 保持类型，密码不留存', async () => {
   const submit = vi.fn().mockResolvedValue(undefined)
-  const wrapper = mount(RecordForm, { props: { title: '测试', fields: [{ key: 'name', label: '名称' }, { key: 'parentId', label: '上级', type: 'number' }, { key: 'enabled', label: '开启', type: 'checkbox' }, { key: 'password', label: '口令', type: 'password' }], initial: { name: 'x', enabled: false, secretNotAllowed: 'no' }, submit } })
+  const wrapper = mount(RecordForm, { global: { stubs: { Modal: { template: '<div><slot /></div>' } } }, props: { title: '测试', fields: [{ key: 'name', label: '名称' }, { key: 'parentId', label: '上级', type: 'number' }, { key: 'enabled', label: '开启', type: 'checkbox' }, { key: 'password', label: '口令', type: 'password' }], initial: { name: 'x', enabled: false, secretNotAllowed: 'no' }, submit } })
   await wrapper.find('input[type=number]').setValue('12'); await wrapper.find('input[type=password]').setValue('fictional'); await wrapper.find('form').trigger('submit'); await vi.waitFor(() => expect(submit).toHaveBeenCalled())
   expect(submit).toHaveBeenCalledWith({ name: 'x', parentId: 12, enabled: false, password: 'fictional' })
 })
-it('DAG 多父边数真实呈现，非树复制', () => {
-  const graph = { roles: [{ id: 1, name: 'A', status: 'ENABLED' }, { id: 2, name: 'B', status: 'DISABLED' }, { id: 3, name: 'C', status: 'ENABLED' }], edges: [{ seniorRoleId: 1, juniorRoleId: 3 }, { seniorRoleId: 2, juniorRoleId: 3 }] } as HierarchyVO
-  const wrapper = mount(RoleDag, { props: { graph } }); expect(wrapper.findAll('rect')).toHaveLength(3); expect(wrapper.findAll('line')).toHaveLength(2)
+it('DAG 菱形保留两条路径，标明停用断路并排除无关边', () => {
+  const graph = {
+    roles: [1, 2, 3, 4, 5].map(id => ({ id, status: id === 2 ? 'DISABLED' : 'ENABLED' })),
+    edges: [[1, 2], [1, 3], [2, 4], [3, 4], [1, 5]].map(([seniorRoleId, juniorRoleId]) => ({ seniorRoleId, juniorRoleId })),
+  } as HierarchyVO
+  const result = inheritancePaths(graph, 1, 4)
+  expect(result.everyEdge).toEqual(new Set(['1:2', '1:3', '2:4', '3:4']))
+  expect(result.paths.map(path => [path.nodes, path.effective])).toEqual([[[1, 2, 4], false], [[1, 3, 4], true]])
+  expect(inheritancePaths(graph, 4, 1).paths).toEqual([])
 })

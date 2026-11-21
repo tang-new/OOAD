@@ -1,30 +1,80 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { authApi } from '@/api'
+import { enabledResources, visibleMenus } from '@/router/routes'
 import type { IdentityVO, MeVO, UiResourceVO } from '@/api/types'
+
 const KEY = 'rbac.token'
-function readToken() { try { return localStorage.getItem(KEY) } catch { return null } }
+export const CENTER = 'rbac-center'
+
+function readToken() {
+  try { return localStorage.getItem(KEY) } catch { return null }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(readToken())
   const identity = ref<IdentityVO | null>(null)
   const profile = ref<MeVO | null>(null)
   const menus = ref<UiResourceVO[]>([])
   const loadedAt = ref(0)
-  const targetSystem = ref('rbac-center')
+  const targetSystem = ref(CENTER)
+  const session = ref(0)
   const loaded = computed(() => identity.value !== null)
   const permissions = computed(() => new Set(identity.value?.permissions ?? []))
-  // identityRole 仅用于展示，绝不据此通配 UI 权限。
+  const navigation = computed(() => visibleMenus(menus.value, has))
+  const buttons = computed(() => new Set(enabledResources(menus.value).filter(item => item.type === 'BUTTON').map(item => item.permissionCode)))
+  let pending: { session: number; promise: Promise<void> } | undefined
+
   function has(code: string) { return permissions.value.has(code) }
+  function canVisit(path: string) { return navigation.value.some(item => item.route === path) }
+  function canAct(operation: string) {
+    const code = `rbac:ui:${operation}`
+    return has(code) && buttons.value.has(code)
+  }
   function setToken(value: string | null) {
+    if (token.value !== value) {
+      session.value++
+      identity.value = null
+      profile.value = null
+      menus.value = []
+      loadedAt.value = 0
+      targetSystem.value = CENTER
+    }
     token.value = value
-    try { if (value) localStorage.setItem(KEY, value); else localStorage.removeItem(KEY) } catch { /* 禁用存储时只用内存 */ }
+    try {
+      if (value) localStorage.setItem(KEY, value)
+      else localStorage.removeItem(KEY)
+    } catch { /* 禁用存储时使用内存会话 */ }
   }
-  function clear() { setToken(null); identity.value = null; profile.value = null; menus.value = []; loadedAt.value = 0 }
-  async function refresh() {
-    const [who, mine, navigation] = await Promise.all([authApi.me(), authApi.profile(), authApi.menus()])
-    identity.value = who; profile.value = mine; menus.value = navigation; loadedAt.value = Date.now()
+  function clear() { setToken(null) }
+  function refresh(): Promise<void> {
+    const current = session.value
+    if (pending?.session === current) return pending.promise
+    const promise = Promise.all([authApi.me(), authApi.profile(), authApi.menus()]).then(([who, mine, navigation]) => {
+      if (current !== session.value) return
+      identity.value = who
+      profile.value = mine
+      menus.value = navigation
+      loadedAt.value = Date.now()
+    }).finally(() => {
+      if (pending?.promise === promise) pending = undefined
+    })
+    pending = { session: current, promise }
+    return promise
   }
-  async function login(username: string, password: string) { const result = await authApi.login(username, password); setToken(result.accessToken); await refresh() }
-  async function logout() { try { if (token.value) await authApi.logout() } finally { clear() } }
-  return { token, identity, profile, menus, loadedAt, targetSystem, loaded, permissions, has, setToken, clear, refresh, login, logout }
+  async function login(username: string, password: string) {
+    const result = await authApi.login(username, password)
+    setToken(result.accessToken)
+    try { await refresh() } catch (error) {
+      if (token.value === result.accessToken) clear()
+      throw error
+    }
+  }
+  async function logout() {
+    const current = session.value
+    try { if (token.value) await authApi.logout() } finally {
+      if (session.value === current) clear()
+    }
+  }
+  return { token, identity, profile, menus, loadedAt, targetSystem, session, loaded, permissions, navigation, has, canVisit, canAct, setToken, clear, refresh, login, logout }
 })

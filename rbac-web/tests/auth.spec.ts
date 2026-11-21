@@ -39,4 +39,27 @@ describe('身份与权限状态', () => {
     setActivePinia(createPinia()); const store = useAuthStore(); expect(store.token).toBeNull(); store.setToken('memory'); expect(store.token).toBe('memory'); store.clear()
     get.mockRestore(); set.mockRestore()
   })
+  it('同会话合并刷新，旧会话的响应不能写入新会话', async () => {
+    const store = useAuthStore()
+    store.setToken('first')
+    let finish!: (identity: IdentityVO) => void
+    vi.mocked(authApi.me).mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+    const old = store.refresh()
+    const duplicate = store.refresh()
+    expect(authApi.me).toHaveBeenCalledTimes(1)
+    store.targetSystem = 'course-project-management'
+    store.setToken('new')
+    await store.refresh()
+    finish({ ...who, name: '旧会话' })
+    await Promise.all([old, duplicate])
+    expect(store.identity?.name).toBe(who.name)
+    expect(store.targetSystem).toBe('rbac-center')
+  })
+  it('会话初始化失败时清理刚获取的令牌', async () => {
+    const store = useAuthStore()
+    vi.mocked(authApi.login).mockResolvedValue({ accessToken: 'dummy', tokenType: 'Bearer', expiresIn: 600 })
+    vi.mocked(authApi.menus).mockRejectedValue(new Error('offline'))
+    await expect(store.login('x', 'x')).rejects.toThrow('offline')
+    expect(store.token).toBeNull()
+  })
 })

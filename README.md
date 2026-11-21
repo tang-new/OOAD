@@ -18,7 +18,7 @@
 | [六人口试审查分工](docs/oral-review/README.adoc) | 全员共同任务、A–F任务卡、交叉口试、迭代复现与只读Git索引 |
 | [数据库](docs/database.adoc) / [API](docs/api.adoc) | 当前唯一契约、种子及安全边界 |
 | [最终验收](docs/final-acceptance.adoc) / [测试证据](docs/test-plan.adoc) / [共享验收](docs/acceptance-plan.adoc) | 真实结果、双实例、故障注入及行为等价 |
-| [浏览器截图](docs/acceptance/screenshots/README.adoc) | 两后端PC/手机真实已加载页面，不含真实人员或秘密 |
+| [桌面前端验收](docs/acceptance/frontend-redesign.adoc) / [历史浏览器截图](docs/acceptance/screenshots/README.adoc) | 双后端 Chromium、逐路由视觉复核和角色继承演示 |
 | [课程接入](course-integration/README.md) / [CloneFactory](docs/clonefactory.adoc) | 固定源码、安装及本轮验收入口 |
 | [部署](docs/deployment.adoc) / [部署证据](deploy/deployment-evidence.json) | 隔离 Swarm、TLS、秘密、真实镜像与验收限制 |
 | [基线](docs/migration-baseline.adoc) / [迭代记录](docs/iteration-log.adoc) | 起始版本、保全备份及真实阶段结果 |
