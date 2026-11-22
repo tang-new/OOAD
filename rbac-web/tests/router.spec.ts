@@ -2,7 +2,7 @@ import { beforeEach, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { ApiError } from '@/api/http'
-import { createAppRouter, signedInDestination } from '@/router'
+import { createAppRouter, loginRedirectPath, signedInDestination } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { flattenMenus, visibleMenus, homePath } from '@/router/routes'
 import type { UiResourceVO } from '@/api/types'
@@ -82,6 +82,7 @@ it.each([[0, '/users'], [503, '/users/']])('权限刷新失败（%i）拦截管�
   await router.push(`${address}?userId=5#details`)
   expect(router.currentRoute.value.path).toBe('/auth-refresh-failed')
   expect(router.currentRoute.value.query.redirect).toBe(target)
+  expect(loginRedirectPath(router.currentRoute.value)).toBe(target)
   expect(refresh).toHaveBeenCalledTimes(1)
 
   const wrapper = mount(StatusView, { props: { status: 'refresh-failed' }, global: { plugins: [router] } })
@@ -123,10 +124,26 @@ it.each([true, false])('直接打开 403 页时初始化会话（有效令牌 %s
   expect(auth.loaded).toBe(valid)
   expect(router.currentRoute.value.path).toBe(valid ? '/403' : '/login')
 })
+it.each([[401, '/login'], [503, '/auth-refresh-failed']])('直接打开权限刷新失败页时校验会话（%i）', async (status, destination) => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  const refresh = vi.spyOn(auth, 'refresh').mockImplementationOnce(async () => {
+    if (status === 401) auth.clear()
+    throw new ApiError(status, 'UNAVAILABLE', '无法刷新权限')
+  })
+  const router = createAppRouter()
+  const target = '/users?userId=5#details'
+  await router.push({ path: '/auth-refresh-failed', query: { redirect: target } })
+  expect(refresh).toHaveBeenCalledTimes(1)
+  expect(router.currentRoute.value.path).toBe(destination)
+  expect(router.currentRoute.value.query.redirect).toBe(target)
+  expect(auth.token).toBe(status === 401 ? null : 'dummy')
+})
 it('权限刷新失败页只允许重试内部管理路由', async () => {
   const auth = useAuthStore(); auth.setToken('dummy')
+  vi.spyOn(auth, 'refresh').mockRejectedValueOnce(new ApiError(503, 'UNAVAILABLE', '无法刷新权限'))
   const router = createAppRouter()
   await router.push({ path: '/auth-refresh-failed', query: { redirect: '//example.com' } })
+  expect(loginRedirectPath(router.currentRoute.value)).toBe(router.currentRoute.value.fullPath)
   const wrapper = mount(StatusView, { props: { status: 'refresh-failed' }, global: { plugins: [router] } })
   expect(wrapper.get('a').attributes('href')).toBe('/me')
   wrapper.unmount()

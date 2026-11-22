@@ -17,6 +17,10 @@ export const pages = [
 ]
 export const pageByPath = new Map(pages.map(page => [page.path, page]))
 
+export function managementRetryPath(redirect: unknown) {
+  if (typeof redirect === 'string' && pageByPath.has(redirect.split(/[?#]/, 1)[0])) return redirect
+}
+
 export function flattenMenus(nodes: UiResourceVO[]): UiResourceVO[] {
   return nodes.flatMap(node => [node, ...flattenMenus(node.children ?? [])])
 }

@@ -311,7 +311,8 @@ public class DirectoryApplicationService {
         Profile profile = directory.user(id, true);
         managed(actor, profile.departmentId());
         Role role = grants.role(roleId);
-        DomainException.require(grants.systemEnabled(role.systemCode()), 409, "ROLE_DISABLED");
+        if (!grants.systemEnabled(role.systemCode()))
+            throw DomainException.auditedDenial(409, "ROLE_DISABLED");
         authorization.upperBound(
                 actor,
                 role.systemCode(),

@@ -20,6 +20,12 @@ class ResourceOperationConsistencyTest {
     private static final ApiOperation DIRECTORY = new ApiOperation(
             9, CENTER, "listIdentityDepartments", "GET", "/auth/departments", null, "admin",
             ApiOperation.Policy.AUTHENTICATED, true);
+    private static final ApiOperation COPY_COURSE = new ApiOperation(
+            10, COURSE, "copyCourse", "POST", "/courses/copy", "course:access", "teacher",
+            ApiOperation.Policy.PROTECTED, true);
+    private static final ApiOperation DISABLED_COPY_COURSE = new ApiOperation(
+            10, COURSE, "copyCourse", "POST", "/courses/copy", "course:access", "teacher",
+            ApiOperation.Policy.PROTECTED, false);
     private static final AuthorizationPolicy.Effective EMPTY =
             new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of());
     private final AuthorizationRepository grants = mock(AuthorizationRepository.class);
@@ -127,6 +133,46 @@ class ResourceOperationConsistencyTest {
         verify(resources).saveOperation(allowed, 2, 80L);
         verify(resources, never()).saveOperation(eq(strongerPermission), anyLong(), nullable(Long.class));
         verify(resources, never()).saveOperation(eq(strongerRole), anyLong(), nullable(Long.class));
+    }
+
+    @Test
+    void canDisableAndRetryAnExistingCourseOperationWithoutItsOriginalIdentityRole() {
+        when(resources.operationSystem(COURSE)).thenReturn(new OperationSystem(2, COURSE, true));
+        when(resources.operation(10L)).thenReturn(COPY_COURSE);
+        when(resources.apiPermissionId(2, "course:access")).thenReturn(80L);
+        when(authorization.effective(7L, COURSE)).thenReturn(EMPTY);
+        when(resources.saveOperation(any(ApiOperation.class), eq(2L), eq(80L)))
+                .thenAnswer(call -> call.getArgument(0));
+
+        ApiOperation saved = service.patchOperation(
+                principal, 10L, "copyCourse", "POST", "/courses/copy", "course:access", "teacher",
+                ApiOperation.Policy.PROTECTED, false,
+                Set.of("operationId", "method", "pathTemplate", "permissionCode", "requiredRole",
+                        "accessPolicy", "enabled"));
+
+        assertThat(saved).isEqualTo(DISABLED_COPY_COURSE);
+        when(resources.operation(10L)).thenReturn(saved);
+        assertThat(service.patchOperation(
+                        principal, 10L, null, null, null, null, null, null, false, Set.of("enabled")))
+                .isEqualTo(saved);
+        verify(authorization, never()).effective(7L, COURSE);
+    }
+
+    @Test
+    void stillChecksTheUpperBoundWhenDisablingWithOtherChangesOrReenabling() {
+        when(resources.operationSystem(COURSE)).thenReturn(new OperationSystem(2, COURSE, true));
+        when(resources.operation(10L)).thenReturn(COPY_COURSE);
+        when(resources.apiPermissionId(2, "course:access")).thenReturn(80L);
+        when(authorization.effective(7L, COURSE)).thenReturn(EMPTY);
+
+        rejects(403, "GRANT_EXCEEDS_ACTOR", () -> service.patchOperation(
+                principal, 10L, null, null, "/courses/other", null, null, null, false,
+                Set.of("pathTemplate", "enabled")));
+
+        when(resources.operation(10L)).thenReturn(DISABLED_COPY_COURSE);
+        rejects(403, "GRANT_EXCEEDS_ACTOR", () -> service.patchOperation(
+                principal, 10L, null, null, null, null, null, null, true, Set.of("enabled")));
+        verify(resources, never()).saveOperation(any(), anyLong(), nullable(Long.class));
     }
 
     @Test

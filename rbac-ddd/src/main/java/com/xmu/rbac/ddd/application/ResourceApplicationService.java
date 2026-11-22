@@ -174,7 +174,9 @@ public class ResourceApplicationService {
                 proposed.policy() != ApiOperation.Policy.PROTECTED || hasCondition,
                 400,
                 "API_REQUIREMENT_MISSING");
-        if (hasCondition && !authorization.effective(actor.id(), "rbac-center").superAdministrator()) {
+        if (hasCondition
+                && !proposed.onlyDisables(old)
+                && !authorization.effective(actor.id(), "rbac-center").superAdministrator()) {
             DomainException.require(system.enabled(), 403, "GRANT_EXCEEDS_ACTOR");
             AuthorizationPolicy.Effective target = authorization.effective(actor.id(), system.code());
             DomainException.require(

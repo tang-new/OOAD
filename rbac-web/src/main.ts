@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import './styles.css'
-import { createAppRouter } from './router'
+import { createAppRouter, loginRedirectPath } from './router'
 import { setAuthHooks } from './api/http'
 import { useAuthStore } from './stores/auth'
 import { vPerm } from './directives/perm'
@@ -15,7 +15,7 @@ setAuthHooks({
   onUnauthenticated: () => {
     auth.clear()
     const route = router.currentRoute.value
-    if (route.path !== '/login') void router.replace({ path: '/login', query: { redirect: route.fullPath } })
+    if (route.path !== '/login') void router.replace({ path: '/login', query: { redirect: loginRedirectPath(route) } })
   },
   onForbidden: () => {
     auth.loadedAt = 0

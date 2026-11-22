@@ -12,38 +12,39 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.*;
 import java.util.concurrent.*;
 
-/** 外部审计通过真实 HTTP、MySQL 唯一键和独立事务提交验证。 */
+/** 通过真实 HTTP 和 MySQL 验证审计记录及独立事务提交。 */
 class DddAuditIntegrationTest extends DddHttpTestSupport {
     @Autowired JdbcTemplate jdbc;
 
+    private long createUser(String root, String username) {
+        return successful(
+                        HttpMethod.POST,
+                        "/api/v1/users",
+                        root,
+                        values(
+                                "username", username,
+                                "name", "审计测试管理员",
+                                "departmentId", 2,
+                                "password", "Ddd-Test-Only-Password-2026!"))
+                .path("id")
+                .asLong();
+    }
+
+    private long courseAdminRole() {
+        return jdbc.queryForObject(
+                "select r.id from sys_role r join sys_system s on r.system_id=s.id where"
+                        + " s.code='course-project-management' and r.code='admin'",
+                Long.class);
+    }
+
     private String courseAdmin(String root) {
         String username = "DDD_AUD_" + UUID.randomUUID().toString().replace("-", "");
-        long user =
-                successful(
-                                HttpMethod.POST,
-                                "/api/v1/users",
-                                root,
-                                values(
-                                        "username",
-                                        username,
-                                        "name",
-                                        "审计测试管理员",
-                                        "departmentId",
-                                        2,
-                                        "password",
-                                        "Ddd-Test-Only-Password-2026!"))
-                        .path("id")
-                        .asLong();
-        long role =
-                jdbc.queryForObject(
-                        "select r.id from sys_role r join sys_system s on r.system_id=s.id where"
-                                + " s.code='course-project-management' and r.code='admin'",
-                        Long.class);
+        long user = createUser(root, username);
         successful(
                 HttpMethod.POST,
                 "/api/v1/users/" + user + "/role-assignments",
                 root,
-                values("roleId", role));
+                values("roleId", courseAdminRole()));
         return login(username, "course-project-management");
     }
 
@@ -198,5 +199,46 @@ class DddAuditIntegrationTest extends DddHttpTestSupport {
                         audit(HttpMethod.GET, "/integration/authorities", actor, null, null)
                                 .getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void disabledSystemAssignmentCommitsDenialWithoutChangingGrants() {
+        String root = login("root", "rbac-center");
+        long user = createUser(root, "DDD_AUD_" + UUID.randomUUID().toString().replace("-", ""));
+        long role = courseAdminRole();
+        long system = jdbc.queryForObject(
+                "select id from sys_system where code='course-project-management'", Long.class);
+        String systemStatus = "/api/v1/systems/" + system + "/status";
+
+        try {
+            successful(HttpMethod.PUT, systemStatus, root, values("status", "DISABLED"));
+            long lastAudit = jdbc.queryForObject("select max(id) from sys_audit_log", Long.class);
+            long grantVersion = jdbc.queryForObject("select version from sys_grant_version where id=1", Long.class);
+
+            ResponseEntity<JsonNode> response = call(
+                    HttpMethod.POST, "/api/v1/users/" + user + "/role-assignments",
+                    root, values("roleId", role));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody().path("code").asText()).isEqualTo("ROLE_DISABLED");
+            assertThat(jdbc.queryForList(
+                    "select event_type, result, reason, source_system_code, actor_id from sys_audit_log where id>?",
+                    lastAudit)).singleElement().satisfies(record -> {
+                        assertThat(record)
+                                .containsEntry("event_type", "AUTHZ_DENIED")
+                                .containsEntry("result", "DENIED")
+                                .containsEntry("reason", "ROLE_DISABLED")
+                                .containsEntry("source_system_code", "rbac-center");
+                        assertThat(((Number) record.get("actor_id")).longValue()).isEqualTo(1L);
+                    });
+            assertThat(jdbc.queryForObject(
+                    "select count(*) from sys_user_role where user_id=? and role_id=?",
+                    Long.class, user, role)).isZero();
+            assertThat(jdbc.queryForObject("select version from sys_grant_version where id=1", Long.class))
+                    .isEqualTo(grantVersion);
+            assertThat(call(HttpMethod.GET, "/auth/me", root, null).getStatusCode()).isEqualTo(HttpStatus.OK);
+        } finally {
+            successful(HttpMethod.PUT, systemStatus, root, values("status", "ENABLED"));
+        }
     }
 }

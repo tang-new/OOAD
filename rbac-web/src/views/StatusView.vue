@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { NButton } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
-import { homePath, pageByPath } from '@/router/routes'
+import { homePath, managementRetryPath } from '@/router/routes'
 const props = defineProps<{ status: 403 | 404 | 'refresh-failed' }>()
 const auth = useAuthStore()
 const route = useRoute()
@@ -12,10 +12,7 @@ const messages = {
   404: { title: '页面未找到', detail: '此地址对应的页面可能已移动。你可以从侧栏继续操作。' },
   'refresh-failed': { title: '权限刷新失败', detail: '暂时无法确认当前权限，请重试。' },
 }
-const retry = computed(() => {
-  const redirect = route.query.redirect
-  if (props.status === 'refresh-failed' && typeof redirect === 'string' && pageByPath.has(redirect.split(/[?#]/, 1)[0])) return redirect
-})
+const retry = computed(() => props.status === 'refresh-failed' ? managementRetryPath(route.query.redirect) : undefined)
 const destination = computed(() => retry.value ?? (props.status === 'refresh-failed' ? '/me' : homePath(auth.menus, auth.has)))
 </script>
 <template>

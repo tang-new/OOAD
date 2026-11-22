@@ -1,9 +1,16 @@
-import { createRouter, createWebHistory, type Router } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized, type Router } from 'vue-router'
 import { ApiError } from '@/api/http'
 import { useAuthStore } from '@/stores/auth'
-import { homePath, pageByPath, pages } from './routes'
+import { homePath, managementRetryPath, pageByPath, pages } from './routes'
 
 const refreshFailurePath = '/auth-refresh-failed'
+
+export function loginRedirectPath(route: RouteLocationNormalized) {
+  const retry = route.matched.at(-1)?.path === refreshFailurePath
+    ? managementRetryPath(route.query.redirect)
+    : undefined
+  return retry ?? route.fullPath
+}
 
 export function signedInDestination(router: Router, redirect: unknown, auth: ReturnType<typeof useAuthStore>) {
   if (typeof redirect === 'string' && /^\/(?![\/\\])/.test(redirect)) {
@@ -32,8 +39,10 @@ export function createAppRouter() {
       return { path: matchedPath, query: to.query, hash: to.hash }
     }
     const auth = useAuthStore()
-    if (!auth.token) return to.path === '/login' ? true : { path: '/login', query: { redirect: to.fullPath } }
-    if (to.path === refreshFailurePath || (to.path === '/403' && to.redirectedFrom)) return true
+    const refreshFailed = matchedPath === refreshFailurePath
+    const login = { path: '/login', query: { redirect: loginRedirectPath(to) } }
+    if (!auth.token) return to.path === '/login' ? true : login
+    if ((refreshFailed || to.path === '/403') && to.redirectedFrom) return true
     const management = pageByPath.has(to.path)
     if (!auth.loaded || Date.now() - auth.loadedAt > 30000 || (management && to.path !== from.path)) {
       try {
@@ -43,8 +52,8 @@ export function createAppRouter() {
           if (error instanceof ApiError && error.status === 403) return '/403'
           return { path: refreshFailurePath, query: { redirect: to.fullPath } }
         }
-        if (auth.token && auth.loaded) return true
-        return to.path === '/login' ? true : { path: '/login', query: { redirect: to.fullPath } }
+        if (auth.token && (auth.loaded || refreshFailed)) return true
+        return to.path === '/login' ? true : login
       }
     }
     if (!auth.token) return to.path === '/login' ? true : '/login'

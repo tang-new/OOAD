@@ -15,14 +15,25 @@ public record ApiOperation(
         boolean enabled) {
     /** 比较同一系统中冻结的路由登记字段。 */
     public boolean matchesDefinition(ApiOperation expected) {
+        return hasSameDefinition(expected) && enabled == expected.enabled();
+    }
+
+    /** 停用已有操作且保持其他登记字段原值，允许重试同一次停用。 */
+    public boolean onlyDisables(ApiOperation previous) {
+        return !enabled
+                && hasSameDefinition(previous)
+                && id == previous.id()
+                && systemCode.equals(previous.systemCode());
+    }
+
+    private boolean hasSameDefinition(ApiOperation expected) {
         return expected != null
                 && operationId.equals(expected.operationId())
                 && method.equals(expected.method())
                 && pathTemplate.equals(expected.pathTemplate())
                 && Objects.equals(permissionCode, expected.permissionCode())
                 && Objects.equals(requiredRole, expected.requiredRole())
-                && policy == expected.policy()
-                && enabled == expected.enabled();
+                && policy == expected.policy();
     }
 
     public enum Policy {
