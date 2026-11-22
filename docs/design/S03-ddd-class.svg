@@ -59,7 +59,7 @@
 <text text-anchor="start" x="950.25" y="-539.61" font-family="Microsoft YaHei" font-size="15.00">&#45; repository: AuthorizationRepository</text>
 <text text-anchor="start" x="950.25" y="-518.61" font-family="Microsoft YaHei" font-size="15.00">&#45; policy: AuthorizationPolicy</text>
 <text text-anchor="start" x="950.25" y="-497.61" font-family="Microsoft YaHei" font-size="15.00">&#45; reads: AuthorizationReadTransaction</text>
-<text text-anchor="start" x="1005" y="-476.61" font-family="Microsoft YaHei" font-size="15.00">&#45; cache: EffectiveCache</text>
+<text text-anchor="start" x="950.25" y="-476.61" font-family="Microsoft YaHei" font-size="15.00">&#45; cache: EffectiveCache</text>
 <polygon fill="#ffffff" stroke="none" points="940.25,-355.86 940.25,-459.86 1411.75,-459.86 1411.75,-355.86 940.25,-355.86"/>
 <text text-anchor="start" x="950.25" y="-435.61" font-family="Microsoft YaHei" font-size="15.00">public AuthorizationPolicy.Effective effective(long, String)</text>
 <text text-anchor="start" x="950.25" y="-414.61" font-family="Microsoft YaHei" font-size="15.00">private AuthorizationPolicy.Effective stableEffective(long, String)</text>

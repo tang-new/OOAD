@@ -187,13 +187,16 @@ def class_diagram(name,mode,nodes,edges):
                 parts=record.group(1).split(',')
                 if short=='AuditFact':parts=[p for p in parts if p.strip().split()[-1] in ['id','requestId','systemCode','actorSubject','payloadHash','at']]
                 field_lines.extend('- '+part.strip() for part in parts[:6])
-        def cell(lines,bg):
+        def cell(lines,bg,*,left_align_lines=False):
             wrapped=[]
             for line in lines:
                 wrapped.extend(textwrap.wrap(line,95,break_long_words=False,break_on_hyphens=False) or [' '])
-            return '<TR><TD ALIGN="LEFT" BGCOLOR="'+bg+'">'+'<BR ALIGN="LEFT"/>'.join(html.escape(l) for l in wrapped)+'</TD></TR>'
+            # BALIGN also covers the final line, which has no explicit BR.
+            line_alignment=' BALIGN="LEFT"' if left_align_lines else ''
+            return '<TR><TD ALIGN="LEFT"'+line_alignment+' BGCOLOR="'+bg+'">'+'<BR ALIGN="LEFT"/>'.join(html.escape(l) for l in wrapped)+'</TD></TR>'
         stereotype='«interface» ' if re.search(r'public\s+interface\s+'+short,src) else ''
-        table='<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10">'+cell([stereotype+short],'#dcecff')+'<HR/>'+cell(field_lines or [' '],'#ffffff')+'<HR/>'+cell(sigs,'#ffffff')+'</TABLE>'
+        fields=cell(field_lines or [' '],'#ffffff',left_align_lines=name=='S03-ddd-class' and alias=='svc')
+        table='<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10">'+cell([stereotype+short],'#dcecff')+'<HR/>'+fields+'<HR/>'+cell(sigs,'#ffffff')+'</TABLE>'
         x,y=positions[slot]; rows.append(f'"{alias}" [pos="{x},{y}!",label=<{table}>];')
     for a,b,kind,role in edges:
         source=INDEX[key(nodes[a][0],mode)]['source']
