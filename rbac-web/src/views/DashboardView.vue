@@ -19,7 +19,7 @@ function loadUsers() {
 function loadCatalog() {
   return catalog.read(async () => {
     const [roles, systems] = await Promise.all([authApi.canCall('listRoles'), authApi.canCall('listSystems')])
-    if ((!roles && !systems) || !await authApi.canCall('getDashboard')) return {}
+    if (!roles && !systems) return {}
     const result = await get<{ roles: number; systems: number }>('/dashboard')
     return { roles: roles ? result.roles : undefined, systems: systems ? result.systems : undefined }
   })
@@ -27,6 +27,7 @@ function loadCatalog() {
 watch(() => auth.loadedAt, time => {
   if (!time) return
   users.reset(); catalog.reset()
+  if (!auth.canVisit('/dashboard')) return
   void loadUsers(); void loadCatalog()
 }, { immediate: true })
 </script>

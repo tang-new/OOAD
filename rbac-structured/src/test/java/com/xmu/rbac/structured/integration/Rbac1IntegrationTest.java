@@ -552,6 +552,37 @@ class Rbac1IntegrationTest {
     }
 
     @Test
+    void dashboardRequiresAllThreeViewPermissions() throws Exception {
+        long role = ok("POST", "/roles",
+            Map.of("systemCode", "rbac-center", "code", "DASHBOARD_TEST", "name", "仪表盘权限测试"))
+            .path("id").asLong();
+        allow(2, role);
+        assign(user("dashboard_tester", 2), role);
+        String token = login("dashboard_tester", "rbac-center");
+        String lookup = "/auth/api-permissions/getDashboard";
+        String dashboard = "/api/v1/dashboard";
+        String permissionId = "select id from sys_permission where system_id=1 and code=?";
+        long users = jdbc.queryForObject(permissionId, Long.class, "rbac:user:view");
+        long roles = jdbc.queryForObject(permissionId, Long.class, "rbac:role:view");
+        long systems = jdbc.queryForObject(permissionId, Long.class, "rbac:system:view");
+
+        grants(role, users, roles, systems);
+        assertThat(call("GET", lookup, token, null).body().path("allowed").asBoolean()).isTrue();
+        Response allowed = call("GET", dashboard, token, null);
+        assertThat(allowed.status()).isEqualTo(200);
+        assertThat(allowed.data().has("systems")).isTrue();
+
+        for (long[] incomplete : List.of(new long[] {users}, new long[] {users, roles},
+                 new long[] {users, systems}, new long[] {roles, systems})) {
+            grants(role, incomplete);
+            assertThat(call("GET", dashboard, token, null).status()).isEqualTo(403);
+            Response decision = call("GET", lookup, token, null);
+            assertThat(decision.status()).isEqualTo(200);
+            assertThat(decision.body().path("allowed").asBoolean()).isFalse();
+        }
+    }
+
+    @Test
     void managementLifecycleAndSqlPaging() throws Exception {
         long system =
             ok("POST", "/systems", Map.of("code", "extra", "name", "额外系统")).path("id").asLong();

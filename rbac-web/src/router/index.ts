@@ -7,7 +7,7 @@ export function signedInDestination(router: Router, redirect: unknown, auth: Ret
     const target = router.resolve(redirect)
     if (target.path === '/me' || auth.canVisit(target.path)) return target.fullPath
   }
-  return homePath(auth.menus, auth.has)
+  return homePath(auth.navigation)
 }
 
 export function createAppRouter() {

@@ -16,12 +16,14 @@ export const useAuthStore = defineStore('auth', () => {
   const identity = ref<IdentityVO | null>(null)
   const profile = ref<MeVO | null>(null)
   const menus = ref<UiResourceVO[]>([])
+  const dashboardAllowed = ref(false)
   const loadedAt = ref(0)
   const targetSystem = ref(CENTER)
   const session = ref(0)
   const loaded = computed(() => identity.value !== null)
   const permissions = computed(() => new Set(identity.value?.permissions ?? []))
-  const navigation = computed(() => visibleMenus(menus.value, has))
+  const navigation = computed(() => visibleMenus(menus.value, has)
+    .filter(item => item.route !== '/dashboard' || dashboardAllowed.value))
   const buttons = computed(() => new Set(enabledResources(menus.value).filter(item => item.type === 'BUTTON').map(item => item.permissionCode)))
   let pending: { session: number; promise: Promise<void> } | undefined
 
@@ -37,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
       identity.value = null
       profile.value = null
       menus.value = []
+      dashboardAllowed.value = false
       loadedAt.value = 0
       targetSystem.value = CENTER
     }
@@ -50,11 +53,14 @@ export const useAuthStore = defineStore('auth', () => {
   function refresh(): Promise<void> {
     const current = session.value
     if (pending?.session === current) return pending.promise
-    const promise = Promise.all([authApi.me(), authApi.profile(), authApi.menus()]).then(([who, mine, navigation]) => {
+    const promise = Promise.all([
+      authApi.me(), authApi.profile(), authApi.menus(), authApi.canCall('getDashboard').catch(() => false),
+    ]).then(([who, mine, navigation, allowed]) => {
       if (current !== session.value) return
       identity.value = who
       profile.value = mine
       menus.value = navigation
+      dashboardAllowed.value = allowed
       loadedAt.value = Date.now()
     }).finally(() => {
       if (pending?.promise === promise) pending = undefined

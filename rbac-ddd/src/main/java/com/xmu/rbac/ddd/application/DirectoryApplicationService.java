@@ -347,7 +347,7 @@ public class DirectoryApplicationService {
     }
 
     public Map<String, Long> dashboard(TokenProvider.Principal p) {
-        AuthorizationRepository.Identity actor = actor(p, "rbac:user:view", false);
+        AuthorizationRepository.Identity actor = authorization.requireDashboard(p);
         long users =
                 directory
                         .users(null, null, null, grants.departmentPath(actor.departmentId()), 1, 1)

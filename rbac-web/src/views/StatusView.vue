@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { homePath } from '@/router/routes'
 const props = defineProps<{ status: 403 | 404 }>()
 const auth = useAuthStore()
-const destination = computed(() => homePath(auth.menus, auth.has))
+const destination = computed(() => homePath(auth.navigation))
 </script>
 <template>
   <section class="status-page">

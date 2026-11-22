@@ -2,6 +2,7 @@ package com.xmu.rbac.structured.service;
 import static com.xmu.rbac.structured.service.Views.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xmu.rbac.contract.DashboardAccess;
 import com.xmu.rbac.structured.dto.Actor;
 import com.xmu.rbac.structured.entity.*;
 import com.xmu.rbac.structured.mapper.Store;
@@ -234,6 +235,13 @@ public class AuthorizationService {
             throw BizException.missing("API_OPERATION_NOT_FOUND");
         if (!Boolean.TRUE.equals(op.enabled))
             return false;
+        if (DashboardAccess.matches(code, operation)) {
+            Snapshot s = snapshot(user, code);
+            return !s.permissions.isEmpty()
+                && db.where(Permission.class, "e.id in ?1 and e.kind=?2 and e.code in ?3",
+                         s.permissions, "API", DashboardAccess.REQUIRED_PERMISSIONS)
+                       .size() == DashboardAccess.REQUIRED_PERMISSIONS.size();
+        }
         if ("PUBLIC".equals(op.accessPolicy) || "AUTHENTICATED".equals(op.accessPolicy))
             return true;
         Snapshot s = snapshot(user, code);
@@ -251,6 +259,12 @@ public class AuthorizationService {
         if (!"rbac-center".equals(a.systemCode()))
             throw BizException.forbidden("AUDIENCE_MISMATCH");
         if (!superAdmin(a) && !permission(a.userId(), a.systemCode(), "API", permission))
+            throw BizException.forbidden("FORBIDDEN");
+    }
+    public void requireDashboard(Actor a) {
+        if (!DashboardAccess.SYSTEM.equals(a.systemCode()))
+            throw BizException.forbidden("AUDIENCE_MISMATCH");
+        if (!api(a.userId(), DashboardAccess.SYSTEM, DashboardAccess.OPERATION))
             throw BizException.forbidden("FORBIDDEN");
     }
     /** 执行root操作，保持服务到持久化层的单向依赖。 */

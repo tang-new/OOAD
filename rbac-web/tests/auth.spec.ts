@@ -3,12 +3,16 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api'
 import type { IdentityVO, MeVO, UiResourceVO } from '@/api/types'
-vi.mock('@/api', () => ({ authApi: { login: vi.fn(), logout: vi.fn(), me: vi.fn(), profile: vi.fn(), menus: vi.fn() } }))
+vi.mock('@/api', () => ({ authApi: { login: vi.fn(), logout: vi.fn(), me: vi.fn(), profile: vi.fn(), menus: vi.fn(), canCall: vi.fn() } }))
 const who: IdentityVO = { subject: 'rbac-u1', roles: ['admin'], permissions: ['rbac:ui:users:view'], name: '虚构人员', no: 'test' }
 const mine = { user: { name: '虚构人员', departmentName: '总部' }, effective: { directRoles: [], effectiveRoles: [], permissions: [], sources: [] } } as unknown as MeVO
-beforeEach(() => { setActivePinia(createPinia()); vi.resetAllMocks(); vi.mocked(authApi.me).mockResolvedValue(who); vi.mocked(authApi.profile).mockResolvedValue(mine); vi.mocked(authApi.menus).mockResolvedValue([]) })
+beforeEach(() => {
+  setActivePinia(createPinia()); vi.resetAllMocks(); vi.mocked(authApi.me).mockResolvedValue(who)
+  vi.mocked(authApi.profile).mockResolvedValue(mine); vi.mocked(authApi.menus).mockResolvedValue([])
+  vi.mocked(authApi.canCall).mockResolvedValue(false)
+})
 describe('身份与权限状态', () => {
-  it('没有身份默认无权，admin 不能通配，登录读取全部三个协议入口', async () => {
+  it('没有身份默认无权，admin 不能通配，登录读取身份和授权', async () => {
     const store = useAuthStore(); expect(store.loaded).toBe(false); expect(store.has('any')).toBe(false)
     vi.mocked(authApi.login).mockResolvedValue({ accessToken: 'dummy', tokenType: 'Bearer', expiresIn: 600 })
     await store.login('test', 'not-real')

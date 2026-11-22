@@ -88,8 +88,13 @@ async function seed(admin: Admin, suffix: string) {
   }) : null
   for (const [senior, junior] of [[a, b], [a, c], [b, d], [c, d]]) await admin.post(`/roles/${senior.id}/inherits/${junior.id}`)
   const permission = await admin.post<PermissionVO>('/permissions', { systemCode: 'rbac-center', code: 'e2e:ui:' + suffix, name: '演示首页', kind: 'UI' })
-  const userView = (await admin.get<ResultPage<PermissionVO>>('/permissions?systemCode=rbac-center&kind=API&keyword=rbac:user:view&page=1&pageSize=20')).items.find(item => item.code === 'rbac:user:view')!
-  await admin.put(`/roles/${d.id}/permissions`, { permissionIds: [permission.id, userView.id] })
+  const [userView, roleView, systemView] = await Promise.all(
+    ['rbac:user:view', 'rbac:role:view', 'rbac:system:view'].map(async code =>
+      (await admin.get<ResultPage<PermissionVO>>(`/permissions?systemCode=rbac-center&kind=API&keyword=${code}&page=1&pageSize=20`))
+        .items.find(item => item.code === code)!.id),
+  )
+  const dashboardPermissions = [permission.id, userView, roleView, systemView]
+  await admin.put(`/roles/${d.id}/permissions`, { permissionIds: dashboardPermissions })
   const menu = await admin.post<UiResourceVO>('/systems/rbac-center/ui-resources', {
     type: 'MENU', code: 'demo_' + suffix, name: '演示首页_' + suffix, route: '/dashboard', component: 'Dashboard',
     sortOrder: 1000, permissionCode: permission.code, status: 'ENABLED',
@@ -98,14 +103,14 @@ async function seed(admin: Admin, suffix: string) {
   const password = `Fictional!${suffix}Z9`
   const user = await admin.post<UserVO>('/users', { username: 'user_' + suffix, name: visual ? '林予安' : '周星野', departmentId: x.id, password })
   const other = await admin.post<UserVO>('/users', { username: 'other_' + suffix, name: visual ? '陈星河' : '许听澜', departmentId: y.id, password })
-  return { x, y, a, b, c, d, menu, user, other, password, permission, longRole }
+  return { x, y, a, b, c, d, menu, user, other, password, permission, longRole, dashboardPermissions, userView }
 }
 
 test('真实管理流程保留双后端 HTTP、RBAC1 继承和审计行为', async ({ page }, info) => {
   const request = strictHttp(), rootPassword = process.env.E2E_BOOTSTRAP_PASSWORD!
   const token = await login(request, 'root', rootPassword), admin = api(request, token)
   const suffix = 'flow' + Date.now()
-  const { x, y, a, b, c, d, menu, user, other, password, permission } = await seed(admin, suffix)
+  const { x, y, a, b, c, d, menu, user, other, password, permission, dashboardPermissions, userView } = await seed(admin, suffix)
   const systems = await admin.get<SystemVO[]>('/systems')
   expect(systems.map(system => system.code)).toEqual(expect.arrayContaining(['rbac-center', 'course-project-management']))
   const course = await admin.get<ResultPage<RoleVO>>('/roles?systemCode=course-project-management&page=1&pageSize=20')
@@ -224,7 +229,7 @@ test('真实管理流程保留双后端 HTTP、RBAC1 继承和审计行为', asy
   await page.getByRole('button', { name: '解释来源' }).click()
   await expect(page.getByText('允许访问', { exact: true })).toBeVisible()
   await capture(page, info.outputPath('decision-allowed.png'))
-  await page.getByLabel('操作标识', { exact: true }).fill('listSystems')
+  await page.getByLabel('操作标识', { exact: true }).fill('listPermissions')
   await page.getByRole('button', { name: '检查权限' }).click()
   await expect(page.getByText('拒绝访问', { exact: true })).toBeVisible()
   await capture(page, info.outputPath('decision-denied.png'))
@@ -233,10 +238,20 @@ test('真实管理流程保留双后端 HTTP、RBAC1 继承和审计行为', asy
   const userApi = api(request, userToken)
   await browserLogout(page)
   await browserLogin(page, user.username, password, '/dashboard')
-  await expect(page.getByLabel('管理目标系统')).toHaveCount(0)
   const scopedUsers = await userApi.get<ResultPage<UserVO>>('/users?page=1&pageSize=1')
-  await expect(page.locator('.counts strong')).toHaveText(String(scopedUsers.total))
+  await expect(page.locator('.counts strong').first()).toHaveText(String(scopedUsers.total))
   await capture(page, info.outputPath('restricted-dashboard.png'))
+  await admin.put(`/roles/${d.id}/permissions`, { permissionIds: [permission.id, userView] })
+  const deniedDashboard = await request.get(`${env.api}/api/v1/dashboard`, { headers: { Authorization: `Bearer ${userToken}` } })
+  expect(deniedDashboard.status()).toBe(403)
+  await page.getByRole('button', { name: '账号菜单' }).click()
+  await page.getByText('刷新权限', { exact: true }).click()
+  await expect(page).toHaveURL(/\/403$/)
+  await expect(page.getByRole('link', { name: '首页', exact: true })).toHaveCount(0)
+  await expect(page.getByLabel('管理目标系统')).toHaveCount(0)
+  await admin.put(`/roles/${d.id}/permissions`, { permissionIds: dashboardPermissions })
+  await page.goto('/dashboard')
+  await expect(page).toHaveURL(/\/dashboard$/)
   await admin.patch(`/ui-resources/${menu.id}`, {
     parentId: menu.parentId, type: menu.type, code: menu.code, name: menu.name, route: menu.route, component: menu.component, sortOrder: menu.sortOrder, permissionCode: menu.permissionCode, status: 'DISABLED',
   })
