@@ -113,7 +113,8 @@ public class AuthorizationService {
                     key, json.writeValueAsString(result), Duration.ofMinutes(5));
             } catch (Exception ignored) {
             }
-            return result;
+            if (version == version())
+                return result;
         }
         throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
     }
