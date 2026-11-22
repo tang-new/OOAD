@@ -73,6 +73,7 @@ public class RoleApplicationService {
         repository.lockGrants();
         AuthorizationRepository.Identity actor =
                 authorization.require(principal, "rbac:role:edit", true);
+        authorization.requireRoleGrantSystem(actor, system);
         Role role =
                 new Role(
                         0, system, code, name, description, true, false, identityRole, 0, Set.of());
@@ -113,6 +114,7 @@ public class RoleApplicationService {
                 authorization.require(principal, "rbac:role:status", true);
         Role role = repository.role(id);
         authorization.requireRoleManagement(actor, role);
+        if (enabled) authorization.requireRoleGrantSystem(actor, role.systemCode());
         role.changeStatus(enabled);
         if (enabled) {
             RoleHierarchy original = repository.hierarchy(role.systemCode());
@@ -135,6 +137,7 @@ public class RoleApplicationService {
                 authorization.require(principal, "rbac:role:edit", true);
         Role role = repository.role(id);
         authorization.requireRoleManagement(actor, role);
+        authorization.requireRoleGrantSystem(actor, role.systemCode());
         List<Permission> all = repository.permissions(role.systemCode());
         List<Permission> selected = repository.permissions(ids);
         DomainException.require(selected.size() == ids.size(), 404, "PERMISSION_NOT_FOUND");
@@ -160,6 +163,7 @@ public class RoleApplicationService {
         authorization.requireRoleManagement(actor, other);
         DomainException.require(
                 role.systemCode().equals(other.systemCode()), 409, "CROSS_SYSTEM_ROLE");
+        if (add) authorization.requireRoleGrantSystem(actor, role.systemCode());
         RoleHierarchy graph = repository.hierarchy(role.systemCode());
         if (add) graph.link(senior, junior);
         else graph.unlink(senior, junior);

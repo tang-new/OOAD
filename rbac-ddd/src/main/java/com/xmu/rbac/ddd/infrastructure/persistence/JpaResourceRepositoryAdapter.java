@@ -36,11 +36,14 @@ public class JpaResourceRepositoryAdapter implements ResourceRepository {
     }
 
     private Long permission(String system, String code, String kind) {
-        if (code == null) return null;
+        return code == null ? null : permission(system(system), code, kind);
+    }
+
+    private long permission(long systemId, String code, String kind) {
         return em.createQuery(
                         "select id from PermissionEntity where systemId=:s and code=:c and kind=:k",
                         Long.class)
-                .setParameter("s", system(system))
+                .setParameter("s", systemId)
                 .setParameter("c", code)
                 .setParameter("k", kind)
                 .getResultStream()
@@ -144,14 +147,28 @@ public class JpaResourceRepositoryAdapter implements ResourceRepository {
                         .toList());
     }
 
-    public ApiOperation saveOperation(ApiOperation o) {
+    public OperationSystem operationSystem(String code) {
+        SystemEntity system =
+                em.createQuery("from SystemEntity where code=:c", SystemEntity.class)
+                        .setParameter("c", code)
+                        .getResultStream()
+                        .findFirst()
+                        .orElseThrow(() -> new DomainException(404, "SYSTEM_NOT_FOUND"));
+        return new OperationSystem(system.getId(), system.getCode(), "ENABLED".equals(system.getStatus()));
+    }
+
+    public long apiPermissionId(long systemId, String code) {
+        return permission(systemId, code, "API");
+    }
+
+    public ApiOperation saveOperation(ApiOperation o, long systemId, Long permissionId) {
         ApiOperationEntity e =
                 o.id() == 0 ? new ApiOperationEntity() : required(ApiOperationEntity.class, o.id());
-        e.setSystemId(system(o.systemCode()));
+        e.setSystemId(systemId);
         e.setOperationId(o.operationId());
         e.setMethod(o.method());
         e.setPathTemplate(o.pathTemplate());
-        e.setPermissionId(permission(o.systemCode(), o.permissionCode(), "API"));
+        e.setPermissionId(permissionId);
         e.setRequiredRole(o.requiredRole());
         e.setAccessPolicy(o.policy().name());
         e.setEnabled(o.enabled());

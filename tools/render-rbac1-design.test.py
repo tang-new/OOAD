@@ -28,6 +28,16 @@ class RendererChecks(unittest.TestCase):
         self.assertIn('link(', design.method(name, 'link'))
         self.assertEqual(design.REFS[-1]['method'], 'link')
 
+    def test_source_only_signature_uses_declaration_and_keeps_nested_type(self):
+        name = 'com.xmu.rbac.ddd.application.AuthorizationApplicationService'
+        path = 'rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/AuthorizationApplicationService.java'
+        source = (design.ROOT / path).read_text(encoding='utf-8')
+        design.INDEX[name] = {'path': path, 'source': source, 'sha256': design.sha(design.ROOT / path),
+                              'bytecode': 'PENDING_COMPILE', 'signatures': []}
+        signature = design.method(name, 'stableSimulation')
+        self.assertTrue(signature.startswith('private SimulationResult stableSimulation('), signature)
+        self.assertIn('Permission.Kind kind', signature)
+
     def test_nonexistent_method_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Missing method declaration'):
             design.method(design.key('RoleHierarchy', 'ddd'), 'inventedValidateAcyclic')

@@ -15,12 +15,12 @@ import java.util.*;
 public class RouteContractVerifier implements ApplicationRunner {
     private final RequestMappingHandlerMapping routes;
     private final OperationContract contract;
-    private final AuthorizationRepository repository;
+    private final ResourceRepository repository;
 
     public RouteContractVerifier(
             @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping routes,
             OperationContract contract,
-            AuthorizationRepository repository) {
+            ResourceRepository repository) {
         this.routes = routes;
         this.contract = contract;
         this.repository = repository;
@@ -44,18 +44,18 @@ public class RouteContractVerifier implements ApplicationRunner {
                             }
                         });
         Set<String> expected = new TreeSet<>();
+        Map<String, ApiOperation> registry = new HashMap<>();
         for (ApiOperation operation : contract.operations()) {
             if (!operation.pathTemplate().startsWith("/api/v1/actuator/"))
                 expected.add(operation.method() + " " + operation.pathTemplate());
-            ApiOperation persisted = repository.operation("rbac-center", operation.operationId());
+            registry.put(operation.operationId(), operation);
+        }
+        var persisted = repository.operations("rbac-center", null, 1, registry.size());
+        DomainException.require(
+                persisted.total() == registry.size(), 503, "API_REGISTRY_CONTRACT_MISMATCH");
+        for (ApiOperation operation : persisted.items()) {
             DomainException.require(
-                    persisted != null
-                            && persisted.method().equals(operation.method())
-                            && persisted.pathTemplate().equals(operation.pathTemplate())
-                            && Objects.equals(
-                                    persisted.permissionCode(), operation.permissionCode())
-                            && Objects.equals(persisted.requiredRole(), operation.requiredRole())
-                            && persisted.policy() == operation.policy(),
+                    operation.matchesDefinition(registry.get(operation.operationId())),
                     503,
                     "API_REGISTRY_CONTRACT_MISMATCH");
         }

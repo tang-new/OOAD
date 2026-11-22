@@ -49,6 +49,7 @@ public class BootstrapService {
             if (op == null || !Objects.equals(op.method, route.method())
                 || !Objects.equals(op.pathTemplate, route.path())
                 || !Objects.equals(permission, route.permission())
+                || !Objects.equals(op.requiredRole, route.requiredRole())
                 || !Objects.equals(op.accessPolicy, route.policy())
                 || !Boolean.TRUE.equals(op.enabled))
                 throw new IllegalStateException("中心API种子与OAS不一致: " + route.operationId());

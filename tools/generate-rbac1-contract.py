@@ -120,6 +120,8 @@ def oas():
             if m not in METHODS:continue
             o.pop('servers',None)
             o['x-required-permission']='PUBLIC' if p=='/auth/login' else ('audit:write' if m=='post' and p=='/auth/audit-logs' else 'audit:read' if p=='/auth/audit-logs' else '@authenticated')
+            if p=='/auth/api-permissions/{operationId}' and m=='get':
+                o['responses'].setdefault('400', {'$ref': '#/components/responses/BadRequest'})
             if p in DIRECTORY:
                 o.update({'x-required-audience': 'course-project-management',
                           'x-required-role': 'admin', 'x-course-permission': 'TEC'})

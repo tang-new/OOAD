@@ -1,4 +1,5 @@
 @startuml
+!pragma teoz true
 hide footbox
 skinparam defaultFontName Microsoft YaHei
 skinparam defaultFontSize 14
@@ -17,102 +18,133 @@ obj -> ctl: 1. getUserEffectivePermissions(actor, user, system)
 activate ctl
 ctl -> svc: 2. effectiveUser(actor, user, system)
 activate svc
-svc -> auth: 3. snapshot(userId, system)
-activate auth
-alt actual transaction active
-auth -> auth: 4. activeSystem(userId, system)
-activate auth
-deactivate auth
-auth -> auth: 5. direct(userId, systemId)
-activate auth
-deactivate auth
-auth -> auth: 6. calculate(directIds, systemId)
-activate auth
-note over auth
-calculate checks system enabled, loads roles/edges/permissions/grants
+note over svc
+Read-only transaction for this HTTP request
 end note
-auth -> model: 7. where(Role.class, system predicate)
+svc -> auth: 3. center(actor, rbac:user:view)
+activate auth
+deactivate auth
+svc -> auth: 4. system(system)
+activate auth
+break unknown system
+auth -->> obj: 404 SYSTEM_NOT_FOUND
+end
+auth -->> svc: targetSystem
+deactivate auth
+svc -> auth: 5. require(User.class, user)
+activate auth
+auth -->> svc: targetUser
+deactivate auth
+svc -> auth: 6. scope(actor, target department)
+activate auth
+deactivate auth
+||15||
+alt target user active and target system enabled
+svc -> auth: 7. snapshot(userId, system)
+activate auth
+auth -> auth: 8. activeSystem(userId, system)
+activate auth
+auth -->> auth: enabled system
+deactivate auth
+auth -> auth: 9. direct(userId, systemId)
+activate auth
+auth -->> auth: direct role IDs
+deactivate auth
+auth -> auth: 10. calculate(directIds, systemId)
+activate auth
+auth -> auth: 11. calculateConfiguredGrants(directIds, systemId)
+activate auth
+auth -> model: 12. where(Role.class, system predicate)
 activate model
+model -->> auth: roles
 deactivate model
-loop each valid direct root
-auth -> auth: 8. walk(root, roles, edges, grants, path, effective, permissions, sources)
-activate auth
-deactivate auth
-end
-deactivate auth
-note over auth
-No cache reads OR writes in transaction.
+note over auth,model
+Also load inheritance edges, enabled permissions and role grants.
 end note
-else nontransactional read
-loop at most 3 attempts
-auth -> auth: 9. version()
+loop each valid direct role
+auth -> auth: 13. walk(root, roles, edges, grants, path, effective, permissions, sources)
 activate auth
 deactivate auth
-auth -> auth: 10. activeSystem(userId, system)
-activate auth
-deactivate auth
-note over auth
-Each attempt rereads and validates user and system status.
-end note
-note over auth
-namespace:authz:system:user:version → l1.get;
-miss → redis.opsForValue().get; Redis exception falls back to DB.
-end note
-alt no cached result
-auth -> auth: 11. direct(userId, systemId)
-activate auth
-deactivate auth
-auth -> auth: 12. calculate(directIds, systemId)
-activate auth
-note over auth
-calculate checks system enabled, loads roles/edges/permissions/grants
-end note
-auth -> model: 13. where(Role.class, system predicate)
-activate model
-deactivate model
-loop each valid direct root
-auth -> auth: 14. walk(root, roles, edges, grants, path, effective, permissions, sources)
-activate auth
-deactivate auth
-end
-deactivate auth
-else cached result
-note over auth
-no recalculation
+note right of auth
+Collect grants and follow enabled junior roles.
 end note
 end
-auth -> auth: 15. version()
-activate auth
+note over auth,model
+Skip disabled roles, deduplicate permission IDs and preserve distinct source paths.
+end note
+auth -->> auth: Snapshot
 deactivate auth
-alt version changed
+auth -->> auth: Snapshot
+deactivate auth
 note over auth
-retry without cache writes
+The transaction bypasses cache reads and writes.
 end note
-else unchanged
-note over auth
-l1.put and attempt Redis set
+auth -->> svc: Snapshot
+deactivate auth
+else target user or system disabled
+note over svc
+Use an empty Snapshot.
 end note
+end
+svc -> auth: 14. effective(snapshot, system)
+activate auth
+auth -->> svc: directRoles, effectiveRoles, permissions, sources
+deactivate auth
+svc -->> ctl: effective permissions
+deactivate svc
+ctl -->> obj: HTTP 200 with effective permissions
+deactivate ctl
+deactivate obj
+== Separate invocation: snapshot() outside a transaction ==
+obj -> auth: 15. snapshot(userId, system)
+activate auth
+activate obj
+loop until stable or at most 3 attempts
 auth -> auth: 16. version()
 activate auth
+auth -->> auth: initial version
 deactivate auth
-note over auth
-unchanged after write → return result; changed after write → retry
-end note
-end
-end
-note over auth
-exhausted attempts → 503 AUTHORIZATION_UNAVAILABLE
-end note
-end
-note over auth
-namespace comes from rbac.cache.namespace.
-end note
-note over auth
-Disabled intermediate role cuts that path; diamond permission id dedup
-preserves independent source paths. No direct roles → empty permissions.
-end note
+auth -> auth: 17. activeSystem(userId, system)
+activate auth
+auth -->> auth: enabled system
 deactivate auth
-deactivate svc
-deactivate ctl
+note over auth,model
+Look up the versioned key in L1, then Redis on miss.
+Calculate from the database when neither cache yields a usable snapshot.
+end note
+opt no usable cached snapshot
+auth -> auth: 18. direct(userId, systemId)
+activate auth
+auth -->> auth: direct role IDs
+deactivate auth
+auth -> auth: 19. calculate(directIds, systemId)
+activate auth
+auth -->> auth: Snapshot
+deactivate auth
+end
+auth -> auth: 20. version()
+activate auth
+auth -->> auth: pre-write version
+deactivate auth
+opt unchanged version before writing
+note over auth
+Write L1 and attempt to write Redis.
+end note
+auth -> auth: 21. version()
+activate auth
+auth -->> auth: post-write version
+deactivate auth
+end
+note over auth,model
+A version change before or after writing retries the attempt.
+An unchanged version after writing ends the loop.
+end note
+end
+alt stable version
+auth -->> obj: Snapshot
+else three attempts exhausted
+auth -->> obj: BizException(503, AUTHORIZATION_UNAVAILABLE)
+end
+deactivate auth
 deactivate obj
 @enduml

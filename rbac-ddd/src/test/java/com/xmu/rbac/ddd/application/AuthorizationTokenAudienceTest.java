@@ -2,16 +2,26 @@ package com.xmu.rbac.ddd.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.xmu.rbac.ddd.domain.DomainException;
 import com.xmu.rbac.ddd.domain.User;
 import com.xmu.rbac.ddd.domain.port.AuthorizationRepository;
 import com.xmu.rbac.ddd.domain.port.EffectiveCache;
 import com.xmu.rbac.ddd.domain.port.TokenProvider;
+import com.xmu.rbac.ddd.interfaces.rest.ApiExceptionAdvice;
+import com.xmu.rbac.ddd.interfaces.rest.IdentityController;
+import com.xmu.rbac.ddd.interfaces.rest.RestSupport;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 
@@ -56,6 +66,31 @@ class AuthorizationTokenAudienceTest {
         assertThatThrownBy(() -> application.validate(principal))
                 .isInstanceOfSatisfying(
                         DomainException.class, error -> assertThat(error.status()).isEqualTo(401));
+    }
+
+    @Test
+    void apiPointQueryRejectsAnOversizeOperationIdBeforeLookup() throws Exception {
+        activeIdentity();
+        when(repository.systemEnabled(principal.systemCode())).thenReturn(true);
+        String bearer = "Bearer fixture-token";
+        RestSupport rest = mock(RestSupport.class);
+        when(rest.principal(bearer)).thenReturn(principal);
+        var controller = new IdentityController(rest, null, application, null, null, "");
+        var mvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new ApiExceptionAdvice(null, rest, application))
+                .build();
+        String endpoint = "/auth/api-permissions/{operationId}";
+
+        mvc.perform(get(endpoint, "x".repeat(129)).header("Authorization", bearer))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        verify(repository, never()).operation(anyString(), anyString());
+
+        String validUnknown = "x".repeat(128);
+        mvc.perform(get(endpoint, validUnknown).header("Authorization", bearer))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("API_OPERATION_NOT_FOUND"));
+        verify(repository).operation(principal.systemCode(), validUnknown);
     }
 
     @Test

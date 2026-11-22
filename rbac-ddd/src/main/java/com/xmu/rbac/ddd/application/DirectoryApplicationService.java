@@ -62,6 +62,8 @@ public class DirectoryApplicationService {
         grants.lockGrants();
         AuthorizationRepository.Identity actor = actor(p, "rbac:system:edit", true);
         SystemDefinition old = id == null ? null : directory.system(id);
+        if (old != null && "ENABLED".equals(status) && !"ENABLED".equals(old.status()))
+            authorization.requireSystemActivation(actor, old.code());
         SystemDefinition saved =
                 directory.saveSystem(
                         new SystemDefinition(
@@ -163,7 +165,10 @@ public class DirectoryApplicationService {
     }
 
     public Profile user(TokenProvider.Principal p, long id) {
-        AuthorizationRepository.Identity actor = actor(p, "rbac:user:view", false);
+        return managedUser(actor(p, "rbac:user:view", false), id);
+    }
+
+    private Profile managedUser(AuthorizationRepository.Identity actor, long id) {
         Profile user = directory.user(id, false);
         managed(actor, user.departmentId());
         return user;
@@ -306,6 +311,7 @@ public class DirectoryApplicationService {
         Profile profile = directory.user(id, true);
         managed(actor, profile.departmentId());
         Role role = grants.role(roleId);
+        DomainException.require(grants.systemEnabled(role.systemCode()), 409, "ROLE_DISABLED");
         authorization.upperBound(
                 actor,
                 role.systemCode(),
@@ -352,7 +358,10 @@ public class DirectoryApplicationService {
 
     public AuthorizationPolicy.Effective effective(
             TokenProvider.Principal p, long id, String system) {
-        user(p, id);
+        AuthorizationRepository.Identity actor = actor(p, "rbac:user:view", false);
+        // 先确认系统存在。快照读取会再次校验系统状态和授权版本。
+        grants.systemEnabled(system);
+        managedUser(actor, id);
         try {
             return authorization.effective(id, system);
         } catch (DomainException error) {

@@ -1,14 +1,16 @@
 @startuml
+!pragma teoz true
 hide footbox
 skinparam defaultFontName Microsoft YaHei
 skinparam defaultFontSize 14
 skinparam ParticipantPadding 24
 skinparam BoxPadding 12
 skinparam sequenceMessageAlign left
-skinparam maxMessageSize 100
+skinparam maxMessageSize 160
 title S03-ddd-sequence — source snapshot (not a runtime trace)
 participant "obj: 调用者" as obj
 participant "ctl: DirectoryController" as ctl
+participant "«MetaClass»\n: RestSupport" as rest
 participant "svc: DirectoryApplicationService" as svc
 participant "auth: AuthorizationApplicationService" as auth
 participant "model: AuthorizationPolicy" as model
@@ -21,68 +23,72 @@ obj -> ctl: 1. effective(bearer, id, system)
 activate ctl
 ctl -> svc: 2. effective(principal, id, system)
 activate svc
-svc -> svc: 3. user(principal, id)
+svc -> svc: 3. actor(principal, rbac:user:view, false)
+activate svc
+deactivate svc
+svc -> repo: 4. systemEnabled(system)
+activate repo
+break unknown system
+repo -->> obj: DomainException 404 SYSTEM_NOT_FOUND
+end
+repo -->> svc: system status
+deactivate repo
+svc -> svc: 5. managedUser(actor, id)
 activate svc
 deactivate svc
 note over svc
-Check caller rbac:user:view and target department scope before handling target-system errors.
+Resolve the system before loading the target user and checking department scope.
 end note
-svc -> auth: 4. effective(userId, system)
+svc -> auth: 6. effective(userId, system)
 activate auth
-alt actual outer transaction is read-only
-auth -> reads: 5. fresh(query callback)
-activate reads
-reads -> auth: 6. stableEffective(userId, system)
-activate auth
-deactivate auth
-note over reads,repo
-Supplier.get callback runs inside REQUIRES_NEW / READ_COMMITTED / readOnly.
-Same stableEffective checks and error handling; freshenRead clears JPA context on every attempt.
-end note
-deactivate reads
-else no outer read-only transaction
+alt no outer read-only transaction (S03 HTTP takes this path)
 auth -> auth: 7. stableEffective(userId, system)
 activate auth
-loop at most 3 attempts
+loop until the version is stable or three attempts are used
 auth -> repo: 8. version()
 activate repo
+repo -->> auth: initial version
 deactivate repo
 auth -> repo: 9. systemEnabled(system)
 activate repo
-repo --> auth: enabled: boolean
+repo -->> auth: system status
 deactivate repo
 break target system disabled
-auth --> svc: DomainException 401 SYSTEM_DISABLED
+auth -->> svc: DomainException 401 SYSTEM_DISABLED
 note over svc
-Catch this target-side error and return empty Effective.
-The retry loop exits before the identity or cache lookup.
+Catch this target-side error and use empty Effective.
 end note
 end
 auth -> repo: 10. identity(userId)
 activate repo
+repo -->> auth: target identity
 deactivate repo
-alt inactive target
+break target user missing
+auth -->> obj: DomainException 404 USER_NOT_FOUND
+end
+alt target user inactive
 note over auth
-empty Effective; no stale user permissions
+Use empty Effective.
 end note
-else ACTIVE and no actual transaction
+else target user active
+opt no active transaction
 auth -> cache: 11. get(system, userId, version)
 activate cache
+cache -->> auth: cached Effective or null
 deactivate cache
-else active write transaction
-note over auth
-bypass get AND put
-end note
 end
-alt result still null
+opt no usable cached result
 auth -> repo: 12. assignments(userId, system)
 activate repo
+repo -->> auth: direct role IDs
 deactivate repo
 auth -> repo: 13. hierarchy(system)
 activate repo
+repo -->> auth: role graph
 deactivate repo
 auth -> repo: 14. permissions(system)
 activate repo
+repo -->> auth: permission catalog
 deactivate repo
 auth -> model: 15. calculate(system, directIds, graph, permissions)
 activate model
@@ -92,50 +98,75 @@ loop each direct role
 graph -> graph: 17. visit(id, new ArrayList<>(), result)
 activate graph
 deactivate graph
+note right of graph
+Skip disabled roles and preserve distinct paths.
+end note
 end
+graph -->> model: role paths
 deactivate graph
+model -->> auth: calculated Effective
 deactivate model
+end
 end
 auth -> repo: 18. version()
 activate repo
+repo -->> auth: version before cache write
 deactivate repo
-alt version changed
-note over auth
-continue; never publish mixed snapshot
-end note
-else version unchanged
-opt ACTIVE target and no actual transaction
+opt version unchanged since the initial read
+opt target user active and no active transaction
 auth -> cache: 19. put(system, userId, version, result)
 activate cache
 deactivate cache
+note right of cache
+Cache the candidate for this version.
+end note
 end
 auth -> repo: 20. version()
 activate repo
+repo -->> auth: final version
 deactivate repo
-note over auth
-final version equal → return; changed again → next attempt
+end
+note over auth,repo
+A version change before or after writing starts the next attempt.
+An unchanged final version ends the loop with the candidate result.
 end note
 end
+break three attempts exhausted
+auth -->> obj: DomainException 503 AUTHORIZATION_UNSTABLE
 end
-alt all attempts unstable
-auth --> obj: DomainException 503 AUTHORIZATION_UNSTABLE
-else stable
-note over auth
-valid cached OR calculated result
+auth -->> auth: stable Effective
+deactivate auth
+else read-only outer transaction (other callers)
+auth -> reads: 21. fresh(query callback)
+activate reads
+reads -> auth: 22. stableEffective(userId, system)
+activate auth
+note over auth,reads
+Same retry algorithm in REQUIRES_NEW / READ_COMMITTED / readOnly.
+Clear the JPA context at the start of each attempt and skip all cache access.
 end note
+auth -->> reads: stable Effective
+deactivate auth
+reads -->> auth: stable Effective
+deactivate reads
+end
+opt stable Effective returned
+auth -->> svc: stable Effective
 end
 deactivate auth
-end
-note over auth
-Disabled intermediate role cuts that path; diamond permission id dedup
-preserves independent source paths. No direct roles → empty permissions.
-end note
-deactivate auth
-opt successful result or caught target SYSTEM_DISABLED
-svc --> ctl: Effective (empty for disabled system)
-ctl --> obj: HTTP 200 with effective permissions
-end
+opt stable result or caught SYSTEM_DISABLED
+svc -->> ctl: Effective (empty for disabled system)
 deactivate svc
+ctl -> rest: 23. effective(effective)
+activate rest
+rest -->> ctl: effective permissions
+deactivate rest
+ctl -> rest: 24. ok(effective permissions)
+activate rest
+rest -->> ctl: response body
+deactivate rest
+ctl -->> obj: HTTP 200 with effective permissions
+end
 deactivate ctl
 deactivate obj
 @enduml

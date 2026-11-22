@@ -77,6 +77,7 @@ function loadPermissions(id = userId.value) {
 }
 async function loadDetail() {
   const id = userId.value, system = auth.targetSystem
+  permissions.reset()
   if (id === null) return true
   const loaded = await detail.read(() => get<UserVO>(`/users/${id}`))
   if (id !== userId.value || system !== auth.targetSystem) return true
@@ -152,7 +153,7 @@ function revoke(link: AssignmentVO) {
   confirm('撤销角色指派', `将撤销 ${detail.data.value?.name ?? '该用户'} 的「${link.roleName}」直接指派。系统将重新计算有效权限。`, () => del(`/users/${link.userId}/role-assignments/${link.id}`))
 }
 watch([userId, () => auth.targetSystem], () => {
-  reset(); detail.reset(); assignments.reset(); options.reset(); permissions.reset()
+  reset(); detail.reset(); assignments.reset(); options.reset()
   roleId.value = null
   void loadDetail()
 }, { immediate: true })

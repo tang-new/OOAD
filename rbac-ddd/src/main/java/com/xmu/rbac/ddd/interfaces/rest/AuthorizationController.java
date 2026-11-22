@@ -7,6 +7,7 @@ import com.xmu.rbac.ddd.domain.port.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
+import org.slf4j.MDC;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -51,39 +52,19 @@ public class AuthorizationController {
                 "INVALID_AUTHORIZATION_REQUEST");
         long user = i.userId() == null ? actor.id() : i.userId();
         if (user != actor.id()) directory.user(principal, user);
-        String unavailable;
-        AuthorizationPolicy.Effective effective;
-        boolean allowed;
-        if (explain && i.kind() == Permission.Kind.API) {
-            var explanation = authorization.explainApi(user, i.systemCode(), i.operationId());
-            unavailable = explanation.unavailableReason();
-            effective = explanation.effective();
-            allowed = explanation.allowed();
-        } else {
-            unavailable = authorization.unavailableReason(user, i.systemCode());
-            var empty = new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of());
-            try {
-                effective = unavailable == null ? authorization.effective(user, i.systemCode()) : empty;
-                allowed = unavailable == null && (
-                        i.kind() == Permission.Kind.UI
-                                ? effective.has(i.permission(), Permission.Kind.UI)
-                                : authorization.api(user, i.systemCode(), i.operationId()));
-            } catch (DomainException error) {
-                // 目标系统在状态读取之后停用时，仍按模拟拒绝返回。
-                if (error.status() != 401 || !"SYSTEM_DISABLED".equals(error.code())) throw error;
-                unavailable = error.code();
-                effective = empty;
-                allowed = false;
-            }
-        }
+        var decision = authorization.simulate(user, i.systemCode(), i.kind(),
+                i.kind() == Permission.Kind.UI ? i.permission() : i.operationId());
+        String unavailable = decision.unavailableReason();
+        boolean allowed = decision.allowed();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("allowed", allowed);
         result.put("reason", unavailable != null ? unavailable : allowed ? "ALLOW" : "DENY");
-        result.put("traceId", UUID.randomUUID().toString());
+        result.put("traceId", Optional.ofNullable(MDC.get("traceId"))
+                .orElseGet(() -> UUID.randomUUID().toString()));
         if (explain) {
             result.put("trace", unavailable != null ? List.of("ACTOR_AUTHENTICATED", unavailable)
                     : List.of("TOKEN_VALID", "USER_SYSTEM_ACTIVE", allowed ? "REQUIREMENT_SATISFIED" : "REQUIREMENT_NOT_SATISFIED"));
-            result.put("effective", RestSupport.effective(effective));
+            result.put("effective", RestSupport.effective(decision.effective()));
         }
         return RestSupport.ok(result);
     }

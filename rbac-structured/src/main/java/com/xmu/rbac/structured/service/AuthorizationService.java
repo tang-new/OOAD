@@ -145,10 +145,14 @@ public class AuthorizationService {
             .map(r -> r.id)
             .toList();
     }
-    /** 计算同系统DAG闭包，切断停用节点并保留来源路径。 */
+    /** 计算启用系统中的角色权限。 */
     public Snapshot calculate(List<Long> direct, Long systemId) {
         if (!"ENABLED".equals(require(SoftwareSystem.class, systemId).status))
             return new Snapshot(List.of(), List.of(), List.of(), List.of());
+        return calculateConfiguredGrants(direct, systemId);
+    }
+    /** 计算角色配置的同系统DAG闭包，切断停用角色并保留来源路径。 */
+    Snapshot calculateConfiguredGrants(List<Long> direct, Long systemId) {
         Map<Long, Role> roles = new HashMap<>();
         for (Role r : db.where(Role.class, "e.systemId=?1", systemId)) roles.put(r.id, r);
         Map<Long, List<Long>> edges = new HashMap<>();
@@ -296,6 +300,11 @@ public class AuthorizationService {
                    target = require(Department.class, department);
         if (!target.path.startsWith(own.path))
             throw BizException.forbidden("OUT_OF_MANAGE_SCOPE");
+    }
+    /** 停用系统没有可委派的有效授权，中心超级管理员仍可维护其角色配置。 */
+    public void requireRoleGrantSystem(Actor a, SoftwareSystem system) {
+        if (!"ENABLED".equals(system.status) && !superAdmin(a))
+            throw BizException.forbidden("PRIVILEGE_ESCALATION");
     }
     /** 授权上界同时检查权限和受控身份投影，包含新继承闭包。 */
     public void upper(Actor a, String code, Snapshot proposed) {

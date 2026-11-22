@@ -151,19 +151,20 @@ public class AuthorizationApplicationService {
         throw new DomainException(503, "AUTHORIZATION_UNSTABLE");
     }
 
-    public record ApiExplanation(
+    public record SimulationResult(
             boolean allowed, String unavailableReason, AuthorizationPolicy.Effective effective) {}
 
-    /** API 解释的判定与展示快照必须对应同一授权版本。 */
-    public ApiExplanation explainApi(long user, String system, String operation) {
+    /** 模拟的目标状态、判定和展示快照必须对应同一授权版本。 */
+    public SimulationResult simulate(long user, String system, Permission.Kind kind, String identifier) {
         if (reads != null
                 && TransactionSynchronizationManager.isActualTransactionActive()
                 && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
-            return reads.fresh(() -> stableApiExplanation(user, system, operation));
-        return stableApiExplanation(user, system, operation);
+            return reads.fresh(() -> stableSimulation(user, system, kind, identifier));
+        return stableSimulation(user, system, kind, identifier);
     }
 
-    private ApiExplanation stableApiExplanation(long user, String system, String operation) {
+    private SimulationResult stableSimulation(
+            long user, String system, Permission.Kind kind, String identifier) {
         for (int attempt = 0; attempt < 3; attempt++) {
             if (TransactionSynchronizationManager.isActualTransactionActive()
                     && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
@@ -179,9 +180,12 @@ public class AuthorizationApplicationService {
                                         java.util.List.of(),
                                         java.util.List.of(),
                                         java.util.List.of());
-                boolean allowed = unavailable == null && stableApi(user, system, operation);
+                boolean allowed = unavailable == null
+                        && (kind == Permission.Kind.UI
+                                ? effective.has(identifier, Permission.Kind.UI)
+                                : stableApi(user, system, identifier));
                 if (version == repository.version())
-                    return new ApiExplanation(allowed, unavailable, effective);
+                    return new SimulationResult(allowed, unavailable, effective);
             } catch (DomainException error) {
                 if (error.status() >= 500 || version == repository.version()) throw error;
             }
@@ -197,7 +201,30 @@ public class AuthorizationApplicationService {
         java.util.Set<Long> direct = new java.util.HashSet<>();
         for (Role role : proposed.directRoles()) direct.add(role.id());
         repository.hierarchy(system).requireGrantable(direct, privileged);
-        policy.requireWithin(effective(actor.id(), system), proposed, privileged);
+        if (!privileged)
+            policy.requireWithin(effective(actor.id(), system), proposed, false);
+    }
+
+    /** 停用系统没有可委派的有效授权，中心超级管理员仍可维护其角色配置。 */
+    public void requireRoleGrantSystem(AuthorizationRepository.Identity actor, String system) {
+        DomainException.require(
+                effective(actor.id(), "rbac-center").superAdministrator()
+                        || repository.systemEnabled(system),
+                403,
+                "GRANT_EXCEEDS_ACTOR");
+    }
+
+    /** 启用前停用系统的有效上界为空，启用后的全部角色闭包都不得超出此上界。 */
+    public void requireSystemActivation(AuthorizationRepository.Identity actor, String system) {
+        if (effective(actor.id(), "rbac-center").superAdministrator()) return;
+        RoleHierarchy graph = repository.hierarchy(system);
+        java.util.Set<Long> roleIds = new java.util.HashSet<>();
+        for (Role role : graph.roles()) roleIds.add(role.id());
+        graph.requireGrantable(roleIds, false);
+        var before = new AuthorizationPolicy.Effective(
+                java.util.List.of(), java.util.List.of(), java.util.List.of(), java.util.List.of());
+        policy.requireWithin(
+                before, policy.calculate(system, roleIds, graph, repository.permissions(system)), false);
     }
 
     /** 已登记业务路由仍受数据库当前启停状态约束，超级管理员不能绕过停用操作。 */

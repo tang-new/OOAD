@@ -135,7 +135,11 @@ DDD JpaDirectoryRepositoryAdapter.saveUser 在首次 INSERT 之前直接生成�
 image::S03-structured-sequence.svg[结构化权限]
 image::S03-ddd-sequence.svg[DDD 权限]
 
-两实现都以 DB 版本和状态为事实来源，事务中不读写授权缓存。DDD `stableEffective` 先读版本，再检查目标系统和目标用户。管理员通过用户查看权限和部门范围检查后，若目标系统停用，目录服务将 `SYSTEM_DISABLED` 转为空有效权限并返回 200。系统启用但目标用户非 ACTIVE 时也得到空权限。无实际事务且目标用户 ACTIVE 时才可 cache.get/put。第一次尾部版本变化立即重试；发布缓存后再次读版本，匹配才返回；最多三次，不稳定返回 503 AUTHORIZATION_UNSTABLE。
+两版用户详情先校验调用者的查看权限，再确认目标系统存在，之后才读取目标用户并检查部门范围。系统编码不存在时统一返回 `404 SYSTEM_NOT_FOUND`，响应与目标用户是否存在无关。通过范围检查后，目标系统或目标用户已停用时返回 `200` 和空权限。
+
+Structured 的 S03 HTTP 查询在只读事务内运行。目标启用时计算权限快照，目标停用时使用空快照，再由 `AuthorizationService.effective` 转换为接口响应。图中分隔线下方独立展示 `snapshot()` 在其他调用中无事务时的缓存与重试过程。
+
+有效权限以数据库的版本和状态为准，事务中不读写授权缓存。DDD `stableEffective` 先读版本，再检查目标系统和目标用户。目录服务把目标系统的 `SYSTEM_DISABLED` 转为空有效权限。无实际事务且目标用户 ACTIVE 时才可 cache.get/put。写入缓存前和写入后均复查授权版本，版本变化就重试，三次仍不稳定返回 `503 AUTHORIZATION_UNSTABLE`。
 
 若当前实际事务为只读，`effective/api` 通过独立 Spring Bean `AuthorizationReadTransaction.fresh`，在 REQUIRES_NEW、READ_COMMITTED、readOnly 事务执行 Supplier 回调；`stableEffective/stableApi` 每次尝试先 `repository.freshenRead`，JpaAdapter 用 EntityManager.clear 清理持久化上下文。写事务不另开读取事务，避免把尚未提交的授权变更误读成旧事实。图中回调分支注明相同算法，普通分支展开循环；不能把 fresh 简化成“清一次缓存”。
 
@@ -144,9 +148,9 @@ image::S03-ddd-sequence.svg[DDD 权限]
 === 管理端停用目标模拟：与实际授权状态修改分开
 
 image::SIM-ddd-class.svg[目标可用性检查类图]
-image::SIM-ddd-sequence.svg[目标模拟 explain 实际链]
+image::SIM-ddd-sequence.svg[管理端模拟判定和解释]
 
-`AuthorizationController.explain` 进入私有 `check`，先认证并校验管理员授权，指定他人时再检查目标部门范围。UI 分支读取 `unavailableReason`，使用取得的有效权限判定。如果目标系统在两次读取之间停用，控制器会捕获目标查询的 `SYSTEM_DISABLED`，形成正常的拒绝结果。API 分支调用 `explainApi`，以同一轮授权版本校验包住目标状态、展示快照和点判定。目标不存在时返回 404。停用用户或系统的模拟返回空权限、`allowed=false` 及 `USER_DISABLED` 或 `SYSTEM_DISABLED`。共享验收场景使用 SIM 图，UML-S06 顺序图展示同步成功审计。
+`AuthorizationController` 的 `check` 和 `explain` 都通过私有 `check` 校验调用者。代查他人时还会检查目标部门范围。两种入口的 UI 和 API 模拟都调用 `simulate`。每轮读取授权版本、目标状态、权限快照和判定，再复查版本。UI 判定匹配快照中的权限码，API 判定检查登记的操作策略。版本变化时重做整轮，稳定的未知目标返回 404。停用用户或系统的模拟返回 `allowed=false` 及 `USER_DISABLED` 或 `SYSTEM_DISABLED`，`explain` 同时带上空权限和对应的解释轨迹。共享验收场景使用 SIM 图，UML-S06 顺序图展示同步成功审计。
 
 === S04：可信 operationId 与双层鉴权
 

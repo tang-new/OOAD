@@ -21,6 +21,8 @@ public interface ResourceRepository {
 
     record Mapping(long uiResourceId, long apiOperationId) {}
 
+    record OperationSystem(long id, String code, boolean enabled) {}
+
     List<Ui> ui(String system);
 
     Ui ui(long id);
@@ -34,7 +36,11 @@ public interface ResourceRepository {
 
     ApiOperation operation(long id);
 
-    ApiOperation saveOperation(ApiOperation operation);
+    OperationSystem operationSystem(String code);
+
+    long apiPermissionId(long systemId, String code);
+
+    ApiOperation saveOperation(ApiOperation operation, long systemId, Long permissionId);
 
     List<Mapping> mappings(String system);
 

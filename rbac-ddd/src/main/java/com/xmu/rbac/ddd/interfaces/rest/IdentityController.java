@@ -128,6 +128,8 @@ public class IdentityController {
     public Map<String, Object> api(
             @RequestHeader(value = "Authorization", required = false) String bearer,
             @PathVariable String operationId) {
+        DomainException.require(
+                !operationId.isEmpty() && operationId.length() <= 128, 400, "INVALID_REQUEST");
         TokenProvider.Principal principal = rest.principal(bearer);
         return Map.of(
                 "operationId",

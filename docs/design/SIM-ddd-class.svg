@@ -13,23 +13,20 @@
 <!-- svc&#45;&gt;repo -->
 <g id="edge2" class="edge">
 <title>svc&#45;&gt;repo</title>
-<path fill="none" stroke="#49627b" d="M906.83,-480.36C769.4,-480.36 612.4,-480.36 484.85,-480.36"/>
-<polygon fill="#49627b" stroke="#49627b" points="473.03,-480.36 485.03,-474.96 477.81,-480.36 485.03,-480.36 485.03,-480.36 485.03,-480.36 477.81,-480.36 485.03,-485.76 473.03,-480.36"/>
-<text text-anchor="middle" x="661.34" y="-485.81" font-family="Microsoft YaHei" font-size="14.00">repository</text>
+<path fill="none" stroke="#49627b" d="M887.3,-480.36C749.93,-480.36 595.75,-480.36 471.89,-480.36"/>
+<text text-anchor="middle" x="645.09" y="-485.81" font-family="Microsoft YaHei" font-size="14.00">repository</text>
 </g>
 <!-- svc&#45;&gt;policy -->
 <g id="edge3" class="edge">
 <title>svc&#45;&gt;policy</title>
-<path fill="none" stroke="#49627b" d="M1565.17,-480.36C1683.67,-480.36 1816.72,-480.36 1932.89,-480.36"/>
-<polygon fill="#49627b" stroke="#49627b" points="1944.66,-480.36 1932.66,-485.76 1939.88,-480.36 1932.66,-480.36 1932.66,-480.36 1932.66,-480.36 1939.88,-480.36 1932.66,-474.96 1944.66,-480.36"/>
-<text text-anchor="middle" x="1729.15" y="-485.81" font-family="Microsoft YaHei" font-size="14.00">policy</text>
+<path fill="none" stroke="#49627b" d="M1584.7,-480.36C1702.62,-480.36 1832.94,-480.36 1945.83,-480.36"/>
+<text text-anchor="middle" x="1745.39" y="-485.81" font-family="Microsoft YaHei" font-size="14.00">policy</text>
 </g>
 <!-- ctl&#45;&gt;svc -->
 <g id="edge1" class="edge">
 <title>ctl&#45;&gt;svc</title>
-<path fill="none" stroke="#49627b" d="M1236,-756.86C1236,-715.85 1236,-665.36 1236,-618.79"/>
-<polygon fill="#49627b" stroke="#49627b" points="1236,-606.98 1241.4,-618.98 1236,-611.77 1236,-618.98 1236,-618.98 1236,-618.98 1236,-611.77 1230.6,-618.98 1236,-606.98"/>
-<text text-anchor="middle" x="1191.38" y="-693.27" font-family="Microsoft YaHei" font-size="14.00">authorization</text>
+<path fill="none" stroke="#49627b" d="M1236,-756.86C1236,-715.11 1236,-663.53 1236,-616.27"/>
+<text text-anchor="middle" x="1184.62" y="-692.02" font-family="Microsoft YaHei" font-size="14.00">authorization &#160;&#160;</text>
 </g>
 <!-- adapter&#45;&gt;repo -->
 <g id="edge4" class="edge">
@@ -37,24 +34,40 @@
 <path fill="none" stroke="#49627b" stroke-dasharray="5,2" d="M236,-224.49C236,-271.18 236,-326.2 236,-373.24"/>
 <polygon fill="none" stroke="#49627b" points="231.8,-373.08 236,-385.08 240.2,-373.09 231.8,-373.08"/>
 </g>
+<!-- _association_head&#45;&gt;_association_head -->
+<g id="edge5" class="edge">
+<title>_association_head&#45;&gt;_association_head</title>
+<path fill="none" stroke="#49627b" d="M1241.4,-628.36C1241.4,-628.36 1236,-616.36 1236,-616.36 1236,-616.36 1230.6,-628.36 1230.6,-628.36"/>
+</g>
+<!-- _association_head&#45;&gt;_association_head -->
+<g id="edge6" class="edge">
+<title>_association_head&#45;&gt;_association_head</title>
+<path fill="none" stroke="#49627b" d="M484,-474.96C484,-474.96 472,-480.36 472,-480.36 472,-480.36 484,-485.76 484,-485.76"/>
+</g>
+<!-- _association_head&#45;&gt;_association_head -->
+<g id="edge7" class="edge">
+<title>_association_head&#45;&gt;_association_head</title>
+<path fill="none" stroke="#49627b" d="M1933.62,-485.76C1933.62,-485.76 1945.62,-480.36 1945.62,-480.36 1945.62,-480.36 1933.62,-474.96 1933.62,-474.96"/>
+</g>
 <!-- svc -->
 <g id="node1" class="node">
 <title>svc</title>
-<polygon fill="#dcecff" stroke="none" points="907.62,-563.86 907.62,-604.86 1564.38,-604.86 1564.38,-563.86 907.62,-563.86"/>
-<text text-anchor="start" x="917.62" y="-580.61" font-family="Microsoft YaHei" font-size="15.00">AuthorizationApplicationService</text>
-<polygon fill="#ffffff" stroke="none" points="907.62,-501.86 907.62,-563.86 1564.38,-563.86 1564.38,-501.86 907.62,-501.86"/>
-<text text-anchor="start" x="917.62" y="-539.61" font-family="Microsoft YaHei" font-size="15.00">&#45; repository: AuthorizationRepository</text>
-<text text-anchor="start" x="917.62" y="-518.61" font-family="Microsoft YaHei" font-size="15.00">&#45; policy: AuthorizationPolicy</text>
-<polygon fill="#ffffff" stroke="none" points="907.62,-355.86 907.62,-501.86 1564.38,-501.86 1564.38,-355.86 907.62,-355.86"/>
-<text text-anchor="start" x="917.62" y="-477.61" font-family="Microsoft YaHei" font-size="15.00">public AuthorizationApplicationService.ApiExplanation explainApi(long, String, String)</text>
-<text text-anchor="start" x="917.62" y="-456.61" font-family="Microsoft YaHei" font-size="15.00">private AuthorizationApplicationService.ApiExplanation stableApiExplanation(long, String,</text>
-<text text-anchor="start" x="917.62" y="-435.61" font-family="Microsoft YaHei" font-size="15.00">String)</text>
-<text text-anchor="start" x="917.62" y="-414.61" font-family="Microsoft YaHei" font-size="15.00">public String unavailableReason(long, String)</text>
-<text text-anchor="start" x="917.62" y="-393.61" font-family="Microsoft YaHei" font-size="15.00">public AuthorizationPolicy.Effective effective(long, String)</text>
-<text text-anchor="start" x="917.62" y="-372.61" font-family="Microsoft YaHei" font-size="15.00">public boolean api(long, String, String)</text>
-<polygon fill="black" stroke="black" points="906.62,-563.86 906.62,-563.86 1565.38,-563.86 1565.38,-563.86 906.62,-563.86"/>
-<polygon fill="black" stroke="black" points="906.62,-501.86 906.62,-501.86 1565.38,-501.86 1565.38,-501.86 906.62,-501.86"/>
-<polygon fill="none" stroke="black" points="906.62,-354.86 906.62,-605.86 1565.38,-605.86 1565.38,-354.86 906.62,-354.86"/>
+<polygon fill="#dcecff" stroke="none" points="888.12,-574.36 888.12,-615.36 1583.88,-615.36 1583.88,-574.36 888.12,-574.36"/>
+<text text-anchor="start" x="898.12" y="-591.11" font-family="Microsoft YaHei" font-size="15.00">AuthorizationApplicationService</text>
+<polygon fill="#ffffff" stroke="none" points="888.12,-512.36 888.12,-574.36 1583.88,-574.36 1583.88,-512.36 888.12,-512.36"/>
+<text text-anchor="start" x="898.12" y="-550.11" font-family="Microsoft YaHei" font-size="15.00">&#45; repository: AuthorizationRepository</text>
+<text text-anchor="start" x="898.12" y="-529.11" font-family="Microsoft YaHei" font-size="15.00">&#45; policy: AuthorizationPolicy</text>
+<polygon fill="#ffffff" stroke="none" points="888.12,-345.36 888.12,-512.36 1583.88,-512.36 1583.88,-345.36 888.12,-345.36"/>
+<text text-anchor="start" x="898.12" y="-488.11" font-family="Microsoft YaHei" font-size="15.00">public AuthorizationApplicationService.SimulationResult simulate(long, String, Permission.Kind,</text>
+<text text-anchor="start" x="898.12" y="-467.11" font-family="Microsoft YaHei" font-size="15.00">String)</text>
+<text text-anchor="start" x="898.12" y="-446.11" font-family="Microsoft YaHei" font-size="15.00">private AuthorizationApplicationService.SimulationResult stableSimulation(long, String,</text>
+<text text-anchor="start" x="898.12" y="-425.11" font-family="Microsoft YaHei" font-size="15.00">Permission.Kind, String)</text>
+<text text-anchor="start" x="898.12" y="-404.11" font-family="Microsoft YaHei" font-size="15.00">public String unavailableReason(long, String)</text>
+<text text-anchor="start" x="898.12" y="-383.11" font-family="Microsoft YaHei" font-size="15.00">private AuthorizationPolicy.Effective stableEffective(long, String)</text>
+<text text-anchor="start" x="898.12" y="-362.11" font-family="Microsoft YaHei" font-size="15.00">private boolean stableApi(long, String, String)</text>
+<polygon fill="black" stroke="black" points="887.12,-574.36 887.12,-574.36 1584.88,-574.36 1584.88,-574.36 887.12,-574.36"/>
+<polygon fill="black" stroke="black" points="887.12,-512.36 887.12,-512.36 1584.88,-512.36 1584.88,-512.36 887.12,-512.36"/>
+<polygon fill="none" stroke="black" points="887.12,-344.36 887.12,-616.36 1584.88,-616.36 1584.88,-344.36 887.12,-344.36"/>
 </g>
 <!-- repo -->
 <g id="node2" class="node">
@@ -121,5 +134,6 @@
 </g>
 <!-- _top -->
 <!-- _bottom -->
+<!-- _association_head -->
 </g>
 </svg>
