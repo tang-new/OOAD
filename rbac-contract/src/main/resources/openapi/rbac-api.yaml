@@ -4040,6 +4040,11 @@ components:
               permissionCode:
                 type: string
                 maxLength: 128
+              permissionKind:
+                type: string
+                enum:
+                - UI
+                - API
               roleCode:
                 type: string
                 maxLength: 64
@@ -4050,6 +4055,7 @@ components:
                   type: string
             required:
             - permissionCode
+            - permissionKind
             - roleCode
             - inherited
             - path

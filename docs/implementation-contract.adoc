@@ -46,7 +46,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 * RoleVO：id,systemCode,code,name,description,status,builtin,identityRole(nullable student/teacher/admin),version。
 * PermissionVO：id,systemCode,code,name,kind(UI/API),status。
 * AssignmentVO：id,userId,roleId,systemCode,roleCode,roleName,assignedAt,assignedBy；无scope部门。
-* EffectiveVO：directRoles:RoleVO[],effectiveRoles:RoleVO[],permissions:PermissionVO[],sources:[{permissionCode,roleCode,inherited:boolean,path:string[]}]；权限集合去重，来源可多条。
+* EffectiveVO：directRoles:RoleVO[],effectiveRoles:RoleVO[],permissions:PermissionVO[],sources:[{permissionCode,permissionKind:UI/API,roleCode,inherited:boolean,path:string[]}]；权限集合去重，来源可多条，按权限种类与编码关联。
 * UiResourceVO：id,systemCode,parentId,type(MENU/BUTTON),code,name,route,component,sortOrder,status,permissionCode,children；父菜单可见不赋子按钮。
 * ApiOperationVO：id,systemCode,operationId,method,pathTemplate,permissionCode(nullable),requiredRole(nullable),accessPolicy(PUBLIC/AUTHENTICATED/PROTECTED),enabled。
 * MappingVO：uiResourceId,apiOperationId；显式多对多，仅追踪，不隐式赋权。

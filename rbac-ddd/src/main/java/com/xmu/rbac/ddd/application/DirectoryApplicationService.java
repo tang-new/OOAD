@@ -353,7 +353,13 @@ public class DirectoryApplicationService {
     public AuthorizationPolicy.Effective effective(
             TokenProvider.Principal p, long id, String system) {
         user(p, id);
-        return authorization.effective(id, system);
+        try {
+            return authorization.effective(id, system);
+        } catch (DomainException error) {
+            // 管理目标的停用状态不影响已校验的操作者会话。
+            if (error.status() != 401 || !"SYSTEM_DISABLED".equals(error.code())) throw error;
+            return new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of());
+        }
     }
 
     public Map<String, Long> dashboard(TokenProvider.Principal p) {

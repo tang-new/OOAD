@@ -2,7 +2,9 @@
 
 2026-11-17：C 的7张图现行局部核验见 link:../oral-review/C-iterations.adoc[C迭代记录] 和 link:../oral-review/C-diagrams-verification.json[编译符号/源码调用顺序/图摘要]。其中4张顺序图已重生成；原全量 source-index.json 保留历史基线，不代表本轮全工程核验。
 
-自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。
+2026-11-22：S03 Structured、S04 两版及 SIM DDD 的顺序图已经按当前源码局部重生成。S04 主顺序图对应 Compose 默认的中心内嵌课程代理，两张 S04 类图保留独立网关的历史结构。
+
+旧全量生成归档见 link:source-index.json[源码和图哈希]、link:generation-status.json[生成状态] 和 link:visual-review.json[目视摘要]。本次局部复核见 link:visual-review.adoc[图稿复核记录]。文本 SHA-256 仅归一化 CRLF→LF，class/jar/png 等二进制逐字节计算。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示当次编译产物、符号及受检查源码调用顺序对齐。
 
 == LOGIN-ddd-class
 
@@ -90,6 +92,8 @@ link:S03-structured-sequence.png[PNG] / link:S03-structured-sequence.puml[PlantU
 
 == S04-ddd-class
 
+独立网关的历史类图。当前 Compose 的课程请求见下方 S04 主顺序图。
+
 image::S04-ddd-class.svg[S04-ddd-class]
 
 link:S04-ddd-class.png[PNG] / link:S04-ddd-class.dot[DOT]
@@ -107,6 +111,8 @@ image::S04-ddd-sequence.svg[S04-ddd-sequence]
 link:S04-ddd-sequence.png[PNG] / link:S04-ddd-sequence.puml[PlantUML]
 
 == S04-structured-class
+
+独立网关的历史类图。当前 Compose 的课程请求见下方 S04 主顺序图。
 
 image::S04-structured-class.svg[S04-structured-class]
 

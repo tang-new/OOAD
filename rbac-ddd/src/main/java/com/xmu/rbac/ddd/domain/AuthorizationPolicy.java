@@ -5,7 +5,11 @@ import java.util.*;
 /** 领域授权专家：并集去重、解释来源、受控身份投影及非超级管理员授权上界。 */
 public final class AuthorizationPolicy {
     public record Source(
-            String permissionCode, String roleCode, boolean inherited, List<String> path) {}
+            String permissionCode,
+            Permission.Kind permissionKind,
+            String roleCode,
+            boolean inherited,
+            List<String> path) {}
 
     public record Effective(
             List<Role> directRoles,
@@ -58,6 +62,7 @@ public final class AuthorizationPolicy {
                 sources.add(
                         new Source(
                                 p.code(),
+                                p.kind(),
                                 role.code(),
                                 path.size() > 1,
                                 path.stream().map(roles::get).map(Role::code).toList()));

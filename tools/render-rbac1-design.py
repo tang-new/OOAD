@@ -113,8 +113,9 @@ def verify_call_chains():
       ('S01/S06','ddd','RoleApplicationService','complete',['integrity.requireAdministrator()','repository.advanceVersion()','audits.local(']),
       ('S02','ddd','DirectoryApplicationService','assign',['grants.lockGrants()','actor(','directory.user(id,true)','managed(','grants.role(roleId)','authorization.upperBound(','aggregate(profile).assign(','directory.assign(','done(']),
       ('S02','ddd','DirectoryApplicationService','done',['integrity.requireAdministrator()','grants.advanceVersion()','audits.local(']),
-      ('SIM','ddd','AuthorizationController','check',['rest.principal(','authorization.require(','directory.user(','authorization.unavailableReason(','authorization.effective(','authorization.api(','result.put("allowed"','result.put("reason"','result.put("trace"']),
+      ('SIM','ddd','AuthorizationController','check',['rest.principal(','authorization.require(','directory.user(','authorization.explainApi(','authorization.unavailableReason(','authorization.effective(','authorization.api(','result.put("allowed"','result.put("reason"','result.put("trace"']),
       ('SIM','ddd','AuthorizationApplicationService','unavailableReason',['repository.systemEnabled(system)','repository.identity(userId)','DomainException.require(target!=null','return"USER_DISABLED"','returnenabled?null:"SYSTEM_DISABLED"']),
+      ('SIM','ddd','AuthorizationApplicationService','stableApiExplanation',['repository.version()','unavailableReason(user,system)','stableEffective(user,system)','stableApi(user,system,operation)','if(version==repository.version())','returnnewApiExplanation(']),
       ('S02','ddd','JpaDirectoryRepositoryAdapter','saveUser',['e.setSubject(','UUID.randomUUID()','em.persist(e)','em.flush()','returnuser(e)']),
       ('S03','ddd','AuthorizationApplicationService','effective',['reads.fresh(','stableEffective(','returnstableEffective(']),
       ('S03','ddd','AuthorizationApplicationService','stableEffective',['repository.freshenRead()','repository.version()','repository.systemEnabled(','repository.identity(userId)','cache.get(','policy.calculate(','repository.version()','cache.put(','repository.version()']),
@@ -129,11 +130,13 @@ def verify_call_chains():
       ('S01/S02/S06','structured','ManagementService','finish',['db.flush()','az.preserveAdministrator()','g.version++','audit.success(']),
       ('S01','structured','ManagementService','inherit',['begin(','az.protectRole(a,s)','az.protectRole(a,j)','db.one(','reachable(junior,senior)','db.save(edge)','changedUpper(','finish(']),
       ('S02','structured','ManagementService','assign',['begin(','az.scope(','db.one(','az.upper(','db.save(ur)','finish(']),
-      ('S03','structured','AuthorizationService','snapshot',['active(u,s)','if(tx)','for(intattempt=0','version()','namespace+":authz:"','l1.get(','redis.opsForValue().get(','calculate(','if(version!=version())','l1.put(','redis.opsForValue().set(']),
+      ('S03','structured','AuthorizationService','snapshot',['TransactionSynchronizationManager.isActualTransactionActive()','activeSystem(userId,code)','calculate(direct(','for(intattempt=0','version()','activeSystem(userId,code)','namespace+":authz:"','l1.get(','redis.opsForValue().get(','calculate(','if(version!=version())','l1.put(','redis.opsForValue().set(','if(version==version())','returnresult']),
+      ('S03','structured','AuthorizationService','activeSystem',['require(User.class,userId)','system(code)','active(u,s)']),
       ('S06','structured','ManagementService','roleStatus',['begin(','az.protectRole(','r.status=status','changedUpper(','finish(']),
       ('S05','structured','AuditService','external',['trusted(','authz.permission(','safe(input.before()','safe(input.after()','isolated.execute(','db.one(','same(existing,payload)','db.save(log)','db.flush()','catch(DataIntegrityViolationException','isolated.execute(','db.one(','same(log,payload)']),
-      ('S04','gateway','GatewayController','forward',['routes.resolve(','auth.authorize(','BoundedBody.read(','proxy.forward(']),
-      ('S04','gateway','AuthBoundary','authorize',['identity.check(','response.getStatusCode().value()!=200','response.getBody()','operationId.equals(decision.operationId())','if(!decision.allowed())'])
+      ('S04 legacy','gateway','GatewayController','forward',['routes.resolve(','auth.authorize(','BoundedBody.read(','proxy.forward(']),
+      ('S04 legacy','gateway','AuthBoundary','authorize',['identity.check(','response.getStatusCode().value()!=200','response.getBody()','operationId.equals(decision.operationId())','if(!decision.allowed())']),
+      ('S04','gateway','CourseProxyFilter','doFilter',['chain.doFilter(','routes.resolve(','request.getHeaders("Authorization")','authorize.require(','BoundedBody.read(','proxy.forward('])
     ]
     for scenario,mode,short,name,tokens in specs:
         k=key(short,mode);entry=INDEX[k];method(k,name)
@@ -238,7 +241,8 @@ class Sequence:
         self.lines+=['activate obj'];self.open('obj',entry,method_name,args)
         self.entry=entry
     def open(self,a,b,m,args=''):
-        method(key(self.participants[b],self.mode if b not in ['gw','route','boundary','http','proxy'] else 'gateway'),m)
+        mode='gateway' if b in ['filter','route','body','proxy'] else self.mode
+        method(key(self.participants[b],mode),m)
         self.count+=1;self.lines += [f'{a} -> {b}: {self.count}. {m}({args})',f'activate {b}']
     def close(self,b,a,label=''):
         if label:self.lines += [f'{b} --> {a}: {label}']
@@ -494,7 +498,8 @@ def main():
     if changed:raise RuntimeError('Sources changed DURING generation; rerun after compile: '+str(changed))
     index={'runtimeEvidenceMode':args.runtime_evidence,'currentRuntimeVerified':False,'artifactsMatchCurrentBuild':args.runtime_evidence=='current','hashRules':HASH_RULES,'generatorSha256':sha(Path(__file__)),'artifacts':{p.name:sha(p) for f in sorted(set(FIGURES)) for p in [OUT/(f+'.svg'),OUT/(f+'.png')]},'generatedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'strictCompiled':args.strict_compiled,'status':'SOURCE_ONLY_PENDING_COMPILE' if WARNINGS else ('STRICT_COMPILED_CHECKED' if args.strict_compiled else 'SIGNATURE_CHECKED'),'warnings':WARNINGS,'tool':tool,'sources':sources,'references':REFS,'callChains':CALL_CHAINS,'figures':sorted(set(FIGURES)),'checks':{'classBoxes':'PASS','classEdgesThirdPartyBoxes':'PASS','symbols':'PASS','orderedSourceCallChains':'PASS','sourceHashesStable':'PASS','sequenceActivationBalance':'PASS','plantumlSyntax':'PASS','pngVisualInspection':'MANUAL_REQUIRED','tests':'NOT_RUN','deployment':'ARCHIVED_LOCAL_FINAL_CHECKED_NO_NEW_LIVE_PROBE'}}
     write('source-index','json',json.dumps(index,ensure_ascii=False,indent=2));write('generation-status','json',json.dumps({k:index[k] for k in ['generatedAt','runtimeEvidenceMode','currentRuntimeVerified','artifactsMatchCurrentBuild','hashRules','strictCompiled','status','warnings','checks']},ensure_ascii=False,indent=2))
-    write('index','adoc','= 当前源码图索引\n\n自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。\n\n'+'\n\n'.join('== '+f+'\n\nimage::'+f+'.svg['+f+']\n\nlink:'+f+'.png[PNG] / link:'+f+('.puml[PlantUML]' if (OUT/(f+'.puml')).exists() else '.dot[DOT]') for f in sorted(set(FIGURES))))
+    legacy_gateway_classes={'S04-structured-class','S04-ddd-class'}
+    write('index','adoc','= 当前源码图索引\n\n自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。\n\n'+'\n\n'.join('== '+f+'\n\n'+('独立网关的历史类图。当前 Compose 的课程请求见下方 S04 主顺序图。\n\n' if f in legacy_gateway_classes else '')+'image::'+f+'.svg['+f+']\n\nlink:'+f+'.png[PNG] / link:'+f+('.puml[PlantUML]' if (OUT/(f+'.puml')).exists() else '.dot[DOT]') for f in sorted(set(FIGURES))))
     print(json.dumps({'status':index['status'],'figures':len(set(FIGURES)),'warnings':WARNINGS,'visual':'Every PNG must be opened; renderer does not assert manual inspection.'},ensure_ascii=False))
 if __name__=='__main__':
     try:main()

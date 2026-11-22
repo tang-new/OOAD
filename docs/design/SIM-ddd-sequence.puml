@@ -33,48 +33,61 @@ ctl -> directory: 5. user(principal, targetUserId)
 activate directory
 deactivate directory
 end
-ctl -> auth: 6. unavailableReason(targetUserId, system)
+alt API explanation
+ctl -> auth: 6. explainApi(targetUserId, system, operationId)
 activate auth
-auth -> repo: 7. systemEnabled(system)
+auth -> auth: 7. stableApiExplanation(targetUserId, system, operationId)
+activate auth
+loop at most 3 attempts
+auth -> repo: 8. version()
 activate repo
 deactivate repo
-auth -> repo: 8. identity(targetUserId)
+auth -> auth: 9. unavailableReason(targetUserId, system)
+activate auth
+auth -> repo: 10. systemEnabled(system)
 activate repo
 deactivate repo
-alt missing target
-auth --> obj: 404 USER_NOT_FOUND; abort
-else existing target
+auth -> repo: 11. identity(targetUserId)
+activate repo
+deactivate repo
+auth --> auth: unavailable or null
+deactivate auth
+opt available target
+auth -> auth: 12. stableEffective(targetUserId, system)
+activate auth
+deactivate auth
+auth -> auth: 13. stableApi(targetUserId, system, operationId)
+activate auth
+deactivate auth
+end
+auth -> repo: 14. version()
+activate repo
+deactivate repo
 note over auth
-non-ACTIVE → USER_DISABLED; otherwise disabled system → SYSTEM_DISABLED;
-active user + enabled system → null
+unchanged → return status, snapshot and decision; changed → retry all reads.
+Unstable after three attempts → 503 AUTHORIZATION_UNSTABLE.
 end note
 end
-auth --> ctl: unavailable
 deactivate auth
-alt unavailable != null
-note over ctl
-empty effective; allowed=false; reason=unavailable;
-explain trace=[ACTOR_AUTHENTICATED, unavailable]; fresh traceId.
-No effective()/api() call for unavailable target.
-end note
-else available target
-ctl -> auth: 9. effective(targetUserId, system)
+auth --> ctl: ApiExplanation
+deactivate auth
+else UI explanation
+ctl -> auth: 15. unavailableReason(targetUserId, system)
 activate auth
 deactivate auth
-opt API decision
-ctl -> auth: 10. api(targetUserId, system, operationId)
+opt available target
+ctl -> auth: 16. effective(targetUserId, system)
 activate auth
 deactivate auth
-end
 note over ctl
-UI uses Effective.has; reason ALLOW or DENY;
-explain trace records TOKEN_VALID, USER_SYSTEM_ACTIVE and requirement result
+Use Effective.has for the UI permission.
 end note
 end
+end
 note over ctl
-RestSupport.ok supplies HTTP envelope; target disabled is a DENY result,
-not authentication failure of the requesting administrator.
-No business mutation or SUCCESS audit occurs in this simulation.
+Unavailable target: empty effective, allowed=false,
+reason and trace carry USER_DISABLED or SYSTEM_DISABLED.
+Available target: reason ALLOW or DENY. RestSupport.ok supplies the HTTP envelope.
 end note
 deactivate ctl
 deactivate ctl

@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { NTag } from 'naive-ui'
-import type { EffectiveVO } from '@/api/types'
+import type { EffectiveVO, PermissionVO } from '@/api/types'
 import ReadState from './ReadState.vue'
 import TechText from './TechText.vue'
 const props = defineProps<{ value: EffectiveVO; showRoles?: boolean }>()
 const filter = ref('')
 const results = computed(() => props.value.permissions.filter(p => [p.code, p.name].some(value => value.toLowerCase().includes(filter.value.trim().toLowerCase()))))
+function permissionKey(kind: PermissionVO['kind'], code: string) { return `${kind}:${code}` }
 const sources = computed(() => {
   const byPermission = new Map<string, EffectiveVO['sources']>()
   for (const source of props.value.sources) {
-    const entries = byPermission.get(source.permissionCode) ?? []
+    const key = permissionKey(source.permissionKind, source.permissionCode)
+    const entries = byPermission.get(key) ?? []
     entries.push(source)
-    byPermission.set(source.permissionCode, entries)
+    byPermission.set(key, entries)
   }
   return byPermission
 })
@@ -32,9 +34,9 @@ const roleNames = computed(() => new Map([...props.value.directRoles, ...props.v
           <td><strong>{{ permission.name }}</strong><TechText :value="permission.code" /></td>
           <td><NTag size="small" :type="permission.kind === 'UI' ? 'info' : 'default'">{{ permission.kind }}</NTag></td>
           <td>
-            <span v-if="!sources.get(permission.code)?.length" class="muted">—</span>
+            <span v-if="!sources.get(permissionKey(permission.kind, permission.code))?.length" class="muted">—</span>
             <ul class="source-list">
-              <li v-for="(source, index) in sources.get(permission.code)" :key="index">
+              <li v-for="(source, index) in sources.get(permissionKey(permission.kind, permission.code))" :key="index">
                 <NTag size="small" :type="source.inherited ? 'info' : 'success'">{{ source.inherited ? '继承' : '直接' }}</NTag>
                 <span :title="source.path.join(' → ')">{{ source.path.length ? source.path.map(code => roleNames.get(code) ?? code).join(' → ') : roleNames.get(source.roleCode) ?? source.roleCode }}</span>
               </li>

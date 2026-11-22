@@ -1,6 +1,6 @@
 = UML PNG 目视复核记录
 
-已审阅图稿共 35 种。本轮只更新最终部署归档说明；按原始 PNG SHA 比较实际变化并打开部署图，其余图摘要相同则沿用上一轮真实目视记录。当前快照见 link:visual-review.json[目视摘要]，源/class 哈希规则见 link:source-index.json[源索引]。
+全量归档曾审阅 35 种图稿。该轮只更新最终部署归档说明；按原始 PNG SHA 比较实际变化并打开部署图，其余图摘要相同则沿用此前目视记录。归档见 link:visual-review.json[目视摘要] 和 link:source-index.json[源索引]。后续局部复核见文末。
 
 == 最新复核范围
 
@@ -37,6 +37,10 @@
 * 新增登录锁图：attempt 正常返回 null 之后才由外层 login 抛 401，失败计数事务不会因该 HTTP 凭据异常回滚。
 * 新增 SIM 两图实际表达 explain → 私有 check → unavailableReason；停用目标不会继续 effective/api，reason/trace 的已验证对齐清楚可见。没有把模拟查询错误地接到 Role.status / SUCCESS 审计上。Repository 的 identity(long)/identity(String) 重载都保留真实签名。
 * 部署图读取最终本地 rounds 双轮证据：新 tag local-final-20261115-035858，structured→DDD 各 7 服务、11 探针、相同前端和持久资源，最终 DDD；图中明确已归档本地通过，不再误写 PENDING，也默认 current 已严格核对四个当前 JAR，图中 artifactsMatchCurrentBuild=true；currentRuntimeVerified=false 只表示 renderer 未发新 probe，不声称外部部署。
+
+== 2026-11-22 局部复核
+
+使用 PlantUML 1.2025.2 重生成 Structured S03、两版 S04 主序列和 DDD SIM 的 SVG/PNG，并逐张打开 PNG 核对版面、分支和文字。S03 的事务外分支展示每轮用户/系统状态读取及写缓存后的版本复查。S04 展示代理内嵌在权限后端，鉴权通过后再读取请求体并转发。DDD SIM 展示 API 解释的同一版本校验。此处记录图稿检查。
 
 类框三段、Service 中心、role 关联标签、Adapter→Repository 实现箭头可读，未见重叠、穿第三方类框或方法文本裁切。循环体短执行条完整位于 loop 内；作为该算法调用者的外层 execution 可覆盖控制片段。回调分支注明 Supplier 间接调用及省略的内部循环，不冒充直接 Java 调用。长序列图应打开原始 PNG/SVG 阅读，不压缩到论文单栏。
 

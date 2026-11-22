@@ -8,7 +8,7 @@ export interface UserVO { id: number; subject: string; username: string; name: s
 export interface RoleVO { id: number; systemCode: string; code: string; name: string; description: string | null; status: Status; builtin: boolean; identityRole: 'student' | 'teacher' | 'admin' | null; version: number }
 export interface PermissionVO { id: number; systemCode: string; code: string; name: string; kind: 'UI' | 'API'; status: Status }
 export interface AssignmentVO { id: number; userId: number; roleId: number; systemCode: string; roleCode: string; roleName: string; assignedAt: string; assignedBy: number }
-export interface EffectiveVO { directRoles: RoleVO[]; effectiveRoles: RoleVO[]; permissions: PermissionVO[]; sources: { permissionCode: string; roleCode: string; inherited: boolean; path: string[] }[] }
+export interface EffectiveVO { directRoles: RoleVO[]; effectiveRoles: RoleVO[]; permissions: PermissionVO[]; sources: { permissionCode: string; permissionKind: PermissionVO['kind']; roleCode: string; inherited: boolean; path: string[] }[] }
 export interface UiResourceVO { id: number; systemCode: string; parentId: number | null; type: 'MENU' | 'BUTTON'; code: string; name: string; route: string | null; component: string | null; sortOrder: number; status: Status; permissionCode: string; children: UiResourceVO[] }
 export interface ApiOperationVO { id: number; systemCode: string; operationId: string; method: string; pathTemplate: string; permissionCode: string | null; requiredRole: string | null; accessPolicy: 'PUBLIC' | 'AUTHENTICATED' | 'PROTECTED'; enabled: boolean }
 export interface MappingVO { uiResourceId: number; apiOperationId: number }

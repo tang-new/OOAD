@@ -5,14 +5,21 @@ import static org.mockito.Mockito.*;
 
 import com.xmu.rbac.ddd.domain.*;
 import com.xmu.rbac.ddd.domain.port.*;
+import com.xmu.rbac.ddd.interfaces.rest.AuthorizationController;
+import com.xmu.rbac.ddd.interfaces.rest.AuthorizationController.Check;
+import com.xmu.rbac.ddd.interfaces.rest.RestSupport;
+
+import jakarta.validation.Validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-/** 五项安全审查中的授权回归；latch 确定性安排撤权和缓存命中时序。 */
+/** 授权回归；latch 确定性安排撤权和缓存命中时序。 */
 class AuthorizationSecurityRegressionTest {
     private AuthorizationRepository.Identity user(User.Status status) {
         return new AuthorizationRepository.Identity(
@@ -44,6 +51,19 @@ class AuthorizationSecurityRegressionTest {
                         Set.of(2L),
                         new RoleHierarchy(List.of(role()), Set.of()),
                         List.of(permission()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"permission", "operationId"})
+    void suppliedAuthorizationSelectorHasLengthBetweenOneAnd128(String field) {
+        try (var factory = Validation.buildDefaultValidatorFactory()) {
+            var validator = factory.getValidator();
+            assertThat(validator.validateValue(Check.class, field, "")).hasSize(1);
+            assertThat(validator.validateValue(Check.class, field, "x".repeat(129))).hasSize(1);
+            assertThat(validator.validateValue(Check.class, field, "x")).isEmpty();
+            assertThat(validator.validateValue(Check.class, field, "x".repeat(128))).isEmpty();
+            assertThat(validator.validateValue(Check.class, field, null)).isEmpty();
+        }
     }
 
     @Test
@@ -95,6 +115,36 @@ class AuthorizationSecurityRegressionTest {
                                     true));
             assertThat(service.api(7, "s", "publicOp")).isFalse();
         }
+    }
+
+    @Test
+    void administratorCanViewEmptyPermissionsForDisabledTargetSystem() {
+        var principal = new TokenProvider.Principal("u7", "rbac-center", "jti", 0, null);
+        DirectoryRepository directory = mock(DirectoryRepository.class);
+        AuthorizationRepository grants = mock(AuthorizationRepository.class);
+        AuthorizationApplicationService authorization = mock(AuthorizationApplicationService.class);
+        var service = new DirectoryApplicationService(directory, grants, authorization, null, null, null);
+        when(authorization.require(principal, "rbac:user:view", false))
+                .thenReturn(user(User.Status.ACTIVE));
+        when(directory.user(8, false))
+                .thenReturn(new DirectoryRepository.Profile(
+                        8L, "u8", "u8", "用户", "8", null, 1L, "总部", "ACTIVE", 0L, null, 0L));
+        when(grants.departmentPath(1)).thenReturn("/1/");
+        when(directory.department(1))
+                .thenReturn(new DirectoryRepository.Department(
+                        1L, null, "root", "总部", "/1/", "ENABLED", 0L));
+        when(authorization.effective(8, "disabled")).thenThrow(new DomainException(401, "SYSTEM_DISABLED"));
+        when(authorization.effective(8, "unknown")).thenThrow(new DomainException(404, "SYSTEM_NOT_FOUND"));
+
+        assertThat(service.effective(principal, 8, "disabled"))
+                .isEqualTo(new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of()));
+        assertThatThrownBy(() -> service.effective(principal, 8, "unknown"))
+                .isInstanceOf(DomainException.class).hasMessage("SYSTEM_NOT_FOUND");
+
+        when(authorization.require(principal, "rbac:user:view", false))
+                .thenThrow(new DomainException(401, "SYSTEM_DISABLED"));
+        assertThatThrownBy(() -> service.effective(principal, 8, "disabled"))
+                .isInstanceOf(DomainException.class).hasMessage("SYSTEM_DISABLED");
     }
 
     @Test
@@ -210,6 +260,88 @@ class AuthorizationSecurityRegressionTest {
                         new AuthorizationApplicationService(r, mock(EffectiveCache.class))
                                 .api(7, "s", "op"))
                 .isFalse();
+    }
+
+    @Test
+    void apiExplanationUsesTheSameVersionForDecisionAndPermissions() {
+        AuthorizationRepository r = repository();
+        AtomicLong version = new AtomicLong(1);
+        when(r.version()).thenAnswer(i -> version.get());
+        when(r.permissions("s"))
+                .thenAnswer(i -> version.get() == 1 ? List.of(permission()) : List.of());
+        ApiOperation operation =
+                new ApiOperation(
+                        1, "s", "op", "GET", "/op", "view", null,
+                        ApiOperation.Policy.PROTECTED, true);
+        when(r.operation("s", "op"))
+                .thenAnswer(
+                        i -> {
+                            version.set(2);
+                            return operation;
+                        });
+        AuthorizationApplicationService service =
+                new AuthorizationApplicationService(r, mock(EffectiveCache.class));
+
+        AuthorizationApplicationService.ApiExplanation result = service.explainApi(7, "s", "op");
+
+        assertThat(result.allowed()).isFalse();
+        assertThat(result.unavailableReason()).isNull();
+        assertThat(result.effective().permissions()).isEmpty();
+    }
+
+    @Test
+    void apiExplanationRetriesWhenSystemIsDisabledAfterTheStatusRead() {
+        AuthorizationRepository r = repository();
+        AtomicLong version = new AtomicLong(1);
+        when(r.version()).thenAnswer(i -> version.get());
+        when(r.systemEnabled("s"))
+                .thenReturn(true)
+                .thenAnswer(
+                        i -> {
+                            version.set(2);
+                            return false;
+                        });
+        AuthorizationApplicationService service =
+                new AuthorizationApplicationService(r, mock(EffectiveCache.class));
+
+        AuthorizationApplicationService.ApiExplanation result = service.explainApi(7, "s", "op");
+
+        assertThat(result.allowed()).isFalse();
+        assertThat(result.unavailableReason()).isEqualTo("SYSTEM_DISABLED");
+        assertThat(result.effective().permissions()).isEmpty();
+        verify(r, never()).operation("s", "op");
+    }
+
+    @Test
+    void uiExplanationReturnsDenialWhenTargetSystemIsDisabledAfterTheStatusRead() {
+        String bearer = "Bearer fixture";
+        var principal = new TokenProvider.Principal("u7", "rbac-center", "jti", 0, null);
+        RestSupport rest = mock(RestSupport.class);
+        DirectoryApplicationService directory = mock(DirectoryApplicationService.class);
+        AuthorizationApplicationService authorization = mock(AuthorizationApplicationService.class);
+        var controller = new AuthorizationController(rest, authorization, directory, null);
+        var request = new Check("s", 8L, Permission.Kind.UI, "view", null);
+        when(rest.principal(bearer)).thenReturn(principal);
+        when(authorization.require(principal, "rbac:authz:invoke", false))
+                .thenReturn(user(User.Status.ACTIVE));
+        when(authorization.unavailableReason(8L, "s")).thenReturn(null);
+        when(authorization.effective(8L, "s")).thenThrow(new DomainException(401, "SYSTEM_DISABLED"));
+
+        var response = (Map<?, ?>) controller.explain(bearer, request);
+        var result = (Map<?, ?>) response.get("data");
+
+        assertThat(response.get("code")).isEqualTo("OK");
+        assertThat(result.get("allowed")).isEqualTo(false);
+        assertThat(result.get("reason")).isEqualTo("SYSTEM_DISABLED");
+        assertThat(result.get("effective")).isEqualTo(Map.of(
+                "directRoles", List.of(), "effectiveRoles", List.of(),
+                "permissions", List.of(), "sources", List.of()));
+
+        when(authorization.require(principal, "rbac:authz:invoke", false))
+                .thenThrow(new DomainException(401, "SYSTEM_DISABLED"));
+        assertThatThrownBy(() -> controller.explain(bearer, request))
+                .isInstanceOf(DomainException.class).hasMessage("SYSTEM_DISABLED");
+        verify(authorization).effective(8L, "s");
     }
 
     @Test

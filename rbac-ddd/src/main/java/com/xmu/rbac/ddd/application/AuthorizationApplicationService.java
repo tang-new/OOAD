@@ -151,6 +151,44 @@ public class AuthorizationApplicationService {
         throw new DomainException(503, "AUTHORIZATION_UNSTABLE");
     }
 
+    public record ApiExplanation(
+            boolean allowed, String unavailableReason, AuthorizationPolicy.Effective effective) {}
+
+    /** API 解释的判定与展示快照必须对应同一授权版本。 */
+    public ApiExplanation explainApi(long user, String system, String operation) {
+        if (reads != null
+                && TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            return reads.fresh(() -> stableApiExplanation(user, system, operation));
+        return stableApiExplanation(user, system, operation);
+    }
+
+    private ApiExplanation stableApiExplanation(long user, String system, String operation) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()
+                    && TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+                repository.freshenRead();
+            long version = repository.version();
+            try {
+                String unavailable = unavailableReason(user, system);
+                AuthorizationPolicy.Effective effective =
+                        unavailable == null
+                                ? stableEffective(user, system)
+                                : new AuthorizationPolicy.Effective(
+                                        java.util.List.of(),
+                                        java.util.List.of(),
+                                        java.util.List.of(),
+                                        java.util.List.of());
+                boolean allowed = unavailable == null && stableApi(user, system, operation);
+                if (version == repository.version())
+                    return new ApiExplanation(allowed, unavailable, effective);
+            } catch (DomainException error) {
+                if (error.status() >= 500 || version == repository.version()) throw error;
+            }
+        }
+        throw new DomainException(503, "AUTHORIZATION_UNSTABLE");
+    }
+
     public void upperBound(
             AuthorizationRepository.Identity actor,
             String system,

@@ -8,49 +8,67 @@ skinparam sequenceMessageAlign left
 skinparam maxMessageSize 100
 title S04-ddd-sequence — source snapshot (not a runtime trace)
 participant "obj: 调用者" as obj
-participant "gw: GatewayController" as gw
+participant "filter: CourseProxyFilter" as filter
 participant "route: RouteRegistry" as route
-participant "boundary: AuthBoundary" as boundary
-participant "http: IdentityClient" as http
-participant "ctl: IdentityController" as ctl
+participant "tokens: TokenProvider" as tokens
 participant "auth: AuthorizationApplicationService" as auth
+participant "body: BoundedBody" as body
 participant "proxy: ProxyClient" as proxy
 activate obj
-obj -> gw: 1. forward(request)
-activate gw
-gw -> route: 2. resolve(request.method, request.URI)
+obj -> filter: 1. doFilter(request, response, chain)
+activate filter
+note over obj,filter
+Course web Nginx forwards protected /api/ routes to rbac-backend.
+The filter is registered when course.upstream is configured.
+Center /api/v1 routes continue through the normal filter chain.
+end note
+filter -> route: 2. resolve(request.method, path without /api)
 activate route
+route --> filter: operationId
 deactivate route
-gw -> boundary: 3. authorize(operationId, bearer)
-activate boundary
-boundary -> http: 4. check(operationId, bearer)
-activate http
-http -> ctl: 5. api(bearer, operationId)
-activate ctl
-note over ctl
-Identity verified first; DDD unknown aud becomes 401 TOKEN_INVALID, not 404.
-end note
-ctl -> auth: 6. api(userId, systemCode, operationId)
+alt route and Bearer header accepted
+group configured Authorize callback in rbac-backend
+filter -> tokens: 3. verify(token)
+activate tokens
+deactivate tokens
+alt verified token with course audience
+filter -> auth: 4. validate(principal)
 activate auth
+auth --> filter: actor
 deactivate auth
-ref over ctl,auth: S04-ddd-policy-sequence expands api → fresh/stableApi version bracket
-deactivate ctl
-deactivate http
-alt invalid identity / unknown operation / denied / timeout
-boundary --> obj: GatewayFailure 401 / 403 / 503
-else allowed
-note over boundary
-Only HTTP 200 with matching operationId and non-null allowed is interpretable.
-end note
-deactivate boundary
-gw -> proxy: 7. forward(request, bytes, traceId)
+filter -> auth: 5. api(actorId, systemCode, operationId)
+activate auth
+auth --> filter: allowed
+deactivate auth
+ref over filter,auth: S04-ddd-policy-sequence shows the version bracket
+else invalid token or audience
+filter --> obj: 401 / 403
+end
+end
+alt authorization accepted
+filter -> body: 6. read(request input, max request bytes, 413)
+activate body
+body --> filter: bytes
+deactivate body
+alt body read succeeds
+filter -> proxy: 7. forward(request, coursePath, bytes, traceId, false)
 activate proxy
+proxy --> filter: course response
 deactivate proxy
 note over proxy
+HTTP to course-backend; relay its response.
 Course object-level 403 is preserved.
-Gateway does NOT invent course success audit or course Service methods.
 end note
+filter --> obj: course response
+else body error
+filter --> obj: 400 / 413
 end
-deactivate gw
+else denied or unavailable
+filter --> obj: 403 / 503
+end
+else invalid route or Bearer header
+filter --> obj: 400 / 404 / 401
+end
+deactivate filter
 deactivate obj
 @enduml

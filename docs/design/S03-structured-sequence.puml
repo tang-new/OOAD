@@ -19,29 +19,23 @@ ctl -> svc: 2. effectiveUser(actor, user, system)
 activate svc
 svc -> auth: 3. snapshot(userId, system)
 activate auth
-auth -> auth: 4. require(User.class, userId)
-activate auth
-deactivate auth
-auth -> auth: 5. system(system)
-activate auth
-deactivate auth
-auth -> auth: 6. active(user, softwareSystem)
-activate auth
-deactivate auth
 alt actual transaction active
-auth -> auth: 7. direct(userId, systemId)
+auth -> auth: 4. activeSystem(userId, system)
 activate auth
 deactivate auth
-auth -> auth: 8. calculate(directIds, systemId)
+auth -> auth: 5. direct(userId, systemId)
+activate auth
+deactivate auth
+auth -> auth: 6. calculate(directIds, systemId)
 activate auth
 note over auth
 calculate checks system enabled, loads roles/edges/permissions/grants
 end note
-auth -> model: 9. where(Role.class, system predicate)
+auth -> model: 7. where(Role.class, system predicate)
 activate model
 deactivate model
 loop each valid direct root
-auth -> auth: 10. walk(root, roles, edges, grants, path, effective, permissions, sources)
+auth -> auth: 8. walk(root, roles, edges, grants, path, effective, permissions, sources)
 activate auth
 deactivate auth
 end
@@ -51,27 +45,33 @@ No cache reads OR writes in transaction.
 end note
 else nontransactional read
 loop at most 3 attempts
-auth -> auth: 11. version()
+auth -> auth: 9. version()
 activate auth
 deactivate auth
+auth -> auth: 10. activeSystem(userId, system)
+activate auth
+deactivate auth
+note over auth
+Each attempt rereads and validates user and system status.
+end note
 note over auth
 namespace:authz:system:user:version → l1.get;
 miss → redis.opsForValue().get; Redis exception falls back to DB.
 end note
 alt no cached result
-auth -> auth: 12. direct(userId, systemId)
+auth -> auth: 11. direct(userId, systemId)
 activate auth
 deactivate auth
-auth -> auth: 13. calculate(directIds, systemId)
+auth -> auth: 12. calculate(directIds, systemId)
 activate auth
 note over auth
 calculate checks system enabled, loads roles/edges/permissions/grants
 end note
-auth -> model: 14. where(Role.class, system predicate)
+auth -> model: 13. where(Role.class, system predicate)
 activate model
 deactivate model
 loop each valid direct root
-auth -> auth: 15. walk(root, roles, edges, grants, path, effective, permissions, sources)
+auth -> auth: 14. walk(root, roles, edges, grants, path, effective, permissions, sources)
 activate auth
 deactivate auth
 end
@@ -81,16 +81,22 @@ note over auth
 no recalculation
 end note
 end
-auth -> auth: 16. version()
+auth -> auth: 15. version()
 activate auth
 deactivate auth
 alt version changed
 note over auth
-continue, no publishing
+retry without cache writes
 end note
 else unchanged
 note over auth
-l1.put and Redis set, then return result
+l1.put and attempt Redis set
+end note
+auth -> auth: 16. version()
+activate auth
+deactivate auth
+note over auth
+unchanged after write → return result; changed after write → retry
 end note
 end
 end
@@ -99,8 +105,7 @@ exhausted attempts → 503 AUTHORIZATION_UNAVAILABLE
 end note
 end
 note over auth
-namespace is configured by rbac.cache.namespace, not hardcoded.
-System disabled within calculate yields empty; snapshot validates active user/system first.
+namespace comes from rbac.cache.namespace.
 end note
 note over auth
 Disabled intermediate role cuts that path; diamond permission id dedup

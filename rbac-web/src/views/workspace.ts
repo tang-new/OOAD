@@ -53,9 +53,9 @@ export function useWorkspace(reload: () => Promise<unknown>, context: () => unkn
     error.value = ''
   }
   onScopeDispose(reset)
-  async function refresh() {
+  async function refresh(afterWrite = false) {
     const current = revision, key = context(), update = ++refreshRevision
-    const results = await Promise.allSettled([auth.refresh(), Promise.resolve().then(reload)])
+    const results = await Promise.allSettled([auth.refresh(afterWrite), Promise.resolve().then(reload)])
     if (current === revision && key === context() && update === refreshRevision) {
       stale.value = results.some(result => result.status === 'rejected' || result.value === false)
       message.value = stale.value ? '已保存。页面或权限刷新失败，请重试刷新。' : '已保存'
@@ -72,11 +72,12 @@ export function useWorkspace(reload: () => Promise<unknown>, context: () => unkn
     } finally {
       if (current === revision) busy.value = false
     }
+    if (session !== auth.session) return
     if (current === revision && key === context()) {
       message.value = '已保存，正在刷新…'
-      void refresh()
-    } else if (session === auth.session) {
-      void auth.refresh().catch(() => undefined)
+      void refresh(true)
+    } else {
+      void auth.refresh(true).catch(() => undefined)
     }
   }
   async function run(action: () => Promise<unknown>) {

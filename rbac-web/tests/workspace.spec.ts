@@ -38,6 +38,8 @@ it('写入确认后刷新失败只重试读取，不会再次提交写入', asyn
   expect(write).toHaveBeenCalledTimes(1)
   expect(reload).toHaveBeenCalledTimes(2)
   expect(refresh).toHaveBeenCalledTimes(2)
+  expect(refresh).toHaveBeenNthCalledWith(1, true)
+  expect(refresh).toHaveBeenNthCalledWith(2, false)
   scope.stop()
 })
 
