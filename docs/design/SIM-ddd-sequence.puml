@@ -1,4 +1,5 @@
 @startuml
+!pragma teoz true
 hide footbox
 skinparam defaultFontName Microsoft YaHei
 skinparam defaultFontSize 14
@@ -10,73 +11,137 @@ title SIM-ddd-sequence — source snapshot (not a runtime trace)
 participant "obj: 调用者" as obj
 participant "ctl: AuthorizationController" as ctl
 participant "rest: RestSupport" as rest
-participant "auth: AuthorizationApplicationService" as auth
 participant "directory: DirectoryApplicationService" as directory
+participant "auth: AuthorizationApplicationService" as auth
 participant "repo: AuthorizationRepository" as repo
+participant "«MetaClass»\n: RestSupport" as restType
 activate obj
-obj -> ctl: 1. explain(bearer, input)
+obj -> ctl: 1. check(bearer, input) or explain(bearer, input)
 activate ctl
-ctl -> ctl: 2. check(bearer, input, true)
+note over ctl
+/authorization/check passes explain=false.
+/authorization/explain passes explain=true.
+end note
+ctl -> ctl: 2. check(bearer, input, explain)
 activate ctl
 ctl -> rest: 3. principal(bearer)
 activate rest
+rest -->> ctl: principal
 deactivate rest
 ctl -> auth: 4. require(principal, rbac:authz:invoke, false)
 activate auth
+auth -->> ctl: actor
 deactivate auth
+break identifier does not match UI / API kind
+ctl -->> obj: 400 INVALID_AUTHORIZATION_REQUEST
+end
 note over ctl
-Validate UI permission vs API operationId input contract;
-choose explicit target userId or actor.id().
+Use the requested userId, or actor.id() if omitted.
 end note
 opt target differs from actor
 ctl -> directory: 5. user(principal, targetUserId)
 activate directory
+directory -->> ctl: target within department scope
 deactivate directory
 end
-ctl -> auth: 6. unavailableReason(targetUserId, system)
+ctl -> auth: 6. simulate(targetUserId, system, kind, identifier)
 activate auth
-auth -> repo: 7. systemEnabled(system)
+auth -> auth: 7. stableSimulation(targetUserId, system, kind, identifier)
+activate auth
+loop until terminal result, at most 3 attempts
+auth -> repo: 8. version()
 activate repo
+repo -->> auth: initial version
 deactivate repo
-auth -> repo: 8. identity(targetUserId)
+group Target status and decision
+auth -> auth: 9. unavailableReason(targetUserId, system)
+activate auth
+auth -> repo: 10. systemEnabled(system)
 activate repo
+repo -->> auth: enabled
 deactivate repo
-alt missing target
-auth --> obj: 404 USER_NOT_FOUND; abort
-else existing target
+auth -> repo: 11. identity(targetUserId)
+activate repo
+repo -->> auth: target identity
+deactivate repo
+note over auth,repo
+An unknown system or missing user throws a 404 DomainException.
+The attempt skips the remaining status and decision reads.
+end note
+auth -->> auth: unavailable reason or null
+deactivate auth
+alt target available
+auth -> auth: 12. stableEffective(targetUserId, system)
+activate auth
+auth -->> auth: effective permissions
+deactivate auth
+alt UI
 note over auth
-non-ACTIVE → USER_DISABLED; otherwise disabled system → SYSTEM_DISABLED;
-active user + enabled system → null
+Decide with Effective.has(identifier, UI).
 end note
-end
-auth --> ctl: unavailable
-deactivate auth
-alt unavailable != null
-note over ctl
-empty effective; allowed=false; reason=unavailable;
-explain trace=[ACTOR_AUTHENTICATED, unavailable]; fresh traceId.
-No effective()/api() call for unavailable target.
-end note
-else available target
-ctl -> auth: 9. effective(targetUserId, system)
+else API
+auth -> auth: 13. stableApi(targetUserId, system, identifier)
 activate auth
-deactivate auth
-opt API decision
-ctl -> auth: 10. api(targetUserId, system, operationId)
-activate auth
+auth -->> auth: allowed
 deactivate auth
 end
-note over ctl
-UI uses Effective.has; reason ALLOW or DENY;
-explain trace records TOKEN_VALID, USER_SYSTEM_ACTIVE and requirement result
+else target user or system disabled
+note over auth
+Use empty effective permissions and allowed=false.
 end note
 end
-note over ctl
-RestSupport.ok supplies HTTP envelope; target disabled is a DENY result,
-not authentication failure of the requesting administrator.
-No business mutation or SUCCESS audit occurs in this simulation.
+end
+alt attempt completed
+auth -> repo: 14. version()
+activate repo
+repo -->> auth: current version
+deactivate repo
+note over auth,repo
+If the version matches, finish with SimulationResult.
+Otherwise repeat the whole attempt.
 end note
+else DomainException caught during lookup or decision
+opt status below 500
+auth -> repo: 15. version()
+activate repo
+repo -->> auth: current version
+deactivate repo
+end
+break status at least 500 or version unchanged
+auth -->> obj: DomainException with original status and code
+end
+note over auth
+A changed version on a client error retries the whole attempt.
+end note
+end
+end
+break three attempts exhausted
+auth -->> obj: 503 AUTHORIZATION_UNSTABLE
+end
+auth -->> auth: SimulationResult
+deactivate auth
+auth -->> ctl: SimulationResult
+deactivate auth
+note over ctl
+Return allowed, reason and traceId.
+Reason is USER_DISABLED / SYSTEM_DISABLED, ALLOW or DENY.
+end note
+opt explain=true
+ctl -> restType: 16. effective(decision.effective())
+activate restType
+restType -->> ctl: effective permissions
+deactivate restType
+note over ctl
+Include the explanation trace and effective permissions.
+end note
+end
+ctl -> restType: 17. ok(result)
+activate restType
+restType -->> ctl: response envelope
+deactivate restType
+ctl -->> ctl: response
 deactivate ctl
+ctl -->> obj: HTTP 200 with simulation response
 deactivate ctl
 deactivate obj
 @enduml

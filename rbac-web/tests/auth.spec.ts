@@ -59,6 +59,47 @@ describe('身份与权限状态', () => {
     expect(store.identity?.name).toBe(who.name)
     expect(store.targetSystem).toBe('rbac-center')
   })
+  it('写后刷新重新读取，同会话的旧响应不能覆盖新权限和菜单', async () => {
+    const store = useAuthStore()
+    store.setToken('dummy')
+    const dashboardPermission = 'rbac:ui:dashboard:view'
+    const dashboard = {
+      id: 8, type: 'MENU', status: 'ENABLED', route: '/dashboard', permissionCode: dashboardPermission,
+    } as UiResourceVO
+    let finishOld!: (identity: IdentityVO) => void
+    vi.mocked(authApi.me).mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve }))
+    vi.mocked(authApi.menus).mockResolvedValueOnce([{ id: 8 }] as UiResourceVO[])
+    vi.mocked(authApi.canCall).mockResolvedValueOnce(true)
+    const old = store.refresh()
+    vi.mocked(authApi.me).mockResolvedValue({ ...who, permissions: [dashboardPermission] })
+    vi.mocked(authApi.menus).mockResolvedValue([dashboard])
+    const fresh = store.refresh(true)
+    const duplicate = store.refresh()
+    expect(authApi.me).toHaveBeenCalledTimes(2)
+    await Promise.all([fresh, duplicate])
+    finishOld(who)
+    await old
+    expect(store.has('rbac:ui:users:view')).toBe(false)
+    expect(store.menus).toEqual([dashboard])
+    expect(store.canVisit('/dashboard')).toBe(false)
+  })
+  it('写后刷新成功后，同会话的旧请求失败也采用新结果', async () => {
+    const store = useAuthStore()
+    store.setToken('dummy')
+    let failOld!: (reason: Error) => void
+    vi.mocked(authApi.me).mockImplementationOnce(() => new Promise((_, reject) => { failOld = reject }))
+    vi.mocked(authApi.menus).mockResolvedValueOnce([{ id: 8 }] as UiResourceVO[])
+    const old = store.refresh()
+    vi.mocked(authApi.me).mockResolvedValue({ ...who, permissions: [] })
+    await store.refresh(true)
+
+    failOld(new Error('旧权限请求失败'))
+
+    await expect(old).resolves.toBeUndefined()
+    expect(store.has('rbac:ui:users:view')).toBe(false)
+    expect(store.menus).toEqual([])
+    expect(store.loaded).toBe(true)
+  })
   it('会话初始化失败时清理刚获取的令牌', async () => {
     const store = useAuthStore()
     vi.mocked(authApi.login).mockResolvedValue({ accessToken: 'dummy', tokenType: 'Bearer', expiresIn: 600 })

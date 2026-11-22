@@ -3,6 +3,8 @@
 
 link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：E；初始人工状态：NOT_STARTED。
 
+审查发现和修复记录见 link:D-problems.md[D 问题记录]。
+
 == 需求与范围
 
 ROLE-02/04/08读取、NFR-01/03、EXT-01 UI/API决定、管理check/explain，UML-S03/S04中心及SIM。
@@ -103,9 +105,9 @@ GRASP：Policy掌握集合/判定，图掌握路径，应用掌握加载/版本/
 
 保留本卡原有后端职责与历史证据。完整交接见link:frontend.adoc[前端总表]；本节为追加任务，尚未人工审查。
 
-页面/组件：`/authorization`及各页有效权限区；CatalogWorkspace鉴权分支、EffectivePermissions、PermissionCode。
+页面/组件：`/authorization` 的 link:../../rbac-web/src/views/AuthorizationView.vue[AuthorizationView] 及各页有效权限区。
 
-link:../../rbac-web/src/components/EffectivePermissions.vue[EffectivePermissions]、link:../../rbac-web/src/components/PermissionCode.vue[PermissionCode]、link:../../rbac-web/src/directives/perm.ts[perm]、link:../../rbac-web/src/router/index.ts[router]、link:../../rbac-web/src/views/workspace.ts[workspace]及CatalogWorkspace.check。
+阅读 `AuthorizationView.check` 以及 link:../../rbac-web/src/components/EffectivePermissions.vue[EffectivePermissions]、link:../../rbac-web/src/components/PermissionCode.vue[PermissionCode]、link:../../rbac-web/src/directives/perm.ts[perm]、link:../../rbac-web/src/router/index.ts[router] 和 link:../../rbac-web/src/views/workspace.ts[workspace]。
 
 * [ ] 核对check(explain)的UI/API分支、本人/指定userId、operationId/permission请求字段、正常allowed:false与异常反馈。
 * [ ] 核对直接/有效角色、权限kind、去重结果与多来源路径、空集；与A/B/C分别核对Me/用户/角色详情的使用点。

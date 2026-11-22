@@ -173,12 +173,15 @@ public class ResourceService {
     @Transactional
     public Object saveApi(Actor a, String code, Long id, Inputs.Api input) {
         GrantVersion g = begin(a);
+        String requiredRole = input.requiredRole();
         if (input.operationId() == null || input.method() == null || input.pathTemplate() == null
-            || input.accessPolicy() == null || input.enabled() == null)
+            || input.accessPolicy() == null || input.enabled() == null
+            || (requiredRole != null && requiredRole.isBlank()))
             throw BizException.bad("VALIDATION_ERROR");
         ApiOperation r = id == null ? new ApiOperation() : az.require(ApiOperation.class, id);
-        Long system = id == null ? az.system(code).id : r.systemId;
-        String systemCode = system(system);
+        SoftwareSystem target = id == null ? az.system(code) : az.require(SoftwareSystem.class, r.systemId);
+        Long system = target.id;
+        String systemCode = target.code;
         if ("rbac-center".equals(systemCode)) {
             RouteRegistry.Route existing = id == null ? null : routes.operation(r.operationId);
             RouteRegistry.Route expected = routes.operation(input.operationId());
@@ -187,26 +190,28 @@ public class ResourceService {
                 || !expected.path().equals(input.pathTemplate())
                 || !Objects.equals(expected.permission(), input.permissionCode())
                 || !input.enabled() || !Objects.equals(expected.policy(), input.accessPolicy())
-                || input.requiredRole() != null)
+                || !Objects.equals(expected.requiredRole(), requiredRole))
                 throw BizException.bad("CENTER_OPERATION_IMMUTABLE");
         }
         Long pid = permission(system, "API", input.permissionCode());
-        if (!az.superAdmin(a)) {
-            if (pid != null && !az.snapshot(a.userId(), systemCode).permissions().contains(pid))
+        boolean hasCondition = pid != null || requiredRole != null;
+        if ("PROTECTED".equals(input.accessPolicy()) && !hasCondition)
+            throw BizException.bad("API_REQUIREMENT_MISSING");
+        if (hasCondition && !az.superAdmin(a)) {
+            if (!"ENABLED".equals(target.status))
                 throw BizException.forbidden("PRIVILEGE_ESCALATION");
-            if (input.requiredRole() != null
-                && !az.identities(az.snapshot(a.userId(), systemCode))
-                    .contains(input.requiredRole()))
+            AuthorizationService.Snapshot actor = az.snapshot(a.userId(), systemCode);
+            if (pid != null && !actor.permissions().contains(pid))
+                throw BizException.forbidden("PRIVILEGE_ESCALATION");
+            if (requiredRole != null && !az.identities(actor).contains(requiredRole))
                 throw BizException.forbidden("PRIVILEGE_ESCALATION");
         }
-        if ("PROTECTED".equals(input.accessPolicy()) && pid == null && input.requiredRole() == null)
-            throw BizException.bad("API_REQUIREMENT_MISSING");
         r.systemId = system;
         r.operationId = input.operationId();
         r.method = input.method();
         r.pathTemplate = input.pathTemplate();
         r.permissionId = pid;
-        r.requiredRole = input.requiredRole();
+        r.requiredRole = requiredRole;
         r.accessPolicy = input.accessPolicy();
         r.enabled = input.enabled();
         if (id == null)

@@ -4,9 +4,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { vPerm } from '@/directives/perm'
 import { useAuthStore } from '@/stores/auth'
 import { meetsPolicy } from '@/utils/password'
+import EffectivePermissions from '@/components/EffectivePermissions.vue'
 import RecordForm from '@/components/RecordForm.vue'
 import { inheritancePaths } from '@/views/hierarchy'
-import type { HierarchyVO } from '@/api/types'
+import type { EffectiveVO, HierarchyVO } from '@/api/types'
 it('权限指令禁用、恢复、隐藏，处理子按钮及非按钮宿主', async () => {
   setActivePinia(createPinia()); const auth = useAuthStore()
   const wrapper = mount({ template: '<div><button v-perm="\'edit\'">edit</button><div v-perm="\'edit\'"><button>nested</button></div><span v-perm="\'edit\'">text</span><button v-perm.hide="\'hide\'">hide</button><button v-perm="\'other\'" disabled>native</button></div>' }, { global: { directives: { perm: vPerm } } })
@@ -34,4 +35,22 @@ it('DAG 菱形保留两条路径，标明停用断路并排除无关边', () => 
   expect(result.everyEdge).toEqual(new Set(['1:2', '1:3', '2:4', '3:4']))
   expect(result.paths.map(path => [path.nodes, path.effective])).toEqual([[[1, 2, 4], false], [[1, 3, 4], true]])
   expect(inheritancePaths(graph, 4, 1).paths).toEqual([])
+})
+
+it('分别显示同码 UI 和 API 权限的来源', () => {
+  const value: EffectiveVO = {
+    directRoles: [], effectiveRoles: [],
+    permissions: [
+      { id: 1, systemCode: 'course', code: 'shared', name: '界面权限', kind: 'UI', status: 'ENABLED' },
+      { id: 2, systemCode: 'course', code: 'shared', name: '接口权限', kind: 'API', status: 'ENABLED' },
+    ],
+    sources: [
+      { permissionCode: 'shared', permissionKind: 'UI', roleCode: 'UI_ROLE', inherited: false, path: ['UI_ROLE'] },
+      { permissionCode: 'shared', permissionKind: 'API', roleCode: 'API_ROLE', inherited: false, path: ['API_ROLE'] },
+    ],
+  }
+  const wrapper = mount(EffectivePermissions, { props: { value } })
+  const sources = wrapper.findAll('tbody tr').map(row => row.findAll('.source-list li > span[title]').map(path => path.text()))
+  expect(sources).toEqual([['UI_ROLE'], ['API_ROLE']])
+  wrapper.unmount()
 })

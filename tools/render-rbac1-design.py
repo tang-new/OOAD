@@ -12,6 +12,7 @@ GRAPHVIZ_DOT = os.environ.get('GRAPHVIZ_DOT') or 'dot'
 INDEX = {}; WARNINGS = []; FIGURES = []; REFS = []; CURRENT_FIGURE = None
 CALL_CHAINS = []; INPUTS = {}
 EXTRA_INPUTS = ['docs/final-acceptance.adoc', 'docs/acceptance/local-results.json', 'docs/acceptance/shared-http.json', 'tools/render-rbac1-design.test.py', 'rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java', 'pom.xml', '.gitattributes', 'tools/render-rbac1-design.scenarios.py', 'rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql', 'docker-compose.yml', 'deploy/full-stack.sh', 'rbac-web/nginx.conf', 'deploy/full-course-nginx.conf', 'deploy/deployment-evidence.json', 'course-integration/REAL-CENTERS-VERIFICATION.md']
+EXTRA_INPUTS.append('docs/design/swarm-deployment-current.puml')
 
 def run(args):
     p = subprocess.run([str(a) for a in args], capture_output=True, text=True, encoding='utf-8', errors='replace')
@@ -77,7 +78,7 @@ def key(short,mode):
 def method(k,m):
     entry=INDEX[k]; src=re.sub(r'@[\w.]+(?:\([^)]*\))?', '', entry['source'])
     # Only declarations, not call sites. javap is a second check when current compiled output exists.
-    pattern=r'(?:public|private|protected|static|final|default|synchronized|abstract|\n|[;}])\s*(?:(?:public|private|protected|static|final|default|synchronized|abstract)\s+)*(?:<[^;{}]+>\s*)?[\w.$<>?,\[\] ]+?\s+'+re.escape(m)+r'\s*\(([^)]*)\)\s*(?:throws\s+[\w., ]+)?[;{]'
+    pattern=r'(?:public|private|protected|static|final|default|synchronized|abstract|\n|[;}])\s*(?:(?:public|private|protected|static|final|default|synchronized|abstract)\s+)*(?:<[^;{}]+>\s*)?(?!\s*(?:return|throw|new)\b)[\w.$<>?,\[\] ]+?\s+'+re.escape(m)+r'\s*\(([^)]*)\)\s*(?:throws\s+[\w., ]+)?[;{]'
     match=re.search(pattern,src)
     if not match: raise ValueError(f'Missing method declaration: {k}.{m}')
     compiled=[s.strip().rstrip(';') for s in entry['signatures'] if re.search(r'\.'+re.escape(m)+r'\(',s) or re.search(r'\s'+re.escape(m)+r'\(',s)]
@@ -88,7 +89,7 @@ def method(k,m):
     return short_signature(signature)
 
 def short_signature(signature):
-    return re.sub(r'(?:[a-z_]\w*\.)+([A-Z]\w*)',r'\1',signature).replace('$','.')
+    return re.sub(r'\b(?:[a-z_]\w*\.)+([A-Z]\w*)',r'\1',signature).replace('$','.')
 
 def java_body(source, name):
     """Locate a real method body, preserving offsets while masking strings/comments for braces."""
@@ -113,11 +114,13 @@ def verify_call_chains():
       ('S01/S06','ddd','RoleApplicationService','complete',['integrity.requireAdministrator()','repository.advanceVersion()','audits.local(']),
       ('S02','ddd','DirectoryApplicationService','assign',['grants.lockGrants()','actor(','directory.user(id,true)','managed(','grants.role(roleId)','authorization.upperBound(','aggregate(profile).assign(','directory.assign(','done(']),
       ('S02','ddd','DirectoryApplicationService','done',['integrity.requireAdministrator()','grants.advanceVersion()','audits.local(']),
-      ('SIM','ddd','AuthorizationController','check',['rest.principal(','authorization.require(','directory.user(','authorization.unavailableReason(','authorization.effective(','authorization.api(','result.put("allowed"','result.put("reason"','result.put("trace"']),
+      ('SIM','ddd','AuthorizationController','check',['rest.principal(','authorization.require(','directory.user(','authorization.simulate(','result.put("allowed"','result.put("reason"','result.put("trace"']),
       ('SIM','ddd','AuthorizationApplicationService','unavailableReason',['repository.systemEnabled(system)','repository.identity(userId)','DomainException.require(target!=null','return"USER_DISABLED"','returnenabled?null:"SYSTEM_DISABLED"']),
+      ('SIM','ddd','AuthorizationApplicationService','stableSimulation',['repository.version()','unavailableReason(user,system)','stableEffective(user,system)','effective.has(identifier,Permission.Kind.UI)','stableApi(user,system,identifier)','if(version==repository.version())','returnnewSimulationResult(']),
       ('S02','ddd','JpaDirectoryRepositoryAdapter','saveUser',['e.setSubject(','UUID.randomUUID()','em.persist(e)','em.flush()','returnuser(e)']),
+      ('S03','ddd','DirectoryApplicationService','effective',['actor(p,"rbac:user:view",false)','grants.systemEnabled(system)','managedUser(actor,id)','authorization.effective(id,system)','catch(DomainException','"SYSTEM_DISABLED".equals(error.code())','returnnewAuthorizationPolicy.Effective(']),
       ('S03','ddd','AuthorizationApplicationService','effective',['reads.fresh(','stableEffective(','returnstableEffective(']),
-      ('S03','ddd','AuthorizationApplicationService','stableEffective',['repository.freshenRead()','repository.version()','repository.systemEnabled(','repository.identity(userId)','cache.get(','policy.calculate(','repository.version()','cache.put(','repository.version()']),
+      ('S03','ddd','AuthorizationApplicationService','stableEffective',['repository.freshenRead()','repository.version()','DomainException.require(repository.systemEnabled(system),401,"SYSTEM_DISABLED")','repository.identity(userId)','cache.get(','policy.calculate(','repository.version()','cache.put(','repository.version()']),
       ('S04','ddd','AuthorizationApplicationService','stableApi',['repository.freshenRead()','repository.version()','repository.operation(','repository.identity(user)','effective(user,system)','repository.identity(user)','policy.allows(','repository.version()']),
       ('S01/S02','ddd','AuthorizationApplicationService','upperBound',['effective(actor.id(),"rbac-center")','repository.hierarchy(system).requireGrantable(','policy.requireWithin(']),
       ('S06','ddd','RoleApplicationService','status',['repository.lockGrants()','authorization.require(','repository.role(id)','authorization.requireRoleManagement(','role.changeStatus(','requireAffectedGrants(','repository.saveRole(','complete(']),
@@ -129,11 +132,14 @@ def verify_call_chains():
       ('S01/S02/S06','structured','ManagementService','finish',['db.flush()','az.preserveAdministrator()','g.version++','audit.success(']),
       ('S01','structured','ManagementService','inherit',['begin(','az.protectRole(a,s)','az.protectRole(a,j)','db.one(','reachable(junior,senior)','db.save(edge)','changedUpper(','finish(']),
       ('S02','structured','ManagementService','assign',['begin(','az.scope(','db.one(','az.upper(','db.save(ur)','finish(']),
-      ('S03','structured','AuthorizationService','snapshot',['active(u,s)','if(tx)','for(intattempt=0','version()','namespace+":authz:"','l1.get(','redis.opsForValue().get(','calculate(','if(version!=version())','l1.put(','redis.opsForValue().set(']),
+      ('S03','structured','ManagementService','effectiveUser',['az.center(a,"rbac:user:view")','az.system(system)','az.require(User.class,user)','az.scope(','targetSystem.status','return az.effective(new AuthorizationService.Snapshot(','return az.effective(az.snapshot(user,system),system)']),
+      ('S03','structured','AuthorizationService','snapshot',['TransactionSynchronizationManager.isActualTransactionActive()','activeSystem(userId,code)','calculate(direct(','for(intattempt=0','version()','activeSystem(userId,code)','namespace+":authz:"','l1.get(','redis.opsForValue().get(','calculate(','if(version!=version())','l1.put(','redis.opsForValue().set(','if(version==version())','returnresult']),
+      ('S03','structured','AuthorizationService','activeSystem',['require(User.class,userId)','system(code)','active(u,s)']),
       ('S06','structured','ManagementService','roleStatus',['begin(','az.protectRole(','r.status=status','changedUpper(','finish(']),
       ('S05','structured','AuditService','external',['trusted(','authz.permission(','safe(input.before()','safe(input.after()','isolated.execute(','db.one(','same(existing,payload)','db.save(log)','db.flush()','catch(DataIntegrityViolationException','isolated.execute(','db.one(','same(log,payload)']),
-      ('S04','gateway','GatewayController','forward',['routes.resolve(','auth.authorize(','BoundedBody.read(','proxy.forward(']),
-      ('S04','gateway','AuthBoundary','authorize',['identity.check(','response.getStatusCode().value()!=200','response.getBody()','operationId.equals(decision.operationId())','if(!decision.allowed())'])
+      ('S04 legacy','gateway','GatewayController','forward',['routes.resolve(','auth.authorize(','BoundedBody.read(','proxy.forward(']),
+      ('S04 legacy','gateway','AuthBoundary','authorize',['identity.check(','response.getStatusCode().value()!=200','response.getBody()','operationId.equals(decision.operationId())','if(!decision.allowed())']),
+      ('S04','gateway','CourseProxyFilter','doFilter',['chain.doFilter(','routes.resolve(','request.getHeaders("Authorization")','authorize.require(','BoundedBody.read(','proxy.forward('])
     ]
     for scenario,mode,short,name,tokens in specs:
         k=key(short,mode);entry=INDEX[k];method(k,name)
@@ -158,11 +164,32 @@ def dot_render(name,body,engine='dot'):
         run(args+['-T'+fmt,path,'-o',OUT/(name+'.'+fmt)])
     FIGURES.append(name)
 
+def open_association_heads(positions,boxes,nodes,edges):
+    # neato -n2 renders these two straight segments as an open V in both formats.
+    anchor='"_association_head"'
+    rows=[f'{anchor} [pos="0,0!",shape=point,width=0,height=0,style=invis,label=""];']
+    for source,target,kind,_ in edges:
+        if kind!='association':continue
+        ax,ay=positions[nodes[source][1]]
+        bx,by=positions[nodes[target][1]]
+        distance=((bx-ax)**2+(by-ay)**2)**0.5
+        dx,dy=(bx-ax)/distance,(by-ay)/distance
+        _,_,width,height=boxes[target]
+        inset=min(half/abs(direction) for direction,half in ((dx,width*36),(dy,height*36)) if direction)
+        tip=(bx-dx*inset,by-dy*inset)
+        wing=(tip[0]-dx*12,tip[1]-dy*12)
+        upper=(wing[0]-dy*5.4,wing[1]+dx*5.4)
+        lower=(wing[0]+dy*5.4,wing[1]-dx*5.4)
+        path=' '.join(f'{x:.3f},{y:.3f}' for x,y in (upper,upper,tip,tip,tip,lower,lower))
+        rows.append(f'{anchor} -> {anchor} [dir=none,pos="{path}"];')
+    return rows
+
 def class_diagram(name,mode,nodes,edges):
     global CURRENT_FIGURE
     CURRENT_FIGURE=name
     # Fixed compass layout; Service center. Bounding checks use actual Graphviz plain geometry.
     positions={'C':(0,0),'L':(-1000,0),'R':(1000,0),'T':(0,360),'B':(0,-360),'LB':(-1000,-360),'RB':(1000,-360),'RT':(1000,360)}
+    sim_style=name=='SIM-ddd-class'
     rows=[]
     for alias,(short,slot,methods) in nodes.items():
         k=key(short,mode); ent=INDEX[k]; src=ent['source']; sigs=[]
@@ -187,13 +214,17 @@ def class_diagram(name,mode,nodes,edges):
                 parts=record.group(1).split(',')
                 if short=='AuditFact':parts=[p for p in parts if p.strip().split()[-1] in ['id','requestId','systemCode','actorSubject','payloadHash','at']]
                 field_lines.extend('- '+part.strip() for part in parts[:6])
-        def cell(lines,bg):
+        def cell(lines,bg,*,left_align_lines=False):
             wrapped=[]
             for line in lines:
                 wrapped.extend(textwrap.wrap(line,95,break_long_words=False,break_on_hyphens=False) or [' '])
-            return '<TR><TD ALIGN="LEFT" BGCOLOR="'+bg+'">'+'<BR ALIGN="LEFT"/>'.join(html.escape(l) for l in wrapped)+'</TD></TR>'
+            # BALIGN also covers the final line, which has no explicit BR.
+            line_alignment=' BALIGN="LEFT"' if left_align_lines else ''
+            return '<TR><TD ALIGN="LEFT"'+line_alignment+' BGCOLOR="'+bg+'">'+'<BR ALIGN="LEFT"/>'.join(html.escape(l) for l in wrapped)+'</TD></TR>'
         stereotype='«interface» ' if re.search(r'public\s+interface\s+'+short,src) else ''
-        table='<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10">'+cell([stereotype+short],'#dcecff')+'<HR/>'+cell(field_lines or [' '],'#ffffff')+'<HR/>'+cell(sigs,'#ffffff')+'</TABLE>'
+        fields=cell(field_lines or [' '],'#ffffff',left_align_lines=sim_style or (name=='S03-ddd-class' and alias=='svc'))
+        operations=cell(sigs,'#ffffff',left_align_lines=sim_style)
+        table='<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10">'+cell([stereotype+short],'#dcecff')+'<HR/>'+fields+'<HR/>'+operations+'</TABLE>'
         x,y=positions[slot]; rows.append(f'"{alias}" [pos="{x},{y}!",label=<{table}>];')
     for a,b,kind,role in edges:
         source=INDEX[key(nodes[a][0],mode)]['source']
@@ -202,11 +233,16 @@ def class_diagram(name,mode,nodes,edges):
         if kind=='dependency' and nodes[b][0] not in source:
             raise ValueError(f'Dependency target not referenced in source: {name}:{a}->{b}')
         opts={'association':'style=solid,arrowhead=vee','dependency':'style=dashed,arrowhead=vee','implementation':'style=dashed,arrowhead=empty'}[kind]
-        if kind=='association': opts+=',label="'+role+'",fontsize=14'
+        if kind=='association':
+            if sim_style:
+                opts='style=solid,arrowhead=none'
+                if positions[nodes[a][1]][0]==positions[nodes[b][1]][0]:role+='   '
+            opts+=',label="'+role+'",fontsize=14'
         rows.append(f'"{a}" -> "{b}" [{opts}];')
     rows.extend(['"_top" [pos="0,480!",shape=point,width=0,height=0,style=invis,label=""];','"_bottom" [pos="0,-480!",shape=point,width=0,height=0,style=invis,label=""];'])
     body='digraph G { graph [overlap=true,splines=line,outputorder=edgesfirst,pad=0.3,bgcolor="white",label="'+name+' — current source snapshot",labelloc=t]; node [shape=plain,fontname="Microsoft YaHei",fontsize=15]; edge [color="#49627b",arrowsize=1.2,fontname="Microsoft YaHei"];\n'+'\n'.join(rows)+'\n}'
-    dot_render(name,body,'neato')
+    if sim_style:write(name,'dot',body)
+    else:dot_render(name,body,'neato')
     plain=run([GRAPHVIZ_DOT,'-Kneato','-n2','-Tplain',OUT/(name+'.dot')])
     boxes={}
     for line in plain.splitlines():
@@ -224,21 +260,28 @@ def class_diagram(name,mode,nodes,edges):
             for i in range(1,1000):
                 px=x+(xx-x)*i/1000;py=y+(yy-y)*i/1000
                 if abs(px-cx)<cw/2 and abs(py-cy)<ch/2: raise ValueError(f'Edge crosses {name}: {a}->{b} through {c}')
+    if sim_style:
+        heads=open_association_heads(positions,boxes,nodes,edges)
+        dot_render(name,body[:-1]+'\n'.join(heads)+'\n}','neato')
 
 class Sequence:
-    def __init__(self,name,mode,participants,entry,method_name,args):
+    def __init__(self,name,mode,participants,entry,method_name,args,reply_arrow='-->'):
         global CURRENT_FIGURE
         CURRENT_FIGURE=name
         self.name=name;self.mode=mode;self.participants=participants;self.count=0
+        self.reply_arrow=reply_arrow
         self.lines=['@startuml','hide footbox','skinparam defaultFontName Microsoft YaHei','skinparam defaultFontSize 14','skinparam ParticipantPadding 24','skinparam BoxPadding 12','skinparam sequenceMessageAlign left','skinparam maxMessageSize 100','title '+name+' — source snapshot (not a runtime trace)','participant "obj: 调用者" as obj']
         for alias,short in participants.items(): self.lines+=['participant "'+alias+': '+short+'" as '+alias]
         self.lines+=['activate obj'];self.open('obj',entry,method_name,args)
         self.entry=entry
     def open(self,a,b,m,args=''):
-        method(key(self.participants[b],self.mode if b not in ['gw','route','boundary','http','proxy'] else 'gateway'),m)
+        mode='gateway' if b in ['filter','route','body','proxy'] else self.mode
+        method(key(self.participants[b],mode),m)
         self.count+=1;self.lines += [f'{a} -> {b}: {self.count}. {m}({args})',f'activate {b}']
+    def reply(self,b,a,label):
+        self.lines += [f'{b} {self.reply_arrow} {a}: {label}']
     def close(self,b,a,label=''):
-        if label:self.lines += [f'{b} --> {a}: {label}']
+        if label:self.reply(b,a,label)
         self.lines += [f'deactivate {b}']
     def call(self,a,b,m,args='',reply=''):self.open(a,b,m,args);self.close(b,a,reply)
     def raw(self,s):
@@ -251,8 +294,9 @@ class Sequence:
                 while i<len(lines) and not command.match(lines[i]):body.append(lines[i]);i+=1
                 self.lines.extend([head,*body,'end note'])
             else:self.lines.append(line);i+=1
-    def finish(self):
-        self.close(self.entry,'obj');self.lines+=['deactivate obj','@enduml']
+    def finish(self,close_entry=True):
+        if close_entry:self.close(self.entry,'obj')
+        self.lines+=['deactivate obj','@enduml']
         balance={}
         for line in self.lines:
             if line.startswith('activate '):
@@ -277,7 +321,7 @@ def classes():
     class_diagram('S02-ddd-class',d,{'svc':('DirectoryApplicationService','C',['assign','transfer']),'repo':('DirectoryRepository','L',['assign','user']),'model':('User','R',['assign','transfer','changeStatus']),'adapter':('JpaDirectoryRepositoryAdapter','LB',['assign']),'elig':('DepartmentEligibility','RB',['requireEligible']),'auth':('AuthorizationApplicationService','B',['upperBound'])},[('svc','repo','association','directory'),('svc','model','dependency',''),('model','elig','dependency',''),('adapter','repo','implementation',''),('svc','auth','association','authorization')])
     class_diagram('S03-ddd-class',d,{'svc':('AuthorizationApplicationService','C',['effective','stableEffective','api','stableApi']),'repo':('AuthorizationRepository','L',['version','freshenRead','hierarchy']),'model':('AuthorizationPolicy','R',['calculate','allows','requireWithin']),'adapter':('JpaAuthorizationRepositoryAdapter','LB',['freshenRead','version','hierarchy']),'graph':('RoleHierarchy','RB',['paths']),'reads':('AuthorizationReadTransaction','T',['fresh']),'cache':('EffectiveCache','B',['get','put'])},[('svc','repo','association','repository'),('svc','model','association','policy'),('model','graph','dependency',''),('adapter','repo','implementation',''),('svc','reads','association','reads'),('svc','cache','association','cache')])
     class_diagram('S06-ddd-class',d,{'svc':('RoleApplicationService','C',['status','complete']),'repo':('AuthorizationRepository','L',['lockGrants','saveRole','advanceVersion']),'role':('Role','R',['changeStatus','requireManageable']),'ctl':('RoleController','T',['status']),'adapter':('JpaAuthorizationRepositoryAdapter','LB',['saveRole','advanceVersion']),'integrity':('GrantIntegrityService','B',['requireAdministrator']),'audit':('AuditApplicationService','RB',['local','denied'])},[('ctl','svc','association','roles'),('svc','repo','association','repository'),('adapter','repo','implementation',''),('svc','role','dependency',''),('svc','integrity','association','integrity'),('svc','audit','association','audits')])
-    class_diagram('SIM-ddd-class',d,{'svc':('AuthorizationApplicationService','C',['unavailableReason','effective','api']),'repo':('AuthorizationRepository','L',['systemEnabled','identity']),'policy':('AuthorizationPolicy','R',['calculate','allows']),'ctl':('AuthorizationController','T',['explain','check']),'adapter':('JpaAuthorizationRepositoryAdapter','LB',['systemEnabled','identity'])},[('ctl','svc','association','authorization'),('svc','repo','association','repository'),('svc','policy','association','policy'),('adapter','repo','implementation','')])
+    class_diagram('SIM-ddd-class',d,{'svc':('AuthorizationApplicationService','C',['simulate','stableSimulation','unavailableReason','stableEffective','stableApi']),'repo':('AuthorizationRepository','L',['version','systemEnabled','identity']),'policy':('AuthorizationPolicy','R',['calculate','allows']),'ctl':('AuthorizationController','T',['explain','check']),'adapter':('JpaAuthorizationRepositoryAdapter','LB',['version','systemEnabled','identity'])},[('ctl','svc','association','authorization'),('svc','repo','association','repository'),('svc','policy','association','policy'),('adapter','repo','implementation','')])
     class_diagram('LOGIN-ddd-class',d,{'svc':('LoginAttemptApplicationService','C',['attempt']),'repo':('AuthorizationRepository','L',['lockLogin','saveLoginState']),'policy':('LoginAttemptPolicy','R',['locked','evaluate']),'ctl':('IdentityApplicationService','T',['login']),'adapter':('JpaAuthorizationRepositoryAdapter','LB',['lockLogin','saveLoginState']),'audit':('AuditApplicationService','B',['local'])},[('ctl','svc','association','loginAttempts'),('svc','repo','association','repository'),('adapter','repo','implementation',''),('svc','policy','association','policy'),('svc','audit','association','audits')])
     for n in ['S05']:
         class_diagram(n+'-ddd-class',d,{'svc':('AuditApplicationService','C',['external','local','denied']),'repo':('AuditRepository','L',['find','append']),'model':('AuditFact','R',['requireReplay']),'adapter':('JpaAuditRepositoryAdapter','LB',['find','append']),'ctl':(('IdentityController' if n=='S05' else 'RoleApplicationService'),'T',(['audit'] if n=='S05' else ['status','complete']))},[('svc','repo','association','repository'),('svc','model','dependency',''),('adapter','repo','implementation',''),('ctl','svc','association','audits')])
@@ -639,7 +683,13 @@ def main():
     if changed:raise RuntimeError('Sources changed DURING generation; rerun after compile: '+str(changed))
     index={'runtimeEvidenceMode':args.runtime_evidence,'currentRuntimeVerified':False,'artifactsMatchCurrentBuild':args.runtime_evidence=='current','hashRules':HASH_RULES,'generatorSha256':sha(Path(__file__)),'artifacts':{p.name:sha(p) for f in sorted(set(FIGURES)) for p in [OUT/(f+'.svg'),OUT/(f+'.png')]},'generatedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'strictCompiled':args.strict_compiled,'status':'SOURCE_ONLY_PENDING_COMPILE' if WARNINGS else ('STRICT_COMPILED_CHECKED' if args.strict_compiled else 'SIGNATURE_CHECKED'),'warnings':WARNINGS,'tool':tool,'sources':sources,'references':REFS,'callChains':CALL_CHAINS,'figures':sorted(set(FIGURES)),'checks':{'classBoxes':'PASS','classEdgesThirdPartyBoxes':'PASS','symbols':'PASS','orderedSourceCallChains':'PASS','sourceHashesStable':'PASS','sequenceActivationBalance':'PASS','plantumlSyntax':'PASS','pngVisualInspection':'MANUAL_REQUIRED','tests':'NOT_RUN','deployment':'ARCHIVED_LOCAL_FINAL_CHECKED_NO_NEW_LIVE_PROBE'}}
     write('source-index','json',json.dumps(index,ensure_ascii=False,indent=2));write('generation-status','json',json.dumps({k:index[k] for k in ['generatedAt','runtimeEvidenceMode','currentRuntimeVerified','artifactsMatchCurrentBuild','hashRules','strictCompiled','status','warnings','checks']},ensure_ascii=False,indent=2))
-    write('index','adoc','= 当前源码图索引\n\n自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。\n\n'+'\n\n'.join('== '+f+'\n\nimage::'+f+'.svg['+f+']\n\nlink:'+f+'.png[PNG] / link:'+f+('.puml[PlantUML]' if (OUT/(f+'.puml')).exists() else '.dot[DOT]') for f in sorted(set(FIGURES))))
+    figure_captions={
+        'S04-structured-class':'独立网关的历史类图。当前 Compose 的课程请求见下方 S04 主顺序图。',
+        'S04-ddd-class':'独立网关的历史类图。当前 Compose 的课程请求见下方 S04 主顺序图。',
+        'swarm-deployment':'旧七服务本地验收归档。当前六服务部署见下方静态配置图。',
+        'swarm-deployment-current':'根据当前 Compose 和 Nginx 配置绘制的六服务部署图。',
+    }
+    write('index','adoc','= 当前源码图索引\n\n自动生成；源码哈希见 source-index.json。文本 SHA-256 仅归一化 CRLF→LF；class/jar/png 等二进制逐字节哈希。STRICT_COMPILED_CHECKED / SIGNATURE_CHECKED 仅表示编译产物、符号及受检查源码调用顺序对齐，不等于业务测试或部署通过。\n\n'+'\n\n'.join('== '+f+'\n\n'+(figure_captions[f]+'\n\n' if f in figure_captions else '')+'image::'+f+'.svg['+f+']\n\nlink:'+f+'.png[PNG] / link:'+f+('.puml[PlantUML]' if (OUT/(f+'.puml')).exists() else '.dot[DOT]') for f in sorted(set(FIGURES))))
     print(json.dumps({'status':index['status'],'figures':len(set(FIGURES)),'warnings':WARNINGS,'visual':'Every PNG must be opened; renderer does not assert manual inspection.'},ensure_ascii=False))
 if __name__=='__main__':
     try:main()

@@ -7,6 +7,7 @@ import com.xmu.rbac.ddd.domain.port.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
+import org.slf4j.MDC;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -33,11 +34,11 @@ public class AuthorizationController {
     }
 
     public record Check(
-            @NotBlank String systemCode,
-            Long userId,
+            @NotBlank @Size(max = 64) String systemCode,
+            @Positive Long userId,
             @NotNull Permission.Kind kind,
-            String permission,
-            String operationId) {}
+            @Size(min = 1, max = 128) String permission,
+            @Size(min = 1, max = 128) String operationId) {}
 
     private Object check(String bearer, Check i, boolean explain) {
         TokenProvider.Principal principal = rest.principal(bearer);
@@ -51,22 +52,19 @@ public class AuthorizationController {
                 "INVALID_AUTHORIZATION_REQUEST");
         long user = i.userId() == null ? actor.id() : i.userId();
         if (user != actor.id()) directory.user(principal, user);
-        String unavailable = authorization.unavailableReason(user, i.systemCode());
-        AuthorizationPolicy.Effective effective = unavailable == null
-                ? authorization.effective(user, i.systemCode())
-                : new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of());
-        boolean allowed = unavailable == null && (
-                i.kind() == Permission.Kind.UI
-                        ? effective.has(i.permission(), Permission.Kind.UI)
-                        : authorization.api(user, i.systemCode(), i.operationId()));
+        var decision = authorization.simulate(user, i.systemCode(), i.kind(),
+                i.kind() == Permission.Kind.UI ? i.permission() : i.operationId());
+        String unavailable = decision.unavailableReason();
+        boolean allowed = decision.allowed();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("allowed", allowed);
         result.put("reason", unavailable != null ? unavailable : allowed ? "ALLOW" : "DENY");
-        result.put("traceId", UUID.randomUUID().toString());
+        result.put("traceId", Optional.ofNullable(MDC.get("traceId"))
+                .orElseGet(() -> UUID.randomUUID().toString()));
         if (explain) {
             result.put("trace", unavailable != null ? List.of("ACTOR_AUTHENTICATED", unavailable)
                     : List.of("TOKEN_VALID", "USER_SYSTEM_ACTIVE", allowed ? "REQUIREMENT_SATISFIED" : "REQUIREMENT_NOT_SATISFIED"));
-            result.put("effective", RestSupport.effective(effective));
+            result.put("effective", RestSupport.effective(decision.effective()));
         }
         return RestSupport.ok(result);
     }

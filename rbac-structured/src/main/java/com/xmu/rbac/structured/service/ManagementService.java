@@ -102,13 +102,12 @@ public class ManagementService {
         GrantVersion g = begin(a, "rbac:system:edit", true);
         enabled(status);
         SoftwareSystem s = az.require(SoftwareSystem.class, id);
-        String previous = s.status;
-        s.status = status;
-        if ("ENABLED".equals(status) && !"ENABLED".equals(previous)) {
-            for (Role role : db.where(Role.class, "e.systemId=?1", id)) {
-                az.upper(a, s.code, az.calculate(List.of(role.id), id));
-            }
+        if ("ENABLED".equals(status) && !"ENABLED".equals(s.status)) {
+            List<Long> roles = db.where(Role.class, "e.systemId=?1", id)
+                                   .stream().map(role -> role.id).toList();
+            az.upper(a, s.code, az.calculateConfiguredGrants(roles, id));
         }
+        s.status = status;
         finish(g, a, "SYSTEM_STATUS", id);
         return system(s);
     }
@@ -344,8 +343,10 @@ public class ManagementService {
     @Transactional
     public Object createRole(Actor a, Inputs.RoleCreate input) {
         GrantVersion g = begin(a, "rbac:role:edit", true);
+        SoftwareSystem system = az.system(input.systemCode());
+        az.requireRoleGrantSystem(a, system);
         Role r = CloneFactory.copy(new Role(), input);
-        r.systemId = az.system(input.systemCode()).id;
+        r.systemId = system.id;
         r.status = "ENABLED";
         r.builtin = false;
         db.save(r);
@@ -390,6 +391,8 @@ public class ManagementService {
         enabled(status);
         Role r = az.require(Role.class, id);
         az.protectRole(a, r);
+        if ("ENABLED".equals(status))
+            az.requireRoleGrantSystem(a, az.require(SoftwareSystem.class, r.systemId));
         r.status = status;
         if ("ENABLED".equals(status))
             changedUpper(a, r);
@@ -429,6 +432,7 @@ public class ManagementService {
         GrantVersion g = begin(a, "rbac:role:edit", true);
         Role r = az.require(Role.class, id);
         az.protectRole(a, r);
+        az.requireRoleGrantSystem(a, az.require(SoftwareSystem.class, r.systemId));
         for (Long pid : ids)
             if (!az.require(Permission.class, pid).systemId.equals(r.systemId))
                 throw BizException.bad("CROSS_SYSTEM_PERMISSION");
@@ -444,11 +448,11 @@ public class ManagementService {
         finish(g, a, "ROLE_PERMISSIONS_REPLACED", id);
         return directPermissions(a, id);
     }
-    /** 执行effectiveRole操作，保持服务到持久化层的单向依赖。 */
+    /** 角色详情展示该角色配置的权限及继承来源。 */
     public Object effectiveRole(Actor a, Long id) {
         az.center(a, "rbac:role:view");
         Role r = az.require(Role.class, id);
-        return az.effective(az.calculate(List.of(id), r.systemId), code(r.systemId));
+        return az.effective(az.calculateConfiguredGrants(List.of(id), r.systemId), code(r.systemId));
     }
     /** 执行hierarchy操作，保持服务到持久化层的单向依赖。 */
     public Object hierarchy(Actor a, String system) {
@@ -485,6 +489,8 @@ public class ManagementService {
         az.protectRole(a, j);
         if (!s.systemId.equals(j.systemId))
             throw BizException.bad("CROSS_SYSTEM_ROLE");
+        if (add)
+            az.requireRoleGrantSystem(a, az.require(SoftwareSystem.class, s.systemId));
         RoleHierarchy edge =
             db.one(RoleHierarchy.class, "e.seniorRoleId=?1 and e.juniorRoleId=?2", senior, junior);
         if (add) {
@@ -561,9 +567,10 @@ public class ManagementService {
     @Transactional(readOnly = true)
     public Object effectiveUser(Actor a, Long user, String system) {
         az.center(a, "rbac:user:view");
+        SoftwareSystem targetSystem = az.system(system);
         User target = az.require(User.class, user);
         az.scope(a, target.departmentId);
-        if (!"ACTIVE".equals(target.status) || !"ENABLED".equals(az.system(system).status)) {
+        if (!"ACTIVE".equals(target.status) || !"ENABLED".equals(targetSystem.status)) {
             return az.effective(
                 new AuthorizationService.Snapshot(List.of(), List.of(), List.of(), List.of()),
                 system);

@@ -148,32 +148,46 @@ public class ResourceApplicationService {
         grants.lockGrants();
         AuthorizationRepository.Identity actor =
                 authorization.require(principal, "rbac:resource:edit", true);
-        if (proposed.id() != 0) {
-            ApiOperation old = resources.operation(proposed.id());
+        String requiredRole = proposed.requiredRole();
+        DomainException.require(requiredRole == null || !requiredRole.isBlank(), 400, "VALIDATION_ERROR");
+        OperationSystem system = resources.operationSystem(proposed.systemCode());
+        ApiOperation old = proposed.id() == 0 ? null : resources.operation(proposed.id());
+        DomainException.require(
+                old == null || old.systemCode().equals(system.code()), 409, "CROSS_SYSTEM_OPERATION");
+        if ("rbac-center".equals(system.code())) {
+            ApiOperation frozen =
+                    contract.operations().stream()
+                            .filter(o -> o.operationId().equals(proposed.operationId()))
+                            .findFirst()
+                            .orElse(null);
             DomainException.require(
-                    old.systemCode().equals(proposed.systemCode()), 409, "CROSS_SYSTEM_OPERATION");
-            if (old.systemCode().equals("rbac-center")) {
-                ApiOperation frozen =
-                        contract.operations().stream()
-                                .filter(o -> o.operationId().equals(old.operationId()))
-                                .findFirst()
-                                .orElse(null);
-                if (frozen != null)
-                    DomainException.require(
-                            frozen.operationId().equals(proposed.operationId())
-                                    && frozen.method().equals(proposed.method())
-                                    && frozen.pathTemplate().equals(proposed.pathTemplate())
-                                    && Objects.equals(
-                                            frozen.permissionCode(), proposed.permissionCode())
-                                    && Objects.equals(
-                                            frozen.requiredRole(), proposed.requiredRole())
-                                    && frozen.policy() == proposed.policy(),
-                            409,
-                            "CENTER_OPERATION_PROTECTED");
-            }
+                    (old == null || old.operationId().equals(proposed.operationId()))
+                            && proposed.matchesDefinition(frozen),
+                    400,
+                    "CENTER_OPERATION_IMMUTABLE");
         }
-        ApiOperation saved = resources.saveOperation(proposed);
-        done(actor, proposed.systemCode(), proposed.operationId());
+        Long permissionId = proposed.permissionCode() == null
+                ? null
+                : resources.apiPermissionId(system.id(), proposed.permissionCode());
+        boolean hasCondition = permissionId != null || requiredRole != null;
+        DomainException.require(
+                proposed.policy() != ApiOperation.Policy.PROTECTED || hasCondition,
+                400,
+                "API_REQUIREMENT_MISSING");
+        if (hasCondition
+                && !proposed.onlyDisables(old)
+                && !authorization.effective(actor.id(), "rbac-center").superAdministrator()) {
+            DomainException.require(system.enabled(), 403, "GRANT_EXCEEDS_ACTOR");
+            AuthorizationPolicy.Effective target = authorization.effective(actor.id(), system.code());
+            DomainException.require(
+                    (permissionId == null
+                                    || target.permissions().stream().anyMatch(p -> p.id() == permissionId))
+                            && (requiredRole == null || target.identities().contains(requiredRole)),
+                    403,
+                    "GRANT_EXCEEDS_ACTOR");
+        }
+        ApiOperation saved = resources.saveOperation(proposed, system.id(), permissionId);
+        done(actor, system.code(), proposed.operationId());
         return saved;
     }
 

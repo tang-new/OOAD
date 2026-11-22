@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { createAppRouter, signedInDestination } from '@/router'
+import { mount } from '@vue/test-utils'
 import { authApi } from '@/api'
+import { ApiError } from '@/api/http'
+import { createAppRouter, loginRedirectPath, signedInDestination } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { flattenMenus, visibleMenus } from '@/router/routes'
 import type { UiResourceVO } from '@/api/types'
+import StatusView from '@/views/StatusView.vue'
 
 const menu = (id: number, route: string | null, type: 'MENU' | 'BUTTON' = 'MENU', children: UiResourceVO[] = []): UiResourceVO => ({
   id, systemCode: 'rbac-center', parentId: null, type, code: `m${id}`, name: '菜单', route, component: 'Users', sortOrder: 0, status: 'ENABLED', permissionCode: `p${id}`, children,
@@ -66,13 +69,102 @@ it('菜单停用或从投影移除时，旧的精确权限不能直达页面', a
   await router.push('/me'); auth.loadedAt = 0
   await router.push('/login'); expect(router.currentRoute.value.path).toBe('/dashboard')
 })
-it('刷新失败关闭保护路由，初次初始化时允许登录页', async () => {
+it.each(['/users/', '/USERS'])('管理页变体 %s 沿用规范路径的菜单权限', async address => {
   const auth = useAuthStore(); auth.setToken('dummy')
-  vi.spyOn(auth, 'refresh').mockRejectedValue(new Error('503'))
+  let navigation: UiResourceVO[] = []
+  vi.spyOn(auth, 'refresh').mockImplementation(async () => {
+    auth.identity = { subject: 'x', name: 'x', no: '', roles: [], permissions: ['p2'] }
+    auth.menus = navigation; auth.loadedAt = Date.now()
+  })
   const router = createAppRouter()
-  await router.push('/users'); expect(router.currentRoute.value.path).toBe('/login')
-  await router.push('/login'); expect(router.currentRoute.value.path).toBe('/login')
-  auth.identity = { subject: 'x', name: 'x', no: '', roles: [], permissions: ['p2'] }
-  auth.menus = [menu(2, '/users')]; auth.loadedAt = Date.now()
+  const suffix = '?userId=5#details'
+  await router.push(address + suffix)
+  expect(router.currentRoute.value.path).toBe('/403')
+  navigation = [menu(2, '/users')]
+  await router.push(address + suffix)
+  expect(router.currentRoute.value.fullPath).toBe('/users' + suffix)
+  expect(signedInDestination(router, address + suffix, auth)).toBe(address + suffix)
+})
+it.each([[0, '/users'], [503, '/users/']])('权限刷新失败（%i）拦截管理页并允许重试原地址', async (status, address) => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  const identity = { subject: 'x', name: 'x', no: '', roles: [], permissions: ['p2'] }
+  const navigation = [menu(2, '/users')]
+  if (status === 503) {
+    auth.identity = identity; auth.menus = navigation; auth.loadedAt = Date.now()
+  }
+  const refresh = vi.spyOn(auth, 'refresh')
+    .mockRejectedValueOnce(new ApiError(status, 'UNAVAILABLE', '无法刷新权限'))
+    .mockImplementationOnce(async () => {
+      auth.identity = identity; auth.menus = navigation; auth.loadedAt = Date.now()
+    })
+  const router = createAppRouter()
+  const target = '/users?userId=5#details'
+  await router.push(`${address}?userId=5#details`)
+  expect(router.currentRoute.value.path).toBe('/auth-refresh-failed')
+  expect(router.currentRoute.value.query.redirect).toBe(target)
+  expect(loginRedirectPath(router.currentRoute.value)).toBe(target)
+  expect(refresh).toHaveBeenCalledTimes(1)
+
+  const wrapper = mount(StatusView, { props: { status: 'refresh-failed' }, global: { plugins: [router] } })
+  expect(wrapper.get('h1').text()).toBe('权限刷新失败')
+  const retry = wrapper.get('a')
+  expect(retry.text()).toBe('重试')
+  expect(retry.attributes('href')).toBe(target)
+  await retry.trigger('click')
+  await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe(target))
+  expect(refresh).toHaveBeenCalledTimes(2)
+  wrapper.unmount()
+})
+it('刷新接口明确拒绝时显示 403，会话清除后返回登录', async () => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  vi.spyOn(auth, 'refresh')
+    .mockRejectedValueOnce(new ApiError(403, 'FORBIDDEN', '无权访问'))
+    .mockImplementationOnce(async () => {
+      auth.clear()
+      throw new ApiError(401, 'UNAUTHORIZED', '会话已过期')
+    })
+  const router = createAppRouter()
   await router.push('/users'); expect(router.currentRoute.value.path).toBe('/403')
+  await router.push('/roles'); expect(router.currentRoute.value.path).toBe('/login')
+  expect(router.currentRoute.value.query.redirect).toBe('/roles')
+})
+it.each([true, false])('直接打开 403 页时初始化会话（有效令牌 %s）', async valid => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  const refresh = vi.spyOn(auth, 'refresh').mockImplementationOnce(async () => {
+    if (!valid) {
+      auth.clear()
+      throw new ApiError(401, 'UNAUTHORIZED', '会话已过期')
+    }
+    auth.identity = { subject: 'x', name: '用户', no: '', roles: [], permissions: [] }
+    auth.loadedAt = Date.now()
+  })
+  const router = createAppRouter()
+  await router.push('/403')
+  expect(refresh).toHaveBeenCalledTimes(1)
+  expect(auth.loaded).toBe(valid)
+  expect(router.currentRoute.value.path).toBe(valid ? '/403' : '/login')
+})
+it.each([[401, '/login'], [503, '/auth-refresh-failed']])('直接打开权限刷新失败页时校验会话（%i）', async (status, destination) => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  const refresh = vi.spyOn(auth, 'refresh').mockImplementationOnce(async () => {
+    if (status === 401) auth.clear()
+    throw new ApiError(status, 'UNAVAILABLE', '无法刷新权限')
+  })
+  const router = createAppRouter()
+  const target = '/users?userId=5#details'
+  await router.push({ path: '/auth-refresh-failed', query: { redirect: target } })
+  expect(refresh).toHaveBeenCalledTimes(1)
+  expect(router.currentRoute.value.path).toBe(destination)
+  expect(router.currentRoute.value.query.redirect).toBe(target)
+  expect(auth.token).toBe(status === 401 ? null : 'dummy')
+})
+it('权限刷新失败页只允许重试内部管理路由', async () => {
+  const auth = useAuthStore(); auth.setToken('dummy')
+  vi.spyOn(auth, 'refresh').mockRejectedValueOnce(new ApiError(503, 'UNAVAILABLE', '无法刷新权限'))
+  const router = createAppRouter()
+  await router.push({ path: '/auth-refresh-failed', query: { redirect: '//example.com' } })
+  expect(loginRedirectPath(router.currentRoute.value)).toBe(router.currentRoute.value.fullPath)
+  const wrapper = mount(StatusView, { props: { status: 'refresh-failed' }, global: { plugins: [router] } })
+  expect(wrapper.get('a').attributes('href')).toBe('/me')
+  wrapper.unmount()
 })

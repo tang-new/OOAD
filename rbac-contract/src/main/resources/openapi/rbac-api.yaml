@@ -481,6 +481,8 @@ paths:
               example:
                 code: IDENTITY_SERVICE_UNAVAILABLE
                 message: 统一身份认证暂时不可用，请稍后重试。
+        '400':
+          $ref: '#/components/responses/BadRequest'
       x-required-permission: '@authenticated'
   /auth/users/{userId}:
     parameters:
@@ -1896,7 +1898,7 @@ paths:
   /api/v1/roles/{id}/effective-permissions:
     get:
       operationId: getRoleEffectivePermissions
-      summary: EffectiveVO（以该角色为直接角色）
+      summary: EffectiveVO（以该角色为直接角色，停用系统仍展示启用角色和权限的配置闭包）
       x-required-permission: rbac:role:view
       x-required-audience: rbac-center
       responses:
@@ -4040,6 +4042,11 @@ components:
               permissionCode:
                 type: string
                 maxLength: 128
+              permissionKind:
+                type: string
+                enum:
+                - UI
+                - API
               roleCode:
                 type: string
                 maxLength: 64
@@ -4050,6 +4057,7 @@ components:
                   type: string
             required:
             - permissionCode
+            - permissionKind
             - roleCode
             - inherited
             - path

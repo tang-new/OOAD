@@ -43,6 +43,7 @@ function loadDirectory() {
 }
 async function loadDetail() {
   const id = roleId.value, system = auth.targetSystem
+  effective.reset()
   if (id === null) return true
   const loaded = await detail.read(async () => {
     const result = await get<RoleVO>(`/roles/${id}`)
@@ -120,7 +121,7 @@ async function savePermissions() {
 }
 watch(() => auth.targetSystem, () => { list.reset(); page.value = 1; void loadList() }, { immediate: true })
 watch([roleId, () => auth.targetSystem], () => {
-  reset(); detail.reset(); effective.reset(); directory.reset(); direct.reset()
+  reset(); detail.reset(); directory.reset(); direct.reset()
   selected.value = []; permissionSearch.value = ''; permissionKeyword.value = ''; permissionKind.value = ''; permissionPage.value = 1
   void loadDetail()
 }, { immediate: true })

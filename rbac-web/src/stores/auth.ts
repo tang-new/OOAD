@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
   const navigation = computed(() => visibleMenus(menus.value, has)
     .filter(item => item.route !== '/dashboard' || dashboardAllowed.value))
   const buttons = computed(() => new Set(enabledResources(menus.value).filter(item => item.type === 'BUTTON').map(item => item.permissionCode)))
-  let pending: { session: number; promise: Promise<void> } | undefined
+  let latest: { session: number; promise: Promise<void>; settled: boolean } | undefined
 
   function has(code: string) { return permissions.value.has(code) }
   function canVisit(path: string) { return navigation.value.some(item => item.route === path) }
@@ -50,22 +50,26 @@ export const useAuthStore = defineStore('auth', () => {
     } catch { /* 禁用存储时使用内存会话 */ }
   }
   function clear() { setToken(null) }
-  function refresh(): Promise<void> {
+  function refresh(afterWrite = false): Promise<void> {
     const current = session.value
-    if (pending?.session === current) return pending.promise
-    const promise = Promise.all([
+    if (!afterWrite && latest?.session === current && !latest.settled) return latest.promise
+    const promise: Promise<void> = Promise.all([
       authApi.me(), authApi.profile(), authApi.menus(), authApi.canCall('getDashboard').catch(() => false),
     ]).then(([who, mine, navigation, allowed]) => {
       if (current !== session.value) return
+      if (latest?.promise !== promise) return latest?.promise
       identity.value = who
       profile.value = mine
       menus.value = navigation
       dashboardAllowed.value = allowed
       loadedAt.value = Date.now()
+    }, error => {
+      if (current === session.value && latest?.promise !== promise) return latest?.promise
+      throw error
     }).finally(() => {
-      if (pending?.promise === promise) pending = undefined
+      if (latest?.promise === promise) latest.settled = true
     })
-    pending = { session: current, promise }
+    latest = { session: current, promise, settled: false }
     return promise
   }
   async function login(username: string, password: string) {

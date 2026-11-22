@@ -30,7 +30,7 @@ aud错误 `AUDIENCE_MISMATCH`，权限不足 `PERMISSION_DENIED`，管理范围�
 * POST /auth/logout Bearer，无body；成功204，持久撤销jti；401。
 * GET /auth/me：`{subject:string,roles:(student|teacher|admin)[],permissions:string[],name:string,no:string}`，roles是当前aud有效角色的identityRole受控投影，不输出任意内部角色码；permissions仅UI；401/503。
 * GET /auth/permissions/{permission}：200 `{allowed:boolean}`，未知/无权false；400/401。
-* GET /auth/api-permissions/{operationId}：200 `{operationId,allowed}`，已注册无权false，未知404 API_OPERATION_NOT_FOUND；401/503。
+* GET /auth/api-permissions/{operationId} 返回 `200 {operationId,allowed}`，已登记但无权时 `allowed=false`。操作标识长度为 1–128，非法输入返回 `400 VALIDATION_ERROR`，未知操作返回 `404 API_OPERATION_NOT_FOUND`。认证失败返回 401，服务不可用返回 503。
 * POST /auth/audit-logs：requestId为UUID；type限score_changed/group_changed/milestone_changed/roster_changed；objectType枚举term/course/class/group/milestone/student/teacher/submission/oral_record，objectId须匹配`^cpm-(term|course|class|group|milestone|student|teacher|submission|oral_record)-[0-9]+$`且类型一致；target必填最长500，before/after为可选安全JSON；201返回审计VO。同requestId同sourceSystem/subject/内容返回相同id，同键异体400 AUDIT_DUPLICATE_CONFLICT。actor只从身份确定。
 * GET /auth/audit-logs：actor,actorId,target,from,to,page,pageSize；200分页裸响应，按当前aud隔离，需API权限audit:read；401/403/400/503。
 
@@ -46,7 +46,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 * RoleVO：id,systemCode,code,name,description,status,builtin,identityRole(nullable student/teacher/admin),version。
 * PermissionVO：id,systemCode,code,name,kind(UI/API),status。
 * AssignmentVO：id,userId,roleId,systemCode,roleCode,roleName,assignedAt,assignedBy；无scope部门。
-* EffectiveVO：directRoles:RoleVO[],effectiveRoles:RoleVO[],permissions:PermissionVO[],sources:[{permissionCode,roleCode,inherited:boolean,path:string[]}]；权限集合去重，来源可多条。
+* EffectiveVO：directRoles:RoleVO[],effectiveRoles:RoleVO[],permissions:PermissionVO[],sources:[{permissionCode,permissionKind:UI/API,roleCode,inherited:boolean,path:string[]}]；权限集合去重，来源可多条，按权限种类与编码关联。
 * UiResourceVO：id,systemCode,parentId,type(MENU/BUTTON),code,name,route,component,sortOrder,status,permissionCode,children；父菜单可见不赋子按钮。
 * ApiOperationVO：id,systemCode,operationId,method,pathTemplate,permissionCode(nullable),requiredRole(nullable),accessPolicy(PUBLIC/AUTHENTICATED/PROTECTED),enabled。
 * MappingVO：uiResourceId,apiOperationId；显式多对多，仅追踪，不隐式赋权。
@@ -87,7 +87,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 |DELETE /roles/{id} |受控退役/清指派、边、权限、准入，保护最后有效超级管理员 |rbac:role:edit
 |GET /roles/{id}/permissions |PermissionVO[]（直接） |rbac:role:view
 |PUT /roles/{id}/permissions |{permissionIds:Long[]}原子替换，仅同系统 |rbac:role:edit
-|GET /roles/{id}/effective-permissions |EffectiveVO（以该角色为直接角色） |rbac:role:view
+|GET /roles/{id}/effective-permissions |EffectiveVO（以该角色为直接角色，停用系统仍展示启用角色和权限的配置闭包） |rbac:role:view
 |GET /systems/{code}/role-hierarchy |HierarchyVO |rbac:role:view
 |POST /roles/{seniorId}/inherits/{juniorId} |同系统有向边，重复409，环409 ROLE_CYCLE |rbac:role:edit
 |DELETE /roles/{seniorId}/inherits/{juniorId} |无边404，否则回收并失效 |rbac:role:edit
@@ -123,6 +123,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 . 直接指派必须在目标用户当前部门的DepartmentAllowedRole清单内，即使超级管理员也要满足；引导root的SUPER_ADMIN准入在种子中明确建立。
 . 非超级管理员不能赋予或改出自己在目标系统没有的有效权限及identityRole标记，改继承前按完整新闭包检验提升。中心管理入口资格与目标系统授权上界分开读取。系统级共享定义（系统/角色/权限/继承/UI/API）的写操作还要求操作者所属根部门；部门管理员只管理子树人员、准入和指派，不能借共享角色影响范围外人员。
 角色直接权限替换、加继承边及重新启用均检查自身与全部受影响上级的最终闭包，操作者上界取保存前事实。特殊SUPER_ADMIN可达性检查不因停用节点切断，避免预埋恢复能力。
+. 普通管理员新增或修改停用系统的角色授权时返回 `403 PRIVILEGE_ESCALATION`。重新启用系统前先核对会恢复生效的角色闭包和身份标记。非超级管理员设置 API 的权限或身份角色条件时，需在目标系统拥有对应授权。目标系统停用时，该类变更返回业务 403。
 . RoleHierarchy同系统senior→junior，停用节点切断路径；系统行/授权版本行排他锁串行化所有图写，避免并发成环。版本与授权/状态/映射变更同本地事务提交。
 . 移部门先锁用户并校验原、新部门的管理范围。跨部门调动在同一事务中更新部门并清空本人的角色指派。新部门的角色需要重新指派。提交当前部门时保留现有指派。保护最后有效 SUPER_ADMIN，调动若会使其失效则整笔回滚。
 受保护的最后管理员须同时具备根部门管理资格、SUPER_ADMIN角色准入、活动用户状态和有效超级管理员能力；存在其他合格管理员时允许迁移。
@@ -133,6 +134,7 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 . 外部审计requestId全局唯一，哈希绑定sourceSystem+subject+规范化业务载荷；同键跨系统/主体不能取到他人记录。JSON字段白名单/敏感键拒绝，大小受限。外部GET只返回origin=COURSE且当前aud的四类事件；内部日志查询可看授权系统的所有事件。两种外部审计操作都要求可信服务请求头X-Audit-Service-Key（RBAC_AUDIT_SERVICE_KEY配置，恒定时间比较），缺失403；仍必须验证用户bearer及audit:read/audit:write。该服务凭据只给课程后端，浏览器不可获得，禁止日志输出；不把用户bearer本身当成业务已发生的证明。
 . 技术日志统一AOP记录traceId/layer/class/method/duration/result/exceptionType，不打印参数、响应、异常消息或token。AOP不是审计落库入口。
 . 未登记API默认拒绝。中心路由启动双向核验OAS；课程网关从可信method/path解析operationId，固定白名单上游，不收客户端目标URL。
+. 固定中心操作的登记须与共享 OpenAPI 一致并保持启用。中心登记在写入及启动时校验，未知或变更固定配置的请求返回 `400 CENTER_OPERATION_IMMUTABLE`。`PROTECTED` 操作至少需要一个 API 权限或身份角色条件，否则返回 `400 API_REQUIREMENT_MISSING`。
 . 教师OAS copyCourse明确x-required-role=teacher，CC只是课程Service中“非组长”的附加检查；注册全局requiredRole=teacher，不将CC误设为所有调用必需。其他对象范围也留在课程端；无显式全局条件的已核验课程路由至少需要课程course:access API权限。
 . 外部课程注册从教师固定源码OAS提取真实operationId和x-required-permission/x-required-role，不能按中文标题自造。UI权限码单独定义并显式映射。
 

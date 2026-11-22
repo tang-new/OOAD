@@ -27,7 +27,7 @@ public class ApiExceptionAdvice {
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<Map<String, Object>> domain(
             DomainException error, jakarta.servlet.http.HttpServletRequest request) {
-        if (error.status() == 403 || error.status() == 401) {
+        if (error.status() == 403 || error.status() == 401 || error.requiresDenialAudit()) {
             try {
                 com.xmu.rbac.ddd.domain.port.AuthorizationRepository.Identity actor = null;
                 String system = "rbac-center";

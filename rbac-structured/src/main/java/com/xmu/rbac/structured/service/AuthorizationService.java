@@ -79,16 +79,21 @@ public class AuthorizationService {
         if (!"ACTIVE".equals(u.status) || !"ENABLED".equals(s.status))
             throw BizException.unauthorized();
     }
-    /** 每次调用读取数据库全局版本；事务内禁止读写缓存。 */
-    public Snapshot snapshot(Long userId, String code) {
+    private SoftwareSystem activeSystem(Long userId, String code) {
         User u = require(User.class, userId);
         SoftwareSystem s = system(code);
         active(u, s);
-        boolean tx = TransactionSynchronizationManager.isActualTransactionActive();
-        if (tx)
+        return s;
+    }
+    /** 每次调用读取数据库全局版本；事务内禁止读写缓存。 */
+    public Snapshot snapshot(Long userId, String code) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            SoftwareSystem s = activeSystem(userId, code);
             return calculate(direct(userId, s.id), s.id);
+        }
         for (int attempt = 0; attempt < 3; attempt++) {
             long version = version();
+            SoftwareSystem s = activeSystem(userId, code);
             String key = namespace + ":authz:" + code + ":" + userId + ":" + version;
             Entry entry = l1.get(key);
             Snapshot result = null;
@@ -97,8 +102,13 @@ public class AuthorizationService {
             if (result == null) {
                 try {
                     String value = redis.opsForValue().get(key);
-                    if (value != null)
-                        result = json.readValue(value, Snapshot.class);
+                    if (value != null) {
+                        Snapshot cached = json.readValue(value, Snapshot.class);
+                        // 旧快照的来源缺少权限种类，需要重新计算。
+                        if (cached.sources.stream()
+                                .allMatch(source -> source.get("permissionKind") != null))
+                            result = cached;
+                    }
                 } catch (Exception ignored) { /* Redis不是事实来源，受限回退数据库。 */
                 }
             }
@@ -114,7 +124,8 @@ public class AuthorizationService {
                     key, json.writeValueAsString(result), Duration.ofMinutes(5));
             } catch (Exception ignored) {
             }
-            return result;
+            if (version == version())
+                return result;
         }
         throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
     }
@@ -135,10 +146,14 @@ public class AuthorizationService {
             .map(r -> r.id)
             .toList();
     }
-    /** 计算同系统DAG闭包，切断停用节点并保留来源路径。 */
+    /** 计算启用系统中的角色权限。 */
     public Snapshot calculate(List<Long> direct, Long systemId) {
         if (!"ENABLED".equals(require(SoftwareSystem.class, systemId).status))
             return new Snapshot(List.of(), List.of(), List.of(), List.of());
+        return calculateConfiguredGrants(direct, systemId);
+    }
+    /** 计算角色配置的同系统DAG闭包，切断停用角色并保留来源路径。 */
+    Snapshot calculateConfiguredGrants(List<Long> direct, Long systemId) {
         Map<Long, Role> roles = new HashMap<>();
         for (Role r : db.where(Role.class, "e.systemId=?1", systemId)) roles.put(r.id, r);
         Map<Long, List<Long>> edges = new HashMap<>();
@@ -177,8 +192,9 @@ public class AuthorizationService {
         effective.add(id);
         for (Permission p : grants.getOrDefault(id, List.of())) {
             permissions.add(p.id);
-            sources.add(map("permissionCode", p.code, "roleCode", role.code, "inherited",
-                path.size() > 1, "path", path.stream().map(x -> roles.get(x).code).toList()));
+            sources.add(map("permissionCode", p.code, "permissionKind", p.kind,
+                "roleCode", role.code, "inherited", path.size() > 1,
+                "path", path.stream().map(x -> roles.get(x).code).toList()));
         }
         for (Long next : edges.getOrDefault(id, List.of()))
             walk(next, roles, edges, grants, path, effective, permissions, sources);
@@ -197,10 +213,11 @@ public class AuthorizationService {
     }
     /** 执行superAdmin操作，保持服务到持久化层的单向依赖。 */
     public boolean superAdmin(Actor a) {
-        if (!"rbac-center".equals(a.systemCode()))
-            return false;
-        return snapshot(a.userId(), "rbac-center")
-            .roles.stream()
+        return "rbac-center".equals(a.systemCode())
+            && hasSuperAdminRole(snapshot(a.userId(), a.systemCode()));
+    }
+    private boolean hasSuperAdminRole(Snapshot snapshot) {
+        return snapshot.roles.stream()
             .map(id -> require(Role.class, id))
             .anyMatch(r -> "SUPER_ADMIN".equals(r.code) && Boolean.TRUE.equals(r.builtin));
     }
@@ -224,8 +241,24 @@ public class AuthorizationService {
                       kind, permission)
                     .isEmpty();
     }
-    /** 执行api操作，保持服务到持久化层的单向依赖。 */
+    /** 事务外按同一授权版本读取操作策略并完成判定。 */
     public boolean api(Long user, String code, String operation) {
+        if (TransactionSynchronizationManager.isActualTransactionActive())
+            return decideApi(user, code, operation);
+        for (int attempt = 0; attempt < 3; attempt++) {
+            long version = version();
+            try {
+                boolean allowed = decideApi(user, code, operation);
+                if (version == version())
+                    return allowed;
+            } catch (BizException error) {
+                if (error.status >= 500 || version == version())
+                    throw error;
+            }
+        }
+        throw new BizException(503, "AUTHORIZATION_UNAVAILABLE");
+    }
+    private boolean decideApi(Long user, String code, String operation) {
         SoftwareSystem system = system(code);
         User u = require(User.class, user);
         active(u, system);
@@ -245,6 +278,8 @@ public class AuthorizationService {
         if ("PUBLIC".equals(op.accessPolicy) || "AUTHENTICATED".equals(op.accessPolicy))
             return true;
         Snapshot s = snapshot(user, code);
+        if ("rbac-center".equals(code) && hasSuperAdminRole(s))
+            return true;
         boolean hasRole = op.requiredRole == null
             || (Set.of("student", "teacher", "admin").contains(op.requiredRole)
                     ? identities(s).contains(op.requiredRole)
@@ -279,6 +314,11 @@ public class AuthorizationService {
                    target = require(Department.class, department);
         if (!target.path.startsWith(own.path))
             throw BizException.forbidden("OUT_OF_MANAGE_SCOPE");
+    }
+    /** 停用系统没有可委派的有效授权，中心超级管理员仍可维护其角色配置。 */
+    public void requireRoleGrantSystem(Actor a, SoftwareSystem system) {
+        if (!"ENABLED".equals(system.status) && !superAdmin(a))
+            throw BizException.forbidden("PRIVILEGE_ESCALATION");
     }
     /** 授权上界同时检查权限和受控身份投影，包含新继承闭包。 */
     public void upper(Actor a, String code, Snapshot proposed) {

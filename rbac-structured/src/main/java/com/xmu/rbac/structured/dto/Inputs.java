@@ -195,7 +195,8 @@ public final class Inputs {
         Mapping(@NotNull @Positive Long uiResourceId, @NotNull @Positive Long apiOperationId) {}
     public record Mappings(@NotNull @Size(max = 10000) List<@Valid Mapping> mappings) {}
     public record Check(@NotBlank @Size(max = 64) String systemCode, @Positive Long userId,
-        @NotBlank @Pattern(regexp = "UI|API") String kind, String permission, String operationId) {}
+        @NotBlank @Pattern(regexp = "UI|API") String kind,
+        @Size(min = 1, max = 128) String permission, @Size(min = 1, max = 128) String operationId) {}
     public record Audit(
         @NotBlank @Pattern(
             regexp = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")

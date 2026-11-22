@@ -62,6 +62,8 @@ public class DirectoryApplicationService {
         grants.lockGrants();
         AuthorizationRepository.Identity actor = actor(p, "rbac:system:edit", true);
         SystemDefinition old = id == null ? null : directory.system(id);
+        if (old != null && "ENABLED".equals(status) && !"ENABLED".equals(old.status()))
+            authorization.requireSystemActivation(actor, old.code());
         SystemDefinition saved =
                 directory.saveSystem(
                         new SystemDefinition(
@@ -163,7 +165,10 @@ public class DirectoryApplicationService {
     }
 
     public Profile user(TokenProvider.Principal p, long id) {
-        AuthorizationRepository.Identity actor = actor(p, "rbac:user:view", false);
+        return managedUser(actor(p, "rbac:user:view", false), id);
+    }
+
+    private Profile managedUser(AuthorizationRepository.Identity actor, long id) {
         Profile user = directory.user(id, false);
         managed(actor, user.departmentId());
         return user;
@@ -306,6 +311,8 @@ public class DirectoryApplicationService {
         Profile profile = directory.user(id, true);
         managed(actor, profile.departmentId());
         Role role = grants.role(roleId);
+        if (!grants.systemEnabled(role.systemCode()))
+            throw DomainException.auditedDenial(409, "ROLE_DISABLED");
         authorization.upperBound(
                 actor,
                 role.systemCode(),
@@ -342,8 +349,17 @@ public class DirectoryApplicationService {
 
     public AuthorizationPolicy.Effective effective(
             TokenProvider.Principal p, long id, String system) {
-        user(p, id);
-        return authorization.effective(id, system);
+        AuthorizationRepository.Identity actor = actor(p, "rbac:user:view", false);
+        // 先确认系统存在。快照读取会再次校验系统状态和授权版本。
+        grants.systemEnabled(system);
+        managedUser(actor, id);
+        try {
+            return authorization.effective(id, system);
+        } catch (DomainException error) {
+            // 管理目标的停用状态不影响已校验的操作者会话。
+            if (error.status() != 401 || !"SYSTEM_DISABLED".equals(error.code())) throw error;
+            return new AuthorizationPolicy.Effective(List.of(), List.of(), List.of(), List.of());
+        }
     }
 
     public Map<String, Long> dashboard(TokenProvider.Principal p) {

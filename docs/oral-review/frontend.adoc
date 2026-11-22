@@ -14,11 +14,11 @@ link:README.adoc[总览] / link:source-map.adoc[源码索引] / link:review-card
 |===
 |成员 |路由 |页面/组件入口 |检查重点
 |link:A-identity.adoc[A] |`/login`、`/me` |link:../../rbac-web/src/views/LoginView.vue[LoginView]、link:../../rbac-web/src/views/MeView.vue[MeView]；布局身份与退出 |登录、会话恢复/清理、三路身份刷新、改密后重新登录、失败反馈与口令清理；Me内有效权限呈现与D交接
-|link:B-directory.adoc[B] |`/users`、`/departments` |link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace]、CatalogWorkspace部门分支 |检索/分页、创建/资料/状态/迁移分离、真实准入选项、指派/回收、准入替换保留其他系统；表单及有效权限使用点
+|link:B-directory.adoc[B] |`/users`、`/departments` |link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace]、link:../../rbac-web/src/views/DepartmentsView.vue[DepartmentsView] |检索/分页、创建/资料/状态/迁移分离、真实准入选项、指派/回收、准入替换保留其他系统；表单及有效权限使用点
 |link:C-role-graph.adoc[C] |`/roles`、`/hierarchy` |link:../../rbac-web/src/views/RoleWorkspace.vue[RoleWorkspace]、link:../../rbac-web/src/components/RoleDag.vue[RoleDag] |编辑/独立启停/删除、直接权限跨页选择、边增删、成环反馈；DAG方向/多父/菱形/状态展示，直接与继承权限区分
-|link:D-authorization.adoc[D] |`/authorization`；各页有效权限区 |CatalogWorkspace鉴权分支；link:../../rbac-web/src/components/EffectivePermissions.vue[EffectivePermissions]、link:../../rbac-web/src/components/PermissionCode.vue[PermissionCode] |UI/API检查与来源解释、本人/指定用户、正常拒绝与故障区分；角色/权限/多条来源路径呈现，路由/按钮权限与刷新
-|link:E-resources.adoc[E] |`/dashboard`、`/systems`、`/permissions`、`/ui-resources`、`/api-operations`、`/mappings`；`/403`和未知路径 |link:../../rbac-web/src/views/ResourceWorkspace.vue[ResourceWorkspace]、CatalogWorkspace对应分支；link:../../rbac-web/src/views/ManagementView.vue[ManagementView]、link:../../rbac-web/src/views/StatusView.vue[StatusView] |统计、系统/权限登记与启停、菜单/API/映射和覆盖报告；导航、目标系统、页面分发、状态页、构建与代理配置、完整演示汇总
-|link:F-audit.adoc[F] |`/audit` |CatalogWorkspace审计分支、format的toInstant |系统/操作者/目标/时间过滤、分页/空结果/详情、已删除操作者、本地时间转UTC、切系统清理旧详情；内部查询与外部同步审计区分
+|link:D-authorization.adoc[D] |`/authorization`；各页有效权限区 |link:../../rbac-web/src/views/AuthorizationView.vue[AuthorizationView]、link:../../rbac-web/src/components/EffectivePermissions.vue[EffectivePermissions]、link:../../rbac-web/src/components/PermissionCode.vue[PermissionCode] |UI/API检查与来源解释、本人/指定用户、正常拒绝与故障区分；角色/权限/多条来源路径呈现，路由/按钮权限与刷新
+|link:E-resources.adoc[E] |`/dashboard`、`/systems`、`/permissions`、`/ui-resources`、`/api-operations`、`/mappings`；`/403`和未知路径 |link:../../rbac-web/src/router/routes.ts[路由指向的独立页面]、link:../../rbac-web/src/views/StatusView.vue[StatusView] |统计、系统/权限登记与启停、菜单/API/映射和覆盖报告；导航、目标系统、页面分发、状态页、构建与代理配置、完整演示汇总
+|link:F-audit.adoc[F] |`/audit` |link:../../rbac-web/src/views/AuditView.vue[AuditView]、format的toInstant |系统/操作者/目标/时间过滤、分页/空结果/详情、已删除操作者、本地时间转UTC、切系统清理旧详情；内部查询与外部同步审计区分
 |===
 
 F只审审计页面及相关公共逻辑使用，不接管全局前端框架、全部测试或全部技术日志，继续按减负目标安排。
@@ -30,14 +30,14 @@ F只审审计页面及相关公共逻辑使用，不接管全局前端框架、�
 [cols="3,1,4",options="header"]
 |===
 |入口 |主责/协作 |具体边界
-|link:../../rbac-web/src/views/CatalogWorkspace.vue[CatalogWorkspace.vue] |E汇总；B/D/F |E：reload中dashboard/systems/permissions、systemForm/systemState/permissionForm/permissionState及对应模板；B：departments、departmentForm/eligibility及准入保存；D：check及authorization模板；F：audit请求参数/列表/详情/翻页。watch(targetSystem)由各人核对自己的清理/重载，不能由E包办所有分支
+|link:../../rbac-web/src/views/AuthorizationView.vue[AuthorizationView.vue] |D |`/authorization` 的主体与操作选择、check/explain 调用、判定和来源展示、输入变化时清理旧结果
 |link:../../rbac-web/src/stores/auth.ts[stores/auth.ts] |A；D |A：readToken/setToken/clear/login/logout/refresh会话生命周期、存储失败降级；D：has精确匹配、refresh替换权限/菜单、loadedAt与targetSystem。F仅理解审计页使用的会话协议
 |link:../../rbac-web/src/api/http.ts[api/http.ts]、link:../../rbac-web/src/api/index.ts[api/index.ts] |A；D |A：双客户端baseURL、Bearer、raw裸响应与request包装、204、401及认证API；D：403钩子与allowed:false不是异常；每人核对自己请求的方法、URL、参数/响应和错误
 |link:../../rbac-web/src/main.ts[main.ts] |E；A/D |E：Vue/Pinia/Router/指令装配；A：getToken、401清会话与登录跳转；D：403标记刷新与权限指令注册
 |link:../../rbac-web/src/router/index.ts[router/index.ts]、link:../../rbac-web/src/router/routes.ts[routes.ts] |D；A/E |D：菜单permissionCode/静态meta、精确守卫、刷新失败不放行；A：未登录深链、登录回跳实际行为、刷新时间窗口；E：全部页面登记、默认/未知路由、标题、菜单展开与可见项。不要把redirect查询参数的存在说成已实现登录后恢复原路径
 |link:../../rbac-web/src/layouts/AppLayout.vue[AppLayout.vue] |E；A/D |E：系统列表、targetSystem、菜单导航及RouterView按path重建；A：身份展示、refresh与logout；D：visibleMenus/has效果。切目标系统只是管理过滤，不切换token audience
 |link:../../rbac-web/src/components/RecordForm.vue[RecordForm.vue] |E；A/B/C |E：fields白名单、number/checkbox、缺省/null、busy/提交失败/关闭；A：密码输入清理；B/C/E：各自fields/initial/submit及version。不能把浏览器required当服务端授权或完整业务校验
-|link:../../rbac-web/src/views/workspace.ts[workspace.ts] |D；B/C/E |D：allowed及mutate顺序action→auth.refresh→reload；E：load/run/errorText、加载/错误/成功反馈；B/C/E：调用点与刷新失败后业务可能已提交的提示语义。ROLE_CYCLE是后端拒绝，不是前端验环证明
+|link:../../rbac-web/src/views/workspace.ts[workspace.ts] |D；B/C/E |D：allowed 及 mutate 保存成功后并行发起新权限读取与页面重载；E：load/run/errorText、加载/错误/成功反馈；B/C/E：调用点与刷新失败后业务可能已提交的提示语义。ROLE_CYCLE是后端拒绝，不是前端验环证明
 |EffectivePermissions、PermissionCode |D；A/B/C |D审公共呈现；A审Me使用，B审用户详情，C审角色详情：传入结果、空集、kind、来源和路径，不把继承权限当直接勾选值
 |link:../../rbac-web/src/directives/perm.ts[perm.ts] |D；E |禁用/隐藏/恢复、嵌套按钮和原生disabled；各人另查自己模板的allowed/disabled，不能假定所有按钮均通过指令
 |link:../../rbac-web/src/api/types.ts[types.ts] |E汇总；全员 |A：IdentityVO/MeVO身份字段；B：User/Department/Assignment；C：Role/Hierarchy；D：Effective与来源；E：System/Permission/UI/API/Mapping/Coverage；F：Audit与分页使用。共享Page/Envelope按各请求复核，不更改产品类型

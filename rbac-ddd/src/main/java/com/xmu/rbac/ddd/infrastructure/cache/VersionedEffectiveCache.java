@@ -81,11 +81,14 @@ public class VersionedEffectiveCache implements EffectiveCache {
                                 true));
             List<AuthorizationPolicy.Source> sources = new ArrayList<>();
             for (JsonNode s : n.path("sources")) {
+                // 旧快照的来源缺少权限种类，需要重新计算。
+                if (!s.hasNonNull("permissionKind")) return null;
                 List<String> path = new ArrayList<>();
                 for (JsonNode p : s.path("path")) path.add(p.asText());
                 sources.add(
                         new AuthorizationPolicy.Source(
                                 s.path("permissionCode").asText(),
+                                Permission.Kind.valueOf(s.path("permissionKind").asText()),
                                 s.path("roleCode").asText(),
                                 s.path("inherited").asBoolean(),
                                 List.copyOf(path)));

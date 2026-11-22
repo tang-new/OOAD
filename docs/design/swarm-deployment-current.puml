@@ -1,0 +1,31 @@
+@startuml
+skinparam defaultFontName Microsoft YaHei
+skinparam linetype polyline
+title Current Swarm topology — six services
+actor Browser
+
+node "Private overlay network" {
+  component "rbac-web\nNginx TLS :443" as web
+  component "course-web\nNginx TLS :443" as courseWeb
+  component "rbac-backend :8081\nStructured or DDD\nCourseProxyFilter runs here" as center
+  component "course-backend :8080" as course
+  database "mysql :3306\nMySQL 8, mysql-data volume\nmanager placement" as mysql
+  database "redis :6379\nRedis 7" as redis
+}
+
+Browser --> web : HTTPS :8443
+Browser --> courseWeb : HTTPS :9443
+web --> center : /api, /auth, /.well-known
+courseWeb --> center : Protected /api/, /auth, /.well-known
+courseWeb --> course : /login\n/api/login is rewritten to /login
+center -right-> course : COURSE_UPSTREAM\nAuthorized course requests, /api prefix stripped
+course -left-> center : IDENTITY_BASE_URL\nAuthorization, identity and audit
+center --> mysql : rbac_center schema
+course --> mysql : rbac_course schema
+center --> redis : Versioned authorization cache
+
+legend bottom
+  Default ports from docker-compose.yml. Only the two frontends publish ports.
+  The private overlay is attachable. Topology derived from configuration and source code.
+endlegend
+@enduml

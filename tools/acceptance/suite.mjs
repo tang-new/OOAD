@@ -142,7 +142,7 @@ export async function runSuite(f, record) {
     for(const [x,y] of [[a,c],[c,d]]) assert.ok((await edge(x,y)).status<300);
     status(await edge(a,b),409);
     const eff=await effective(a);assert.deepEqual(eff.permissions.filter(x=>x.code===p.code).map(x=>x.code),[p.code]);assert.equal(eff.effectiveRoles.length,4);
-    for(const source of eff.sources.filter(x=>x.permissionCode===p.code)) {keys(source,['permissionCode','roleCode','inherited','path']);assert.equal(source.inherited,true);assert.ok(source.path.length>=2);}
+    for(const source of eff.sources.filter(x=>x.permissionCode===p.code)) {keys(source,['permissionCode','permissionKind','roleCode','inherited','path']);assert.equal(source.permissionKind,p.kind);assert.equal(source.inherited,true);assert.ok(source.path.length>=2);}
     assert.ok(eff.sources.some(x=>x.permissionCode===p.code));
     status(await edge(a,a),409);const cycle=await edge(d,a);status(cycle,409);assert.equal(cycle.body.code,'ROLE_CYCLE');
     const cross=await makeRole('DAG_CENTER',B);assert.ok([400,409].includes((await edge(a,cross)).status));

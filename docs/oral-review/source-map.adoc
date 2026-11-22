@@ -443,7 +443,7 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-web/src/layouts/AppLayout.vue[rbac-web/src/layouts/AppLayout.vue] |A/D |shared-methods
 |link:../../rbac-web/src/main.ts[rbac-web/src/main.ts] |A/D |shared-methods
 |link:../../rbac-web/src/styles.css[rbac-web/src/styles.css] |A/D |auxiliary
-|link:../../rbac-web/src/views/CatalogWorkspace.vue[rbac-web/src/views/CatalogWorkspace.vue] |B/D/F |shared-methods
+|link:../../rbac-web/src/views/AuthorizationView.vue[rbac-web/src/views/AuthorizationView.vue] |D |auxiliary
 |link:../../rbac-web/src/views/ManagementView.vue[rbac-web/src/views/ManagementView.vue] |A/D |auxiliary
 |link:../../rbac-web/src/views/ResourceWorkspace.vue[rbac-web/src/views/ResourceWorkspace.vue] |D |auxiliary
 |link:../../rbac-web/src/views/StatusView.vue[rbac-web/src/views/StatusView.vue] |A/D |auxiliary

@@ -3753,15 +3753,12 @@
       "reviewState": "NOT_STARTED"
     },
     {
-      "path": "rbac-web/src/views/CatalogWorkspace.vue",
-      "lead": "E",
+      "path": "rbac-web/src/views/AuthorizationView.vue",
+      "lead": "D",
       "owners": [
-        "E",
-        "B",
-        "D",
-        "F"
+        "D"
       ],
-      "depth": "shared-methods",
+      "depth": "auxiliary",
       "reviewState": "NOT_STARTED"
     },
     {

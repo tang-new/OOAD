@@ -6,7 +6,8 @@ import org.yaml.snakeyaml.Yaml;
 @Service
 public class RouteRegistry {
     public record
-        Route(String method, String path, String operationId, String permission, String policy) {}
+        Route(String method, String path, String operationId, String permission, String requiredRole,
+            String policy) {}
     private final Map<String, Route> byOperation;
     @SuppressWarnings("unchecked")
     public RouteRegistry() {
@@ -38,7 +39,7 @@ public class RouteRegistry {
                     if (!policy.equals("PROTECTED"))
                         permission = null;
                     Route route = new Route(method.getKey().toUpperCase(Locale.ROOT), path.getKey(),
-                        id, permission, policy);
+                        id, permission, (String) op.get("x-required-role"), policy);
                     if (registry.put(id, route) != null)
                         throw new IllegalStateException("OAS operationId重复");
                 }
