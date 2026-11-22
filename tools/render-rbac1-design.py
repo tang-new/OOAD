@@ -306,22 +306,170 @@ def packages():
         edges='\n'.join(json.dumps(a)+' -> '+json.dumps(b)+';' for a,b in sorted(deps) if a in counts and b in counts)
         dot_render(mode+'-packages','digraph G {rankdir=LR;node [shape=folder,fontname="Microsoft YaHei"];graph [label="'+mode+' — explicit Java imports only (wildcards preserved)"];'+nodes+edges+'}')
 
+ER_WIDTH, ER_HEADER, ER_ROW = 510, 32, 19
+ER_SANS = 'Noto Sans CJK SC,Microsoft YaHei,sans-serif'
+ER_MONO = 'DejaVu Sans Mono,Consolas,monospace'
+ER_PALETTE = {
+    'organization': ('#dfeafa', '#edf4fd'),
+    'authorization': ('#deefe4', '#eaf5ed'),
+    'resources': ('#f7ead5', '#fdf4e5'),
+    'infrastructure': ('#e6e9ef', '#f1f3f7'),
+}
+# Top-left coordinates in points. SQL owns every field and relation.
+ER_TABLES = {
+    'sys_department': (50, 235, 'organization', '部门'),
+    'sys_user': (50, 488, 'organization', '用户'),
+    'sys_department_allowed_role': (730, 235, 'authorization', '部门角色准入'),
+    'sys_user_role': (730, 503, 'authorization', '用户角色指派'),
+    'sys_role_hierarchy': (1410, 180, 'authorization', '角色继承'),
+    'sys_role': (1410, 367, 'authorization', '角色'),
+    'sys_role_permission': (1410, 678, 'authorization', '角色直接权限'),
+    'sys_system': (2090, 185, 'resources', '业务系统'),
+    'sys_permission': (2090, 824, 'authorization', '权限'),
+    'sys_api_operation': (2770, 378, 'resources', 'API 操作'),
+    'sys_ui_resource': (2770, 795, 'resources', 'UI 资源'),
+    'sys_ui_api_mapping': (2770, 651, 'resources', 'UI 与 API 映射'),
+    'sys_audit_log': (50, 933, 'infrastructure', '审计日志'),
+    'sys_token_revocation': (730, 933, 'infrastructure', '令牌撤销'),
+    'sys_grant_version': (730, 1065, 'infrastructure', '授权版本'),
+}
+# Each FK has its own lane and label anchor, including multiple edges between a pair of tables.
+ER_ROUTES = {
+    ('sys_department', 'parent_id'): (((140,235), (140,191), (380,191), (380,235)), (260,179)),
+    ('sys_user', 'department_id'): (((172,488), (172,400)), (247,444)),
+    ('sys_role', 'system_id'): (((1920,402), (1990,402), (1990,245), (2090,245)), (2064,338)),
+    ('sys_permission', 'system_id'): (((2300,824), (2300,312)), (2368,548)),
+    ('sys_role_permission', 'role_id'): (((1546,678), (1546,570)), (1604,625)),
+    ('sys_role_permission', 'permission_id'): (((1920,729), (1970,729), (1970,893), (2090,893)), (2034,880)),
+    ('sys_user_role', 'user_id'): (((730,548), (560,548)), (645,535)),
+    ('sys_user_role', 'role_id'): (((1240,541), (1320,541), (1320,492), (1410,492)), (1363,479)),
+    ('sys_user_role', 'assigned_by'): (((730,588), (560,588)), (645,575)),
+    ('sys_department_allowed_role', 'department_id'): (((730,270), (560,270)), (645,257)),
+    ('sys_department_allowed_role', 'role_id'): (((1240,286), (1370,286), (1370,418), (1410,418)), (1304,273)),
+    ('sys_role_hierarchy', 'senior_role_id'): (((1555,269), (1555,367)), (1638,300)),
+    ('sys_role_hierarchy', 'junior_role_id'): (((1754,269), (1754,367)), (1839,332)),
+    ('sys_ui_resource', 'system_id'): (((3280,815), (3380,815), (3380,215), (2600,215)), (2970,202)),
+    ('sys_ui_resource', 'parent_id'): (((3280,868), (3338,868), (3338,943), (3280,943)), (3327,854)),
+    ('sys_ui_resource', 'permission_id'): (((2770,924), (2600,924)), (2685,911)),
+    ('sys_api_operation', 'system_id'): (((2770,417), (2680,417), (2680,281), (2600,281)), (2665,268)),
+    ('sys_api_operation', 'permission_id'): (((2770,558), (2670,558), (2670,851), (2600,851)), (2707,545)),
+    ('sys_ui_api_mapping', 'ui_resource_id'): (((3100,740), (3100,795)), (3180,769)),
+    ('sys_ui_api_mapping', 'api_operation_id'): (((2940,651), (2940,600)), (3021,626)),
+}
+
+def er_position(point):
+    x, y = point
+    return f'{x:g},{-y:g}'
+
+def er_annotation(node, x, y, width, heading, lines=(), size=18):
+    row = lambda value, points: (
+        f'<TR><TD ALIGN="LEFT"><FONT POINT-SIZE="{points}">{value}</FONT></TD></TR>'
+    )
+    content = row(f'<B>{html.escape(heading)}</B>', size)
+    content += ''.join(row(html.escape(line), 13) for line in lines)
+    label = f'<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" WIDTH="{width}">{content}</TABLE>'
+    return f'{node} [pos="{er_position((x + width / 2, y + (size + 12 + 23 * len(lines)) / 2))}!",label=<{label}>];'
+
+def er_table(name, columns, foreign_keys):
+    x, y, group, caption = ER_TABLES[name]
+    header, background = ER_PALETTE[group]
+    height = ER_HEADER + ER_ROW * len(columns)
+    table_rows = [f'<TR><TD COLSPAN="3" WIDTH="{ER_WIDTH - 2}" HEIGHT="{ER_HEADER - 2}" '
+                  f'BGCOLOR="{header}"><FONT POINT-SIZE="16"><B>{caption}（{name}）</B></FONT></TD></TR><HR/>']
+    for field, definition in columns:
+        markers = []
+        if 'PRIMARY KEY' in definition:
+            markers.append('PK')
+        if field in foreign_keys:
+            markers.append('FK')
+        if definition.endswith(' NULL') and not definition.endswith(' NOT NULL'):
+            markers.append('N')
+        if definition.endswith(' UNIQUE'):
+            markers.append('U')
+        cells = []
+        for width, size, value in zip((52, 142, 314), (10, 11, 10), (','.join(markers), field, definition)):
+            content = html.escape(value) or '&#160;'
+            cells.append(f'<TD WIDTH="{width}" HEIGHT="{ER_ROW}" ALIGN="LEFT">'
+                         f'<FONT FACE="{ER_MONO}" POINT-SIZE="{size}">{content}</FONT></TD>')
+        table_rows.append('<TR>' + '<VR/>'.join(cells) + '</TR>')
+    label = (f'<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="3" FIXEDSIZE="TRUE" '
+             f'COLOR="#536779" BGCOLOR="{background}" WIDTH="{ER_WIDTH}" HEIGHT="{height}">'
+             + ''.join(table_rows) + '</TABLE>')
+    return f'{name} [pos="{er_position((x + ER_WIDTH / 2, y + height / 2))}!",label=<{label}>];'
+
+def er_relation(table, field, target, pk, nullable):
+    points, label = ER_ROUTES[table, field]
+    start, end = points[0], points[-1]
+    # Keep the polyline clear of the crow's-foot and parent markers.
+    def inset(point, towards, distance):
+        x, y = point
+        dx, dy = towards[0] - x, towards[1] - y
+        length = abs(dx) + abs(dy)
+        return x + distance * dx / length, y + distance * dy / length
+
+    vertices = (inset(start, points[1], 16), *points[1:-1],
+                inset(end, points[-2], 14 if nullable else 10))
+    controls = [vertices[0]]
+    for a, b in zip(vertices, vertices[1:]):
+        controls.extend((a, b, b))
+    route = ' '.join((f's,{er_position(start)}', f'e,{er_position(end)}',
+                      *(er_position(point) for point in controls)))
+    parent = 'teeodot' if nullable else 'teetee'
+    return (f'{table} -> {target} [label="{field} → {pk}",pos="{route}",'
+            f'lp="{er_position(label)}",arrowhead={parent}];')
+
 def er():
     sqlpath=ROOT/'rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql';sql=sqlpath.read_text(encoding='utf-8');tables=re.findall(r'CREATE TABLE (\w+)\s*\((.*?)\) ENGINE=',sql,re.S)
-    if len(tables)!=15: raise ValueError(f'Expected 15 actual tables, got {len(tables)}; review ER generator')
-    nodes=[];edges=[]
-    for name,body in tables:
-        cols=[];constraints=[]
-        for line in body.splitlines():
-            line=line.strip().rstrip(',')
-            if re.match(r'\w+\s+(?:BIGINT|TINYINT|VARCHAR|CHAR|BOOLEAN|INT|TIMESTAMP|JSON)',line):cols.append(line)
-            elif line:constraints.append(line)
-        label='<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#dcecff"><B>'+name+'</B></TD></TR><HR/>'+''.join('<TR><TD ALIGN="LEFT">'+html.escape('<PK> '+c if 'PRIMARY KEY' in c else c)+'</TD></TR>' for c in cols)+'</TABLE>'
-        nodes.append(name+' [shape=plain,label=<'+label+'>];')
-        for fk,target,pk in re.findall(r'FOREIGN KEY\((\w+)\) REFERENCES (\w+)\((\w+)\)',body):edges.append(f'{name} -> {target} [label="{fk} → {pk}",arrowhead=crow,arrowtail=tee,dir=both];')
-    # Child -> parent FK direction, explicit cardinality via edge labels instead of misleading crow foot reversal.
-    edges=[x.replace('arrowhead=crow,arrowtail=tee','arrowhead=tee,arrowtail=crow') for x in edges]
-    dot_render('schema-15-er','digraph G {rankdir=LR;graph [nodesep=0.7,ranksep=2.0,splines=polyline,label="15-table physical ER — V1 DDL; nullable FK means optional parent; no inferred audit FK"];node [fontname="Microsoft YaHei",fontsize=11];edge [fontname="Microsoft YaHei",fontsize=10];'+''.join(nodes+edges)+'}')
+    if {name for name, _ in tables} != ER_TABLES.keys():
+        raise ValueError('Physical ER table layout differs from V1 DDL')
+    nodes, edges, unique_keys = [], [], []
+    used_routes = set()
+    for name, body in tables:
+        columns = dict(re.findall(
+            r'^\s*(\w+)\s+((?:BIGINT|TINYINT|VARCHAR|CHAR|BOOLEAN|INT|TIMESTAMP|JSON).*?)\s*,?$', body, re.M))
+        foreign_keys = re.findall(r'FOREIGN KEY\((\w+)\) REFERENCES (\w+)\((\w+)\)', body)
+        nodes.append(er_table(name, columns.items(), {field for field, _, _ in foreign_keys}))
+        for field, target, pk in foreign_keys:
+            used_routes.add((name, field))
+            definition = columns[field]
+            edges.append(er_relation(name, field, target, pk,
+                                     definition.endswith(' NULL') and not definition.endswith(' NOT NULL')))
+        unique_keys.extend(f"{name}  ({', '.join(key.split(','))})"
+                           for key in re.findall(r'UNIQUE\(([^)]+)\)', body) if ',' in key)
+    if used_routes != ER_ROUTES.keys():
+        raise ValueError('Physical ER relationship layout differs from V1 DDL')
+    notes = [
+        er_annotation('title', 50, 20, 1100, 'RBAC1 权限管理系统 · 数据库 ER 图',
+                      (f'MySQL 8.0  |  {len(tables)} 张表 · {len(edges)} 条外键  |  Flyway V1  |  鸟脚记法',), 30),
+        er_annotation('organization', 50, 130, 510, '组织与用户'),
+        er_annotation('authorization', 1410, 130, 510, '角色与授权'),
+        er_annotation('resources', 2090, 130, 510, '系统与资源'),
+        er_annotation('infrastructure', 50, 884, 510, '审计与授权一致性'),
+        er_annotation('background', 1410, 947, 1070, '模型背景与业务约束', (
+            '同一个权限中心管理中心系统和课程系统。部门组成单公司组织树，用户归属一个部门。',
+            '直接角色指派先检查当前部门的准入名单。跨部门调动清空该用户的直接角色指派。',
+            '角色继承沿 senior → junior。应用层检查同系统、去重和无环，继承权限在读取时计算。',
+            '权限目录区分 UI 与 API。映射表登记界面与操作的关系，实际访问仍由 API 独立鉴权。',
+            '授权写入锁定授权版本行（id=1）。版本推进与本地成功审计随业务一起提交。',
+            '令牌按 jti 记录撤销。审计保留历史主体快照，审计与令牌撤销均无业务外键。',
+        )),
+        er_annotation('legend', 1410, 1143, 1070, '图例', (
+            'PK 主键  ·  FK 外键  ·  N 可空  ·  U 单列唯一',
+            '虚线为物理外键。鸟脚端为子表（0..*），父端按外键可空性表示 1 或 0..1。',
+            '浅蓝为组织与用户，浅绿为授权，浅橙为系统和资源，浅灰为审计与授权一致性。',
+        )),
+        er_annotation('unique_keys', 2590, 1090, 800, '关键联合唯一约束', unique_keys),
+    ]
+    graph = [
+        '// Preserve the hand-routed geometry with neato -n2.',
+        'digraph G {',
+        'graph [layout=neato,splines=polyline,outputorder=edgesfirst,pad=0.35,bgcolor="#fcfdff"];',
+        f'node [shape=plain,fontname="{ER_SANS}",fontcolor="#1e354d"];',
+        'edge [dir=both,arrowtail=crowodot,arrowsize=0.8,style=dashed,color="#52697e",'
+        f'fontcolor="#314b66",fontname="{ER_MONO}",fontsize=10];',
+        *notes, *nodes, *edges, '}',
+    ]
+    dot_render('schema-15-er', '\n'.join(graph) + '\n', 'neato')
     write('schema-constraints','json',json.dumps({name:{'columns':body.strip().splitlines(),'ddlSha256':sha(sqlpath)} for name,body in tables},ensure_ascii=False,indent=2))
     dot_render('role-senior-junior-dag','digraph G {rankdir=TB;node [shape=box];graph [label="Semantic example, NOT database snapshot: senior inherits junior; multiple juniors/parents legal"];A [label="A senior: p1"];B [label="B: p2"];C [label="C: p3"];D [label="D junior: p4"]; A->B;A->C;B->D;C->D; note [shape=note,label="A effective = {p1,p2,p3,p4}\\nD contributes once, sources retain both paths\\nDisabled B cuts A→B→D, not A→C→D\\nD→A rejected by link/reachable"]; }')
 
