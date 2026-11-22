@@ -6,6 +6,8 @@ import hashlib
 import tempfile
 import copy
 import json
+import re
+from xml.etree import ElementTree
 from unittest import mock
 
 SCRIPT = Path(__file__).with_name('render-rbac1-design.py')
@@ -79,9 +81,30 @@ class RendererChecks(unittest.TestCase):
                 self.assertNotEqual(design.sha(path),original,suffix)
 
     def test_fifteen_physical_tables(self):
-        import re
         ddl = (design.ROOT / 'rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql').read_text(encoding='utf-8')
         self.assertEqual(len(re.findall(r'CREATE TABLE\s+\w+', ddl)), 15)
+
+    def test_fixed_er_layout_preserves_columns_and_foreign_keys(self):
+        ddl = (design.ROOT / 'rbac-contract/src/main/resources/db/migration/V1__rbac1_schema.sql').read_text(encoding='utf-8')
+        with mock.patch.object(design, 'dot_render') as render, mock.patch.object(design, 'write'):
+            design.er()
+        name, graph, *engines = render.call_args_list[0].args
+        self.assertEqual((name, engines), ('schema-15-er', ['neato']))
+
+        expected_tables = dict(re.findall(r'CREATE TABLE (\w+)\s*\((.*?)\) ENGINE=', ddl, re.S))
+        actual_tables = dict(re.findall(r'^(sys_\w+) \[pos="[^"]+",label=<(.*?)>\];$', graph, re.M | re.S))
+        self.assertEqual(actual_tables.keys(), expected_tables.keys())
+        expected_fks = []
+        for table, body in expected_tables.items():
+            fields = [line.strip().rstrip(',') for line in body.splitlines()
+                      if re.match(r'\s*\w+\s+(?:BIGINT|TINYINT|VARCHAR|CHAR|BOOLEAN|INT|TIMESTAMP|JSON)', line)]
+            rows = ElementTree.fromstring(actual_tables[table]).findall('TR')[1:]
+            self.assertEqual([' '.join(''.join(cell.itertext()) for cell in row.findall('TD')[1:])
+                              for row in rows], fields, table)
+            expected_fks.extend((table, target, f'{field} → {pk}')
+                                for field, target, pk in re.findall(r'FOREIGN KEY\((\w+)\) REFERENCES (\w+)\((\w+)\)', body))
+        self.assertCountEqual(re.findall(r'^(sys_\w+) -> (sys_\w+) \[label="([^"]+)",pos=', graph, re.M),
+                              expected_fks)
 
 class RuntimeEvidenceChecks(unittest.TestCase):
     def setUp(self):

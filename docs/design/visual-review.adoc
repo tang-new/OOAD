@@ -1,6 +1,6 @@
 = UML PNG 目视复核记录
 
-全量归档曾审阅 35 种图稿。该轮只更新最终部署归档说明；按原始 PNG SHA 比较实际变化并打开部署图，其余图摘要相同则沿用此前目视记录。归档见 link:visual-review.json[目视摘要] 和 link:source-index.json[源索引]。后续局部复核见文末。
+全量归档曾审阅 35 种图稿。更新最终部署归档说明时，按原始 PNG SHA 比较变化并打开部署图，摘要相同的图稿沿用此前的目视记录。后续单独重绘并打开了 RBAC1 的十五表 ER 图。S03、S04、SIM 和六服务 Swarm 的局部复核见文末。link:visual-review.json[目视摘要] · link:source-index.json[源索引与哈希规则]
 
 == 最新复核范围
 
@@ -28,6 +28,7 @@
 
 == 发现、修订和目视结论
 
+* 十五表 ER 图沿用 RBAC0 的浅色背景、功能分区、表框三栏和鸟脚记法。逐项比较重绘前后的 SVG，15 张表、107 个字段定义和 20 条外键一致，外键线交叉由 2 处降为 0 处。图中旁注记录准入、同系统无环继承、UI/API 映射、授权版本和审计边界。
 * S01 DDD 类图加入真实 Role 特殊能力方法、RoleHierarchy.requireGrantable 与 role 字段关联。序列先保护 senior/junior，再 link、图授权上界、保存、管理员完整性、版本和审计；不把“停用”当作取消 SUPER_ADMIN 能力。
 * S02 展开 upperBound → User.assign → DepartmentEligibility.requireEligible → DirectoryRepository.assign，重复指派检查位于 eligibility 之后，未画错异常来源或把保存放到校验之前。
 * S03 DDD 加入 reads/cache 关联，显示只读外层事务的 fresh 回调、三次版本括号、状态检查与 get/put 复查；结构化单独显示事务内直接计算与非事务缓存 miss 内计算，不再把计算放在重试循环之后。

@@ -1,10 +1,10 @@
 {
-  "reviewedAt": "2026-11-14T20:09:01.171027+00:00",
-  "previousReviewedAt": "2026-11-14T19:04:11.640555+00:00",
+  "reviewedAt": "2026-11-22T14:49:26.566102+00:00",
+  "previousReviewedAt": "2026-11-14T20:09:01.171027+00:00",
   "snapshotGeneratedAt": "2026-11-14T20:06:34.141275+00:00",
-  "method": "New-tag default current deployment PNG actually opened with read; other 34 raw binary PNG hashes match previous real visual review",
+  "method": "ER-only redraw: opened the new PNG and compared the SVG with the original. All 15 tables, 107 field definitions and 20 foreign keys match. Edge crossings reduced from 2 to 0.",
   "readThisRound": [
-    "swarm-deployment.png"
+    "schema-15-er.png"
   ],
   "unchangedDigestRetained": 34,
   "pngHashRule": "Raw binary SHA-256; no normalization",
@@ -39,7 +39,7 @@
     "S06-ddd-sequence.png": "925bcd0a0a3bbfcc79ce27398256affce01321365bb23d3af60cfcfce63883ab",
     "S06-structured-class.png": "802d5452a77e209f89bff40954de620edf078619cbd50802fabf5dee74ef934d",
     "S06-structured-sequence.png": "b0b86e6e3adccb0b3faa5c51f3f961ec8c3b679e418639679df8a34653fa6e8d",
-    "schema-15-er.png": "59f5b901e86f7955e1120e39e733260d59cfc63f38e6d743fe78a303fcde3445",
+    "schema-15-er.png": "d6e3d5b8647294213090fb720f56061c9612f890da9a345ab22c29e09a99f32b",
     "SIM-ddd-class.png": "bd2f4aa1b7be3692f640070365c62fa9e1825c278d0b68d68b9cf08ce957fc10",
     "SIM-ddd-sequence.png": "5fd091959e7707fc601cd37c06ec27d46845f6aea039d22aa0077a128cbff803",
     "structured-packages.png": "b8f0242022a68fdc690a281bb5d13375eba621187774160777b5f0adbb8e8919",

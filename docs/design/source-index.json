@@ -33,7 +33,7 @@
     "binaryRule": "All other files, especially .class/.jar/.png, hashed byte-for-byte; never normalize binary CRLF",
     "methodAndOrderGuards": "Unchanged declaration/javap and ordered callsite checks; this only canonicalizes text line endings"
   },
-  "generatorSha256": "599c22aae344a82a4c6453dde21dcf7de02aa63e88543d600997a925ca957745",
+  "generatorSha256": "7b0af7131867897dc3547e0af2a88c1d87cde579101bd067acae16f294948c28",
   "artifacts": {
     "LOGIN-ddd-class.svg": "1f80842a229a35106b8d319567110330814eeec86ea1b6340c8d5799b86be125",
     "LOGIN-ddd-class.png": "12d6a420cede01730d51168d5ee58114d032cd9e951d0a8163cfb1ebf61a2e07",
@@ -99,8 +99,8 @@
     "role-senior-junior-dag.png": "e5a3f43213e67ee29ebcc5c8421614f1455aa72873aff734fd48ceb5ec85037d",
     "role-state.svg": "b42e1fecf9826c2ad36c924e9c492af8d2be9d0deca3c2c05663f697809f0c2f",
     "role-state.png": "b3d4a1ec8f577c4e492206ca426f9e9841716207bfc8f75211cb70801e76419f",
-    "schema-15-er.svg": "1a88dfdb3c17b8ed7f80f55764c91a1ec051501d49c1ba55d34baa01d2e58285",
-    "schema-15-er.png": "59f5b901e86f7955e1120e39e733260d59cfc63f38e6d743fe78a303fcde3445",
+    "schema-15-er.svg": "947b0db0a6df934d03ec4addfcb2ad6b47d81cba50b1f87502cc89db26f80fdf",
+    "schema-15-er.png": "d6e3d5b8647294213090fb720f56061c9612f890da9a345ab22c29e09a99f32b",
     "structured-packages.svg": "483d9a7038514e9a6936289270f7f5bdf9ad74bd09f031d545838d952a244b89",
     "structured-packages.png": "b8f0242022a68fdc690a281bb5d13375eba621187774160777b5f0adbb8e8919",
     "swarm-deployment.svg": "0b9f51b9c9e2b67add54d64a57a15c6430cee0001c252320a17d3fa613c49271",
@@ -3707,7 +3707,7 @@
       "sha256": "890f02c71e08ccba0cb558affdc86314bb1feadd0db487eadd23f868395bfdcb"
     },
     "tools/render-rbac1-design.test.py": {
-      "sha256": "4ce9213ae3d71f3dd1e505aa32bd2084f86ff09597909137676b73371fc50b94"
+      "sha256": "b55e610eee16d84041b347c177cc12bea998b50beaa69e6ea904d598641ec583"
     },
     "rbac-contract/src/main/java/com/xmu/rbac/contract/ApiErrors.java": {
       "sha256": "2dd8da2f5f23b4ba8458291cf7a0381d42fe31243f96cf78ec1dd96f49c7650a"
