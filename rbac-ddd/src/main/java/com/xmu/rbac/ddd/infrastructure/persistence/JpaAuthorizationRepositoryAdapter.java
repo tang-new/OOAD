@@ -201,6 +201,21 @@ public class JpaAuthorizationRepositoryAdapter implements AuthorizationRepositor
     }
 
     @Override
+    public void deleteRole(long id) {
+        RoleEntity entity = em.find(RoleEntity.class, id);
+        DomainException.require(entity != null, 404, "ROLE_NOT_FOUND");
+        for (String table :
+                List.of("AssignmentEntity", "RolePermissionEntity", "EligibilityEntity"))
+            em.createQuery("delete from " + table + " where roleId=:id")
+                    .setParameter("id", id)
+                    .executeUpdate();
+        em.createQuery("delete from HierarchyEntity where seniorRoleId=:id or juniorRoleId=:id")
+                .setParameter("id", id)
+                .executeUpdate();
+        em.remove(entity);
+    }
+
+    @Override
     public void saveEdges(String code, Set<RoleHierarchy.Edge> edges) {
         List<Long> ids =
                 em.createQuery("select id from RoleEntity where systemId=:s", Long.class)

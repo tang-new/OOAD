@@ -64,6 +64,41 @@ class DddSecurityIntegrationTest extends DddHttpTestSupport {
     }
 
     @Test
+    void dashboardRequiresAllThreeViewPermissions() {
+        String root = login("root", "rbac-center");
+        String username = code();
+        long role = successful(HttpMethod.POST, "/api/v1/roles", root,
+                values("systemCode", "rbac-center", "code", code(), "name", "仪表盘权限测试"))
+                .path("id").asLong();
+        allow(root, 2, role);
+        long target = user(root, username, 2);
+        successful(HttpMethod.POST, "/api/v1/users/" + target + "/role-assignments", root,
+                values("roleId", role));
+        String token = login(username, "rbac-center");
+        String permissions = "/api/v1/roles/" + role + "/permissions";
+        String lookup = "/auth/api-permissions/getDashboard";
+        String dashboard = "/api/v1/dashboard";
+        String permissionId = "select id from sys_permission where system_id=1 and code=?";
+        long users = jdbc.queryForObject(permissionId, Long.class, "rbac:user:view");
+        long roles = jdbc.queryForObject(permissionId, Long.class, "rbac:role:view");
+        long systems = jdbc.queryForObject(permissionId, Long.class, "rbac:system:view");
+
+        successful(HttpMethod.PUT, permissions, root, values("permissionIds", List.of(users, roles, systems)));
+        assertThat(call(HttpMethod.GET, lookup, token, null).getBody().path("allowed").asBoolean()).isTrue();
+        assertThat(successful(HttpMethod.GET, dashboard, token, null).has("systems")).isTrue();
+
+        for (List<Long> incomplete : List.of(List.of(users), List.of(users, roles),
+                List.of(users, systems), List.of(roles, systems))) {
+            successful(HttpMethod.PUT, permissions, root, values("permissionIds", incomplete));
+            assertThat(call(HttpMethod.GET, dashboard, token, null).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+            ResponseEntity<JsonNode> decision = call(HttpMethod.GET, lookup, token, null);
+            assertThat(decision.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(decision.getBody().path("allowed").asBoolean()).isFalse();
+        }
+    }
+
+    @Test
     void nonSuperAdminCannotEmptyEditGrantOrInheritSpecialCapability() {
         String root = login("root", "rbac-center");
         long special =

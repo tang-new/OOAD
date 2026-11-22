@@ -1,5 +1,6 @@
 package com.xmu.rbac.ddd.application;
 
+import com.xmu.rbac.contract.DashboardAccess;
 import com.xmu.rbac.ddd.domain.*;
 import com.xmu.rbac.ddd.domain.port.*;
 
@@ -103,9 +104,7 @@ public class AuthorizationApplicationService {
 
     public AuthorizationRepository.Identity require(
             TokenProvider.Principal principal, String permission, boolean sharedWrite) {
-        AuthorizationRepository.Identity actor = validate(principal);
-        DomainException.require(
-                principal.systemCode().equals("rbac-center"), 403, "AUDIENCE_FORBIDDEN");
+        AuthorizationRepository.Identity actor = centerActor(principal);
         AuthorizationPolicy.Effective effective = effective(actor.id(), "rbac-center");
         DomainException.require(
                 effective.superAdministrator() || effective.has(permission, Permission.Kind.API),
@@ -116,6 +115,22 @@ public class AuthorizationApplicationService {
                     repository.departmentPath(actor.departmentId()).equals("/1/"),
                     403,
                     "ROOT_DEPARTMENT_REQUIRED");
+        return actor;
+    }
+
+    public AuthorizationRepository.Identity requireDashboard(TokenProvider.Principal principal) {
+        AuthorizationRepository.Identity actor = centerActor(principal);
+        DomainException.require(
+                api(actor.id(), DashboardAccess.SYSTEM, DashboardAccess.OPERATION),
+                403,
+                "PERMISSION_DENIED");
+        return actor;
+    }
+
+    private AuthorizationRepository.Identity centerActor(TokenProvider.Principal principal) {
+        AuthorizationRepository.Identity actor = validate(principal);
+        DomainException.require(
+                principal.systemCode().equals("rbac-center"), 403, "AUDIENCE_FORBIDDEN");
         return actor;
     }
 
@@ -144,7 +159,10 @@ public class AuthorizationApplicationService {
                 allowed =
                         target != null
                                 && target.status() == User.Status.ACTIVE
-                                && policy.allows(registered, effective);
+                                && (DashboardAccess.matches(system, operation)
+                                        ? registered.enabled() && DashboardAccess.REQUIRED_PERMISSIONS.stream()
+                                                .allMatch(code -> effective.has(code, Permission.Kind.API))
+                                        : policy.allows(registered, effective));
             }
             if (version == repository.version()) return allowed;
         }

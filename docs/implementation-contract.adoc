@@ -114,6 +114,8 @@ PUBLIC GET /.well-known/jwks.json；健康/info仍位于/api/v1/actuator/{health
 |GET /dashboard |仅基础计数 `{users,roles,systems}`，不做统计/热力图 |rbac:user:view
 |===
 
+仪表盘调用需同时具备 `rbac:user:view`、`rbac:role:view` 和 `rbac:system:view`。表中的 `rbac:user:view` 是路由登记的入口权限。仪表盘 API、操作授权查询和前端入口都使用三项权限的判定，首页菜单还需独立的 UI 权限。
+
 == 不变量与安全决策
 
 . 组织管理范围：中心管理权限 + actor当前部门子树；总部根部门覆盖全部。权限计算不再带部门数据scope。

@@ -13,7 +13,7 @@ const messages = {
   'refresh-failed': { title: '权限刷新失败', detail: '暂时无法确认当前权限，请重试。' },
 }
 const retry = computed(() => props.status === 'refresh-failed' ? managementRetryPath(route.query.redirect) : undefined)
-const destination = computed(() => retry.value ?? (props.status === 'refresh-failed' ? '/me' : homePath(auth.menus, auth.has)))
+const destination = computed(() => retry.value ?? (props.status === 'refresh-failed' ? '/me' : homePath(auth.navigation)))
 </script>
 <template>
   <section class="status-page">

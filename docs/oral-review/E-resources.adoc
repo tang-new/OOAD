@@ -17,7 +17,7 @@ ID-01、RES-01–06、EXT-03–07、UI-01–06与NFR-05/07；只全面审查我�
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |systems/createSystem/renameSystem/systemStatus、permissions/createPermission/permissionStatus
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ResourceService.java[ResourceService.java] |ui/menus/saveUi/patchUi/deleteUi、apis/saveApi/patchApi、mappings/replaceMappings；check交D
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/RouteRegistry.java[RouteRegistry.java] |读取OAS构建安全元数据，WebConfig/BootstrapService启动双向核对
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |systems/system方法；组织/用户归B、角色删除归C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |systems/system方法，组织和用户归B
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/ResourceApplicationService.java[ResourceApplicationService.java] |菜单/API/权限/映射用例、PATCH合并及保护中心操作
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/ResourcePolicy.java[ResourcePolicy.java] |validate/visible/patch、父子和映射规则
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaResourceRepositoryAdapter.java[JpaResourceRepositoryAdapter.java] |sys+kind权限定位、显式映射、分页/保存和UiState转换

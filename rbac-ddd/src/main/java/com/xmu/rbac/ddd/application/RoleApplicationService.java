@@ -108,6 +108,17 @@ public class RoleApplicationService {
     }
 
     @Transactional
+    public void deleteRole(TokenProvider.Principal principal, long id) {
+        repository.lockGrants();
+        AuthorizationRepository.Identity actor =
+                authorization.require(principal, "rbac:role:edit", true);
+        Role role = repository.role(id);
+        authorization.requireRoleManagement(actor, role);
+        repository.deleteRole(id);
+        complete(actor, "rbac-center", "ROLE_DELETED", role.code());
+    }
+
+    @Transactional
     public Role status(TokenProvider.Principal principal, long id, boolean enabled) {
         repository.lockGrants();
         AuthorizationRepository.Identity actor =

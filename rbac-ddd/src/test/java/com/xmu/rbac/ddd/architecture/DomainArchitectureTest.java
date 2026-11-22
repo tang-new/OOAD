@@ -7,8 +7,13 @@ import static org.assertj.core.api.Assertions.*;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.*;
 import com.tngtech.archunit.lang.ArchRule;
+import com.xmu.rbac.ddd.interfaces.rest.RoleController;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.DeleteMapping;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /** 领域纯净和依赖倒置规则必须同时通过生产代码并拒绝反例。 */
 class DomainArchitectureTest {
@@ -45,6 +50,15 @@ class DomainArchitectureTest {
                         .importPackages("com.xmu.rbac.ddd");
         domain.check(production);
         application.check(production);
+    }
+
+    @Test
+    void roleControllerOwnsRoleDeletionRoute() {
+        assertThat(Arrays.stream(RoleController.class.getDeclaredMethods())
+                        .map(method -> method.getAnnotation(DeleteMapping.class))
+                        .filter(Objects::nonNull)
+                        .flatMap(mapping -> Arrays.stream(mapping.value())))
+                .contains("/roles/{id}");
     }
 
     @Test

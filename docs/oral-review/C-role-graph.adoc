@@ -18,13 +18,11 @@ ROLE-01/02/03/04/07、NFR-04，UML-S01及S06业务入口；有效权限读取和
 |定位 |要阅读的具体责任
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |roles/role/createRole/patchRole/roleStatus/deleteRole、directPermissions/replacePermissions/effectiveRole/hierarchy、reachable/inherit/changedUpper、begin/finish
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |lock/captureUpper/upper/protectRole/preserveAdministrator，计算算法归D共审
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java[RoleController.java] |创建/修改/独立状态/直接权限/继承图；CloneFactory请求与输出
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java[RoleApplicationService.java] |create/rename/status/permissions/link/complete、锁→领域规则→上界→保存→版本/审计
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java[RoleController.java] |创建、修改、删除、独立状态、直接权限和继承图的 HTTP 入口
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java[RoleApplicationService.java] |create/rename/deleteRole/status/permissions/link/complete，编排角色变更及版本和审计
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/Role.java[Role.java] |rename/replacePermissions、changeStatus实际程度、superAdministratorCapability/requireManageable
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |link/unlink/构造/requireGrantable；paths供D使用
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |deleteRole在这里！不要遗漏目录服务中的角色删除
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |deleteRole清assignment/rolePermission/eligibility/hierarchy
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |role/hierarchy/restore/saveRole/saveEdges、持久化版本与关联
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |role/hierarchy/restore/saveRole/saveEdges，deleteRole清理指派、直接权限、部门准入和继承边
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/GrantIntegrityService.java[GrantIntegrityService.java] |加载变更后的管理员事实并调用Policy，实际保护范围需逐项核对
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/LastAdministratorPolicy.java[LastAdministratorPolicy.java] |requireAvailable的输入与不变量，不把应用查询责任塞给该对象
 |===
@@ -35,7 +33,7 @@ structured加边：inherit → begin(锁/入口/root/冻结上界) → 读角色
 
 DDD加边：RoleController.link → RoleApplicationService.link → lockGrants/角色与图 → RoleHierarchy.link → requireAffectedGrants（affectedBy/requireGraphGrant/upperBound）→ saveEdges → complete。
 
-角色状态/删除：普通编辑与启停分离；删除同时追DirectoryApplicationService.deleteRole与Adapter；完成环节先完整性检查，再推进版本和本地SUCCESS审计。
+角色删除由 RoleController.deleteRole 进入 RoleApplicationService.deleteRole，再由 JpaAuthorizationRepositoryAdapter 清理关联并删除角色。应用服务检查最后有效超级管理员，随后推进授权版本并写入本地成功审计。
 
 == 主审检查项
 

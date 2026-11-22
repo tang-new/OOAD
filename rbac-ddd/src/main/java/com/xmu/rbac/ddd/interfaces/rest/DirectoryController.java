@@ -283,14 +283,6 @@ public class DirectoryController {
                 RestSupport.effective(directory.effective(rest.principal(b), id, code)));
     }
 
-    @DeleteMapping("/roles/{id}")
-    public Object deleteRole(
-            @RequestHeader(value = "Authorization", required = false) String b,
-            @PathVariable @Positive long id) {
-        directory.deleteRole(rest.principal(b), id);
-        return RestSupport.ok(null);
-    }
-
     @GetMapping("/me")
     public Object self(@RequestHeader(value = "Authorization", required = false) String b) {
         TokenProvider.Principal p = rest.principal(b);

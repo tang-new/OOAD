@@ -39,6 +39,6 @@ export function visibleMenus(nodes: UiResourceVO[], has: (code: string) => boole
   return [...visible.values()]
 }
 
-export function homePath(nodes: UiResourceVO[], has: (code: string) => boolean) {
-  return visibleMenus(nodes, has).some(menu => menu.route === '/dashboard') ? '/dashboard' : '/me'
+export function homePath(navigation: UiResourceVO[]) {
+  return navigation.some(menu => menu.route === '/dashboard') ? '/dashboard' : '/me'
 }

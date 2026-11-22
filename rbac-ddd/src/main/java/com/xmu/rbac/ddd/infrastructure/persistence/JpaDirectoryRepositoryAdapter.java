@@ -311,16 +311,4 @@ public class JpaDirectoryRepositoryAdapter implements DirectoryRepository {
                         .getResultList();
         for (AssignmentEntity a : assigned) if (!roles.contains(a.getRoleId())) em.remove(a);
     }
-
-    public void deleteRole(long id) {
-        for (String table :
-                List.of("AssignmentEntity", "RolePermissionEntity", "EligibilityEntity"))
-            em.createQuery("delete from " + table + " where roleId=:id")
-                    .setParameter("id", id)
-                    .executeUpdate();
-        em.createQuery("delete from HierarchyEntity where seniorRoleId=:id or juniorRoleId=:id")
-                .setParameter("id", id)
-                .executeUpdate();
-        em.remove(required(RoleEntity.class, id));
-    }
 }

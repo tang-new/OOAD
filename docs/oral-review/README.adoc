@@ -35,7 +35,7 @@ F 不包办全部 UML、日志、测试平台和部署。各链路负责人核�
 
 身份 A → 运行时决策 D → 接入边界 E；组织指派 B、角色图 C、权限资源 E 提供授权事实；敏感操作将审计事实交 F。
 同一文件可属于多人。结构化 ManagementService、AuthorizationService 以及 DDD DirectoryApplicationService/AuthorizationRepository 需要按方法划界，不能按目录独占。
-DDD 角色删除位于目录服务；有效权限计算同时使用角色图和权限事实。完整方法交接见 link:source-map.adoc[共享方法分工]。
+DDD 角色删除由 RoleController 和 RoleApplicationService 负责。有效权限计算同时使用角色图和权限事实。完整方法交接见 link:source-map.adoc[共享方法分工]。
 
 [cols="2,2,3",options="header"]
 |===

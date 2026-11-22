@@ -3,12 +3,16 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api'
 import type { IdentityVO, MeVO, UiResourceVO } from '@/api/types'
-vi.mock('@/api', () => ({ authApi: { login: vi.fn(), logout: vi.fn(), me: vi.fn(), profile: vi.fn(), menus: vi.fn() } }))
+vi.mock('@/api', () => ({ authApi: { login: vi.fn(), logout: vi.fn(), me: vi.fn(), profile: vi.fn(), menus: vi.fn(), canCall: vi.fn() } }))
 const who: IdentityVO = { subject: 'rbac-u1', roles: ['admin'], permissions: ['rbac:ui:users:view'], name: '虚构人员', no: 'test' }
 const mine = { user: { name: '虚构人员', departmentName: '总部' }, effective: { directRoles: [], effectiveRoles: [], permissions: [], sources: [] } } as unknown as MeVO
-beforeEach(() => { setActivePinia(createPinia()); vi.resetAllMocks(); vi.mocked(authApi.me).mockResolvedValue(who); vi.mocked(authApi.profile).mockResolvedValue(mine); vi.mocked(authApi.menus).mockResolvedValue([]) })
+beforeEach(() => {
+  setActivePinia(createPinia()); vi.resetAllMocks(); vi.mocked(authApi.me).mockResolvedValue(who)
+  vi.mocked(authApi.profile).mockResolvedValue(mine); vi.mocked(authApi.menus).mockResolvedValue([])
+  vi.mocked(authApi.canCall).mockResolvedValue(false)
+})
 describe('身份与权限状态', () => {
-  it('没有身份默认无权，admin 不能通配，登录读取全部三个协议入口', async () => {
+  it('没有身份默认无权，admin 不能通配，登录读取身份和授权', async () => {
     const store = useAuthStore(); expect(store.loaded).toBe(false); expect(store.has('any')).toBe(false)
     vi.mocked(authApi.login).mockResolvedValue({ accessToken: 'dummy', tokenType: 'Bearer', expiresIn: 600 })
     await store.login('test', 'not-real')
@@ -58,11 +62,17 @@ describe('身份与权限状态', () => {
   it('写后刷新重新读取，同会话的旧响应不能覆盖新权限和菜单', async () => {
     const store = useAuthStore()
     store.setToken('dummy')
+    const dashboardPermission = 'rbac:ui:dashboard:view'
+    const dashboard = {
+      id: 8, type: 'MENU', status: 'ENABLED', route: '/dashboard', permissionCode: dashboardPermission,
+    } as UiResourceVO
     let finishOld!: (identity: IdentityVO) => void
     vi.mocked(authApi.me).mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve }))
     vi.mocked(authApi.menus).mockResolvedValueOnce([{ id: 8 }] as UiResourceVO[])
+    vi.mocked(authApi.canCall).mockResolvedValueOnce(true)
     const old = store.refresh()
-    vi.mocked(authApi.me).mockResolvedValue({ ...who, permissions: [] })
+    vi.mocked(authApi.me).mockResolvedValue({ ...who, permissions: [dashboardPermission] })
+    vi.mocked(authApi.menus).mockResolvedValue([dashboard])
     const fresh = store.refresh(true)
     const duplicate = store.refresh()
     expect(authApi.me).toHaveBeenCalledTimes(2)
@@ -70,7 +80,8 @@ describe('身份与权限状态', () => {
     finishOld(who)
     await old
     expect(store.has('rbac:ui:users:view')).toBe(false)
-    expect(store.menus).toEqual([])
+    expect(store.menus).toEqual([dashboard])
+    expect(store.canVisit('/dashboard')).toBe(false)
   })
   it('写后刷新成功后，同会话的旧请求失败也采用新结果', async () => {
     const store = useAuthStore()

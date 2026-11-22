@@ -629,7 +629,7 @@ public class ManagementService {
     }
     /** 执行dashboard操作，保持服务到持久化层的单向依赖。 */
     public Object dashboard(Actor a) {
-        az.center(a, "rbac:user:view");
+        az.requireDashboard(a);
         return map("users", db.count(User.class), "roles", db.count(Role.class), "systems",
             db.count(SoftwareSystem.class));
     }

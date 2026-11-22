@@ -3,6 +3,8 @@
 
 link:README.adoc[总览] / link:common.adoc[全员共同任务] / link:cross-review.adoc[交叉口试]。互审伙伴：E；初始人工状态：NOT_STARTED。
 
+审查发现和修复记录见 link:D-problems.md[D 问题记录]。
+
 == 需求与范围
 
 ROLE-02/04/08读取、NFR-01/03、EXT-01 UI/API决定、管理check/explain，UML-S03/S04中心及SIM。
