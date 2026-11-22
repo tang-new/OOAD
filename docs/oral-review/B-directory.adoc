@@ -34,14 +34,14 @@ structured：ManagementController → ManagementService.begin(授权锁/入口/�
 
 DDD指派：DirectoryController.assign → DirectoryApplicationService.assign → lockGrants/actor/managed/upperBound → aggregate(profile).assign(role, eligibility) → DirectoryRepository.assign → done。
 
-DDD调动：transfer → 锁用户并检查原/新范围和version → User.transfer保留目标准入交集 → save删除本人不合法assignment → 版本/审计；不修改共享RolePermission。
+DDD 调动流程先锁定用户并校验原、新部门的管理范围及版本。跨部门时，User.transfer 清空本人的角色指派，由 save 删除对应记录，并在同一事务中更新授权版本和审计。
 
 == 主审检查项
 
 * [ ] 画清UserRole与DepartmentAllowedRole的两个多对多联结实体，资格不自动授权。
 * [ ] 直接指派仅接收roleId，用户当前部门来自数据库；超级管理员也必须满足目标部门准入。
 * [ ] 撤销检查当前管理权限、部门范围和assignment属于路径用户，不能凭曾授出就越界。
-* [ ] 部门迁移只回收本人不合资格角色，其他用户及RolePermission不变；替换准入也需核对回收范围。
+* [ ] 核对跨部门调动清空本人的角色指派，并检查其他用户的指派和共享角色权限。替换准入时核对不再符合准入的指派。
 * [ ] 用户状态/资料/部门独立API；PATCH存在性和显式null、version与不可改字段逐项核对。
 * [ ] 分页过滤、稳定顺序、万级用户场景和数据库offset边界；删除部门遇员工/子部门冲突。
 * [ ] 用户停用/恢复与上界、最后管理员、tokenVersion分别与A/C/D确认。
@@ -58,7 +58,7 @@ GRASP：User掌握自己的状态/部门/直接角色，Eligibility掌握允许�
 |===
 |定位 |要阅读的具体责任
 |link:../../rbac-structured/src/test/java/com/xmu/rbac/structured/integration/Rbac1IntegrationTest.java[Rbac1IntegrationTest.java] |organizationAdmissionMovementAndUpperBound、crossSystemAndManagementBoundary、managementLifecycleAndSqlPaging、departmentAdministratorCannotEscapeScopeOrSharedCatalogAndInheritedUpperBound
-|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |transferReclaimsIneligibleAssignmentWithoutChangingSharedRole、independentJpaPagingIsStableAndRejectsInvalidBounds
+|link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/DddPersistenceIntegrationTest.java[DddPersistenceIntegrationTest.java] |transferRevokesEligibleAssignmentWithoutChangingSharedRole、independentJpaPagingIsStableAndRejectsInvalidBounds
 |link:../../rbac-ddd/src/test/java/com/xmu/rbac/ddd/domain/DomainRulesTest.java[DomainRulesTest.java] |departmentChecksDirectEligibility、userTransferOnlyDropsOwnAssignments、statusRevokesTokenAndDeletedCannotReactivate、departmentPathIsSegmentSafe
 |link:../../tools/acceptance/suite.mjs[suite.mjs] |ROLE-05、ID-05、ROLE-06、ID-04 10000 synthetic SQL users场景，检查HTTP与SQL后置条件
 |link:../../rbac-web/src/views/UserWorkspace.vue[UserWorkspace.vue] |用户分页、真实准入选项、独立状态和调动；页面辅助核对

@@ -39,7 +39,7 @@ BackendIsolationTest、DomainArchitectureTest包括生产类扫描及故意违�
 [cols="1,3"]
 |场景 |真实职责分配与必须保留的安全期望
 |S01 继承加边 |RoleApplicationService先lockGrants，加载RoleHierarchy；RoleHierarchy.link拒绝自环、跨系统、重复及反向可达；应用保存边、检查上界/最后管理员、递增版本并同事务审计。数据库锁负责并发串行化，必须实际测反向并发。
-|S02 准入与调动 |User.assign调用DepartmentEligibility.requireEligible；User.transfer仅保留目标部门允许的本人角色；DirectoryApplicationService核对组织管理原/新范围、锁用户并保存，不改共享Role定义。
+|S02 准入与调动 |User.assign 调用 DepartmentEligibility.requireEligible。跨部门调动时，User.transfer 清空本人的角色指派。DirectoryApplicationService 核对原、新部门的管理范围并在同一事务中保存。
 |S03 有效权限 |RoleHierarchy.paths保留有效路径、停用节点切断；AuthorizationPolicy.calculate计算直接/有效角色、去重权限和多条来源，identityRole投影受控。应用加载事实/版本并协调缓存，不从UI映射推导API。
 |S04 课程准入 |ApiOperation/AuthorizationPolicy判定系统级permission/requiredRole；可信课程网关另由固定method/path解析operationId；私有authorities投影真实API能力/ROLE_身份。teacher准入不能伪造CC，教师Service保留对象规则。
 |S05 幂等审计 |AuditFact.requireReplay绑定来源系统、主体和payload_hash；AuditApplicationService规范化安全JSON并使用独立插入事务，唯一冲突回滚后重读，提交后201；外部查询按aud隔离。

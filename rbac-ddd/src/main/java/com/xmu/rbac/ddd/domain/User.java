@@ -2,7 +2,7 @@ package com.xmu.rbac.ddd.domain;
 
 import java.util.*;
 
-/** 单一部门身份聚合，调动仅回收本人的不合资格指派。 */
+/** 单一部门身份聚合，跨部门调动清空本人的角色指派。 */
 public final class User {
     public enum Status {
         ACTIVE,
@@ -42,9 +42,10 @@ public final class User {
         roleIds = Set.copyOf(updated);
     }
 
-    public void transfer(DepartmentEligibility destination) {
-        departmentId = destination.departmentId();
-        roleIds = destination.retained(roleIds);
+    public void transfer(long destinationDepartmentId) {
+        if (departmentId == destinationDepartmentId) return;
+        departmentId = destinationDepartmentId;
+        roleIds = Set.of();
     }
 
     public void changeStatus(Status status) {

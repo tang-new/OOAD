@@ -299,7 +299,7 @@ public class ManagementService {
         finish(g, a, "USER_STATUS", id);
         return userView(u);
     }
-    /** 单事务更新部门并回收不合资格指派，不修改共享角色定义。 */
+    /** 在同一事务中更新部门并清空本人的角色指派。 */
     @Transactional
     public Object moveUser(Actor a, Long id, Inputs.Move input) {
         GrantVersion g = begin(a, "rbac:user:edit", false);
@@ -309,14 +309,11 @@ public class ManagementService {
         version(input.version(), u.version);
         az.scope(a, u.departmentId);
         az.scope(a, input.departmentId());
-        Set<Long> allowed = new HashSet<>();
-        for (DepartmentAllowedRole r :
-            db.where(DepartmentAllowedRole.class, "e.departmentId=?1", input.departmentId()))
-            allowed.add(r.roleId);
-        u.departmentId = input.departmentId();
-        for (UserRole ur : db.where(UserRole.class, "e.userId=?1", id))
-            if (!allowed.contains(ur.roleId))
+        if (!Objects.equals(u.departmentId, input.departmentId())) {
+            u.departmentId = input.departmentId();
+            for (UserRole ur : db.where(UserRole.class, "e.userId=?1", id))
                 db.remove(ur);
+        }
         finish(g, a, "USER_DEPARTMENT_CHANGED", id);
         return userView(u);
     }

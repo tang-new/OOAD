@@ -184,13 +184,18 @@ class DomainRulesTest {
     }
 
     @Test
-    void userTransferOnlyDropsOwnAssignments() {
-        Role r = role(1, null, Set.of(1L));
+    void userTransferClearsAllAssignments() {
         User u = new User(2, "subject", 1, User.Status.ACTIVE, 0, Set.of(1L, 2L));
-        u.transfer(new DepartmentEligibility(2, Set.of(2L)));
+        u.transfer(2);
         assertThat(u.departmentId()).isEqualTo(2);
-        assertThat(u.roleIds()).containsExactly(2L);
-        assertThat(r.permissionIds()).containsExactly(1L);
+        assertThat(u.roleIds()).isEmpty();
+    }
+
+    @Test
+    void userTransferToCurrentDepartmentKeepsAssignments() {
+        User u = new User(2, "subject", 1, User.Status.ACTIVE, 0, Set.of(1L));
+        u.transfer(1);
+        assertThat(u.roleIds()).containsExactly(1L);
     }
 
     @Test

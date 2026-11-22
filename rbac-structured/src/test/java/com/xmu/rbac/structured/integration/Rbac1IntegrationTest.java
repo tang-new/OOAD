@@ -369,7 +369,10 @@ class Rbac1IntegrationTest {
             call("POST", "/api/v1/users/" + u + "/role-assignments", root, Map.of("roleId", a));
         assertThat(denied.status).isEqualTo(403);
         allow(2, a);
+        allow(3, a);
         assign(u, a);
+        ok("PUT", "/users/" + u + "/department", Map.of("departmentId", 2));
+        assertThat(ok("GET", "/users/" + u + "/role-assignments", null).size()).isEqualTo(1);
         ok("PUT", "/users/" + u + "/department", Map.of("departmentId", 3));
         assertThat(ok("GET", "/users/" + u + "/role-assignments", null).size()).isZero();
         assertPermission(effective(a), "p", true);

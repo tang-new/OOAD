@@ -202,7 +202,7 @@ class DddPersistenceIntegrationTest extends DddHttpTestSupport {
     }
 
     @Test
-    void transferReclaimsIneligibleAssignmentWithoutChangingSharedRole() {
+    void transferRevokesEligibleAssignmentWithoutChangingSharedRole() {
         String root = login("root", "rbac-center");
         String permissionCode = code();
         long permission = permission(root, permissionCode, "UI");
@@ -212,18 +212,20 @@ class DddPersistenceIntegrationTest extends DddHttpTestSupport {
                 "/api/v1/roles/" + role + "/permissions",
                 root,
                 values("permissionIds", List.of(permission)));
-        List<Long> allowed =
-                new ArrayList<>(
-                        jdbc.queryForList(
-                                "select role_id from sys_department_allowed_role where"
-                                        + " department_id=2",
-                                Long.class));
-        allowed.add(role);
-        successful(
-                HttpMethod.PUT,
-                "/api/v1/departments/2/assignable-roles",
-                root,
-                values("roleIds", allowed));
+        for (long department : List.of(2L, 3L)) {
+            List<Long> allowed =
+                    new ArrayList<>(
+                            jdbc.queryForList(
+                                    "select role_id from sys_department_allowed_role where department_id=?",
+                                    Long.class,
+                                    department));
+            allowed.add(role);
+            successful(
+                    HttpMethod.PUT,
+                    "/api/v1/departments/" + department + "/assignable-roles",
+                    root,
+                    values("roleIds", allowed));
+        }
         String username = code();
         long user =
                 successful(
@@ -275,17 +277,18 @@ class DddPersistenceIntegrationTest extends DddHttpTestSupport {
                                 .path("allowed")
                                 .asBoolean())
                 .isTrue();
-        successful(
-                HttpMethod.PUT,
-                "/api/v1/users/" + user + "/department",
-                root,
-                values("departmentId", 3));
+        JsonNode moved =
+                successful(
+                        HttpMethod.PUT,
+                        "/api/v1/users/" + user + "/department",
+                        root,
+                        values("departmentId", 3));
+        assertThat(moved.path("departmentId").asLong()).isEqualTo(3);
         assertThat(
                         jdbc.queryForObject(
-                                "select count(*) from sys_user_role where user_id=? and role_id=?",
+                                "select count(*) from sys_user_role where user_id=?",
                                 Long.class,
-                                user,
-                                role))
+                                user))
                 .isZero();
         assertThat(
                         jdbc.queryForObject(

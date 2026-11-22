@@ -288,7 +288,7 @@ public class DirectoryApplicationService {
         managed(actor, department);
         policy.requireVersion(version, old.version());
         User user = aggregate(old);
-        user.transfer(grants.eligibility(department));
+        user.transfer(department);
         Profile saved = save(old, user);
         done(actor, "USER_DEPARTMENT_CHANGED", old.subject());
         return saved;

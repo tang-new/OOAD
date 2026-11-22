@@ -14,12 +14,6 @@ public record DepartmentEligibility(long departmentId, Set<Long> allowedRoleIds)
         DomainException.require(role.enabled(), 409, "ROLE_DISABLED");
     }
 
-    public Set<Long> retained(Set<Long> assignments) {
-        java.util.HashSet<Long> retained = new java.util.HashSet<>(assignments);
-        retained.retainAll(allowedRoleIds);
-        return Set.copyOf(retained);
-    }
-
     public static void requireManaged(String actorPath, String targetPath) {
         DomainException.require(targetPath.startsWith(actorPath), 403, "DEPARTMENT_OUT_OF_SCOPE");
     }

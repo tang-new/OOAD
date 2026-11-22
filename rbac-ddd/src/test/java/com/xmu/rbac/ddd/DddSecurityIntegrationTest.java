@@ -222,8 +222,13 @@ class DddSecurityIntegrationTest extends DddHttpTestSupport {
             assertThat(jdbc.queryForObject(
                             "select department_id from sys_user where id=1", Long.class))
                     .isEqualTo(2L);
+            assertThat(jdbc.queryForObject(
+                            "select count(*) from sys_user_role where user_id=1", Long.class))
+                    .isZero();
         } finally {
             jdbc.update("update sys_user set department_id=1 where id=1");
+            jdbc.update("insert into sys_user_role (user_id, role_id) select 1, 1 "
+                    + "where not exists (select 1 from sys_user_role where user_id=1 and role_id=1)");
             jdbc.update("delete from sys_user_role where user_id=?", backup);
             jdbc.update("update sys_user set status='DELETED',token_version=token_version+1 where id=?", backup);
             jdbc.update("update sys_grant_version set version=version+1 where id=1");
