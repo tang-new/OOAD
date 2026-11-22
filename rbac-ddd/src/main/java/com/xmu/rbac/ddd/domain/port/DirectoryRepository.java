@@ -86,6 +86,4 @@ public interface DirectoryRepository {
     void replaceEligibility(long department, Set<Long> roleIds);
 
     Set<Long> allowed(long department);
-
-    void deleteRole(long id);
 }

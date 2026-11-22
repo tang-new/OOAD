@@ -28,6 +28,8 @@ public interface AuthorizationRepository {
 
     Role saveRole(Role role);
 
+    void deleteRole(long id);
+
     void saveEdges(String systemCode, Set<RoleHierarchy.Edge> edges);
 
     Page<Role> roles(String systemCode, String keyword, String status, int page, int pageSize);

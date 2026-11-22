@@ -101,6 +101,14 @@ public class RoleController {
                                 input.provided("description"))));
     }
 
+    @DeleteMapping("/roles/{id}")
+    public Map<String, Object> deleteRole(
+            @RequestHeader(value = "Authorization", required = false) String bearer,
+            @PathVariable @Positive long id) {
+        roles.deleteRole(rest.principal(bearer), id);
+        return RestSupport.ok(null);
+    }
+
     @PutMapping("/roles/{id}/status")
     public Map<String, Object> status(
             @RequestHeader(value = "Authorization", required = false) String bearer,

@@ -155,6 +155,64 @@ class DddPersistenceIntegrationTest extends DddHttpTestSupport {
     }
 
     @Test
+    void deletingRoleRemovesItsReferencesAndRecordsCenterAudit() {
+        String root = login("root", "rbac-center");
+        String code = code();
+        long target = role(root, code);
+        long senior = role(root, code());
+        long junior = role(root, code());
+        long directPermission = permission(root, code(), "UI");
+        successful(HttpMethod.PUT, "/api/v1/roles/" + target + "/permissions", root,
+                values("permissionIds", List.of(directPermission)));
+        successful(HttpMethod.POST, "/api/v1/roles/" + senior + "/inherits/" + target, root, null);
+        successful(HttpMethod.POST, "/api/v1/roles/" + target + "/inherits/" + junior, root, null);
+        jdbc.update("insert into sys_department_allowed_role(department_id,role_id) values(1,?)", target);
+        jdbc.update("insert into sys_user_role(user_id,role_id) values(1,?)", target);
+        long version = grants.version();
+
+        assertThat(successful(HttpMethod.DELETE, "/api/v1/roles/" + target, root, null).isNull())
+                .isTrue();
+
+        assertThat(jdbc.queryForObject("select count(*) from sys_role where id=?", Long.class, target))
+                .isZero();
+        for (String table : List.of("sys_role_permission", "sys_user_role", "sys_department_allowed_role")) {
+            assertThat(jdbc.queryForObject("select count(*) from " + table + " where role_id=?",
+                    Long.class, target)).as(table).isZero();
+        }
+        assertThat(jdbc.queryForObject(
+                "select count(*) from sys_role_hierarchy where senior_role_id=? or junior_role_id=?",
+                Long.class, target, target)).isZero();
+        assertThat(grants.version()).isEqualTo(version + 1);
+        assertThat(jdbc.queryForList(
+                "select source_system_code from sys_audit_log where event_type='ROLE_DELETED'"
+                        + " and target=? and result='SUCCESS'",
+                String.class, code)).containsExactly("rbac-center");
+    }
+
+    @Test
+    void deletingLastAdministratorRoleRollsBack() {
+        String root = login("root", "rbac-center");
+        long role = jdbc.queryForObject(
+                "select id from sys_role where system_id=1 and code='SUPER_ADMIN'", Long.class);
+        long version = grants.version();
+
+        ResponseEntity<JsonNode> response = call(HttpMethod.DELETE, "/api/v1/roles/" + role, root, null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().path("code").asText()).isEqualTo("LAST_SUPER_ADMIN_PROTECTED");
+        assertThat(jdbc.queryForObject("select count(*) from sys_role where id=?", Long.class, role))
+                .isEqualTo(1L);
+        assertThat(jdbc.queryForObject(
+                "select count(*) from sys_user_role where user_id=1 and role_id=?", Long.class, role))
+                .isEqualTo(1L);
+        assertThat(grants.version()).isEqualTo(version);
+        assertThat(jdbc.queryForObject(
+                "select count(*) from sys_audit_log where event_type='ROLE_DELETED'"
+                        + " and target='SUPER_ADMIN' and result='SUCCESS'",
+                Long.class)).isZero();
+    }
+
+    @Test
     void concurrentInverseEdgesCannotCommitCycle() throws Exception {
         String root = login("root", "rbac-center");
         long a = role(root, code()), b = role(root, code());

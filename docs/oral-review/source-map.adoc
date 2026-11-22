@@ -27,10 +27,10 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/controller/AuthController.java[AuthController.java] |F |`write`, `query` |对外同步审计
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/BootstrapService.java[BootstrapService.java] |A/E |`initialize` |初始化口令归A，OAS/持久目录核验归E
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |B |`departments`, `department`, `deleteDepartment`, `allowed`, `users`, `user`, `createUser`, `patchUser`, `aggregate`, `save`, `statusUser`, `transfer`, `assignments`, `assign`, `unassign`, `self`, `effective`, `dashboard`, `managed` |组织/用户/指派和局部装配；身份与A，计算与D交接
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |C |`deleteRole` |角色删除不能因目录命名漏审
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/RoleApplicationService.java[RoleApplicationService.java] |C |`deleteRole` |角色删除用例
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |E |`systems`, `system` |系统管理
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |C/D/F |`done` |共享完整性/版本/审计边界
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |C |`deleteRole` |关联清理
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |C |`deleteRole` |角色与关联清理
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |E |`systems`, `system`, `saveSystem` |系统持久化
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |B |`department`, `departments`, `saveDepartment`, `departmentOccupied`, `deleteDepartment`, `user`, `saveUser`, `users`, `assignments`, `assign`, `removeAssignment`, `allowed`, `replaceEligibility` |组织/用户/准入/指派
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaAuthorizationRepositoryAdapter.java[JpaAuthorizationRepositoryAdapter.java] |A |`username`, `lockLogin`, `saveLoginState`, `revoked`, `revoke`, `password` |凭据、失败计数和持久注销
@@ -39,7 +39,7 @@ link:README.adoc[总览] / link:api-matrix.adoc[操作责任表] / link:coverage
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |A |`login`, `logout`, `jwks`, `me`, `password` |身份/本人输出
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |D |`permission`, `api` |UI/API授权
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/IdentityController.java[IdentityController.java] |F |`auditActor`, `audit`, `auditLogs` |受信审计入口
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |C |`deleteRole` |角色删除
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RoleController.java[RoleController.java] |C |`deleteRole` |角色删除入口
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/RestSupport.java[RestSupport.java] |A/C/D/F |`principal`, `role`, `effective`, `audit` |A主体验证，C角色VO，D有效权限投影，F审计投影
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/RoleHierarchy.java[RoleHierarchy.java] |C/D |`link`, `unlink`, `required`, `reachable`, `paths`, `visit`, `requireGrantable`, `affectedBy` |C写入不变量/特殊能力/受影响上级；D有效路径遍历
 |===

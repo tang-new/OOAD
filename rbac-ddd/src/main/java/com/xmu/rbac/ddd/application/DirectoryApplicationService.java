@@ -336,16 +336,6 @@ public class DirectoryApplicationService {
         done(actor, "ROLE_UNASSIGNED", profile.subject());
     }
 
-    @Transactional
-    public void deleteRole(TokenProvider.Principal p, long id) {
-        grants.lockGrants();
-        AuthorizationRepository.Identity actor = actor(p, "rbac:role:edit", true);
-        Role role = grants.role(id);
-        authorization.requireRoleManagement(actor, role);
-        directory.deleteRole(id);
-        done(actor, "ROLE_DELETED", role.code());
-    }
-
     public Profile self(TokenProvider.Principal p) {
         return directory.user(authorization.validate(p).id(), false);
     }

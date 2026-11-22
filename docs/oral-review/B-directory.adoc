@@ -18,13 +18,13 @@ ID-04/05/06、ROLE-05/06/08、组织管理相关SELF；身份字段A、角色定
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/ManagementService.java[ManagementService.java] |departments/createDepartment/renameDepartment/deleteDepartment、allowedRoles/replaceAllowed、users/user/createUser/patchUser/userStatus/moveUser、assignments/assign/unassign/effectiveUser、dashboard
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/service/AuthorizationService.java[AuthorizationService.java] |scope/root/upper/captureUpper协作；权限计算主体归D，上界/管理员保护与C共审
 |link:../../rbac-structured/src/main/java/com/xmu/rbac/structured/mapper/Store.java[Store.java] |page在SQL完成、用户排他锁、查询参数绑定；通用Store其他调用归对应链
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |用户/部门/准入/指派/调动与DTO→Command；系统入口E、角色删除C
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |managed、allowed、users/user、createUser/patchUser/statusUser/transfer/assign/unassign、aggregate/save/effective/dashboard；system和deleteRole另交E/C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/interfaces/rest/DirectoryController.java[DirectoryController.java] |用户/部门/准入/指派/调动与DTO→Command，系统入口归E
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/application/DirectoryApplicationService.java[DirectoryApplicationService.java] |managed、allowed、users/user、createUser/patchUser/statusUser/transfer/assign/unassign、aggregate/save/effective/dashboard，system归E
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/User.java[User.java] |assign/transfer/changeStatus、roleIds和tokenVersion，不自行查库
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/DepartmentEligibility.java[DepartmentEligibility.java] |requireEligible/retained与管理范围检查
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/OrganizationPolicy.java[OrganizationPolicy.java] |路径范围、版本和可删除性
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/domain/port/DirectoryRepository.java[DirectoryRepository.java] |Profile/Department/Assignment、目录读写端口；识别包含凭据的内部Profile不直接输出
-|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |分页、用户/部门写入、准入替换与关联回收；deleteRole交C
+|link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/JpaDirectoryRepositoryAdapter.java[JpaDirectoryRepositoryAdapter.java] |分页、用户/部门写入、准入替换与关联回收
 |link:../../rbac-ddd/src/main/java/com/xmu/rbac/ddd/infrastructure/persistence/repository/UserJpaRepository.java[UserJpaRepository.java] |搜索PageRequest、账号/用户锁；登录锁与A共享
 |===
 
