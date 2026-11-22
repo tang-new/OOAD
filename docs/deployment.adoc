@@ -1,21 +1,26 @@
 = RBAC1 本地双实现部署与边界
 :toc:
 
-== 已执行，不是配置推测
+== 历史七服务验收归档
 
 安全依赖修复后最终本地标签 `local-final-20261115-035858`：分别选择structured、DDD执行两轮七服务验收，每轮7/7服务、11/11探针通过，最终保留DDD。
 两轮复用相同中心/课程前端镜像；MySQL/Redis容器与数据卷未变。TLS1.3、私有路径403、未认证课程401、内部健康、MySQL healthy、Redis PONG和实际镜像SHA256匹配均有记录。
 完整不可变镜像/容器ID、两轮探针及停写切换证据见link:../deploy/deployment-evidence.json[真实运行证据]。
+这两轮的拓扑见 link:design/swarm-deployment.svg[七服务验收图]。
 
 这是本机Docker Desktop单manager的授权隔离Swarm，不是外部生产或三服务器高可用验收。TLS证书本地自签，不冒称公共可信CA；未提供的远端条件、容量与整机恢复未验证。
 
-== 拓扑与运行环境
+== 当前六服务拓扑与运行环境
+
+image::design/swarm-deployment-current.svg[当前 Compose 的六服务拓扑]
+
+link:design/swarm-deployment-current.png[PNG] · link:design/swarm-deployment-current.puml[PlantUML 图源]
 
 * Java21、中心Spring Boot3.3.5、Maven3.9.9、MySQL8、Redis7、Node22/Vue3。
 * 稳定服务名rbac-backend通过MODULE选择rbac-structured或rbac-ddd，仅一个活动中心；两套业务实现不共用服务代码。
-* 七服务：rbac-web、rbac-backend、rbac-gateway、course-web、course-backend、mysql、redis。
-* 只发布两边缘TLS，默认中心 `https://localhost:8443`、课程 `https://localhost:9443/course/`；中心/课程业务后端、gateway、MySQL和Redis不公开端口。
-* 中心代理/api、/auth、/.well-known；课程代理/auth和/.well-known到中心，业务/api仅经gateway进入真实教师后端。
+* 当前 Compose 使用 `rbac-web`、`rbac-backend`、`course-web`、`course-backend`、`mysql` 和 `redis` 六项服务。
+* 默认只公开两个前端的 TLS 入口，中心使用 `https://localhost:8443`，课程使用 `https://localhost:9443/course/`。
+* 中心前端将 `/api`、`/auth`、`/.well-known` 转发给权限后端。课程前端将 `/login` 和 `/api/login` 交给课程后端，将 `/auth`、`/.well-known` 和受保护的 `/api/` 请求交给权限后端。内嵌的 `CourseProxyFilter` 完成鉴权后，经 `COURSE_UPSTREAM` 转发课程业务请求。
 * 两边缘拒绝/integration和/identity；可信服务key不进入浏览器、镜像环境明文或日志。
 * 生产RSA通过共享文件和Swarm secrets，不使用临时key；configtree提供数据库口令、bootstrap和服务key。角色/权限不放JWT，注销事实存MySQL。
 
@@ -63,14 +68,14 @@ bash deploy/full-final.sh
 ----
 
 final gate先校验真实Surefire最少2/49/112/25且无失败/错误/skip、两个25场景及T21成功、全模块verify成功、可执行jar及当前jar等于HTTP运行快照；任一未过都在镜像构建前拒绝。
-脚本创建不可覆盖的local-final-*标签，六镜像构建后再次检查jar未变，再进行structured→DDD两轮受控切换与运行验证。
-每次切换先停写、等待旧五个应用/边缘容器全部停止，保留MySQL/Redis及卷，再发布新模块；不能把普通滚动更新冒充严格单写。
+脚本创建不可覆盖的 `local-final-*` 标签，构建两套中心镜像和共用应用镜像后再次检查 JAR，再执行 Structured 和 DDD 两轮受控切换与运行验证。
+每次切换先停写，等待旧的两个前端和两个后端停稳，保留 MySQL、Redis 和数据卷，再发布新模块。
 
 [source,shell]
 ----
 # 只查看本任务新stack，不扩展到其它项目。
 docker stack services rbac1-acceptance
-MODULE=rbac-ddd TAG=local-final-20261115-035858 DEPLOYMENT_STAGE=local-final \
+MODULE=rbac-ddd TAG='<当前部署的不可变标签>' DEPLOYMENT_STAGE=local-final \
 EVIDENCE_FILE=.runtime/full/manual-recheck.json bash deploy/full-verify.sh
 ----
 

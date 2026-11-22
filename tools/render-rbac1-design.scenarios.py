@@ -99,15 +99,22 @@ def build_sequences():
         else:p.pop('graph',None)
         q=Sequence('S03-'+mode+'-sequence',mode,p,'ctl','effective' if d else handler(mode,'effectiveUser'),'bearer, id, system' if d else 'actor, user, system')
         q.open('ctl','svc','effective' if d else 'effectiveUser','principal, id, system' if d else 'actor, user, system')
+        if d:
+            q.call('svc','svc','user','principal, id')
+            q.raw('note over svc: Check caller rbac:user:view and target department scope before handling target-system errors.')
         q.open('svc','auth','effective' if d else 'snapshot','userId, system')
         if d:
             q.raw('alt actual outer transaction is read-only')
             q.open('auth','reads','fresh','query callback');q.call('reads','auth','stableEffective','userId, system')
-            q.raw('note over reads,repo: Supplier.get callback runs inside REQUIRES_NEW / READ_COMMITTED / readOnly.\nSame stableEffective loop as expanded below; each retry freshenRead clears JPA context.')
+            q.raw('note over reads,repo: Supplier.get callback runs inside REQUIRES_NEW / READ_COMMITTED / readOnly.\nSame stableEffective checks and error handling; freshenRead clears JPA context on every attempt.')
             q.close('reads','auth');q.raw('else no outer read-only transaction')
             q.open('auth','auth','stableEffective','userId, system')
             q.raw('loop at most 3 attempts')
-            q.call('auth','repo','version');q.call('auth','repo','systemEnabled','system');q.call('auth','repo','identity','userId')
+            q.call('auth','repo','version');q.call('auth','repo','systemEnabled','system','enabled: boolean')
+            q.raw('break target system disabled\nauth --> svc: DomainException 401 SYSTEM_DISABLED\n'
+                  'note over svc: Catch this target-side error and return empty Effective.\n'
+                  'The retry loop exits before the identity or cache lookup.\nend')
+            q.call('auth','repo','identity','userId')
             q.raw('alt inactive target\nnote over auth: empty Effective; no stale user permissions\nelse ACTIVE and no actual transaction');q.call('auth','cache','get','system, userId, version')
             q.raw('else active write transaction\nnote over auth: bypass get AND put\nend\nalt result still null')
             q.call('auth','repo','assignments','userId, system');q.call('auth','repo','hierarchy','system');q.call('auth','repo','permissions','system')
@@ -131,7 +138,10 @@ def build_sequences():
             q.call('auth','auth','version')
             q.raw('note over auth: unchanged after write → return result; changed after write → retry\nend\nend\nnote over auth: exhausted attempts → 503 AUTHORIZATION_UNAVAILABLE\nend\nnote over auth: namespace comes from rbac.cache.namespace.')
         q.raw('note over auth: Disabled intermediate role cuts that path; diamond permission id dedup\npreserves independent source paths. No direct roles → empty permissions.')
-        q.close('auth','svc');end_use_case(q)
+        q.close('auth','svc')
+        if d:
+            q.raw('opt successful result or caught target SYSTEM_DISABLED\nsvc --> ctl: Effective (empty for disabled system)\nctl --> obj: HTTP 200 with effective permissions\nend')
+        end_use_case(q)
         # S04: the same in-process course filter uses the active backend's authorization callback.
         p={'filter':'CourseProxyFilter','route':'RouteRegistry','tokens':'TokenProvider' if d else 'TokenService',
            'auth':'AuthorizationApplicationService' if d else 'AuthorizationService','body':'BoundedBody','proxy':'ProxyClient'}
@@ -218,7 +228,12 @@ def build_simulation_detail():
     q.call('auth','auth','stableApi','targetUserId, system, operationId');q.raw('end');q.call('auth','repo','version')
     q.raw('note over auth: unchanged → return status, snapshot and decision; changed → retry all reads.\nUnstable after three attempts → 503 AUTHORIZATION_UNSTABLE.\nend');q.close('auth','auth');q.close('auth','ctl','ApiExplanation')
     q.raw('else UI explanation');q.call('ctl','auth','unavailableReason','targetUserId, system')
-    q.raw('opt available target');q.call('ctl','auth','effective','targetUserId, system');q.raw('note over ctl: Use Effective.has for the UI permission.\nend\nend')
+    q.raw('opt target initially available');q.open('ctl','auth','effective','targetUserId, system')
+    q.raw('alt effective permissions returned\nauth --> ctl: Effective\n'
+          'note over ctl: Use Effective.has for the UI permission.\nelse target system disabled during lookup\n'
+          'auth --> ctl: DomainException 401 SYSTEM_DISABLED\n'
+          'note over ctl: Catch this target-side error; set allowed=false, SYSTEM_DISABLED and empty Effective.\nend')
+    q.close('auth','ctl');q.raw('end\nend')
     q.raw('note over ctl: Unavailable target: empty effective, allowed=false,\nreason and trace carry USER_DISABLED or SYSTEM_DISABLED.\nAvailable target: reason ALLOW or DENY. RestSupport.ok supplies the HTTP envelope.')
     q.close('ctl','ctl');q.finish()
 

@@ -21,30 +21,44 @@ obj -> ctl: 1. effective(bearer, id, system)
 activate ctl
 ctl -> svc: 2. effective(principal, id, system)
 activate svc
-svc -> auth: 3. effective(userId, system)
+svc -> svc: 3. user(principal, id)
+activate svc
+deactivate svc
+note over svc
+Check caller rbac:user:view and target department scope before handling target-system errors.
+end note
+svc -> auth: 4. effective(userId, system)
 activate auth
 alt actual outer transaction is read-only
-auth -> reads: 4. fresh(query callback)
+auth -> reads: 5. fresh(query callback)
 activate reads
-reads -> auth: 5. stableEffective(userId, system)
+reads -> auth: 6. stableEffective(userId, system)
 activate auth
 deactivate auth
 note over reads,repo
 Supplier.get callback runs inside REQUIRES_NEW / READ_COMMITTED / readOnly.
-Same stableEffective loop as expanded below; each retry freshenRead clears JPA context.
+Same stableEffective checks and error handling; freshenRead clears JPA context on every attempt.
 end note
 deactivate reads
 else no outer read-only transaction
-auth -> auth: 6. stableEffective(userId, system)
+auth -> auth: 7. stableEffective(userId, system)
 activate auth
 loop at most 3 attempts
-auth -> repo: 7. version()
+auth -> repo: 8. version()
 activate repo
 deactivate repo
-auth -> repo: 8. systemEnabled(system)
+auth -> repo: 9. systemEnabled(system)
 activate repo
+repo --> auth: enabled: boolean
 deactivate repo
-auth -> repo: 9. identity(userId)
+break target system disabled
+auth --> svc: DomainException 401 SYSTEM_DISABLED
+note over svc
+Catch this target-side error and return empty Effective.
+The retry loop exits before the identity or cache lookup.
+end note
+end
+auth -> repo: 10. identity(userId)
 activate repo
 deactivate repo
 alt inactive target
@@ -52,7 +66,7 @@ note over auth
 empty Effective; no stale user permissions
 end note
 else ACTIVE and no actual transaction
-auth -> cache: 10. get(system, userId, version)
+auth -> cache: 11. get(system, userId, version)
 activate cache
 deactivate cache
 else active write transaction
@@ -61,28 +75,28 @@ bypass get AND put
 end note
 end
 alt result still null
-auth -> repo: 11. assignments(userId, system)
+auth -> repo: 12. assignments(userId, system)
 activate repo
 deactivate repo
-auth -> repo: 12. hierarchy(system)
+auth -> repo: 13. hierarchy(system)
 activate repo
 deactivate repo
-auth -> repo: 13. permissions(system)
+auth -> repo: 14. permissions(system)
 activate repo
 deactivate repo
-auth -> model: 14. calculate(system, directIds, graph, permissions)
+auth -> model: 15. calculate(system, directIds, graph, permissions)
 activate model
-model -> graph: 15. paths(safeDirect)
+model -> graph: 16. paths(safeDirect)
 activate graph
 loop each direct role
-graph -> graph: 16. visit(id, new ArrayList<>(), result)
+graph -> graph: 17. visit(id, new ArrayList<>(), result)
 activate graph
 deactivate graph
 end
 deactivate graph
 deactivate model
 end
-auth -> repo: 17. version()
+auth -> repo: 18. version()
 activate repo
 deactivate repo
 alt version changed
@@ -91,11 +105,11 @@ continue; never publish mixed snapshot
 end note
 else version unchanged
 opt ACTIVE target and no actual transaction
-auth -> cache: 18. put(system, userId, version, result)
+auth -> cache: 19. put(system, userId, version, result)
 activate cache
 deactivate cache
 end
-auth -> repo: 19. version()
+auth -> repo: 20. version()
 activate repo
 deactivate repo
 note over auth
@@ -117,6 +131,10 @@ Disabled intermediate role cuts that path; diamond permission id dedup
 preserves independent source paths. No direct roles → empty permissions.
 end note
 deactivate auth
+opt successful result or caught target SYSTEM_DISABLED
+svc --> ctl: Effective (empty for disabled system)
+ctl --> obj: HTTP 200 with effective permissions
+end
 deactivate svc
 deactivate ctl
 deactivate obj

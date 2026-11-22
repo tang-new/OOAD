@@ -5,11 +5,11 @@
 == 阅读边界与事实等级
 
 本文件是当前代码的可维护设计入口，不是测试或生产验收报告。旧 M2 骨架、旧表结构及旧包图不作为当前模型。
-需求依据为 `docs/sources/requirements-final.md` 第 7、19、22 节；图形约束采用 Downloads 中的 `uml-class-sequence-diagrams` SKILL/checklist，转换边界同时参照 `projectmgt-code-conventions` SKILL/checklist。课程项目约定中的统一身份“消费者”规则不能机械套给作为身份提供者的权限中心。
+需求依据为 `docs/sources/requirements-final.md` 第 7、19、22 节。图形约束采用课程资料中的 `uml-class-sequence-diagrams` skill 和验收清单，转换边界同时参照 `projectmgt-code-conventions` skill 和验收清单。课程项目约定中的统一身份“消费者”规则不能机械套给作为身份提供者的权限中心。
 
 * 全量图生成归档：link:design/source-index.json[路径、SHA-256、javap 签名和图中方法引用]、link:design/generation-status.json[当时的生成结果]。后续局部更新见图索引中的日期记录。
-* 全部图与可维护源：link:design/index.adoc[35 张图索引]。每张同时有 SVG、PNG、DOT 或 PlantUML；包括稳定 API 策略细图、持久登录锁及管理端目标模拟 SIM 类图/顺序图。
-* 调用链复核：link:design/call-chain-review.json[25 组方法体顺序检查及源码哈希]。除符号存在外，核对锁、策略、保存、版本和审计的实际顺序；词法检查不是完整 Java 调用图或运行证明。
+* 全部图与可维护源：link:design/index.adoc[图索引]。每张同时有 SVG、PNG、DOT 或 PlantUML；包括稳定 API 策略细图、持久登录锁及管理端目标模拟 SIM 类图/顺序图。
+* 调用链复核归档：link:design/call-chain-review.json[25 组方法体顺序检查及源码哈希]。绘图器核对符号以及锁、策略、保存、版本和审计的调用顺序。
 * 手工目视记录：link:design/visual-review.adoc[PNG 检查及限制]。渲染退出码不代替目视验收。
 * 口试：link:defense.adoc[六个案例与追问]；本轮实际命令、编译记录与 19 项绘图器回归：link:design/verification.adoc[核验记录]。
 
@@ -135,7 +135,7 @@ DDD JpaDirectoryRepositoryAdapter.saveUser 在首次 INSERT 之前直接生成�
 image::S03-structured-sequence.svg[结构化权限]
 image::S03-ddd-sequence.svg[DDD 权限]
 
-两实现都以 DB 版本和状态为事实来源，事务中不读写授权缓存。DDD `stableEffective` 先读版本，再读 systemEnabled 和目标 identity；非 ACTIVE 目标得到空权限。无实际事务且 ACTIVE 时才可 cache.get/put。第一次尾部版本变化立即重试；发布缓存后再次读版本，匹配才返回；最多三次，不稳定返回 503 AUTHORIZATION_UNSTABLE。
+两实现都以 DB 版本和状态为事实来源，事务中不读写授权缓存。DDD `stableEffective` 先读版本，再检查目标系统和目标用户。管理员通过用户查看权限和部门范围检查后，若目标系统停用，目录服务将 `SYSTEM_DISABLED` 转为空有效权限并返回 200。系统启用但目标用户非 ACTIVE 时也得到空权限。无实际事务且目标用户 ACTIVE 时才可 cache.get/put。第一次尾部版本变化立即重试；发布缓存后再次读版本，匹配才返回；最多三次，不稳定返回 503 AUTHORIZATION_UNSTABLE。
 
 若当前实际事务为只读，`effective/api` 通过独立 Spring Bean `AuthorizationReadTransaction.fresh`，在 REQUIRES_NEW、READ_COMMITTED、readOnly 事务执行 Supplier 回调；`stableEffective/stableApi` 每次尝试先 `repository.freshenRead`，JpaAdapter 用 EntityManager.clear 清理持久化上下文。写事务不另开读取事务，避免把尚未提交的授权变更误读成旧事实。图中回调分支注明相同算法，普通分支展开循环；不能把 fresh 简化成“清一次缓存”。
 
@@ -146,7 +146,7 @@ image::S03-ddd-sequence.svg[DDD 权限]
 image::SIM-ddd-class.svg[目标可用性检查类图]
 image::SIM-ddd-sequence.svg[目标模拟 explain 实际链]
 
-`AuthorizationController.explain` 进入私有 `check`，先认证并校验管理员授权，指定他人时再检查目标部门范围。UI 分支读取 `unavailableReason`，使用取得的有效权限判定。API 分支调用 `explainApi`，以同一轮授权版本校验包住目标状态、展示快照和点判定。目标不存在时返回 404。停用用户或系统的模拟返回空权限、`allowed=false` 及 `USER_DISABLED` 或 `SYSTEM_DISABLED`。共享验收场景使用 SIM 图，UML-S06 顺序图展示同步成功审计。
+`AuthorizationController.explain` 进入私有 `check`，先认证并校验管理员授权，指定他人时再检查目标部门范围。UI 分支读取 `unavailableReason`，使用取得的有效权限判定。如果目标系统在两次读取之间停用，控制器会捕获目标查询的 `SYSTEM_DISABLED`，形成正常的拒绝结果。API 分支调用 `explainApi`，以同一轮授权版本校验包住目标状态、展示快照和点判定。目标不存在时返回 404。停用用户或系统的模拟返回空权限、`allowed=false` 及 `USER_DISABLED` 或 `SYSTEM_DISABLED`。共享验收场景使用 SIM 图，UML-S06 顺序图展示同步成功审计。
 
 === S04：可信 operationId 与双层鉴权
 
@@ -229,17 +229,25 @@ image::LOGIN-ddd-sequence.svg[持久登录锁事务]
 
 真实链为 IdentityApplicationService.login → LoginAttemptApplicationService.attempt。attempt 在事务内 `lockLogin` 串行化账号行，LoginAttemptPolicy.locked/evaluate 判断；仅 ACTIVE 且未锁才做密码匹配。第 5 次错误锁 900 秒；锁定中不继续累加，过期重新计数，正确凭据清零。`saveLoginState` 与 LOGIN_DENIED 同事务，失败时返回 null，事务正常提交后外层 login 才抛 401，避免安全计数被同一个异常回滚。不存在账号返回 null；系统停用/审计持久化异常仍使 attempt 事务回滚，不能笼统说“任何登录失败都已提交计数”。
 
-== 最终本地 Swarm：真实归档，不是渲染器 live probe
+== 当前 Swarm 六服务拓扑
+
+image::swarm-deployment-current.svg[当前 Compose 的六服务拓扑]
+
+`mysql`、`redis`、`rbac-backend`、`rbac-web`、`course-backend` 和 `course-web` 共用私有 overlay 网络。默认只发布两个前端的 TLS 端口 8443 和 9443。`MODULE` 选择一个活动的权限中心实现。
+
+课程登录由 `course-web` 直接转发至 `course-backend`，受保护的课程 `/api/` 请求经 `rbac-backend` 内嵌的 `CourseProxyFilter` 鉴权后转发。此图依据 link:../docker-compose.yml[默认 Compose] 和 link:../deploy/full-course-nginx.conf[课程 Nginx 路由] 绘制。
+
+== 历史本地 Swarm 七服务验收归档
 
 image::swarm-deployment.svg[最终本地双实现 Swarm 归档与范围]
 
-当前配置七服务：mysql、redis、rbac-backend、rbac-gateway、rbac-web、course-backend、course-web。private overlay；默认只发布两前端 TLS 8443/9443，后端无发布端口。MODULE 切换一个活动权限中心实现，不是两个中心同时竞争同一数据库。
+这两轮验收时，独立的 `rbac-gateway` 负责鉴权转发，是当时的第七项服务。
 
 link:design/deployment-snapshot.json[最终本地双轮部署快照] 按 deployment-evidence.json 的 `rounds.rbac-structured` / `rounds.rbac-ddd` 分别保存 services、nodes、probes，而非读取已不存在的顶层 candidate.services。归档状态 local-final-dual-runtime-passed，时间 2026-11-14T20:01:59Z，tag=local-final-20261115-035858；structured→DDD 各 7 服务与 11/11 探针，实际镜像 ID 均匹配本地构建；前端镜像、MySQL/Redis 资源与已有持久卷保持不变，最终活动实现 DDD。
 
 顶层 `localFinalDeploymentAccepted=true` 是本地部署验收通过；每轮 `finalAcceptance=false` 和 verificationScope 明确该轮只证明 runtime 健康/TLS/隔离/镜像身份，不单独宣称整个项目业务完成，不能误读为“最终本地部署尚未验收”。业务、课程和浏览器另有归档：link:final-acceptance.adoc[最终本地交付验收]、link:acceptance/local-results.json[机器可读结果]。绘图器只读取已真实执行的证据，不再次探测运行态，不声明外部服务器、公共 CA、多节点 HA 或外部 CI 通过。
 
-本轮默认 current（未传 archived flag）严格核对四个当前 canonical JAR 与新归档完全一致，artifactsMatchCurrentBuild=true；currentRuntimeVerified=false 仅表示渲染器未发起新的 live probe，不是否定归档中已真实完成的本地部署。CI 的新构建必须显式 archived，两个当前验收标志均 false；不同构建的合法 ZIP/JDK 字节差异不能改写历史 SHA 或冒充已部署。生产 Java 未变，unused POI 删除及 npm 安全依赖升级导致新 artifact，采用新的不可变 tag 和 m21/m22 验证，不替换旧报告身份。
+归档生成时，`current` 模式核对了当时的四个 canonical JAR。旧图中的 `artifactsMatchCurrentBuild=true` 对应该次构建。CI 的新构建显式使用 `archived` 模式验证历史证据，保留原有 SHA 和验收状态。
 
 == 当前 canonical 本地验收结果
 

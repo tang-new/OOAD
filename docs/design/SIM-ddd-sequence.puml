@@ -75,13 +75,21 @@ else UI explanation
 ctl -> auth: 15. unavailableReason(targetUserId, system)
 activate auth
 deactivate auth
-opt available target
+opt target initially available
 ctl -> auth: 16. effective(targetUserId, system)
 activate auth
-deactivate auth
+alt effective permissions returned
+auth --> ctl: Effective
 note over ctl
 Use Effective.has for the UI permission.
 end note
+else target system disabled during lookup
+auth --> ctl: DomainException 401 SYSTEM_DISABLED
+note over ctl
+Catch this target-side error; set allowed=false, SYSTEM_DISABLED and empty Effective.
+end note
+end
+deactivate auth
 end
 end
 note over ctl
